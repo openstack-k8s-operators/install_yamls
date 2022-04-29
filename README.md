@@ -2,7 +2,7 @@
 
 Scripts to automate Installing OpenStack in your *pre-installed* OpenShift environment.
 
-Aside from generating Yaml and running *oc* commands to apply them to your cluster nothing in this repo should modify the local machine, require sudo, or make any changes to the local environment.
+Aside from generating Yaml and running *oc* commands to apply them to your cluster nothing in this repo should modify the local machine, require sudo, or make any changes to the local machine.
 
 ## Goals
 
