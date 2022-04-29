@@ -1,0 +1,17 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: operator-name
+  namespace: openstack
+spec:
+  config:
+    env:
+    - name: WATCH_NAMESPACE
+      value: openstack
+  source: operator-index
+  sourceNamespace: openstack
+  name: operator-name
+  # to install a specific version
+  # installPlanApproval: Manual
+  # startingCSV: operator.vX.X.X
+  channel: alpha
