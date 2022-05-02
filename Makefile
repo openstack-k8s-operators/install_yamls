@@ -3,7 +3,7 @@ MARIADB_IMG=quay.io/openstack-k8s-operators/mariadb-operator-index:latest
 
 all: keystone mariadb
 
-crc_init:
+crc_storage:
 	bash scripts/create-pv.sh
 	bash scripts/gen-crc-pv-kustomize.sh
 	oc kustomize out/crc | oc apply -f -
