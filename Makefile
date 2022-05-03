@@ -1,39 +1,55 @@
-KEYSTONE_IMG=quay.io/openstack-k8s-operators/keystone-operator-index:latest
-MARIADB_IMG=quay.io/openstack-k8s-operators/mariadb-operator-index:latest
+NAMESPACE ?= openstack
+KEYSTONE_IMG ?= quay.io/openstack-k8s-operators/keystone-operator-index:latest
+MARIADB_IMG ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
 
-all: keystone mariadb
+all: namespace keystone mariadb
 
 crc_storage:
 	bash scripts/create-pv.sh
 	bash scripts/gen-crc-pv-kustomize.sh
 	oc kustomize out/crc | oc apply -f -
 
+# NAMESPACE
+.PHONY: namespace
+namespace:
+	bash scripts/gen-namespace.sh ${NAMESPACE}
+	oc apply -f out/${NAMESPACE}/namespace.yaml
+	sleep 2
+	oc project ${NAMESPACE}
+
+.PHONY: namespace_cleanup
+namespace_cleanup:
+	make keystone_cleanup
+	make mariadb_cleanup
+	oc delete project ${NAMESPACE}
+	rm -Rf out/${NAMESPACE}
+
 # KEYSTONE
-out/keystone/subscription.yaml:
-	bash scripts/gen-olm.sh keystone ${KEYSTONE_IMG}
+keystone_prep:
+	bash scripts/gen-olm.sh ${NAMESPACE} keystone ${KEYSTONE_IMG}
 
 .PHONY: keystone
-keystone: out/keystone/subscription.yaml
-	oc apply -f out/keystone
+keystone: namespace keystone_prep
+	oc apply -f out/${NAMESPACE}/keystone
 
 .PHONY: keystone_cleanup
 keystone_cleanup: 
-	oc delete -n openstack csv keystone-operator.v0.0.1 || true
-	oc delete -n openstack subscription keystone-operator || true
-	oc delete -n openstack catalogsource keystone-operator-index || true
-	rm -Rf out/keystone
+	oc delete -n ${NAMESPACE} csv keystone-operator.v0.0.1 || true
+	oc delete -n ${NAMESPACE} subscription keystone-operator || true
+	oc delete -n ${NAMESPACE} catalogsource keystone-operator-index || true
+	rm -Rf out/${NAMESPACE}/keystone
 
 # MARIADB
-out/mariadb/subscription.yaml:
-	bash scripts/gen-olm.sh mariadb ${MARIADB_IMG}
+mariadb_prep:
+	bash scripts/gen-olm.sh ${NAMESPACE} mariadb ${MARIADB_IMG}
 
 .PHONY: mariadb
-mariadb: out/mariadb/subscription.yaml
-	oc apply -f out/mariadb
+mariadb: namespace mariadb_prep
+	oc apply -f out/${NAMESPACE}/mariadb
 
 .PHONY: mariadb_cleanup
 mariadb_cleanup: 
-	oc delete -n openstack csv mariadb-operator.v0.0.1 || true
-	oc delete -n openstack subscription mariadb-operator || true
-	oc delete -n openstack catalogsource mariadb-operator-index || true
-	rm -Rf out/mariadb
+	oc delete -n ${NAMESPACE} csv mariadb-operator.v0.0.1 || true
+	oc delete -n ${NAMESPACE} subscription mariadb-operator || true
+	oc delete -n ${NAMESPACE} catalogsource mariadb-operator-index || true
+	rm -Rf out/${NAMESPACE}/mariadb

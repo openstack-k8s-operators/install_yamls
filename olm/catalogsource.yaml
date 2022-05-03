@@ -1,8 +1,0 @@
-apiVersion: operators.coreos.com/v1alpha1
-kind: CatalogSource
-metadata:
-  name: osp-director-operator-index
-  namespace: openstack
-spec:
-  sourceType: grpc
-  image: operator-index:latest
