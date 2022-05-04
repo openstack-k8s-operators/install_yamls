@@ -4,10 +4,16 @@ MARIADB_IMG ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
 
 all: namespace keystone mariadb
 
+# CRC
 crc_storage:
 	bash scripts/create-pv.sh
 	bash scripts/gen-crc-pv-kustomize.sh
 	oc kustomize out/crc | oc apply -f -
+
+crc_storage_cleanup:
+	oc get pv | grep local | cut -f 1 -d ' ' | xargs oc delete pv
+	oc delete sc local-storage
+	#FIXME need to cleanup the actual directories in the CRC VM too
 
 # NAMESPACE
 .PHONY: namespace
