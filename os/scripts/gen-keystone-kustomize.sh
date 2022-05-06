@@ -72,21 +72,6 @@ patches:
       value: keystone-secret
   target:
     kind: KeystoneAPI
-- patch: |-
-    - op: replace
-      path: /metadata/name
-      value: keystone
-    - op: replace
-      path: /metadata/namespace
-      value: ${NAMESPACE}
-    - op: replace
-      path: /spec/name
-      value: keystone
-    - op: replace
-      path: /spec/secret
-      value: keystone-secret
-  target:
-    kind: MariaDBDatabase
 EOF
 
 kustomization_add_resources
