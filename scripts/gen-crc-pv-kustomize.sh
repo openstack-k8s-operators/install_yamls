@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ ! -d out ]; then
+if [ ! -d out/crc ]; then
   mkdir -p out/crc
 fi
 
