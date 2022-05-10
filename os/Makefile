@@ -69,9 +69,7 @@ keystone: namespace keystone_prep ## installs the operator, also runs the prep s
 
 .PHONY: keystone_cleanup
 keystone_cleanup: ## deletes the operator, but does not cleanup the service resources
-	oc delete -n ${NAMESPACE} csv keystone-operator.v0.0.1 || true
-	oc delete -n ${NAMESPACE} subscription keystone-operator || true
-	oc delete -n ${NAMESPACE} catalogsource keystone-operator-index || true
+	oc delete --ignore-not-found=true -f out/${NAMESPACE}/keystone
 	rm -Rf out/${NAMESPACE}/keystone
 
 OPERATOR_BASE_DIR=out/operator
@@ -105,9 +103,7 @@ mariadb: namespace mariadb_prep ## installs the operator, also runs the prep ste
 
 .PHONY: mariadb_cleanup
 mariadb_cleanup: ## deletes the operator, but does not cleanup the service resources
-	oc delete -n ${NAMESPACE} csv mariadb-operator.v0.0.1 || true
-	oc delete -n ${NAMESPACE} subscription mariadb-operator || true
-	oc delete -n ${NAMESPACE} catalogsource mariadb-operator-index || true
+	oc delete --ignore-not-found=true -f out/${NAMESPACE}/mariadb
 	rm -Rf out/${NAMESPACE}/mariadb
 
 MARIADB_DEPLOY_DIR=out/${NAMESPACE}/mariadb/cr
