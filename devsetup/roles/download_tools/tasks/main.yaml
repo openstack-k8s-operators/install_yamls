@@ -1,0 +1,110 @@
+- name: Install build dependencies
+  become: true
+  become_user: root
+  package:
+    name:
+      - jq
+      - skopeo
+      - sqlite
+
+- name: Set opm download url suffix
+  set_fact: opm_url_suffix="latest/download"
+  when: opm_version is undefined or opm_version == "latest"
+
+- name: Set opm download url suffix
+  set_fact: opm_url_suffix="download/{{ opm_version }}"
+  when: opm_version is defined and opm_version != "latest"
+
+- name: Create $HOME/bin dir
+  file:
+    path: "{{ lookup('env', 'HOME') }}/bin"
+    state: directory
+    mode: '0755'
+
+- name: Download opm
+  get_url:
+    url: https://github.com/operator-framework/operator-registry/releases/{{ opm_url_suffix }}/linux-amd64-opm
+    dest: "{{ lookup('env', 'HOME') }}/bin/opm"
+    mode: '0755'
+    timeout: 30
+
+- name: Get version from sdk_version
+  set_fact: _sdk_version="{{ sdk_version | regex_search('v(.*)', '\\1') | first }}"
+
+- name: Set operator-sdk file for version < 1.3.0
+  set_fact: _operator_sdk_file="operator-sdk-{{ sdk_version }}-x86_64-linux-gnu"
+  when: _sdk_version is version('1.3.0', 'lt', strict=True )
+
+- name: Set operator-sdk file for version >= 1.3.0
+  set_fact: _operator_sdk_file="operator-sdk_linux_amd64"
+  when: _sdk_version is version('1.3.0', 'ge', strict=True )
+
+- name: Download operator-sdk
+  get_url:
+    url: https://github.com/operator-framework/operator-sdk/releases/download/{{ sdk_version }}/{{ _operator_sdk_file }}
+    dest: "{{ lookup('env', 'HOME') }}/bin/operator-sdk"
+    mode: '0755'
+    force: yes
+    timeout: 30
+
+- name: Download and extract kustomize
+  unarchive:
+    src: https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F{{ kustomize_version }}/kustomize_{{ kustomize_version }}_linux_amd64.tar.gz
+    dest: "{{ lookup('env', 'HOME') }}/bin/"
+    remote_src: yes
+
+- name: Download kuttl
+  get_url:
+    url: https://github.com/kudobuilder/kuttl/releases/download/v{{ kuttl_version }}/kubectl-kuttl_{{ kuttl_version }}_linux_x86_64
+    dest: "{{ lookup('env', 'HOME') }}/bin/kubectl-kuttl"
+    mode: '0755'
+    timeout: 30
+
+- name: Set proper golang on the system
+  become: true
+  become_user: root
+  block:
+
+  - name: Deinstall golang
+    package:
+      state: absent
+      name:
+      - golang-bin
+      - golang-src
+      - golang
+
+  - name: Delete old go version installed from upstream
+    file:
+      path: "{{ item }}"
+      state: absent
+    with_items:
+    - /usr/local/go
+    - "{{ lookup('env', 'HOME') }}/bin/go"
+    - "{{ lookup('env', 'HOME') }}/bin/gofmt"
+    - /usr/local/bin/go
+    - /usr/local/bin/gofmt
+
+  - name: Download and extract golang
+    unarchive:
+      src: "https://golang.org/dl/go{{ go_version }}.linux-amd64.tar.gz"
+      dest: "/usr/local"
+      remote_src: yes
+      extra_opts:
+        - "--exclude"
+        - "go/misc"
+        - "--exclude"
+        - "go/pkg/linux_amd64_race"
+        - "--exclude"
+        - "go/test"
+
+  - name: set alternatives link to installed go version
+    shell: |
+      set -e
+      update-alternatives --install /usr/local/bin/{{ item }} {{ item }} /usr/local/go/bin/{{ item }} 1
+    with_items:
+    - go
+    - gofmt
+
+- name: Clean bash cache
+  debug:
+    msg: When move from rpm to upstream version, make sure to clean bash cache using `hash -d go`
