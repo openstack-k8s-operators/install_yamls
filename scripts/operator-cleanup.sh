@@ -13,11 +13,20 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-set -ex
+set -x
 
-NODE_NAME=$(oc get node -o name)
-if [ -z "$NODE_NAME" ]; then
-  echo "Unable to determine node name with 'oc' command."
-  exit 1
+if [ -z "$NAMESPACE" ]; then
+  echo "Please set NAMESPACE"; exit 1
 fi
-oc debug $NODE_NAME -T -- chroot /host /usr/bin/bash -c "for i in {1..6}; do echo \"creating dir /mnt/openstack/pv00\$i\"; mkdir -p /mnt/openstack/pv00\$i; done"
+
+if [ -z "$OPERATOR_NAME" ]; then
+  echo "Please set OPERATOR_NAME"; exit 1
+fi
+
+CSV=$(oc get csv --no-headers -o custom-columns=":metadata.name" --ignore-not-found=true | grep $OPERATOR_NAME)
+
+if [ -n "$CSV" ]; then
+  oc delete -n ${NAMESPACE} csv ${CSV} --ignore-not-found=true
+fi
+oc delete -n ${NAMESPACE} subscription ${OPERATOR_NAME}-operator --ignore-not-found=true
+oc delete -n ${NAMESPACE} catalogsource ${OPERATOR_NAME}-operator-index --ignore-not-found=true
