@@ -31,6 +31,9 @@ PLACEMENT_BRANCH    ?= master
 PLACEMENTAPI        ?= config/samples/placement_v1beta1_placementapi.yaml
 PLACEMENTAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-placement-api:current-tripleo
 
+# Rabbitmq
+RABBITMQ_IMG         ?= quay.io/dprince/rabbitmq-cluster-operator-index@sha256:59d137af72cbafd7099ec7d689d0c08823a95d2b660f4ea5b277da481e4335e7
+
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
 ${1}: export NAMESPACE=${NAMESPACE}
@@ -224,3 +227,20 @@ placement_deploy_cleanup: ## cleans up the service instance, Does not affect the
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/placement-operator ${DEPLOY_DIR}
 
+##@ RABBITMQ
+.PHONY: rabbitmq_prep
+rabbitmq_prep: export IMAGE=${RABBITMQ_IMG}
+rabbitmq_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,cluster))
+	bash scripts/gen-olm.sh
+
+.PHONY: rabbitmq
+rabbitmq: namespace rabbitmq_prep ## installs the operator, also runs the prep step. Set RABBITMQ_IMG for custom image.
+	$(eval $(call vars,$@,cluster))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: rabbitmq_cleanup
+rabbitmq_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,cluster))
+	bash scripts/operator-cleanup.sh
+	rm -Rf ${OPERATOR_DIR}
