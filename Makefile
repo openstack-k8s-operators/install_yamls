@@ -58,6 +58,14 @@ CINDER_BRANCH    ?= master
 CINDER           ?= config/samples/cinder_v1beta1_cinder.yaml
 # TODO: Image customizations for all Cinder services
 
+
+# Rabbitmq
+RABBITMQ_IMG         ?= quay.io/openstack-k8s-operators/rabbitmq-cluster-operator-index:latest
+RABBITMQ_REPO      ?= https://github.com/openstack-k8s-operators/rabbitmq-cluster-operator.git
+RABBITMQ_BRANCH    ?= patches
+RABBITMQ           ?= docs/examples/default-security-context/rabbitmq.yaml
+
+
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
 ${1}: export NAMESPACE=${NAMESPACE}
@@ -409,3 +417,42 @@ cinder_deploy_cleanup: ## cleans up the service instance, Does not affect the op
 	$(eval $(call vars,$@,cinder))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/cinder-operator ${DEPLOY_DIR}
+
+##@ RABBITMQ
+.PHONY: rabbitmq_prep
+rabbitmq_prep: export IMAGE=${RABBITMQ_IMG}
+rabbitmq_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,cluster))
+	bash scripts/gen-olm.sh
+
+.PHONY: rabbitmq
+rabbitmq: namespace rabbitmq_prep ## installs the operator, also runs the prep step. Set RABBITMQ_IMG for custom image.
+	$(eval $(call vars,$@,cluster))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: rabbitmq_cleanup
+rabbitmq_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,cluster))
+	bash scripts/operator-cleanup.sh
+	rm -Rf ${OPERATOR_DIR}
+
+.PHONY: rabbitmq_deploy_prep
+rabbitmq_deploy_prep: export KIND=RabbitmqCluster
+rabbitmq_deploy_prep: rabbitmq_deploy_cleanup ## prepares the CR to install the service based on the service sample file RABBITMQ
+	$(eval $(call vars,$@,rabbitmq))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone -b ${RABBITMQ_BRANCH} ${RABBITMQ_REPO} rabbitmq-operator && popd
+	cp ${OPERATOR_BASE_DIR}/rabbitmq-operator/${RABBITMQ} ${DEPLOY_DIR}
+	#bash scripts/gen-service-kustomize.sh
+
+.PHONY: rabbitmq_deploy
+rabbitmq_deploy: input rabbitmq_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set RABBITMQ_REPO and RABBITMQ_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,rabbitmq))
+	#oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	oc apply -f ${DEPLOY_DIR}/rabbitmq.yaml
+
+.PHONY: rabbitmq_deploy_cleanup
+rabbitmq_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,rabbitmq))
+	oc delete --ignore-not-found=true RabbitmqCluster default-security-context
+	rm -Rf ${OPERATOR_BASE_DIR}/rabbitmq-operator ${DEPLOY_DIR}
