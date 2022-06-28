@@ -19,7 +19,7 @@ Helper scripts to automate installing CRC and required tools with versions used 
 eval $(crc oc-env)
 
 # one time operation to initialize PVs within the CRC VM
-make crc_init
+make crc_storage
 
 # Install MariaDB Operator using OLM (defaults to quay.io/openstack-k8s-operators)
 make mariadb MARIADB_IMG=quay.io/openstack-k8s-operators/mariadb-operator-index:latest
