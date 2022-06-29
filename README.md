@@ -26,5 +26,13 @@ make mariadb MARIADB_IMG=quay.io/openstack-k8s-operators/mariadb-operator-index:
 
 # Install Keystone Operator using OLM (defaults to quay.io/openstack-k8s-operators)
 make keystone KEYSTONE_IMG=quay.io/openstack-k8s-operators/keystone-operator-index:latest
+```
 
+### Deploy example CRs
+```bash
+# Deploy MariaDB
+make mariadb_deploy
+
+# Deploy Keystone
+make keystone_deploy
 ```
