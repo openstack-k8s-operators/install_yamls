@@ -53,6 +53,8 @@ secretGenerator:
   - DbRootPassword=${PASSWORD}
   - DatabasePassword=${PASSWORD}
   - KeystoneDatabasePassword=${PASSWORD}
+  - PlacementPassword=${PASSWORD}
+  - PlacementDatabasePassword=${PASSWORD}
 generatorOptions:
   disableNameSuffixHash: true
   labels:
