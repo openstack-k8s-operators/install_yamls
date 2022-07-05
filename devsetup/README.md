@@ -3,7 +3,7 @@
 CRC installation requires sudo to create a NetworkManager dispatcher file in /etc/NetworkManager/dispatcher.d/99-crc.sh, also the post step to add the CRC cert to the system store to be able to access the image registry from the host system.
 
 * Get the pull secret from `https://cloud.redhat.com/openshift/create/local` and save it in `pull-secret.txt` of the repo dir, or set the `PULL_SECRET` env var to point to a different location.
-* `CRC_URL` and `KUBEADMIN_PWD` can be used to change requirements for CRC install
+* `CRC_URL` and `KUBEADMIN_PWD` can be used to change requirements for CRC install. The default `KUBEADMIN_PWD` is `12345678`
 
 ```bash
 make crc
@@ -44,6 +44,35 @@ sudo cp -f tls.crt /etc/pki/ca-trust/source/anchors/crc-router-ca.pem
 sudo update-ca-trust
 ```
 
+#### Access OCP from external systems
+
+On the local system add the required entries to your local /etc/hosts. The previous used ansible playbook also outputs the information:
+
+```
+cat <<EOF >> /etc/hosts
+192.168.130.11 api.crc.testing canary-openshift-ingress-canary.apps-crc.testing console-openshift-console.apps-crc.testing default-route-openshift-image-registry.apps-crc.testing downloads-openshift-console.apps-crc.testing oauth-openshift.apps-crc.testing
+EOF
+```
+
+**Note**
+validate that the IP address matches the installed CRC VM.
+
+To access OCP console
+
+On the local system, enable SSH proxying:
+```
+# on Fedora
+sudo dnf install sshuttle
+
+# on RHEL
+sudo pip install sshuttle
+
+sshuttle -r <user>@<virthost> 192.168.130.0/24
+```
+
+Now you can access the OCP environment
+* console using the local web browser: <https://console-openshift-console.apps-crc.testing>
+* `oc` client: `oc login -u kubeadmin -p ${KUBEADMIN_PWD} https://api.crc.testing:6443`
 
 ### tool deployment
 All tools and specific version to develop operators for this Cloud Native OpenStack approch can be deployed via the download_tools make target. All components which don't get installed via rpm get installed to $HOME/bin or /usr/local/bin (go/gofmt).
