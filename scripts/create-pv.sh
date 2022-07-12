@@ -15,7 +15,7 @@
 # under the License.
 set -ex
 
-NODE_NAME=$(oc get node -o name)
+NODE_NAME=$(oc get node -o name -l node-role.kubernetes.io/worker | head -n 1)
 if [ -z "$NODE_NAME" ]; then
   echo "Unable to determine node name with 'oc' command."
   exit 1
