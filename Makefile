@@ -6,23 +6,30 @@ OUT                 ?= ${PWD}/out
 # operators gets cloned here
 OPERATOR_BASE_DIR   ?= ${OUT}/operator
 
+# default registry and org to pull service images from
+SERVICE_REGISTRY    ?= quay.io
+SERVICE_ORG         ?= tripleowallabycentos9
+
 # Keystone
 KEYSTONE_IMG        ?= quay.io/openstack-k8s-operators/keystone-operator-index:latest
 KEYSTONE_REPO       ?= https://github.com/openstack-k8s-operators/keystone-operator.git
 KEYSTONE_BRANCH     ?= master
 KEYSTONEAPI         ?= config/samples/keystone_v1beta1_keystoneapi.yaml
+KEYSTONEAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-keystone:current-tripleo
 
 # Mariadb
 MARIADB_IMG         ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
 MARIADB_REPO        ?= https://github.com/openstack-k8s-operators/mariadb-operator.git
 MARIADB_BRANCH      ?= master
 MARIADB             ?= config/samples/mariadb_v1beta1_mariadb.yaml
+MARIADB_DEPL_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-mariadb:current-tripleo
 
 # Placement
 PLACEMENT_IMG       ?= quay.io/openstack-k8s-operators/placement-operator-index:latest
 PLACEMENT_REPO      ?= https://github.com/openstack-k8s-operators/placement-operator.git
 PLACEMENT_BRANCH    ?= master
 PLACEMENTAPI        ?= config/samples/placement_v1beta1_placementapi.yaml
+PLACEMENTAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-placement-api:current-tripleo
 
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
@@ -121,6 +128,7 @@ keystone_cleanup: ## deletes the operator, but does not cleanup the service reso
 
 .PHONY: keystone_deploy_prep
 keystone_deploy_prep: export KIND=KeystoneAPI
+keystone_deploy_prep: export IMAGE=${KEYSTONEAPI_IMG}
 keystone_deploy_prep: keystone_deploy_cleanup ## prepares the CR to install the service based on the service sample file KEYSTONEAPI
 	$(eval $(call vars,$@,keystone))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -158,6 +166,7 @@ mariadb_cleanup: ## deletes the operator, but does not cleanup the service resou
 
 .PHONY: mariadb_deploy_prep
 mariadb_deploy_prep: export KIND=MariaDB
+mariadb_deploy_prep: export IMAGE="${MARIADB_DEPL_IMG}"
 mariadb_deploy_prep: mariadb_deploy_cleanup ## prepares the CRs files to install the service based on the service sample file MARIADB
 	$(eval $(call vars,$@,mariadb))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -196,6 +205,7 @@ placement_cleanup: ## deletes the operator, but does not cleanup the service res
 
 .PHONY: placement_deploy_prep
 placement_deploy_prep: export KIND=PlacementAPI
+placement_deploy_prep: export IMAGE=${PLACEMENTAPI_IMG}
 placement_deploy_prep: placement_deploy_cleanup ## prepares the CR to install the service based on the service sample file PLACEMENTAPI
 	$(eval $(call vars,$@,placement))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
