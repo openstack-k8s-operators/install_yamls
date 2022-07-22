@@ -1,0 +1,26 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: sample
+spec:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 1
+      memory: 50M
+    limits:
+      cpu: 1
+      memory: 50M
+  persistence:
+    storageClassName: local-storage
+    storage: 500M
+  override:
+    statefulSet:
+      spec:
+        template:
+          spec:
+            securityContext: {}
+            containers: []
+            initContainers:
+            - name: setup-container
+              securityContext: {}
