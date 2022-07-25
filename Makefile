@@ -31,6 +31,13 @@ PLACEMENT_BRANCH    ?= master
 PLACEMENTAPI        ?= config/samples/placement_v1beta1_placementapi.yaml
 PLACEMENTAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-placement-api:current-tripleo
 
+# Sir Glancealot
+GLANCE_IMG          ?= quay.io/openstack-k8s-operators/glance-operator-index:latest
+GLANCE_REPO         ?= https://github.com/openstack-k8s-operators/glance-operator.git
+GLANCE_BRANCH       ?= master
+GLANCEAPI           ?= config/samples/glance_v1beta1_glanceapi.yaml
+GLANCEAPI_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-glance-api:current-tripleo
+
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
 ${1}: export NAMESPACE=${NAMESPACE}
@@ -63,10 +70,10 @@ help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 .PHONY: cleanup
-cleanup: placement_cleanup keystone_cleanup mariadb_cleanup ## Delete all operators
+cleanup: glance_cleanup placement_cleanup keystone_cleanup mariadb_cleanup ## Delete all operators
 
 .PHONY: deploy_cleanup
-deploy_cleanup: placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup ## Delete all OpenStack service objects
+deploy_cleanup: glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup ## Delete all OpenStack service objects
 
 ##@ CRC
 crc_storage: ## initialize local storage PVs in CRC vm
@@ -224,3 +231,41 @@ placement_deploy_cleanup: ## cleans up the service instance, Does not affect the
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/placement-operator ${DEPLOY_DIR}
 
+##@ GLANCE
+.PHONY: glance_prep
+glance_prep: export IMAGE=${GLANCE_IMG}
+glance_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,glance))
+	bash scripts/gen-olm.sh
+
+.PHONY: glance
+glance: namespace glance_prep ## installs the operator, also runs the prep step. Set GLANCE_IMG for custom image.
+	$(eval $(call vars,$@,glance))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: glance_cleanup
+glance_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,glance))
+	bash scripts/operator-cleanup.sh
+	rm -Rf ${OPERATOR_DIR}
+
+.PHONY: glance_deploy_prep
+glance_deploy_prep: export KIND=GlanceAPI
+glance_deploy_prep: export IMAGE=${GLANCEAPI_IMG}
+glance_deploy_prep: glance_deploy_cleanup ## prepares the CR to install the service based on the service sample file GLANCEAPI
+	$(eval $(call vars,$@,glance))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone -b ${GLANCE_BRANCH} ${GLANCE_REPO} && popd
+	cp ${OPERATOR_BASE_DIR}/glance-operator/${GLANCEAPI} ${DEPLOY_DIR}
+	bash scripts/gen-service-kustomize.sh
+
+.PHONY: glance_deploy
+glance_deploy: input glance_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set GLANCE_REPO and GLANCE_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,glance))
+	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+
+.PHONY: glance_deploy_cleanup
+glance_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,glance))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	rm -Rf ${OPERATOR_BASE_DIR}/glance-operator ${DEPLOY_DIR}

@@ -55,6 +55,8 @@ secretGenerator:
   - KeystoneDatabasePassword=${PASSWORD}
   - PlacementPassword=${PASSWORD}
   - PlacementDatabasePassword=${PASSWORD}
+  - GlancePassword=${PASSWORD}
+  - GlanceDatabasePassword=${PASSWORD}
 generatorOptions:
   disableNameSuffixHash: true
   labels:
