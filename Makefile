@@ -43,7 +43,14 @@ NEUTRON_IMG        ?= quay.io/openstack-k8s-operators/neutron-operator-index:lat
 NEUTRON_REPO       ?= https://github.com/openstack-k8s-operators/neutron-operator.git
 NEUTRON_BRANCH     ?= master
 NEUTRONAPI         ?= config/samples/neutron_v1beta1_neutronapi.yaml
-NEUTRONAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-neutron-server:current-tripleo
+NEUTRONAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-neutron-server:current-tripleo
+
+# Cinder
+CINDER_IMG       ?= quay.io/openstack-k8s-operators/cinder-operator-index:latest
+CINDER_REPO      ?= https://github.com/openstack-k8s-operators/cinder-operator.git
+CINDER_BRANCH    ?= master
+CINDER           ?= config/samples/cinder_v1beta1_cinder.yaml
+# TODO: Image customizations for all Cinder services
 
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
@@ -77,10 +84,10 @@ help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 .PHONY: cleanup
-cleanup: neutron_cleanup glance_cleanup placement_cleanup keystone_cleanup mariadb_cleanup ## Delete all operators
+cleanup: neutron_cleanup cinder_cleanup glance_cleanup placement_cleanup keystone_cleanup mariadb_cleanup ## Delete all operators
 
 .PHONY: deploy_cleanup
-deploy_cleanup: neutron_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup ## Delete all OpenStack service objects
+deploy_cleanup: neutron_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup ## Delete all OpenStack service objects
 
 ##@ CRC
 crc_storage: ## initialize local storage PVs in CRC vm
@@ -315,3 +322,41 @@ neutron_deploy_cleanup: ## cleans up the service instance, Does not affect the o
 	$(eval $(call vars,$@,neutron))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/neutron-operator ${DEPLOY_DIR}
+
+##@ CINDER
+.PHONY: cinder_prep
+cinder_prep: export IMAGE=${CINDER_IMG}
+cinder_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,cinder))
+	bash scripts/gen-olm.sh
+
+.PHONY: cinder
+cinder: namespace cinder_prep ## installs the operator, also runs the prep step. Set CINDER_IMG for custom image.
+	$(eval $(call vars,$@,cinder))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: cinder_cleanup
+cinder_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,cinder))
+	bash scripts/operator-cleanup.sh
+	rm -Rf ${OPERATOR_DIR}
+
+.PHONY: cinder_deploy_prep
+cinder_deploy_prep: export KIND=Cinder
+cinder_deploy_prep: cinder_deploy_cleanup ## prepares the CR to install the service based on the service sample file CINDER
+	$(eval $(call vars,$@,cinder))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone -b ${CINDER_BRANCH} ${CINDER_REPO} && popd
+	cp ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER} ${DEPLOY_DIR}
+	bash scripts/gen-service-kustomize.sh
+
+.PHONY: cinder_deploy
+cinder_deploy: input cinder_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set CINDER_REPO and CINDER_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,cinder))
+	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+
+.PHONY: cinder_deploy_cleanup
+cinder_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,cinder))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	rm -Rf ${OPERATOR_BASE_DIR}/cinder-operator ${DEPLOY_DIR}
