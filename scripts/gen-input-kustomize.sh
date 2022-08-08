@@ -57,6 +57,8 @@ secretGenerator:
   - PlacementDatabasePassword=${PASSWORD}
   - GlancePassword=${PASSWORD}
   - GlanceDatabasePassword=${PASSWORD}
+  - CinderPassword=${PASSWORD}
+  - CinderDatabasePassword=${PASSWORD}
 generatorOptions:
   disableNameSuffixHash: true
   labels:
