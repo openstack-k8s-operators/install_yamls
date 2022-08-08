@@ -60,6 +60,8 @@ secretGenerator:
   - NeutronPassword=${PASSWORD}
   - NeutronDatabasePassword=${PASSWORD}
   - NovaPassword=${PASSWORD}
+  - CinderPassword=${PASSWORD}
+  - CinderDatabasePassword=${PASSWORD}
 generatorOptions:
   disableNameSuffixHash: true
   labels:
