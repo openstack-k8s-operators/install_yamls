@@ -38,6 +38,13 @@ GLANCE_BRANCH       ?= master
 GLANCEAPI           ?= config/samples/glance_v1beta1_glanceapi.yaml
 GLANCEAPI_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-glance-api:current-tripleo
 
+# Neutron
+NEUTRON_IMG        ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
+NEUTRON_REPO       ?= https://github.com/openstack-k8s-operators/neutron-operator.git
+NEUTRON_BRANCH     ?= master
+NEUTRONAPI         ?= config/samples/neutron_v1beta1_neutronapi.yaml
+NEUTRONAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-neutron-server:current-tripleo
+
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
 ${1}: export NAMESPACE=${NAMESPACE}
@@ -50,7 +57,7 @@ ${1}: export DEPLOY_DIR=${OUT}/${NAMESPACE}/${2}/cr
 endef
 
 .PHONY: all
-all: namespace keystone mariadb placement
+all: namespace keystone mariadb placement neutron
 
 ##@ General
 
@@ -70,10 +77,10 @@ help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 .PHONY: cleanup
-cleanup: glance_cleanup placement_cleanup keystone_cleanup mariadb_cleanup ## Delete all operators
+cleanup: neutron_cleanup glance_cleanup placement_cleanup keystone_cleanup mariadb_cleanup ## Delete all operators
 
 .PHONY: deploy_cleanup
-deploy_cleanup: glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup ## Delete all OpenStack service objects
+deploy_cleanup: neutron_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup ## Delete all OpenStack service objects
 
 ##@ CRC
 crc_storage: ## initialize local storage PVs in CRC vm
@@ -269,3 +276,42 @@ glance_deploy_cleanup: ## cleans up the service instance, Does not affect the op
 	$(eval $(call vars,$@,glance))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/glance-operator ${DEPLOY_DIR}
+
+##@ NEUTRON
+.PHONY: neutron_prep
+neutron_prep: export IMAGE=${NEUTRON_IMG}
+neutron_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,neutron))
+	bash scripts/gen-olm.sh
+
+.PHONY: neutron
+neutron: namespace neutron_prep ## installs the operator, also runs the prep step. Set NEUTRON_IMG for custom image.
+	$(eval $(call vars,$@,neutron))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: neutron_cleanup
+neutron_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,neutron))
+	bash scripts/operator-cleanup.sh
+	rm -Rf ${OPERATOR_DIR}
+
+.PHONY: neutron_deploy_prep
+neutron_deploy_prep: export KIND=NeutronAPI
+neutron_deploy_prep: export IMAGE=${NEUTRONAPI_IMG}
+neutron_deploy_prep: neutron_deploy_cleanup ## prepares the CR to install the service based on the service sample file NEUTRONAPI
+	$(eval $(call vars,$@,neutron))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone -b ${NEUTRON_BRANCH} ${NEUTRON_REPO} && popd
+	cp ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI} ${DEPLOY_DIR}
+	bash scripts/gen-service-kustomize.sh
+
+.PHONY: neutron_deploy
+neutron_deploy: input neutron_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set NEUTRON_REPO and NEUTRON_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,neutron))
+	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+
+.PHONY: neutron_deploy_cleanup
+neutron_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,neutron))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	rm -Rf ${OPERATOR_BASE_DIR}/neutron-operator ${DEPLOY_DIR}
