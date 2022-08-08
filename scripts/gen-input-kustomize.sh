@@ -57,6 +57,9 @@ secretGenerator:
   - PlacementDatabasePassword=${PASSWORD}
   - GlancePassword=${PASSWORD}
   - GlanceDatabasePassword=${PASSWORD}
+  - NeutronPassword=${PASSWORD}
+  - NeutronDatabasePassword=${PASSWORD}
+  - NovaPassword=${PASSWORD}
 generatorOptions:
   disableNameSuffixHash: true
   labels:
