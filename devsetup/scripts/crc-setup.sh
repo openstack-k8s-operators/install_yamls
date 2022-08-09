@@ -9,6 +9,8 @@ fi
 CRC_URL=$1
 KUBEADMIN_PWD=$2
 PULL_SECRET_FILE=$3
+CPUS=4
+MEMORY=9216
 
 if [ -z "${CRC_URL}" ]; then
   echo "Please set CRC_URL as ARG1"; exit 1
@@ -39,6 +41,8 @@ ${CRC_BIN} config set pull-secret-file ${PULL_SECRET_FILE}
 # https://github.com/code-ready/crc/issues/2674
 crc config set skip-check-daemon-systemd-unit true
 crc config set skip-check-daemon-systemd-sockets true
+crc config set cpus ${CPUS}
+crc config set memory ${MEMORY}
 ${CRC_BIN} setup
 
 ${CRC_BIN} start
