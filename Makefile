@@ -10,6 +10,12 @@ OPERATOR_BASE_DIR   ?= ${OUT}/operator
 SERVICE_REGISTRY    ?= quay.io
 SERVICE_ORG         ?= tripleowallabycentos9
 
+# OpenStack Operator
+OPENSTACK_IMG        ?= quay.io/openstack-k8s-operators/openstack-operator-index:latest
+OPENSTACK_REPO       ?= https://github.com/openstack-k8s-operators/openstack-operator.git
+OPENSTACK_BRANCH     ?= master
+OPENSTACK_CTLPLANE   ?= config/samples/core_v1beta1_openstackcontrolplane.yaml
+
 # Keystone
 KEYSTONE_IMG        ?= quay.io/openstack-k8s-operators/keystone-operator-index:latest
 KEYSTONE_REPO       ?= https://github.com/openstack-k8s-operators/keystone-operator.git
@@ -128,6 +134,49 @@ input: ## creates required secret/CM, used by the services as input
 input_cleanup: ## deletes the secret/CM, used by the services as input
 	oc kustomize ${OUT}/${NAMESPACE}/input | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OUT}/${NAMESPACE}/input
+
+##@ OPENSTACK
+.PHONY: openstack_prep
+openstack_prep: export IMAGE=${OPENSTACK_IMG}
+openstack_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,openstack))
+	bash scripts/gen-olm.sh
+
+.PHONY: openstack
+openstack: namespace openstack_prep ## installs the operator, also runs the prep step. Set OPENSTACK_IMG for custom image.
+	$(eval $(call vars,$@,openstack))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: openstack_cleanup
+openstack_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,openstack))
+	bash scripts/operator-cleanup.sh
+	rm -Rf ${OPERATOR_DIR}
+	# FIXME: work around MariaDB finalizer issues when DB is deleted before
+	# mariadbdatabases have been cleaned
+	oc get mariadbdatabases -o json | jq .items[].metadata.name -r | xargs oc patch mariadbdatabase -p '{"metadata":{"finalizers": []}}' --type merge
+
+
+.PHONY: openstack_deploy_prep
+openstack_deploy_prep: export KIND=OpenStackControlplane
+openstack_deploy_prep: export IMAGE=unused
+openstack_deploy_prep: openstack_deploy_cleanup ## prepares the CR to install the service based on the service sample file OPENSTACK
+	$(eval $(call vars,$@,openstack))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone -b ${OPENSTACK_BRANCH} ${OPENSTACK_REPO} && popd
+	cp ${OPERATOR_BASE_DIR}/openstack-operator/${OPENSTACK_CTLPLANE} ${DEPLOY_DIR}
+	bash scripts/gen-service-kustomize.sh
+
+.PHONY: openstack_deploy
+openstack_deploy: input openstack_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,openstack))
+	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+
+.PHONY: openstack_deploy_cleanup
+openstack_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,openstack))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	rm -Rf ${OPERATOR_BASE_DIR}/openstack-operator ${DEPLOY_DIR}
 
 ##@ KEYSTONE
 .PHONY: keystone_prep
