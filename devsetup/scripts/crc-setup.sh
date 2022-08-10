@@ -9,8 +9,8 @@ fi
 CRC_URL=$1
 KUBEADMIN_PWD=$2
 PULL_SECRET_FILE=$3
-CPUS=4
-MEMORY=9216
+CPUS=${CPUS:-4}
+MEMORY=${MEMORY:-9216}
 
 if [ -z "${CRC_URL}" ]; then
   echo "Please set CRC_URL as ARG1"; exit 1
