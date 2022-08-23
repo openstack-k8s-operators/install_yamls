@@ -12,7 +12,7 @@ metadata:
 spec:
   storageClassName: local-storage
   capacity:
-    storage: 1G
+    storage: 10Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
@@ -36,7 +36,7 @@ metadata:
 spec:
   storageClassName: local-storage
   capacity:
-    storage: 1G
+    storage: 10Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
@@ -60,7 +60,7 @@ metadata:
 spec:
   storageClassName: local-storage
   capacity:
-    storage: 1G
+    storage: 10Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
@@ -84,7 +84,7 @@ metadata:
 spec:
   storageClassName: local-storage
   capacity:
-    storage: 1G
+    storage: 10Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
@@ -108,7 +108,7 @@ metadata:
 spec:
   storageClassName: local-storage
   capacity:
-    storage: 1G
+    storage: 10Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
@@ -132,7 +132,7 @@ metadata:
 spec:
   storageClassName: local-storage
   capacity:
-    storage: 1G
+    storage: 10Gi
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Delete
