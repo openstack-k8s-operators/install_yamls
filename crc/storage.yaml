@@ -15,6 +15,8 @@ spec:
     storage: 10Gi
   accessModes:
     - ReadWriteOnce
+    - ReadWriteMany
+    - ReadOnlyMany
   persistentVolumeReclaimPolicy: Delete
   local:
     path: "/mnt/openstack/pv001"
@@ -39,6 +41,8 @@ spec:
     storage: 10Gi
   accessModes:
     - ReadWriteOnce
+    - ReadWriteMany
+    - ReadOnlyMany
   persistentVolumeReclaimPolicy: Delete
   local:
     path: "/mnt/openstack/pv002"
@@ -63,6 +67,8 @@ spec:
     storage: 10Gi
   accessModes:
     - ReadWriteOnce
+    - ReadWriteMany
+    - ReadOnlyMany
   persistentVolumeReclaimPolicy: Delete
   local:
     path: "/mnt/openstack/pv003"
@@ -87,6 +93,8 @@ spec:
     storage: 10Gi
   accessModes:
     - ReadWriteOnce
+    - ReadWriteMany
+    - ReadOnlyMany
   persistentVolumeReclaimPolicy: Delete
   local:
     path: "/mnt/openstack/pv004"
@@ -111,6 +119,8 @@ spec:
     storage: 10Gi
   accessModes:
     - ReadWriteOnce
+    - ReadWriteMany
+    - ReadOnlyMany
   persistentVolumeReclaimPolicy: Delete
   local:
     path: "/mnt/openstack/pv005"
@@ -135,6 +145,8 @@ spec:
     storage: 10Gi
   accessModes:
     - ReadWriteOnce
+    - ReadWriteMany
+    - ReadOnlyMany
   persistentVolumeReclaimPolicy: Delete
   local:
     path: "/mnt/openstack/pv006"
