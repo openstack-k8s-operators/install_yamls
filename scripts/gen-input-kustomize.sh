@@ -62,6 +62,8 @@ secretGenerator:
   - NovaPassword=${PASSWORD}
   - CinderPassword=${PASSWORD}
   - CinderDatabasePassword=${PASSWORD}
+  - IronicPassword=${PASSWORD}
+  - IronicDatabasePassword=${PASSWORD}
 generatorOptions:
   disableNameSuffixHash: true
   labels:
