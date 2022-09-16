@@ -21,6 +21,7 @@ KEYSTONE_IMG        ?= quay.io/openstack-k8s-operators/keystone-operator-index:l
 KEYSTONE_REPO       ?= https://github.com/openstack-k8s-operators/keystone-operator.git
 KEYSTONE_BRANCH     ?= master
 KEYSTONEAPI         ?= config/samples/keystone_v1beta1_keystoneapi.yaml
+KEYSTONEAPI_CR      ?= ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
 KEYSTONEAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-keystone:current-tripleo
 
 # Mariadb
@@ -28,6 +29,7 @@ MARIADB_IMG         ?= quay.io/openstack-k8s-operators/mariadb-operator-index:la
 MARIADB_REPO        ?= https://github.com/openstack-k8s-operators/mariadb-operator.git
 MARIADB_BRANCH      ?= master
 MARIADB             ?= config/samples/mariadb_v1beta1_mariadb.yaml
+MARIADB_CR          ?= ${OPERATOR_BASE_DIR}/mariadb-operator/${MARIADB}
 MARIADB_DEPL_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-mariadb:current-tripleo
 
 # Placement
@@ -35,6 +37,7 @@ PLACEMENT_IMG       ?= quay.io/openstack-k8s-operators/placement-operator-index:
 PLACEMENT_REPO      ?= https://github.com/openstack-k8s-operators/placement-operator.git
 PLACEMENT_BRANCH    ?= master
 PLACEMENTAPI        ?= config/samples/placement_v1beta1_placementapi.yaml
+PLACEMENTAPI_CR     ?= ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI}
 PLACEMENTAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-placement-api:current-tripleo
 
 # Sir Glancealot
@@ -42,6 +45,7 @@ GLANCE_IMG          ?= quay.io/openstack-k8s-operators/glance-operator-index:lat
 GLANCE_REPO         ?= https://github.com/openstack-k8s-operators/glance-operator.git
 GLANCE_BRANCH       ?= master
 GLANCEAPI           ?= config/samples/glance_v1beta1_glanceapi.yaml
+GLANCEAPI_CR        ?= ${OPERATOR_BASE_DIR}/glance-operator/${GLANCEAPI}
 GLANCEAPI_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-glance-api:current-tripleo
 
 # Neutron
@@ -49,6 +53,7 @@ NEUTRON_IMG        ?= quay.io/openstack-k8s-operators/neutron-operator-index:lat
 NEUTRON_REPO       ?= https://github.com/openstack-k8s-operators/neutron-operator.git
 NEUTRON_BRANCH     ?= master
 NEUTRONAPI         ?= config/samples/neutron_v1beta1_neutronapi.yaml
+NEUTRONAPI_CR      ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
 NEUTRONAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-neutron-server:current-tripleo
 
 # Cinder
@@ -56,6 +61,7 @@ CINDER_IMG       ?= quay.io/openstack-k8s-operators/cinder-operator-index:latest
 CINDER_REPO      ?= https://github.com/openstack-k8s-operators/cinder-operator.git
 CINDER_BRANCH    ?= master
 CINDER           ?= config/samples/cinder_v1beta1_cinder.yaml
+CINDER_CR        ?= ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
 # TODO: Image customizations for all Cinder services
 
 # Rabbitmq
@@ -63,12 +69,14 @@ RABBITMQ_IMG         ?= quay.io/openstack-k8s-operators/rabbitmq-cluster-operato
 RABBITMQ_REPO      ?= https://github.com/openstack-k8s-operators/rabbitmq-cluster-operator.git
 RABBITMQ_BRANCH    ?= patches
 RABBITMQ           ?= docs/examples/default-security-context/rabbitmq.yaml
+RABBITMQ_CR        ?= ${OPERATOR_BASE_DIR}/rabbitmq-operator/${RABBITMQ}
 
 # Ironic
 IRONIC_IMG       ?= quay.io/openstack-k8s-operators/ironic-operator-index:latest
 IRONIC_REPO      ?= https://github.com/openstack-k8s-operators/ironic-operator.git
 IRONIC_BRANCH    ?= master
 IRONIC           ?= config/samples/ironic_v1beta1_ironic.yaml
+IRONIC_CR        ?= ${OPERATOR_BASE_DIR}/ironic-operator/${IRONIC}
 
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
@@ -215,7 +223,7 @@ keystone_deploy_prep: keystone_deploy_cleanup ## prepares the CR to install the 
 	$(eval $(call vars,$@,keystone))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${KEYSTONE_BRANCH} ${KEYSTONE_REPO} && popd
-	cp ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI} ${DEPLOY_DIR}
+	cp ${KEYSTONEAPI_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: keystone_deploy
@@ -253,7 +261,7 @@ mariadb_deploy_prep: mariadb_deploy_cleanup ## prepares the CRs files to install
 	$(eval $(call vars,$@,mariadb))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${MARIADB_BRANCH} ${MARIADB_REPO} && popd
-	cp ${OPERATOR_BASE_DIR}/mariadb-operator/${MARIADB} ${DEPLOY_DIR}
+	cp ${MARIADB_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: mariadb_deploy
@@ -292,7 +300,7 @@ placement_deploy_prep: placement_deploy_cleanup ## prepares the CR to install th
 	$(eval $(call vars,$@,placement))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${PLACEMENT_BRANCH} ${PLACEMENT_REPO} && popd
-	cp ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI} ${DEPLOY_DIR}
+	cp ${PLACEMENTAPI_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: placement_deploy
@@ -331,7 +339,7 @@ glance_deploy_prep: glance_deploy_cleanup ## prepares the CR to install the serv
 	$(eval $(call vars,$@,glance))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${GLANCE_BRANCH} ${GLANCE_REPO} && popd
-	cp ${OPERATOR_BASE_DIR}/glance-operator/${GLANCEAPI} ${DEPLOY_DIR}
+	cp ${GLANCEAPI_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: glance_deploy
@@ -370,7 +378,7 @@ neutron_deploy_prep: neutron_deploy_cleanup ## prepares the CR to install the se
 	$(eval $(call vars,$@,neutron))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${NEUTRON_BRANCH} ${NEUTRON_REPO} && popd
-	cp ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI} ${DEPLOY_DIR}
+	cp ${NEUTRONAPI_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: neutron_deploy
@@ -408,7 +416,7 @@ cinder_deploy_prep: cinder_deploy_cleanup ## prepares the CR to install the serv
 	$(eval $(call vars,$@,cinder))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${CINDER_BRANCH} ${CINDER_REPO} && popd
-	cp ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER} ${DEPLOY_DIR}
+	cp ${CINDER_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: cinder_deploy
@@ -446,7 +454,7 @@ rabbitmq_deploy_prep: rabbitmq_deploy_cleanup ## prepares the CR to install the 
 	$(eval $(call vars,$@,rabbitmq))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${RABBITMQ_BRANCH} ${RABBITMQ_REPO} rabbitmq-operator && popd
-	cp ${OPERATOR_BASE_DIR}/rabbitmq-operator/${RABBITMQ} ${DEPLOY_DIR}
+	cp ${RABBITMQ_CR} ${DEPLOY_DIR}
 	#bash scripts/gen-service-kustomize.sh
 
 .PHONY: rabbitmq_deploy
@@ -486,7 +494,7 @@ ironic_deploy_prep: ironic_deploy_cleanup ## prepares the CR to install the serv
 	$(eval $(call vars,$@,ironic))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${IRONIC_BRANCH} ${IRONIC_REPO} && popd
-	cp ${OPERATOR_BASE_DIR}/ironic-operator/${IRONIC} ${DEPLOY_DIR}
+	cp ${IRONIC_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: ironic_deploy
