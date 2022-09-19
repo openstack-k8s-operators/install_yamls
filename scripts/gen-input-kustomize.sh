@@ -59,13 +59,19 @@ secretGenerator:
   - GlanceDatabasePassword=${PASSWORD}
   - NeutronPassword=${PASSWORD}
   - NeutronDatabasePassword=${PASSWORD}
-  - NovaPassword=${PASSWORD}
   - CinderPassword=${PASSWORD}
   - CinderDatabasePassword=${PASSWORD}
   - IronicPassword=${PASSWORD}
   - IronicDatabasePassword=${PASSWORD}
   - OctaviaPassword=${PASSWORD}
   - OctaviaDatabasePassword=${PASSWORD}
+  - NovaPassword=${PASSWORD}
+  - NovaAPIDatabasePassword=${PASSWORD}
+  - NovaAPIMessageBusPassword=${PASSWORD}
+  - NovaCell0DatabasePassword=${PASSWORD}
+  - NovaCell0MessageBusPassword=${PASSWORD}
+  - NovaCell1DatabasePassword=${PASSWORD}
+  - NovaCell1MessageBusPassword=${PASSWORD}
 generatorOptions:
   disableNameSuffixHash: true
   labels:
