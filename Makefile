@@ -148,7 +148,7 @@ namespace_cleanup: ## deletes the namespace specified via NAMESPACE env var, als
 input: ## creates required secret/CM, used by the services as input
 	$(eval $(call vars,$@))
 	bash scripts/gen-input-kustomize.sh ${NAMESPACE} ${SECRET} ${PASSWORD}
-	oc kustomize ${OUT}/${NAMESPACE}/input | oc apply -f -
+	oc get secret/${SECRET} || oc kustomize ${OUT}/${NAMESPACE}/input | oc apply -f -
 
 .PHONY: input_cleanup
 input_cleanup: ## deletes the secret/CM, used by the services as input
