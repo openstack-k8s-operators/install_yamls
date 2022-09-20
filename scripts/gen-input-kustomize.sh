@@ -64,6 +64,8 @@ secretGenerator:
   - CinderDatabasePassword=${PASSWORD}
   - IronicPassword=${PASSWORD}
   - IronicDatabasePassword=${PASSWORD}
+  - OctaviaPassword=${PASSWORD}
+  - OctaviaDatabasePassword=${PASSWORD}
 generatorOptions:
   disableNameSuffixHash: true
   labels:
