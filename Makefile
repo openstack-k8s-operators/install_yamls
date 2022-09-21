@@ -1,4 +1,5 @@
 # general
+SHELL := /bin/bash
 NAMESPACE           ?= openstack
 PASSWORD            ?= 12345678
 SECRET              ?= osp-secret
