@@ -45,8 +45,8 @@ PLACEMENTAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-placement-ap
 GLANCE_IMG          ?= quay.io/openstack-k8s-operators/glance-operator-index:latest
 GLANCE_REPO         ?= https://github.com/openstack-k8s-operators/glance-operator.git
 GLANCE_BRANCH       ?= master
-GLANCEAPI           ?= config/samples/glance_v1beta1_glanceapi.yaml
-GLANCEAPI_CR        ?= ${OPERATOR_BASE_DIR}/glance-operator/${GLANCEAPI}
+GLANCE              ?= config/samples/glance_v1beta1_glance.yaml
+GLANCE_CR           ?= ${OPERATOR_BASE_DIR}/glance-operator/${GLANCE}
 GLANCEAPI_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-glance-api:current-tripleo
 
 # Neutron
@@ -334,13 +334,13 @@ glance_cleanup: ## deletes the operator, but does not cleanup the service resour
 	rm -Rf ${OPERATOR_DIR}
 
 .PHONY: glance_deploy_prep
-glance_deploy_prep: export KIND=GlanceAPI
+glance_deploy_prep: export KIND=Glance
 glance_deploy_prep: export IMAGE=${GLANCEAPI_IMG}
-glance_deploy_prep: glance_deploy_cleanup ## prepares the CR to install the service based on the service sample file GLANCEAPI
+glance_deploy_prep: glance_deploy_cleanup ## prepares the CR to install the service based on the service sample file GLANCE
 	$(eval $(call vars,$@,glance))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${GLANCE_BRANCH} ${GLANCE_REPO} && popd
-	cp ${GLANCEAPI_CR} ${DEPLOY_DIR}
+	cp ${GLANCE_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: glance_deploy
