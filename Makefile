@@ -173,10 +173,6 @@ openstack_cleanup: ## deletes the operator, but does not cleanup the service res
 	$(eval $(call vars,$@,openstack))
 	bash scripts/operator-cleanup.sh
 	rm -Rf ${OPERATOR_DIR}
-	# FIXME: work around MariaDB finalizer issues when DB is deleted before
-	# mariadbdatabases have been cleaned
-	oc get mariadbdatabases -o json | jq .items[].metadata.name -r | xargs oc patch mariadbdatabase -p '{"metadata":{"finalizers": []}}' --type merge
-
 
 .PHONY: openstack_deploy_prep
 openstack_deploy_prep: export KIND=OpenStackControlplane
