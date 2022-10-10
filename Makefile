@@ -11,6 +11,9 @@ OPERATOR_BASE_DIR   ?= ${OUT}/operator
 SERVICE_REGISTRY    ?= quay.io
 SERVICE_ORG         ?= tripleowallabycentos9
 
+# storage (used by some operators)
+STORAGE_CLASS       ?= "local-storage"
+
 # OpenStack Operator
 OPENSTACK_IMG        ?= quay.io/openstack-k8s-operators/openstack-operator-index:latest
 OPENSTACK_REPO       ?= https://github.com/openstack-k8s-operators/openstack-operator.git
@@ -84,6 +87,7 @@ define vars
 ${1}: export NAMESPACE=${NAMESPACE}
 ${1}: export SECRET=${SECRET}
 ${1}: export PASSWORD=${PASSWORD}
+${1}: export STORAGE_CLASS=${STORAGE_CLASS}
 ${1}: export OUT=${OUT}
 ${1}: export OPERATOR_NAME=${2}
 ${1}: export OPERATOR_DIR=${OUT}/${NAMESPACE}/${2}/op
@@ -175,7 +179,7 @@ openstack_cleanup: ## deletes the operator, but does not cleanup the service res
 	rm -Rf ${OPERATOR_DIR}
 
 .PHONY: openstack_deploy_prep
-openstack_deploy_prep: export KIND=OpenStackControlplane
+openstack_deploy_prep: export KIND=OpenStackControlPlane
 openstack_deploy_prep: export IMAGE=unused
 openstack_deploy_prep: openstack_deploy_cleanup ## prepares the CR to install the service based on the service sample file OPENSTACK
 	$(eval $(call vars,$@,openstack))
