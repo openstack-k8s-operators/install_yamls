@@ -125,7 +125,7 @@ crc_storage: ## initialize local storage PVs in CRC vm
 crc_storage_cleanup: ## cleanup local storage PVs in CRC vm
 	oc get pv | grep local | cut -f 1 -d ' ' | xargs oc delete pv
 	oc delete sc local-storage
-	#FIXME need to cleanup the actual directories in the CRC VM too
+	bash scripts/delete-pv.sh
 
 ##@ NAMESPACE
 .PHONY: namespace
