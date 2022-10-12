@@ -237,6 +237,7 @@ keystone_deploy_cleanup: ## cleans up the service instance, Does not affect the 
 	$(eval $(call vars,$@,keystone))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/keystone-operator ${DEPLOY_DIR}
+	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database keystone;" || true
 
 ##@ MARIADB
 mariadb_prep: export IMAGE=${MARIADB_IMG}
@@ -314,6 +315,7 @@ placement_deploy_cleanup: ## cleans up the service instance, Does not affect the
 	$(eval $(call vars,$@,placement))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/placement-operator ${DEPLOY_DIR}
+	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database placement;" || true
 
 ##@ GLANCE
 .PHONY: glance_prep
@@ -353,6 +355,7 @@ glance_deploy_cleanup: ## cleans up the service instance, Does not affect the op
 	$(eval $(call vars,$@,glance))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/glance-operator ${DEPLOY_DIR}
+	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database glance;" || true
 
 ##@ NEUTRON
 .PHONY: neutron_prep
@@ -392,6 +395,7 @@ neutron_deploy_cleanup: ## cleans up the service instance, Does not affect the o
 	$(eval $(call vars,$@,neutron))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/neutron-operator ${DEPLOY_DIR}
+	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database neutron;" || true
 
 ##@ CINDER
 .PHONY: cinder_prep
@@ -430,6 +434,7 @@ cinder_deploy_cleanup: ## cleans up the service instance, Does not affect the op
 	$(eval $(call vars,$@,cinder))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/cinder-operator ${DEPLOY_DIR}
+	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database cinder;" || true
 
 ##@ RABBITMQ
 .PHONY: rabbitmq_prep
@@ -508,3 +513,4 @@ ironic_deploy_cleanup: ## cleans up the service instance, Does not affect the op
 	$(eval $(call vars,$@,ironic))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/ironic-operator ${DEPLOY_DIR}
+	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database ironic;" || true
