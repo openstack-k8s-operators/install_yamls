@@ -417,6 +417,7 @@ cinder_cleanup: ## deletes the operator, but does not cleanup the service resour
 
 .PHONY: cinder_deploy_prep
 cinder_deploy_prep: export KIND=Cinder
+cinder_deploy_prep: export IMAGE=unused
 cinder_deploy_prep: cinder_deploy_cleanup ## prepares the CR to install the service based on the service sample file CINDER
 	$(eval $(call vars,$@,cinder))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
