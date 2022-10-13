@@ -19,6 +19,7 @@ OPENSTACK_IMG        ?= quay.io/openstack-k8s-operators/openstack-operator-index
 OPENSTACK_REPO       ?= https://github.com/openstack-k8s-operators/openstack-operator.git
 OPENSTACK_BRANCH     ?= master
 OPENSTACK_CTLPLANE   ?= config/samples/core_v1beta1_openstackcontrolplane.yaml
+OPENSTACK_CR         ?= ${OPERATOR_BASE_DIR}/openstack-operator/${OPENSTACK_CTLPLANE}
 
 # Keystone
 KEYSTONE_IMG        ?= quay.io/openstack-k8s-operators/keystone-operator-index:latest
@@ -185,7 +186,7 @@ openstack_deploy_prep: openstack_deploy_cleanup ## prepares the CR to install th
 	$(eval $(call vars,$@,openstack))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${OPENSTACK_BRANCH} ${OPENSTACK_REPO} && popd
-	cp ${OPERATOR_BASE_DIR}/openstack-operator/${OPENSTACK_CTLPLANE} ${DEPLOY_DIR}
+	cp ${OPENSTACK_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: openstack_deploy
