@@ -1,4 +1,5 @@
 # general
+SHELL := /bin/bash
 NAMESPACE           ?= openstack
 PASSWORD            ?= 12345678
 SECRET              ?= osp-secret
@@ -9,6 +10,9 @@ OPERATOR_BASE_DIR   ?= ${OUT}/operator
 # default registry and org to pull service images from
 SERVICE_REGISTRY    ?= quay.io
 SERVICE_ORG         ?= tripleowallabycentos9
+
+# storage (used by some operators)
+STORAGE_CLASS       ?= "local-storage"
 
 # OpenStack Operator
 OPENSTACK_IMG        ?= quay.io/openstack-k8s-operators/openstack-operator-index:latest
@@ -44,8 +48,8 @@ PLACEMENTAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-placement-ap
 GLANCE_IMG          ?= quay.io/openstack-k8s-operators/glance-operator-index:latest
 GLANCE_REPO         ?= https://github.com/openstack-k8s-operators/glance-operator.git
 GLANCE_BRANCH       ?= master
-GLANCEAPI           ?= config/samples/glance_v1beta1_glanceapi.yaml
-GLANCEAPI_CR        ?= ${OPERATOR_BASE_DIR}/glance-operator/${GLANCEAPI}
+GLANCE              ?= config/samples/glance_v1beta1_glance.yaml
+GLANCE_CR           ?= ${OPERATOR_BASE_DIR}/glance-operator/${GLANCE}
 GLANCEAPI_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-glance-api:current-tripleo
 
 # Neutron
@@ -92,6 +96,7 @@ define vars
 ${1}: export NAMESPACE=${NAMESPACE}
 ${1}: export SECRET=${SECRET}
 ${1}: export PASSWORD=${PASSWORD}
+${1}: export STORAGE_CLASS=${STORAGE_CLASS}
 ${1}: export OUT=${OUT}
 ${1}: export OPERATOR_NAME=${2}
 ${1}: export OPERATOR_DIR=${OUT}/${NAMESPACE}/${2}/op
@@ -133,7 +138,7 @@ crc_storage: ## initialize local storage PVs in CRC vm
 crc_storage_cleanup: ## cleanup local storage PVs in CRC vm
 	oc get pv | grep local | cut -f 1 -d ' ' | xargs oc delete pv
 	oc delete sc local-storage
-	#FIXME need to cleanup the actual directories in the CRC VM too
+	bash scripts/delete-pv.sh
 
 ##@ NAMESPACE
 .PHONY: namespace
@@ -157,7 +162,7 @@ namespace_cleanup: ## deletes the namespace specified via NAMESPACE env var, als
 input: ## creates required secret/CM, used by the services as input
 	$(eval $(call vars,$@))
 	bash scripts/gen-input-kustomize.sh ${NAMESPACE} ${SECRET} ${PASSWORD}
-	oc kustomize ${OUT}/${NAMESPACE}/input | oc apply -f -
+	oc get secret/${SECRET} || oc kustomize ${OUT}/${NAMESPACE}/input | oc apply -f -
 
 .PHONY: input_cleanup
 input_cleanup: ## deletes the secret/CM, used by the services as input
@@ -181,13 +186,9 @@ openstack_cleanup: ## deletes the operator, but does not cleanup the service res
 	$(eval $(call vars,$@,openstack))
 	bash scripts/operator-cleanup.sh
 	rm -Rf ${OPERATOR_DIR}
-	# FIXME: work around MariaDB finalizer issues when DB is deleted before
-	# mariadbdatabases have been cleaned
-	oc get mariadbdatabases -o json | jq .items[].metadata.name -r | xargs oc patch mariadbdatabase -p '{"metadata":{"finalizers": []}}' --type merge
-
 
 .PHONY: openstack_deploy_prep
-openstack_deploy_prep: export KIND=OpenStackControlplane
+openstack_deploy_prep: export KIND=OpenStackControlPlane
 openstack_deploy_prep: export IMAGE=unused
 openstack_deploy_prep: openstack_deploy_cleanup ## prepares the CR to install the service based on the service sample file OPENSTACK
 	$(eval $(call vars,$@,openstack))
@@ -245,6 +246,7 @@ keystone_deploy_cleanup: ## cleans up the service instance, Does not affect the 
 	$(eval $(call vars,$@,keystone))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/keystone-operator ${DEPLOY_DIR}
+	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database keystone;" || true
 
 ##@ MARIADB
 mariadb_prep: export IMAGE=${MARIADB_IMG}
@@ -322,6 +324,7 @@ placement_deploy_cleanup: ## cleans up the service instance, Does not affect the
 	$(eval $(call vars,$@,placement))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/placement-operator ${DEPLOY_DIR}
+	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database placement;" || true
 
 ##@ GLANCE
 .PHONY: glance_prep
@@ -342,13 +345,13 @@ glance_cleanup: ## deletes the operator, but does not cleanup the service resour
 	rm -Rf ${OPERATOR_DIR}
 
 .PHONY: glance_deploy_prep
-glance_deploy_prep: export KIND=GlanceAPI
+glance_deploy_prep: export KIND=Glance
 glance_deploy_prep: export IMAGE=${GLANCEAPI_IMG}
-glance_deploy_prep: glance_deploy_cleanup ## prepares the CR to install the service based on the service sample file GLANCEAPI
+glance_deploy_prep: glance_deploy_cleanup ## prepares the CR to install the service based on the service sample file GLANCE
 	$(eval $(call vars,$@,glance))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${GLANCE_BRANCH} ${GLANCE_REPO} && popd
-	cp ${GLANCEAPI_CR} ${DEPLOY_DIR}
+	cp ${GLANCE_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: glance_deploy
@@ -361,6 +364,7 @@ glance_deploy_cleanup: ## cleans up the service instance, Does not affect the op
 	$(eval $(call vars,$@,glance))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/glance-operator ${DEPLOY_DIR}
+	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database glance;" || true
 
 ##@ NEUTRON
 .PHONY: neutron_prep
@@ -400,6 +404,7 @@ neutron_deploy_cleanup: ## cleans up the service instance, Does not affect the o
 	$(eval $(call vars,$@,neutron))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/neutron-operator ${DEPLOY_DIR}
+	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database neutron;" || true
 
 ##@ CINDER
 .PHONY: cinder_prep
@@ -421,6 +426,7 @@ cinder_cleanup: ## deletes the operator, but does not cleanup the service resour
 
 .PHONY: cinder_deploy_prep
 cinder_deploy_prep: export KIND=Cinder
+cinder_deploy_prep: export IMAGE=unused
 cinder_deploy_prep: cinder_deploy_cleanup ## prepares the CR to install the service based on the service sample file CINDER
 	$(eval $(call vars,$@,cinder))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -438,6 +444,7 @@ cinder_deploy_cleanup: ## cleans up the service instance, Does not affect the op
 	$(eval $(call vars,$@,cinder))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/cinder-operator ${DEPLOY_DIR}
+	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database cinder;" || true
 
 ##@ RABBITMQ
 .PHONY: rabbitmq_prep
@@ -516,6 +523,7 @@ ironic_deploy_cleanup: ## cleans up the service instance, Does not affect the op
 	$(eval $(call vars,$@,ironic))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/ironic-operator ${DEPLOY_DIR}
+  oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database ironic;" || true
 
 ##@ OCTAVIA
 .PHONY: octavia_prep
@@ -555,3 +563,4 @@ octavia_deploy_cleanup: ## cleans up the service instance, Does not affect the o
 	$(eval $(call vars,$@,octavia))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/octavia-operator ${DEPLOY_DIR}
+  oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database octavia;" || true

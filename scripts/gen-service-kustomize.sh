@@ -60,6 +60,9 @@ patches:
     - op: replace
       path: /spec/containerImage
       value: ${IMAGE}
+    - op: replace
+      path: /spec/storageClass
+      value: ${STORAGE_CLASS}
   target:
     kind: ${KIND}
 EOF
