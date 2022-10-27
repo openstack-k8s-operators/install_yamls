@@ -615,5 +615,4 @@ nova_deploy_cleanup: ## cleans up the service instance, Does not affect the oper
 	$(eval $(call vars,$@,nova))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/nova-operator ${DEPLOY_DIR}
-	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database nova_api; drop database nova_cell0;" || true
-
+	oc rsh mariadb-openstack mysql -u root --password=${PASSWORD} -ss -e "show databases like 'nova_%';" | xargs -I '{}' oc rsh mariadb-openstack mysql -u root --password=${PASSWORD} -ss -e "drop database {};"
