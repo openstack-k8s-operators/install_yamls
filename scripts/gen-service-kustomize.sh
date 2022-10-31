@@ -53,19 +53,23 @@ kind: Kustomization
 resources:
 namespace: ${NAMESPACE}
 patches:
-- patch: |-
+- target:
+    kind: ${KIND}
+  patch: |-
     - op: replace
       path: /spec/secret
       value: ${SECRET}
     - op: replace
-      path: /spec/containerImage
-      value: ${IMAGE}
-    - op: replace
       path: /spec/storageClass
       value: ${STORAGE_CLASS}
-  target:
-    kind: ${KIND}
 EOF
+if [ "$IMAGE" != "unused" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/containerImage
+      value: ${IMAGE}
+EOF
+fi
 
 kustomization_add_resources
 
