@@ -18,6 +18,7 @@ set -ex
 if [ ! -d out/crc ]; then
   mkdir -p out/crc
 fi
+PV_NUM=${PV_NUM:-12}
 
 NODE_NAME=$(oc get node -o name -l node-role.kubernetes.io/worker | head -n 1 | sed -e 's|node/||')
 if [ -z "$NODE_NAME" ]; then
@@ -25,14 +26,42 @@ if [ -z "$NODE_NAME" ]; then
   exit 1
 fi
 
-cat > out/crc/kustomization.yaml <<EOF_CAT
-resources:
-- ../../crc
-patches:
-- patch: |-
-    - op: replace
-      path: /spec/nodeAffinity/required/nodeSelectorTerms/0/matchExpressions/0/values/0
-      value: $NODE_NAME
-  target:
-    kind: PersistentVolume
+cat > out/crc/storage.yaml <<EOF_CAT
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: local-storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
 EOF_CAT
+
+for (( i=1; i<=$PV_NUM; i++ )); do
+cat >> out/crc/storage.yaml <<EOF_CAT
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: local-storage$i
+spec:
+  storageClassName: local-storage
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+    - ReadWriteMany
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Delete
+  local:
+    path: "/mnt/openstack/pv$i"
+    type: DirectoryOrCreate
+  volumeMode: Filesystem
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - $NODE_NAME
+EOF_CAT
+done
