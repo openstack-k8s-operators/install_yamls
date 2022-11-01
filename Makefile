@@ -141,7 +141,7 @@ deploy_cleanup: nova_deploy_cleanup octavia_deploy_cleanup neutron_deploy_cleanu
 crc_storage: ## initialize local storage PVs in CRC vm
 	bash scripts/create-pv.sh
 	bash scripts/gen-crc-pv-kustomize.sh
-	oc kustomize ${OUT}/crc | oc apply -f -
+	oc apply -f ${OUT}/crc/storage.yaml
 
 crc_storage_cleanup: ## cleanup local storage PVs in CRC vm
 	oc get pv | grep local | cut -f 1 -d ' ' | xargs oc delete pv
