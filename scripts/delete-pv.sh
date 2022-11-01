@@ -14,10 +14,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 set -ex
+PV_NUM=${PV_NUM:-12}
 
 NODE_NAME=$(oc get node -o name -l node-role.kubernetes.io/worker | head -n 1)
 if [ -z "$NODE_NAME" ]; then
   echo "Unable to determine node name with 'oc' command."
   exit 1
 fi
-oc debug $NODE_NAME -T -- chroot /host /usr/bin/bash -c "for i in {1..6}; do echo \"deleting dir /mnt/openstack/pv00\$i\"; rm -rf /mnt/openstack/pv00\$i; done"
+oc debug $NODE_NAME -T -- chroot /host /usr/bin/bash -c "for (( i=1; i<=$PV_NUM; i++ )); do echo \"deleting dir /mnt/openstack/pv\$i\"; rm -rf /mnt/openstack/pv\$i; done"
