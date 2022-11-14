@@ -538,7 +538,7 @@ rabbitmq_deploy: input rabbitmq_deploy_prep ## installs the service instance usi
 .PHONY: rabbitmq_deploy_cleanup
 rabbitmq_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,rabbitmq))
-	oc delete --ignore-not-found=true RabbitmqCluster default-security-context
+	oc delete --ignore-not-found=true RabbitmqCluster rabbitmq
 	rm -Rf ${OPERATOR_BASE_DIR}/rabbitmq-operator ${DEPLOY_DIR}
 
 ##@ IRONIC
