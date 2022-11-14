@@ -53,6 +53,15 @@ GLANCE              ?= config/samples/glance_v1beta1_glance.yaml
 GLANCE_CR           ?= ${OPERATOR_BASE_DIR}/glance-operator/${GLANCE}
 GLANCEAPI_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-glance-api:current-tripleo
 
+# Ovn
+OVN_IMG             ?= quay.io/openstack-k8s-operators/ovn-operator-index:latest
+OVN_REPO            ?= https://github.com/openstack-k8s-operators/ovn-operator.git
+OVN_BRANCH          ?= master
+OVNDBS              ?= config/samples/ovn_v1alpha1_ovndbcluster.yaml
+OVNDBS_CR           ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNDBS}
+OVNNORTHD           ?= config/samples/ovn_v1alpha1_ovnnorthd.yaml
+OVNNORTHD_CR        ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNNORTHD}
+
 # Neutron
 NEUTRON_IMG        ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
 NEUTRON_REPO       ?= https://github.com/openstack-k8s-operators/neutron-operator.git
@@ -132,10 +141,10 @@ help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 .PHONY: cleanup
-cleanup: nova_cleanup octavia_cleanup neutron_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup keystone_cleanup mariadb_cleanup ## Delete all operators
+cleanup: nova_cleanup octavia_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup keystone_cleanup mariadb_cleanup ## Delete all operators
 
 .PHONY: deploy_cleanup
-deploy_cleanup: nova_deploy_cleanup octavia_deploy_cleanup neutron_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup ## Delete all OpenStack service objects
+deploy_cleanup: nova_deploy_cleanup octavia_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup ## Delete all OpenStack service objects
 
 ##@ CRC
 crc_storage: ## initialize local storage PVs in CRC vm
@@ -373,6 +382,45 @@ glance_deploy_cleanup: ## cleans up the service instance, Does not affect the op
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/glance-operator ${DEPLOY_DIR}
 	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database glance;" || true
+
+##@ OVN
+.PHONY: ovn_prep
+ovn_prep: export IMAGE=${OVN_IMG}
+ovn_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,ovn))
+	bash scripts/gen-olm.sh
+
+.PHONY: ovn
+ovn: namespace ovn_prep ## installs the operator, also runs the prep step. Set OVN_IMG for custom image.
+	$(eval $(call vars,$@,ovn))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: ovn_cleanup
+ovn_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,ovn))
+	bash scripts/operator-cleanup.sh
+	rm -Rf ${OPERATOR_DIR}
+
+.PHONY: ovn_deploy_prep
+ovn_deploy_prep: export KIND=.*
+ovn_deploy_prep: export IMAGE=unused
+ovn_deploy_prep: ovn_deploy_cleanup ## prepares the CR to install the service based on the service sample file OVNAPI
+	$(eval $(call vars,$@,ovn))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone -b ${OVN_BRANCH} ${OVN_REPO} && popd
+	cp ${OVNDBS_CR} ${OVNNORTHD_CR} ${DEPLOY_DIR}
+	bash scripts/gen-service-kustomize.sh
+
+.PHONY: ovn_deploy
+ovn_deploy: ovn_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set OVN_REPO and OVN_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,ovn))
+	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+
+.PHONY: ovn_deploy_cleanup
+ovn_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,ovn))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	rm -Rf ${OPERATOR_BASE_DIR}/ovn-operator ${DEPLOY_DIR}
 
 ##@ NEUTRON
 .PHONY: neutron_prep
