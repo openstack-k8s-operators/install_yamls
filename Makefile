@@ -532,13 +532,13 @@ rabbitmq_deploy_prep: rabbitmq_deploy_cleanup ## prepares the CR to install the 
 .PHONY: rabbitmq_deploy
 rabbitmq_deploy: input rabbitmq_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set RABBITMQ_REPO and RABBITMQ_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,rabbitmq))
-	#oc kustomize ${DEPLOY_DIR} | oc apply -f -
-	oc apply -f ${DEPLOY_DIR}/rabbitmq.yaml
+	KIND=RabbitmqCluster NAME=rabbitmq bash scripts/gen-name-kustomize.sh
+	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 
 .PHONY: rabbitmq_deploy_cleanup
 rabbitmq_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,rabbitmq))
-	oc delete --ignore-not-found=true RabbitmqCluster default-security-context
+	oc delete --ignore-not-found=true RabbitmqCluster rabbitmq
 	rm -Rf ${OPERATOR_BASE_DIR}/rabbitmq-operator ${DEPLOY_DIR}
 
 ##@ IRONIC
