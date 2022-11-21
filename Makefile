@@ -57,9 +57,9 @@ GLANCEAPI_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-glance-api:c
 OVN_IMG             ?= quay.io/openstack-k8s-operators/ovn-operator-index:latest
 OVN_REPO            ?= https://github.com/openstack-k8s-operators/ovn-operator.git
 OVN_BRANCH          ?= master
-OVNDBS              ?= config/samples/ovn_v1alpha1_ovndbcluster.yaml
+OVNDBS              ?= config/samples/ovn_v1beta1_ovndbcluster.yaml
 OVNDBS_CR           ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNDBS}
-OVNNORTHD           ?= config/samples/ovn_v1alpha1_ovnnorthd.yaml
+OVNNORTHD           ?= config/samples/ovn_v1beta1_ovnnorthd.yaml
 OVNNORTHD_CR        ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNNORTHD}
 
 # Neutron
