@@ -140,6 +140,9 @@ all: namespace keystone mariadb placement neutron
 help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
+.PHONY: crds
+crds: nova_crd octavia_crd neutron_crd ovn_crd ironic_crd cinder_crd glance_crd placement_crd keystone_crd mariadb_crd rabbitmq_crd ## installs all service operator crds
+
 .PHONY: cleanup
 cleanup: nova_cleanup octavia_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup keystone_cleanup mariadb_cleanup ## Delete all operators
 
@@ -214,6 +217,11 @@ openstack_deploy_prep: openstack_deploy_cleanup ## prepares the CR to install th
 	cp ${OPENSTACK_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
+.PHONY: openstack_crd
+openstack_crd: input openstack_deploy_prep ## installs the openstack CRDs only. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,openstack))
+	oc apply -f ${OPERATOR_BASE_DIR}/openstack-operator/config/crd/bases
+
 .PHONY: openstack_deploy
 openstack_deploy: input openstack_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,openstack))
@@ -252,6 +260,11 @@ keystone_deploy_prep: keystone_deploy_cleanup ## prepares the CR to install the 
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${KEYSTONE_BRANCH} ${KEYSTONE_REPO} && popd
 	cp ${KEYSTONEAPI_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
+
+.PHONY: keystone_crd
+keystone_crd: input keystone_deploy_prep ## installs the keystone CRDs only. Runs prep step in advance. Set KEYSTONE_REPO and KEYSTONE_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,keystone))
+	oc apply -f ${OPERATOR_BASE_DIR}/keystone-operator/config/crd/bases
 
 .PHONY: keystone_deploy
 keystone_deploy: input keystone_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set KEYSTONE_REPO and KEYSTONE_BRANCH to deploy from a custom repo.
@@ -292,6 +305,11 @@ mariadb_deploy_prep: mariadb_deploy_cleanup ## prepares the CRs files to install
 	cp ${MARIADB_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
+.PHONY: mariadb_crd
+mariadb_crd: input mariadb_deploy_prep ## installs the mariadb CRDs only. Runs prep step in advance. Set MARIADB_REPO and MARIADB_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,mariadb))
+	oc apply -f ${OPERATOR_BASE_DIR}/mariadb-operator/config/crd/bases
+
 .PHONY: mariadb_deploy
 mariadb_deploy: input mariadb_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set MARIADB_REPO and MARIADB_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,mariadb))
@@ -330,6 +348,11 @@ placement_deploy_prep: placement_deploy_cleanup ## prepares the CR to install th
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${PLACEMENT_BRANCH} ${PLACEMENT_REPO} && popd
 	cp ${PLACEMENTAPI_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
+
+.PHONY: placement_crd
+placement_crd: input placement_deploy_prep ## installs the placement CRDs only. Runs prep step in advance. Set PLACEMENT_REPO and PLACEMENT_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,placement))
+	oc apply -f ${OPERATOR_BASE_DIR}/placement-operator/config/crd/bases
 
 .PHONY: placement_deploy
 placement_deploy: input placement_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set PLACEMENT_REPO and PLACEMENT_BRANCH to deploy from a custom repo.
@@ -371,6 +394,11 @@ glance_deploy_prep: glance_deploy_cleanup ## prepares the CR to install the serv
 	cp ${GLANCE_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
+.PHONY: glance_crd
+glance_crd: input glance_deploy_prep ## installs the glance CRDs only. Runs prep step in advance. Set GLANCE_REPO and GLANCE_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,glance))
+	oc apply -f ${OPERATOR_BASE_DIR}/glance-operator/config/crd/bases
+
 .PHONY: glance_deploy
 glance_deploy: input glance_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set GLANCE_REPO and GLANCE_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,glance))
@@ -411,6 +439,11 @@ ovn_deploy_prep: ovn_deploy_cleanup ## prepares the CR to install the service ba
 	cp ${OVNDBS_CR} ${OVNNORTHD_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
+.PHONY: ovn_crd
+ovn_crd: input ovn_deploy_prep ## installs the ovn CRDs only. Runs prep step in advance. Set OVN_REPO and OVN_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,ovn))
+	oc apply -f ${OPERATOR_BASE_DIR}/ovn-operator/config/crd/bases
+
 .PHONY: ovn_deploy
 ovn_deploy: ovn_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set OVN_REPO and OVN_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,ovn))
@@ -449,6 +482,11 @@ neutron_deploy_prep: neutron_deploy_cleanup ## prepares the CR to install the se
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${NEUTRON_BRANCH} ${NEUTRON_REPO} && popd
 	cp ${NEUTRONAPI_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
+
+.PHONY: neutron_crd
+neutron_crd: input neutron_deploy_prep ## installs the neutron CRDs only. Runs prep step in advance. Set NEUTRON_REPO and NEUTRON_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,neutron))
+	oc apply -f ${OPERATOR_BASE_DIR}/neutron-operator/config/crd/bases
 
 .PHONY: neutron_deploy
 neutron_deploy: input neutron_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set NEUTRON_REPO and NEUTRON_BRANCH to deploy from a custom repo.
@@ -490,6 +528,11 @@ cinder_deploy_prep: cinder_deploy_cleanup ## prepares the CR to install the serv
 	cp ${CINDER_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
+.PHONY: cinder_crd
+cinder_crd: input cinder_deploy_prep ## installs the cinder CRDs only. Runs prep step in advance. Set CINDER_REPO and CINDER_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,cinder))
+	oc apply -f ${OPERATOR_BASE_DIR}/cinder-operator/config/crd/bases
+
 .PHONY: cinder_deploy
 cinder_deploy: input cinder_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set CINDER_REPO and CINDER_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,cinder))
@@ -529,6 +572,11 @@ rabbitmq_deploy_prep: rabbitmq_deploy_cleanup ## prepares the CR to install the 
 	cp ${RABBITMQ_CR} ${DEPLOY_DIR}
 	#bash scripts/gen-service-kustomize.sh
 
+.PHONY: rabbitmq_crd
+rabbitmq_crd: input rabbitmq_deploy_prep ## installs the rabbitmq CRDs only. Runs prep step in advance. Set RABBITMQ_REPO and RABBITMQ_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,rabbitmq))
+	oc apply -f ${OPERATOR_BASE_DIR}/rabbitmq-operator/config/crd/bases
+
 .PHONY: rabbitmq_deploy
 rabbitmq_deploy: input rabbitmq_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set RABBITMQ_REPO and RABBITMQ_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,rabbitmq))
@@ -538,7 +586,7 @@ rabbitmq_deploy: input rabbitmq_deploy_prep ## installs the service instance usi
 .PHONY: rabbitmq_deploy_cleanup
 rabbitmq_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,rabbitmq))
-	oc delete --ignore-not-found=true RabbitmqCluster rabbitmq
+	oc get RabbitmqCluster && oc delete --ignore-not-found=true RabbitmqCluster rabbitmq || echo "not installed"
 	rm -Rf ${OPERATOR_BASE_DIR}/rabbitmq-operator ${DEPLOY_DIR}
 
 ##@ IRONIC
@@ -568,6 +616,11 @@ ironic_deploy_prep: ironic_deploy_cleanup ## prepares the CR to install the serv
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${IRONIC_BRANCH} ${IRONIC_REPO} && popd
 	cp ${IRONIC_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
+
+.PHONY: ironic_crd
+ironic_crd: input ironic_deploy_prep ## installs the ironic CRDs only. Runs prep step in advance. Set IRONIC_REPO and IRONIC_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,ironic))
+	oc apply -f ${OPERATOR_BASE_DIR}/ironic-operator/config/crd/bases
 
 .PHONY: ironic_deploy
 ironic_deploy: input ironic_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set IRONIC_REPO and IRONIC_BRANCH to deploy from a custom repo.
@@ -608,6 +661,11 @@ octavia_deploy_prep: octavia_deploy_cleanup ## prepares the CR to install the se
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${OCTAVIA_BRANCH} ${OCTAVIA_REPO} && popd
 	cp ${OCTAVIAAPI_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
+
+.PHONY: octavia_crd
+octavia_crd: input octavia_deploy_prep ## installs the octavia CRDs only. Runs prep step in advance. Set OCTAVIA_REPO and OCTAVIA_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,octavia))
+	oc apply -f ${OPERATOR_BASE_DIR}/octavia-operator/config/crd/bases
 
 .PHONY: octavia_deploy
 octavia_deploy: input octavia_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set OCTAVIA_REPO and OCTAVIA_BRANCH to deploy from a custom repo.
@@ -652,6 +710,11 @@ nova_deploy_prep: nova_deploy_cleanup ## prepares the CR to install the service 
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${NOVA_BRANCH} ${NOVA_REPO} && popd
 	cp ${NOVA_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
+
+.PHONY: nova_crd
+nova_crd: input nova_deploy_prep ## installs the nova CRDs only. Runs prep step in advance. Set NOVA_REPO and NOVA_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,nova))
+	oc apply -f ${OPERATOR_BASE_DIR}/nova-operator/config/crd/bases
 
 .PHONY: nova_deploy
 nova_deploy: input nova_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set NOVA_REPO and NOVA_BRANCH to deploy from a custom repo.
