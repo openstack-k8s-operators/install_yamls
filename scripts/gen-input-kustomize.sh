@@ -64,6 +64,8 @@ secretGenerator:
   - CinderDatabasePassword=${PASSWORD}
   - IronicPassword=${PASSWORD}
   - IronicDatabasePassword=${PASSWORD}
+  - IronicInspectorPassword=${PASSWORD}
+  - IronicInspectorDatabasePassword=${PASSWORD}
   - OctaviaPassword=${PASSWORD}
   - OctaviaDatabasePassword=${PASSWORD}
   - NovaPassword=${PASSWORD}
