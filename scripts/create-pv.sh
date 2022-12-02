@@ -22,5 +22,5 @@ if [ -z "$NODE_NAMES" ]; then
   exit 1
 fi
 for node in $NODE_NAMES; do
-    oc debug $node -T -- chroot /host /usr/bin/bash -c "for i in `seq -w $PV_NUM`; do echo \"creating dir /mnt/openstack/pv\$i on $node\"; mkdir -p /mnt/openstack/pv\$i; done"
+    oc debug $node -T -- chroot /host /usr/bin/bash -c "for i in `seq -w -s ' ' $PV_NUM`; do echo \"creating dir /mnt/openstack/pv\$i on $node\"; mkdir -p /mnt/openstack/pv\$i; done"
 done
