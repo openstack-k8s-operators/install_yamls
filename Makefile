@@ -9,7 +9,7 @@ OPERATOR_BASE_DIR   ?= ${OUT}/operator
 
 # default registry and org to pull service images from
 SERVICE_REGISTRY    ?= quay.io
-SERVICE_ORG         ?= tripleowallabycentos9
+SERVICE_ORG         ?= tripleozedcentos9
 
 # storage (used by some operators)
 STORAGE_CLASS       ?= "local-storage"
