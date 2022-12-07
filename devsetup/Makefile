@@ -53,3 +53,11 @@ edpm_compute_cleanup:
 	-sudo virsh destroy edpm-compute-${EDPM_COMPUTE_SUFFIX}
 	-sudo virsh undefine edpm-compute-${EDPM_COMPUTE_SUFFIX}
 	rm -f ${HOME}/.crc/machines/crc/edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2
+
+.PHONY: edpm_play
+edpm_play:
+	oc create -f edpm/edpm-play.yaml
+
+.PHONY: edpm_play_cleanup
+edpm_play_cleanup:
+	-oc delete ansibleee deploy-external-dataplane-compute

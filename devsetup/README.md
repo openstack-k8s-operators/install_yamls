@@ -82,3 +82,41 @@ All tools and specific version to develop operators for this Cloud Native OpenSt
 cd <install_yamls_root_path>/devsetup
 make download_tools
 ```
+
+### EDPM deployment
+The EDPM deployment will create additional VM's alongside the crc VM, provides
+a mechanism to configure them using the ansibleee-operator.
+
+After completing the devsetup, attach the crc VM to the default network:
+```
+make crc_attach_default_interface
+```
+
+Deploy additional VM's for compute nodes:
+```
+# Creates edpm-compute-0:
+make edpm_compute
+# Set $EDPM_COMPUTE_SUFFIX to create additional VM's beyond 0:
+make edpm_compute EDPM_COMPUTE_SUFFIX=1
+```
+
+Edit edpm/edpm-play.yaml and set the compute node VM IP addresses in the
+inventory. The IP address in the inventory (192.168.122.139) needs to be
+changed to the right IP for edpm-compute-0 in the environment. The
+edpm-compute-0 IP can be discovered with the following command:
+```
+sudo virsh net-dhcp-leases default
+```
+
+Execute the ansible to configure the compute nodes:
+```
+make edpm-play
+```
+
+Cleanup:
+```
+make edpm_play_cleanup
+# Will delete VM's!:
+make edpm_compute_cleanup
+make edpm_compute_cleanup EDPM_COMPUTE_SUFFIX=1
+```
