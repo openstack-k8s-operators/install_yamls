@@ -225,6 +225,14 @@ openstack_deploy_cleanup: ## cleans up the service instance, Does not affect the
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/openstack-operator ${DEPLOY_DIR}
 
+.PHONY: openstack_crds
+openstack_crds: ## installs all openstack CRDs. Useful for infrastructure dev
+	mkdir -p ${OUT}/openstack_crds
+	podman pull quay.io/openstack-k8s-operators/openstack-operator-bundle:latest
+	podman image save -o ${OUT}/openstack_crds --compress --format docker-dir quay.io/openstack-k8s-operators/openstack-operator-bundle:latest
+	tar xvf $$(file ${OUT}/openstack_crds/* | grep gzip | cut -f 1 -d ':') -C ${OUT}/openstack_crds
+	for X in $$(grep -l CustomResourceDefinition out/openstack_crds/manifests/*); do oc apply -f $$X; done
+
 ##@ KEYSTONE
 .PHONY: keystone_prep
 keystone_prep: export IMAGE=${KEYSTONE_IMG}
