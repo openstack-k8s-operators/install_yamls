@@ -114,6 +114,13 @@ NOVA_BRANCH    ?= master
 NOVA           ?= config/samples/nova_v1beta1_nova.yaml
 NOVA_CR        ?= ${OPERATOR_BASE_DIR}/nova-operator/${NOVA}
 
+# AnsibleEE
+ANSIBLEEE_IMG       ?= quay.io/openstack-k8s-operators/ansibleee-operator-index:main-latest
+ANSIBLEEE_REPO      ?= https://github.com/openstack-k8s-operators/ansibleee-operator.git
+ANSIBLEEE_BRANCH    ?= main
+ANSIBLEEE           ?= config/samples/_v1alpha1_ansibleee.yaml
+ANSIBLEEE_CR        ?= ${OPERATOR_BASE_DIR}/ansibleee-operator/${ANSIBLEEE}
+
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
 ${1}: export NAMESPACE=${NAMESPACE}
@@ -696,3 +703,21 @@ mariadb_kuttl: namespace input openstack_crds deploy_cleanup mariadb_deploy_prep
 .PHONY: keystone_kuttl
 keystone_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate keystone_deploy_prep keystone ## runs kuttl tests for the keystone operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests.
 	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${KEYSTONE_KUTTL_CONF} ${KEYSTONE_KUTTL_DIR}
+
+##@ ANSIBLEEE
+.PHONY: ansibleee_prep
+ansibleee_prep: export IMAGE=${ANSIBLEEE_IMG}
+ansibleee_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,ansibleee))
+	bash scripts/gen-olm.sh
+
+.PHONY: ansibleee
+ansibleee: namespace ansibleee_prep ## installs the operator, also runs the prep step. Set ansibleee_IMG for custom image.
+	$(eval $(call vars,$@,ansibleee))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: ansibleee_cleanup
+ansibleee_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,ansibleee))
+	bash scripts/operator-cleanup.sh
+	rm -Rf ${OPERATOR_DIR}
