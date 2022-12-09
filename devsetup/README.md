@@ -28,7 +28,7 @@ crc setup
 
 crc start
 
-# show kubeadmin and devel login detains
+# show kubeadmin and devel login details
 crc console --credentials
 
 # add crc provided oc client to PATH
