@@ -6,6 +6,7 @@ CRC installation requires sudo to create a NetworkManager dispatcher file in /et
 * `CRC_URL` and `KUBEADMIN_PWD` can be used to change requirements for CRC install. The default `KUBEADMIN_PWD` is `12345678`
 
 ```bash
+cd <install_yamls_root_path>/devsetup
 make crc
 ```
 
@@ -78,5 +79,6 @@ Now you can access the OCP environment
 All tools and specific version to develop operators for this Cloud Native OpenStack approch can be deployed via the download_tools make target. All components which don't get installed via rpm get installed to $HOME/bin or /usr/local/bin (go/gofmt).
 
 ```bash
+cd <install_yamls_root_path>/devsetup
 make download_tools
 ```
