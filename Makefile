@@ -99,7 +99,7 @@ OCTAVIA_REPO      ?= https://github.com/openstack-k8s-operators/octavia-operator
 OCTAVIA_BRANCH    ?= main
 OCTAVIAAPI        ?= config/samples/octavia_v1beta1_octaviaapi.yaml
 OCTAVIAAPI_CR     ?= ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIAAPI}
-OCTAVIAAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-octavia:current-tripleo
+OCTAVIAAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-octavia-api:current-tripleo
 
 # Nova
 NOVA_IMG       ?= quay.io/openstack-k8s-operators/nova-operator-index:latest
