@@ -4,6 +4,8 @@ NAMESPACE           ?= openstack
 PASSWORD            ?= 12345678
 SECRET              ?= osp-secret
 OUT                 ?= ${PWD}/out
+INSTALL_YAMLS       ?= ${PWD}  # used for kuttl tests
+
 # operators gets cloned here
 OPERATOR_BASE_DIR   ?= ${OUT}/operator
 
@@ -28,6 +30,8 @@ KEYSTONE_BRANCH     ?= master
 KEYSTONEAPI         ?= config/samples/keystone_v1beta1_keystoneapi.yaml
 KEYSTONEAPI_CR      ?= ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
 KEYSTONEAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-keystone:current-tripleo
+KEYSTONE_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.yaml
+KEYSTONE_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
 
 # Mariadb
 MARIADB_IMG         ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
@@ -672,3 +676,7 @@ nova_deploy_cleanup: ## cleans up the service instance, Does not affect the oper
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/nova-operator ${DEPLOY_DIR}
 	oc rsh mariadb-openstack mysql -u root --password=${PASSWORD} -ss -e "show databases like 'nova_%';" | xargs -I '{}' oc rsh mariadb-openstack mysql -u root --password=${PASSWORD} -ss -e "drop database {};"
+
+.PHONY: kuttl_keystone
+kuttl_keystone: namespace input deploy_cleanup keystone_deploy_prep keystone
+	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${KEYSTONE_KUTTL_CONF} ${KEYSTONE_KUTTL_DIR}
