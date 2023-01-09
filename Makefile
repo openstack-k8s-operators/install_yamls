@@ -677,6 +677,8 @@ nova_deploy_cleanup: ## cleans up the service instance, Does not affect the oper
 	rm -Rf ${OPERATOR_BASE_DIR}/nova-operator ${DEPLOY_DIR}
 	oc rsh mariadb-openstack mysql -u root --password=${PASSWORD} -ss -e "show databases like 'nova_%';" | xargs -I '{}' oc rsh mariadb-openstack mysql -u root --password=${PASSWORD} -ss -e "drop database {};"
 
-.PHONY: kuttl_keystone
-kuttl_keystone: namespace input deploy_cleanup keystone_deploy_prep keystone
+##@ KUTTL tests
+
+.PHONY: keystone_kuttl
+keystone_kuttl: namespace input openstack_crds deploy_cleanup keystone_deploy_prep mariadb keystone ## runs kuttl tests for the keystone operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests.
 	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${KEYSTONE_KUTTL_CONF} ${KEYSTONE_KUTTL_DIR}
