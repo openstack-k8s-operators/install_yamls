@@ -40,6 +40,8 @@ MARIADB_BRANCH      ?= master
 MARIADB             ?= config/samples/mariadb_v1beta1_mariadb.yaml
 MARIADB_CR          ?= ${OPERATOR_BASE_DIR}/mariadb-operator/${MARIADB}
 MARIADB_DEPL_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-mariadb:current-tripleo
+MARIADB_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
+MARIADB_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
 
 # Placement
 PLACEMENT_IMG       ?= quay.io/openstack-k8s-operators/placement-operator-index:latest
@@ -270,6 +272,10 @@ keystone_deploy: input keystone_deploy_prep ## installs the service instance usi
 	$(eval $(call vars,$@,keystone))
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 
+.PHONY: keystone_deploy_validate ## checks that keystone was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
+keystone_deploy_validate: input namespace
+	kubectl-kuttl assert -n ${NAMESPACE} ${KEYSTONE_KUTTL_DIR}/../common/assert_keystone_deployment.yaml --timeout 180
+
 .PHONY: keystone_deploy_cleanup
 keystone_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,keystone))
@@ -287,6 +293,10 @@ mariadb_prep: ## creates the files to install the operator using olm
 mariadb: namespace mariadb_prep ## installs the operator, also runs the prep step. Set MARIADB_IMG for custom image.
 	$(eval $(call vars,$@,mariadb))
 	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: mariadb_deploy_validate ## checks that mariadb was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
+mariadb_deploy_validate: input namespace
+	kubectl-kuttl assert -n ${NAMESPACE} ${MARIADB_KUTTL_DIR}/mariadb_deploy/01-assert.yaml --timeout 180
 
 .PHONY: mariadb_cleanup
 mariadb_cleanup: ## deletes the operator, but does not cleanup the service resources
@@ -679,6 +689,10 @@ nova_deploy_cleanup: ## cleans up the service instance, Does not affect the oper
 
 ##@ KUTTL tests
 
+.PHONY: mariadb_kuttl
+mariadb_kuttl: namespace input openstack_crds deploy_cleanup mariadb_deploy_prep mariadb  ## runs kuttl tests for the mariadb operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests.
+	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${MARIADB_KUTTL_CONF} ${MARIADB_KUTTL_DIR}
+
 .PHONY: keystone_kuttl
-keystone_kuttl: namespace input openstack_crds deploy_cleanup keystone_deploy_prep mariadb keystone ## runs kuttl tests for the keystone operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests.
+keystone_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate keystone_deploy_prep keystone ## runs kuttl tests for the keystone operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests.
 	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${KEYSTONE_KUTTL_CONF} ${KEYSTONE_KUTTL_DIR}

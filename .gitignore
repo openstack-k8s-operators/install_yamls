@@ -1,4 +1,4 @@
 out
 pull-secret.txt
-kuttl-test.json
+kuttl-test-*.json
 kubeconfig
