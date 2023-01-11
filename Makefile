@@ -272,8 +272,8 @@ keystone_deploy: input keystone_deploy_prep ## installs the service instance usi
 	$(eval $(call vars,$@,keystone))
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 
-.PHONY: keystone_deploy_validate ## checks that keystone was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
-keystone_deploy_validate: input namespace
+.PHONY: keystone_deploy_validate
+keystone_deploy_validate: input namespace ## checks that keystone was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
 	kubectl-kuttl assert -n ${NAMESPACE} ${KEYSTONE_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
 
 .PHONY: keystone_deploy_cleanup
@@ -293,10 +293,6 @@ mariadb_prep: ## creates the files to install the operator using olm
 mariadb: namespace mariadb_prep ## installs the operator, also runs the prep step. Set MARIADB_IMG for custom image.
 	$(eval $(call vars,$@,mariadb))
 	oc apply -f ${OPERATOR_DIR}
-
-.PHONY: mariadb_deploy_validate ## checks that mariadb was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
-mariadb_deploy_validate: input namespace
-	kubectl-kuttl assert -n ${NAMESPACE} ${MARIADB_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
 
 .PHONY: mariadb_cleanup
 mariadb_cleanup: ## deletes the operator, but does not cleanup the service resources
@@ -318,6 +314,10 @@ mariadb_deploy_prep: mariadb_deploy_cleanup ## prepares the CRs files to install
 mariadb_deploy: input mariadb_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set MARIADB_REPO and MARIADB_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,mariadb))
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+
+.PHONY: mariadb_deploy_validate
+mariadb_deploy_validate: input namespace ## checks that mariadb was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
+	kubectl-kuttl assert -n ${NAMESPACE} ${MARIADB_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
 
 .PHONY: mariadb_deploy_cleanup
 mariadb_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
