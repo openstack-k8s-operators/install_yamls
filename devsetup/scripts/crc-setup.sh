@@ -39,10 +39,10 @@ ${CRC_BIN} config set kubeadmin-password ${KUBEADMIN_PWD}
 ${CRC_BIN} config set pull-secret-file ${PULL_SECRET_FILE}
 # Executing systemctl action failed:  exit status 1: Failed to connect to bus: No such file or directory
 # https://github.com/code-ready/crc/issues/2674
-crc config set skip-check-daemon-systemd-unit true
-crc config set skip-check-daemon-systemd-sockets true
-crc config set cpus ${CPUS}
-crc config set memory ${MEMORY}
+${CRC_BIN} config set skip-check-daemon-systemd-unit true
+${CRC_BIN} config set skip-check-daemon-systemd-sockets true
+${CRC_BIN} config set cpus ${CPUS}
+${CRC_BIN} config set memory ${MEMORY}
 ${CRC_BIN} setup
 
 ${CRC_BIN} start
