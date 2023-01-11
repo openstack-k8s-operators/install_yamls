@@ -274,7 +274,7 @@ keystone_deploy: input keystone_deploy_prep ## installs the service instance usi
 
 .PHONY: keystone_deploy_validate ## checks that keystone was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
 keystone_deploy_validate: input namespace
-	kubectl-kuttl assert -n ${NAMESPACE} ${KEYSTONE_KUTTL_DIR}/../common/assert_keystone_deployment.yaml --timeout 180
+	kubectl-kuttl assert -n ${NAMESPACE} ${KEYSTONE_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
 
 .PHONY: keystone_deploy_cleanup
 keystone_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
@@ -296,7 +296,7 @@ mariadb: namespace mariadb_prep ## installs the operator, also runs the prep ste
 
 .PHONY: mariadb_deploy_validate ## checks that mariadb was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
 mariadb_deploy_validate: input namespace
-	kubectl-kuttl assert -n ${NAMESPACE} ${MARIADB_KUTTL_DIR}/mariadb_deploy/01-assert.yaml --timeout 180
+	kubectl-kuttl assert -n ${NAMESPACE} ${MARIADB_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
 
 .PHONY: mariadb_cleanup
 mariadb_cleanup: ## deletes the operator, but does not cleanup the service resources
