@@ -4,6 +4,8 @@ NAMESPACE           ?= openstack
 PASSWORD            ?= 12345678
 SECRET              ?= osp-secret
 OUT                 ?= ${PWD}/out
+INSTALL_YAMLS       ?= ${PWD}  # used for kuttl tests
+
 # operators gets cloned here
 OPERATOR_BASE_DIR   ?= ${OUT}/operator
 
@@ -28,6 +30,8 @@ KEYSTONE_BRANCH     ?= master
 KEYSTONEAPI         ?= config/samples/keystone_v1beta1_keystoneapi.yaml
 KEYSTONEAPI_CR      ?= ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
 KEYSTONEAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-keystone:current-tripleo
+KEYSTONE_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.yaml
+KEYSTONE_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
 
 # Mariadb
 MARIADB_IMG         ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
@@ -36,6 +40,8 @@ MARIADB_BRANCH      ?= master
 MARIADB             ?= config/samples/mariadb_v1beta1_mariadb.yaml
 MARIADB_CR          ?= ${OPERATOR_BASE_DIR}/mariadb-operator/${MARIADB}
 MARIADB_DEPL_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-mariadb:current-tripleo
+MARIADB_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
+MARIADB_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
 
 # Placement
 PLACEMENT_IMG       ?= quay.io/openstack-k8s-operators/placement-operator-index:latest
@@ -266,6 +272,10 @@ keystone_deploy: input keystone_deploy_prep ## installs the service instance usi
 	$(eval $(call vars,$@,keystone))
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 
+.PHONY: keystone_deploy_validate
+keystone_deploy_validate: input namespace ## checks that keystone was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
+	kubectl-kuttl assert -n ${NAMESPACE} ${KEYSTONE_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
+
 .PHONY: keystone_deploy_cleanup
 keystone_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,keystone))
@@ -304,6 +314,10 @@ mariadb_deploy_prep: mariadb_deploy_cleanup ## prepares the CRs files to install
 mariadb_deploy: input mariadb_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set MARIADB_REPO and MARIADB_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,mariadb))
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+
+.PHONY: mariadb_deploy_validate
+mariadb_deploy_validate: input namespace ## checks that mariadb was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
+	kubectl-kuttl assert -n ${NAMESPACE} ${MARIADB_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
 
 .PHONY: mariadb_deploy_cleanup
 mariadb_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
@@ -672,3 +686,13 @@ nova_deploy_cleanup: ## cleans up the service instance, Does not affect the oper
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/nova-operator ${DEPLOY_DIR}
 	oc rsh mariadb-openstack mysql -u root --password=${PASSWORD} -ss -e "show databases like 'nova_%';" | xargs -I '{}' oc rsh mariadb-openstack mysql -u root --password=${PASSWORD} -ss -e "drop database {};"
+
+##@ KUTTL tests
+
+.PHONY: mariadb_kuttl
+mariadb_kuttl: namespace input openstack_crds deploy_cleanup mariadb_deploy_prep mariadb  ## runs kuttl tests for the mariadb operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests.
+	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${MARIADB_KUTTL_CONF} ${MARIADB_KUTTL_DIR}
+
+.PHONY: keystone_kuttl
+keystone_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate keystone_deploy_prep keystone ## runs kuttl tests for the keystone operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests.
+	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${KEYSTONE_KUTTL_CONF} ${KEYSTONE_KUTTL_DIR}

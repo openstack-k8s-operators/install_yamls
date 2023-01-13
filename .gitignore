@@ -1,2 +1,4 @@
 out
 pull-secret.txt
+kuttl-test-*.json
+kubeconfig
