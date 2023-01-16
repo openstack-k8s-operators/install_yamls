@@ -30,3 +30,8 @@ if [ -n "$CSV" ]; then
 fi
 oc delete -n ${NAMESPACE} subscription ${OPERATOR_NAME}-operator --ignore-not-found=true
 oc delete -n ${NAMESPACE} catalogsource ${OPERATOR_NAME}-operator-index --ignore-not-found=true
+
+for crd in `oc get crd -o name | grep "\.${OPERATOR_NAME}\.openstack\.org$"`; do
+  oc delete $crd
+done
+oc delete operators ${OPERATOR_NAME}-operator.openstack
