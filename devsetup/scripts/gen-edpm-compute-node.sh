@@ -36,7 +36,7 @@ cat <<EOF >../out/edpm/${EDPM_COMPUTE_NAME}.xml
   </memoryBacking>
   <vcpu placement='static'>2</vcpu>
   <os>
-    <type arch='x86_64' machine='pc-q35-rhel9.0.0'>hvm</type>
+    <type arch='x86_64' machine='q35'>hvm</type>
     <boot dev='hd'/>
     <bootmenu enable='no'/>
   </os>
@@ -53,7 +53,7 @@ cat <<EOF >../out/edpm/${EDPM_COMPUTE_NAME}.xml
   <on_reboot>restart</on_reboot>
   <on_crash>destroy</on_crash>
   <devices>
-    <emulator>/usr/libexec/qemu-kvm</emulator>
+    <emulator>$(command -v qemu-kvm)</emulator>
     <disk type='file' device='disk'>
       <driver name='qemu' type='qcow2'/>
       <source file='${DISK_FILEPATH}'/>
@@ -99,7 +99,7 @@ cat <<EOF >../out/edpm/${EDPM_COMPUTE_NAME}.xml
     </controller>
     <filesystem type='mount' accessmode='passthrough'>
       <driver type='virtiofs'/>
-      <source dir='/home/stack'/>
+      <source dir='${HOME}'/>
       <target dir='dir0'/>
       <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>
     </filesystem>
