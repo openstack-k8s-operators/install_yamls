@@ -62,7 +62,7 @@ GLANCEAPI_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-glance-api:c
 # Ovn
 OVN_IMG             ?= quay.io/openstack-k8s-operators/ovn-operator-index:latest
 OVN_REPO            ?= https://github.com/openstack-k8s-operators/ovn-operator.git
-OVN_BRANCH          ?= master
+OVN_BRANCH          ?= main
 OVNDBS              ?= config/samples/ovn_v1beta1_ovndbcluster.yaml
 OVNDBS_CR           ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNDBS}
 OVNNORTHD           ?= config/samples/ovn_v1beta1_ovnnorthd.yaml
