@@ -115,8 +115,8 @@ NOVA           ?= config/samples/nova_v1beta1_nova.yaml
 NOVA_CR        ?= ${OPERATOR_BASE_DIR}/nova-operator/${NOVA}
 
 # AnsibleEE
-ANSIBLEEE_IMG       ?= quay.io/openstack-k8s-operators/ansibleee-operator-index:main-latest
-ANSIBLEEE_REPO      ?= https://github.com/openstack-k8s-operators/ansibleee-operator.git
+ANSIBLEEE_IMG       ?= quay.io/openstack-k8s-operators/openstack-ansibleee-operator-index:main-latest
+ANSIBLEEE_REPO      ?= https://github.com/openstack-k8s-operators/openstack-ansibleee-operator
 ANSIBLEEE_BRANCH    ?= main
 ANSIBLEEE           ?= config/samples/_v1alpha1_ansibleee.yaml
 ANSIBLEEE_CR        ?= ${OPERATOR_BASE_DIR}/ansibleee-operator/${ANSIBLEEE}
