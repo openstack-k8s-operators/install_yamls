@@ -53,7 +53,6 @@ cat <<EOF >../out/edpm/${EDPM_COMPUTE_NAME}.xml
   <on_reboot>restart</on_reboot>
   <on_crash>destroy</on_crash>
   <devices>
-    <emulator>$(command -v qemu-kvm)</emulator>
     <disk type='file' device='disk'>
       <driver name='qemu' type='qcow2'/>
       <source file='${DISK_FILEPATH}'/>
