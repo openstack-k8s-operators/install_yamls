@@ -1,6 +1,7 @@
 CRC_URL ?= 'https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz'
 KUBEADMIN_PWD ?= 12345678
 PULL_SECRET  ?= ${PWD}/pull-secret.txt
+EDPM_COMPUTE_SUFFIX ?= 0
 
 ##@ General
 
@@ -37,3 +38,26 @@ download_tools: ## Runs an ansible playbook to install required tools with the v
 	ANSIBLE_FORCE_COLOR=true ansible-playbook \
 	-v -i hosts \
 	download_tools.yaml
+
+.PHONY: crc_attach_default_interface
+crc_attach_default_interface:
+	sudo virsh attach-interface crc --source default --type network --model virtio --config --persistent
+
+.PHONY: edpm_compute
+edpm_compute:
+	scripts/gen-ansibleee-ssh-key.sh
+	scripts/gen-edpm-compute-node.sh ${EDPM_COMPUTE_SUFFIX}
+
+.PHONY: edpm_compute_cleanup
+edpm_compute_cleanup:
+	-sudo virsh destroy edpm-compute-${EDPM_COMPUTE_SUFFIX}
+	-sudo virsh undefine edpm-compute-${EDPM_COMPUTE_SUFFIX}
+	rm -f ${HOME}/.crc/machines/crc/edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2
+
+.PHONY: edpm_play
+edpm_play:
+	oc create -f edpm/edpm-play.yaml
+
+.PHONY: edpm_play_cleanup
+edpm_play_cleanup:
+	-oc delete ansibleee deploy-external-dataplane-compute
