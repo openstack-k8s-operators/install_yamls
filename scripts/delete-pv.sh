@@ -16,9 +16,11 @@
 set -ex
 PV_NUM=${PV_NUM:-12}
 
-NODE_NAME=$(oc get node -o name -l node-role.kubernetes.io/worker | head -n 1)
-if [ -z "$NODE_NAME" ]; then
+NODE_NAMES=$(oc get node -o name -l node-role.kubernetes.io/worker)
+if [ -z "$NODE_NAMES" ]; then
   echo "Unable to determine node name with 'oc' command."
   exit 1
 fi
-oc debug $NODE_NAME -T -- chroot /host /usr/bin/bash -c "for (( i=1; i<=$PV_NUM; i++ )); do echo \"deleting dir /mnt/openstack/pv\$i\"; rm -rf /mnt/openstack/pv\$i; done"
+for node in $NODE_NAMES; do
+    oc debug $node -T -- chroot /host /usr/bin/bash -c "for i in `seq -w -s ' ' $PV_NUM`; do echo \"deleting dir /mnt/openstack/pv\$i on $node\"; rm -rf /mnt/openstack/pv\$i; done"
+done
