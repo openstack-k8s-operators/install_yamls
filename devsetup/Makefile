@@ -62,4 +62,4 @@ edpm_play:
 
 .PHONY: edpm_play_cleanup
 edpm_play_cleanup:
-	-oc delete ansibleee deploy-external-dataplane-compute
+	-oc delete openstackansibleee deploy-external-dataplane-compute

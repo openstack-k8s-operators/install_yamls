@@ -1,5 +1,5 @@
-apiVersion: redhat.com/v1alpha1
-kind: AnsibleEE
+apiVersion: ansibleee.openstack.org/v1alpha1
+kind: OpenStackAnsibleEE
 metadata:
   name: deploy-external-dataplane-compute
   namespace: openstack
@@ -10,7 +10,7 @@ spec:
 
     - hosts: all
       tasks:
-        - name: Enable tripleo-repos
+        - name: Enable edpm-repos
           shell: |
             rpm -q git || sudo yum -y install git
             sudo yum -y install python-setuptools python-requests python3-pip
@@ -29,39 +29,39 @@ spec:
         - name: run sshuttle
           shell: tmux new-session -d -s sshuttle "sshuttle -r root@192.168.122.1 192.168.130.0/24"
 
-    - name: Deploy TripleO facts playbook
-      ansible.builtin.import_playbook: deploy-tripleo-facts.yml
+    - name: Deploy EDPM facts playbook
+      ansible.builtin.import_playbook: deploy-edpm-facts.yml
 
-    - name: Deploy TripleO SELinux playbook
-      ansible.builtin.import_playbook: deploy-tripleo-selinux.yml
+    - name: Deploy EDPM SELinux playbook
+      ansible.builtin.import_playbook: deploy-edpm-selinux.yml
 
-    - name: Deploy TripleO pre-network playbook
-      ansible.builtin.import_playbook: deploy-tripleo-pre-network.yml
+    - name: Deploy EDPM pre-network playbook
+      ansible.builtin.import_playbook: deploy-edpm-pre-network.yml
 
-    - name: Deploy TripleO network playbook
-      ansible.builtin.import_playbook: deploy-tripleo-network-configure.yml
+    - name: Deploy EDPM network playbook
+      ansible.builtin.import_playbook: deploy-edpm-network-configure.yml
 
-    - name: Deploy TripleO network validation playbook
-      ansible.builtin.import_playbook: deploy-tripleo-network-validate.yml
+    - name: Deploy EDPM network validation playbook
+      ansible.builtin.import_playbook: deploy-edpm-network-validate.yml
 
-    - name: Deploy TripleO install operating system playbook
-      ansible.builtin.import_playbook: deploy-tripleo-os-install.yml
+    - name: Deploy EDPM install operating system playbook
+      ansible.builtin.import_playbook: deploy-edpm-os-install.yml
 
-    - name: Deploy TripleO configure operating system playbook
-      ansible.builtin.import_playbook: deploy-tripleo-os-configure.yml
+    - name: Deploy EDPM configure operating system playbook
+      ansible.builtin.import_playbook: deploy-edpm-os-configure.yml
 
-    - name: Deploy TripleO run operating system playbook
-      ansible.builtin.import_playbook: deploy-tripleo-os-run.yml
+    - name: Deploy EDPM run operating system playbook
+      ansible.builtin.import_playbook: deploy-edpm-os-run.yml
 
-    - name: Deploy TripleO install OpenStack playbook
-      ansible.builtin.import_playbook: deploy-tripleo-openstack-install.yml
+    - name: Deploy EDPM install OpenStack playbook
+      ansible.builtin.import_playbook: deploy-edpm-openstack-install.yml
 
-    - name: Deploy TripleO configure OpenStack playbook
-      ansible.builtin.import_playbook: deploy-tripleo-openstack-configure.yml
+    - name: Deploy EDPM configure OpenStack playbook
+      ansible.builtin.import_playbook: deploy-edpm-openstack-configure.yml
 
-    - name: Deploy TripleO run OpenStack playbook
-      ansible.builtin.import_playbook: deploy-tripleo-openstack-run.yml
-  image: "quay.io/tripleomastercentos9/openstack-tripleo-ansible-ee:current-tripleo"
+    - name: Deploy EDPM run OpenStack playbook
+      ansible.builtin.import_playbook: deploy-edpm-openstack-run.yml
+  image: "quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest"
   inventory: |
     allovercloud:
       children:
@@ -86,32 +86,32 @@ spec:
                     nova_api_network: internal_api
                     nova_libvirt_network: internal_api
 
-                  # tripleo_network_config
-                  # Default nic config template for a TripleO compute node
-                  # These vars are tripleo_network_config role vars
-                  tripleo_network_config_template: templates/net_config_bridge.j2
-                  tripleo_network_config_hide_sensitive_logs: false
+                  # edpm_network_config
+                  # Default nic config template for a EDPM compute node
+                  # These vars are edpm_network_config role vars
+                  edpm_network_config_template: templates/net_config_bridge.j2
+                  edpm_network_config_hide_sensitive_logs: false
                   #
                   # These vars are for the network config templates themselves and are
-                  # considered TripleO network defaults.
+                  # considered EDPM network defaults.
                   neutron_physical_bridge_name: br-ex
                   neutron_public_interface_name: eth0
                   ctlplane_subnet_cidr: 24
                   ctlplane_gateway_ip: 192.168.122.1
 
-                  # tripleo_nodes_validation
-                  tripleo_nodes_validation_validate_controllers_icmp: false
-                  tripleo_nodes_validation_validate_gateway_icmp: false
+                  # edpm_nodes_validation
+                  edpm_nodes_validation_validate_controllers_icmp: false
+                  edpm_nodes_validation_validate_gateway_icmp: false
 
                   # 99-standalone-vars
                   ctlplane_dns_nameservers:
                   - 192.168.122.1
                   dns_search_domains: []
-                  tripleo_nova_compute_DEFAULT_transport_url: rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.localdomain:5672/?ssl=0
-                  tripleo_nova_compute_cache_memcache_servers: standalone.ctlplane.localdomain:11211
-                  tripleo_nova_compute_cinder_auth_url: http://192.168.24.3:5000/v3
-                  tripleo_nova_compute_cinder_password: ip3VDO3mq6JObAQqfekzt85kp
-                  tripleo_nova_compute_config_overrides:
+                  edpm_nova_compute_DEFAULT_transport_url: rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.localdomain:5672/?ssl=0
+                  edpm_nova_compute_cache_memcache_servers: standalone.ctlplane.localdomain:11211
+                  edpm_nova_compute_cinder_auth_url: http://192.168.24.3:5000/v3
+                  edpm_nova_compute_cinder_password: ip3VDO3mq6JObAQqfekzt85kp
+                  edpm_nova_compute_config_overrides:
                     DEFAULT:
                       oslo_messaging_notifications_transport_url: rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.localdomain:5672/?ssl=0
                       transport_url: rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.localdomain:5672/?ssl=0
@@ -151,44 +151,44 @@ spec:
                       username: nova
                     vnc:
                       novncproxy_base_url: http://192.168.24.3:6080
-                  tripleo_nova_compute_neutron_auth_type: v3password
-                  tripleo_nova_compute_neutron_auth_url: http://192.168.24.3:5000/v3
-                  tripleo_nova_compute_neutron_password: viaNg9cyAqS8N1ydQe7n3XkuM
-                  tripleo_nova_compute_neutron_project_domain_name: Default
-                  tripleo_nova_compute_neutron_project_name: service
-                  tripleo_nova_compute_neutron_region_name: regionOne
-                  tripleo_nova_compute_neutron_user_domain_name: Default
-                  tripleo_nova_compute_neutron_username: neutron
-                  tripleo_nova_compute_oslo_messaging_notifications_transport_url: rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.localdomain:5672/?ssl=0
-                  tripleo_nova_compute_placement_auth_type: password
-                  tripleo_nova_compute_placement_auth_url: http://192.168.24.3:5000
-                  tripleo_nova_compute_placement_password: Tnqq58zC6mD9O2jaC8xfiyt3M
-                  tripleo_nova_compute_placement_project_domain_name: Default
-                  tripleo_nova_compute_placement_project_name: service
-                  tripleo_nova_compute_placement_region_name: regionOne
-                  tripleo_nova_compute_placement_user_domain_name: Default
-                  tripleo_nova_compute_placement_username: placement
-                  tripleo_nova_compute_placement_valid_interfaces: internal
-                  tripleo_nova_compute_service_user_auth_type: password
-                  tripleo_nova_compute_service_user_auth_url: http://192.168.24.3:5000
-                  tripleo_nova_compute_service_user_password: 59CnvTwMZcJfxCF9NU8bGWrcd
-                  tripleo_nova_compute_service_user_project_domain_name: Default
-                  tripleo_nova_compute_service_user_project_name: service
-                  tripleo_nova_compute_service_user_region_name: regionOne
-                  tripleo_nova_compute_service_user_send_service_user_token: true
-                  tripleo_nova_compute_service_user_user_domain_name: Default
-                  tripleo_nova_compute_service_user_username: nova
-                  tripleo_nova_compute_vnc_novncproxy_base_url: http://192.168.24.3:6080
-                  tripleo_ovn_dbs:
+                  edpm_nova_compute_neutron_auth_type: v3password
+                  edpm_nova_compute_neutron_auth_url: http://192.168.24.3:5000/v3
+                  edpm_nova_compute_neutron_password: viaNg9cyAqS8N1ydQe7n3XkuM
+                  edpm_nova_compute_neutron_project_domain_name: Default
+                  edpm_nova_compute_neutron_project_name: service
+                  edpm_nova_compute_neutron_region_name: regionOne
+                  edpm_nova_compute_neutron_user_domain_name: Default
+                  edpm_nova_compute_neutron_username: neutron
+                  edpm_nova_compute_oslo_messaging_notifications_transport_url: rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.localdomain:5672/?ssl=0
+                  edpm_nova_compute_placement_auth_type: password
+                  edpm_nova_compute_placement_auth_url: http://192.168.24.3:5000
+                  edpm_nova_compute_placement_password: Tnqq58zC6mD9O2jaC8xfiyt3M
+                  edpm_nova_compute_placement_project_domain_name: Default
+                  edpm_nova_compute_placement_project_name: service
+                  edpm_nova_compute_placement_region_name: regionOne
+                  edpm_nova_compute_placement_user_domain_name: Default
+                  edpm_nova_compute_placement_username: placement
+                  edpm_nova_compute_placement_valid_interfaces: internal
+                  edpm_nova_compute_service_user_auth_type: password
+                  edpm_nova_compute_service_user_auth_url: http://192.168.24.3:5000
+                  edpm_nova_compute_service_user_password: 59CnvTwMZcJfxCF9NU8bGWrcd
+                  edpm_nova_compute_service_user_project_domain_name: Default
+                  edpm_nova_compute_service_user_project_name: service
+                  edpm_nova_compute_service_user_region_name: regionOne
+                  edpm_nova_compute_service_user_send_service_user_token: true
+                  edpm_nova_compute_service_user_user_domain_name: Default
+                  edpm_nova_compute_service_user_username: nova
+                  edpm_nova_compute_vnc_novncproxy_base_url: http://192.168.24.3:6080
+                  edpm_ovn_dbs:
                   - 192.168.24.1
             vars:
-                tripleo_ovn_controller_image: quay.io/tripleomastercentos9/openstack-ovn-controller:current-tripleo
+                edpm_ovn_controller_image: quay.io/tripleomastercentos9/openstack-ovn-controller:current-tripleo
                 gather_facts: false
                 enable_debug: false
                 # SELinux module
-                tripleo_selinux_mode: enforcing
+                edpm_selinux_mode: enforcing
                 undercloud_hosts_entries: []
-                # tripleo_hosts_entries role
+                # edpm_hosts_entries role
                 extra_hosts_entries: []
                 vip_hosts_entries: []
                 hosts_entries: []
