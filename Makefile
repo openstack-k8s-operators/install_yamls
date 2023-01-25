@@ -118,6 +118,8 @@ OCTAVIA_BRANCH    ?= main
 OCTAVIAAPI        ?= config/samples/octavia_v1beta1_octaviaapi.yaml
 OCTAVIAAPI_CR     ?= ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIAAPI}
 OCTAVIAAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-octavia-api:current-tripleo
+OCTAVIA_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/octavia-operator/kuttl-test.yaml
+OCTAVIA_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/octavia-operator/tests/kuttl/tests
 
 # Nova
 NOVA_IMG       ?= quay.io/openstack-k8s-operators/nova-operator-index:latest
@@ -715,6 +717,10 @@ octavia_deploy: input octavia_deploy_prep ## installs the service instance using
 	$(eval $(call vars,$@,octavia))
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 
+.PHONY: octavia_deploy_validate
+octavia_deploy_validate: input namespace ## checks that octavia was properly deployed. Set OCTAVIA_KUTTL_DIR to use assert file from custom repo.
+	kubectl-kuttl assert -n ${NAMESPACE} ${OCTAVIA_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
+
 .PHONY: octavia_deploy_cleanup
 octavia_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,octavia))
@@ -786,6 +792,18 @@ keystone_kuttl_run: ## runs kuttl tests for the keystone operator, assumes that 
 keystone_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate keystone_deploy_prep keystone ## runs kuttl tests for the keystone operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make keystone_kuttl_run
 	make deploy_cleanup
+	make keystone_cleanup
+	make mariadb_cleanup
+
+.PHONY: octavia_kuttl_run
+octavia_kuttl_run: ## runs kuttl tests for the octavia operator, assumes that everything needed for running the test was deployed beforehand.
+	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${OCTAVIA_KUTTL_CONF} ${OCTAVIA_KUTTL_DIR}
+
+.PHONY: octavia_kuttl
+octavia_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone octavia_deploy_prep octavia keystone_deploy mariadb_deploy_validate ## runs kuttl tests for the octavia operator. Installs openstack crds and mariadb, keystone, octavia operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	make octavia_kuttl_run
+	make deploy_cleanup
+	make octavia_cleanup
 	make keystone_cleanup
 	make mariadb_cleanup
 
