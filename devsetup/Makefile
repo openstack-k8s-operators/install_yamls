@@ -50,8 +50,8 @@ edpm_compute:
 
 .PHONY: edpm_compute_cleanup
 edpm_compute_cleanup:
-	sudo virsh destroy edpm-compute-${EDPM_COMPUTE_SUFFIX}
-	sudo virsh undefine edpm-compute-${EDPM_COMPUTE_SUFFIX}
+	-sudo virsh destroy edpm-compute-${EDPM_COMPUTE_SUFFIX}
+	-sudo virsh undefine edpm-compute-${EDPM_COMPUTE_SUFFIX}
 	rm -f ${HOME}/.crc/machines/crc/edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2
 	rm -f ../out/edpm/edpm-compute-*-id_rsa.pub
 	oc delete -f ../out/edpm/ansibleee-ssh-key-secret.yaml
@@ -62,4 +62,4 @@ edpm_play:
 
 .PHONY: edpm_play_cleanup
 edpm_play_cleanup:
-	oc delete ansibleee deploy-external-dataplane-compute
+	-oc delete ansibleee deploy-external-dataplane-compute
