@@ -28,6 +28,11 @@ INFRA_IMG        ?= quay.io/openstack-k8s-operators/infra-operator-index:latest
 INFRA_REPO       ?= https://github.com/openstack-k8s-operators/infra-operator.git
 INFRA_BRANCH     ?= master
 
+# Memcached
+MEMCACHED           ?= config/samples/memcached_v1beta1_memcached.yaml
+MEMCACHED_CR        ?= ${OPERATOR_BASE_DIR}/infra-operator/${MEMCACHED}
+MEMCACHED_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-memcached:current-tripleo
+
 # Keystone
 KEYSTONE_IMG        ?= quay.io/openstack-k8s-operators/keystone-operator-index:latest
 KEYSTONE_REPO       ?= https://github.com/openstack-k8s-operators/keystone-operator.git
@@ -278,6 +283,28 @@ infra_cleanup: ## deletes the operator, but does not cleanup the service resourc
 	$(eval $(call vars,$@,infra))
 	bash scripts/operator-cleanup.sh
 	rm -Rf ${OPERATOR_DIR}
+
+##@ MEMCACHED
+.PHONY: memcached_deploy_prep
+memcached_deploy_prep: export KIND=Memcached
+memcached_deploy_prep: export IMAGE=${MEMCACHED_IMG}
+memcached_deploy_prep: memcached_deploy_cleanup ## prepares the CR to install the service based on the service sample file MEMCACHED
+	$(eval $(call vars,$@,infra))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone -b ${INFRA_BRANCH} ${INFRA_REPO} && popd
+	cp ${MEMCACHED_CR} ${DEPLOY_DIR}
+	bash scripts/gen-service-kustomize.sh
+
+.PHONY: memcached_deploy
+memcached_deploy: input memcached_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set INFRA_REPO and INFRA_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,infra))
+	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+
+.PHONY: memcached_deploy_cleanup
+memcached_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,infra))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	rm -Rf ${OPERATOR_BASE_DIR}/infra-operator ${DEPLOY_DIR}
 
 ##@ KEYSTONE
 .PHONY: keystone_prep
