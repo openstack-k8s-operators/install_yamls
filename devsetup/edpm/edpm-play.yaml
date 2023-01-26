@@ -69,10 +69,6 @@ spec:
                     tenant_ip: 192.168.24.2
                     fqdn_internal_api: '{{ ansible_fqdn }}'
                 vars:
-                  chrony_ntp_servers:
-                    - clock.redhat.com
-                    - clock2.redhat.com
-
                   service_net_map:
                     nova_api_network: internal_api
                     nova_libvirt_network: internal_api
