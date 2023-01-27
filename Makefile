@@ -23,6 +23,11 @@ OPENSTACK_BRANCH     ?= master
 OPENSTACK_CTLPLANE   ?= config/samples/core_v1beta1_openstackcontrolplane.yaml
 OPENSTACK_CR         ?= ${OPERATOR_BASE_DIR}/openstack-operator/${OPENSTACK_CTLPLANE}
 
+# Infra Operator
+INFRA_IMG        ?= quay.io/openstack-k8s-operators/infra-operator-index:latest
+INFRA_REPO       ?= https://github.com/openstack-k8s-operators/infra-operator.git
+INFRA_BRANCH     ?= master
+
 # Keystone
 KEYSTONE_IMG        ?= quay.io/openstack-k8s-operators/keystone-operator-index:latest
 KEYSTONE_REPO       ?= https://github.com/openstack-k8s-operators/keystone-operator.git
@@ -245,6 +250,24 @@ openstack_crds: ## installs all openstack CRDs. Useful for infrastructure dev
 	podman image save -o ${OUT}/openstack_crds --compress --format docker-dir quay.io/openstack-k8s-operators/openstack-operator-bundle:latest
 	tar xvf $$(file ${OUT}/openstack_crds/* | grep gzip | cut -f 1 -d ':') -C ${OUT}/openstack_crds
 	for X in $$(grep -l CustomResourceDefinition out/openstack_crds/manifests/*); do oc apply -f $$X; done
+
+##@ INFRA
+.PHONY: infra_prep
+infra_prep: export IMAGE=${INFRA_IMG}
+infra_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,infra))
+	bash scripts/gen-olm.sh
+
+.PHONY: infra
+infra: namespace infra_prep ## installs the operator, also runs the prep step. Set INFRA_IMG for custom image.
+	$(eval $(call vars,$@,infra))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: infra_cleanup
+infra_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,infra))
+	bash scripts/operator-cleanup.sh
+	rm -Rf ${OPERATOR_DIR}
 
 ##@ KEYSTONE
 .PHONY: keystone_prep
