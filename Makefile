@@ -73,6 +73,13 @@ OVNDBS_CR           ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNDBS}
 OVNNORTHD           ?= config/samples/ovn_v1beta1_ovnnorthd.yaml
 OVNNORTHD_CR        ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNNORTHD}
 
+# Ovs
+OVS_IMG             ?= quay.io/openstack-k8s-operators/ovs-operator-index:latest
+OVS_REPO            ?= https://github.com/openstack-k8s-operators/ovs-operator.git
+OVS_BRANCH          ?= main
+OVS                 ?= config/samples/ovs_v1beta1_ovs.yaml
+OVS_CR              ?= ${OPERATOR_BASE_DIR}/ovs-operator/${OVS}
+
 # Neutron
 NEUTRON_IMG        ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
 NEUTRON_REPO       ?= https://github.com/openstack-k8s-operators/neutron-operator.git
@@ -476,6 +483,45 @@ ovn_deploy_cleanup: ## cleans up the service instance, Does not affect the opera
 	$(eval $(call vars,$@,ovn))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/ovn-operator ${DEPLOY_DIR}
+
+##@ OVS
+.PHONY: ovs_prep
+ovs_prep: export IMAGE=${OVS_IMG}
+ovs_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,ovs))
+	bash scripts/gen-olm.sh
+
+.PHONY: ovs
+ovs: namespace ovs_prep ## installs the operator, also runs the prep step. Set OVS_IMG for custom image.
+	$(eval $(call vars,$@,ovs))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: ovs_cleanup
+ovs_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,ovs))
+	bash scripts/operator-cleanup.sh
+	rm -Rf ${OPERATOR_DIR}
+
+.PHONY: ovs_deploy_prep
+ovs_deploy_prep: export KIND=.*
+ovs_deploy_prep: export IMAGE=unused
+ovs_deploy_prep: ovs_deploy_cleanup ## prepares the CR to install the service based on the service sample file OVS
+	$(eval $(call vars,$@,ovs))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone -b ${OVS_BRANCH} ${OVS_REPO} && popd
+	cp ${OVS_CR} ${DEPLOY_DIR}
+	bash scripts/gen-service-kustomize.sh
+
+.PHONY: ovs_deploy
+ovs_deploy: ovs_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set OVS_REPO and OVS_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,ovs))
+	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+
+.PHONY: ovs_deploy_cleanup
+ovs_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,ovs))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	rm -Rf ${OPERATOR_BASE_DIR}/ovs-operator ${DEPLOY_DIR}
 
 ##@ NEUTRON
 .PHONY: neutron_prep
