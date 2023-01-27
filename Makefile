@@ -126,6 +126,9 @@ ANSIBLEEE_BRANCH    ?= main
 ANSIBLEEE           ?= config/samples/_v1alpha1_ansibleee.yaml
 ANSIBLEEE_CR        ?= ${OPERATOR_BASE_DIR}/ansibleee-operator/${ANSIBLEEE}
 
+# Ceph
+CEPH_IMG       ?= quay.io/ceph/daemon:latest-quincy
+
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
 ${1}: export NAMESPACE=${NAMESPACE}
@@ -744,3 +747,20 @@ ansibleee_cleanup: ## deletes the operator, but does not cleanup the service res
 	$(eval $(call vars,$@,ansibleee))
 	bash scripts/operator-cleanup.sh
 	rm -Rf ${OPERATOR_DIR}
+
+##@ CEPH
+.PHONY: ceph
+ceph: export IMAGE=${CEPH_IMG}
+ceph: namespace ## deploy the Ceph Pod
+	$(eval $(call vars,$@,ceph))
+	bash scripts/gen-ceph-kustomize.sh "build"
+	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/gen-ceph-kustomize.sh "isready"
+	bash scripts/gen-ceph-kustomize.sh "pools"
+	bash scripts/gen-ceph-kustomize.sh "secret"
+
+.PHONY: ceph_cleanup
+ceph_cleanup: ## deletes the ceph pod
+	$(eval $(call vars,$@,ceph))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	rm -Rf ${DEPLOY_DIR}
