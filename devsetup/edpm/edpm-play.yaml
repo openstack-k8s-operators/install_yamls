@@ -1,3 +1,4 @@
+---
 apiVersion: ansibleee.openstack.org/v1alpha1
 kind: OpenStackAnsibleEE
 metadata:
@@ -94,14 +95,19 @@ spec:
                   ctlplane_dns_nameservers:
                   - 192.168.122.1
                   dns_search_domains: []
-                  edpm_nova_compute_DEFAULT_transport_url: rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.localdomain:5672/?ssl=0
+                  edpm_nova_compute_DEFAULT_transport_url:
+                    "rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.\
+                    localdomain:5672/?ssl=0"
                   edpm_nova_compute_cache_memcache_servers: standalone.ctlplane.localdomain:11211
                   edpm_nova_compute_cinder_auth_url: http://192.168.24.3:5000/v3
                   edpm_nova_compute_cinder_password: ip3VDO3mq6JObAQqfekzt85kp
                   edpm_nova_compute_config_overrides:
                     DEFAULT:
-                      oslo_messaging_notifications_transport_url: rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.localdomain:5672/?ssl=0
-                      transport_url: rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.localdomain:5672/?ssl=0
+                      oslo_messaging_notifications_transport_url:
+                          "rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.\
+                          localdomain:5672/?ssl=0"
+                      transport_url: "rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.\
+                                      ctlplane.localdomain:5672/?ssl=0"
                     cache:
                       memcache_servers: standalone.ctlplane.localdomain:11211
                     cinder:
@@ -146,7 +152,9 @@ spec:
                   edpm_nova_compute_neutron_region_name: regionOne
                   edpm_nova_compute_neutron_user_domain_name: Default
                   edpm_nova_compute_neutron_username: neutron
-                  edpm_nova_compute_oslo_messaging_notifications_transport_url: rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.localdomain:5672/?ssl=0
+                  edpm_nova_compute_oslo_messaging_notifications_transport_url:
+                    "rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.\
+                    localdomain:5672/?ssl=0"
                   edpm_nova_compute_placement_auth_type: password
                   edpm_nova_compute_placement_auth_url: http://192.168.24.3:5000
                   edpm_nova_compute_placement_password: Tnqq58zC6mD9O2jaC8xfiyt3M
@@ -169,7 +177,8 @@ spec:
                   edpm_ovn_dbs:
                   - 192.168.24.1
             vars:
-                edpm_ovn_controller_image: quay.io/tripleomastercentos9/openstack-ovn-controller:current-tripleo
+                edpm_ovn_controller_image: >-
+                  "quay.io/tripleomastercentos9/openstack-ovn-controller:current-tripleo"
                 gather_facts: false
                 enable_debug: false
                 # SELinux module
@@ -201,4 +210,3 @@ spec:
         - name: ssh-key
           mountPath: /runner/env/ssh_key
           subPath: ssh_key
-

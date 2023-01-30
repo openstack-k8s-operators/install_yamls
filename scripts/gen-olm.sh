@@ -16,20 +16,20 @@
 set -ex
 
 if [ -z "${NAMESPACE}" ]; then
-  echo "Please set NAMESPACE"; exit 1
+    echo "Please set NAMESPACE"; exit 1
 fi
 if [ -z "${OPERATOR_NAME}" ]; then
-  echo "Please set OPERATOR_NAME"; exit 1
+    echo "Please set OPERATOR_NAME"; exit 1
 fi
 if [ -z "${IMAGE}" ]; then
-  echo "Please set IMAGE"; exit 1
+    echo "Please set IMAGE"; exit 1
 fi
 if [ -z "${OPERATOR_DIR}" ]; then
-  echo "Please set OPERATOR_DIR"; exit 1
+    echo "Please set OPERATOR_DIR"; exit 1
 fi
 
 if [ ! -d ${OPERATOR_DIR} ]; then
-  mkdir -p ${OPERATOR_DIR}
+    mkdir -p ${OPERATOR_DIR}
 fi
 
 echo OPERATOR_DIR ${OPERATOR_DIR}

@@ -20,19 +20,19 @@ SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 . ${SCRIPTPATH}/common.sh --source-only
 
 if [ -z "$NAMESPACE" ]; then
-  echo "Please set NAMESPACE"; exit 1
+    echo "Please set NAMESPACE"; exit 1
 fi
 
 if [ -z "$KIND" ]; then
-      echo "Please set KIND"; exit 1
+    echo "Please set KIND"; exit 1
 fi
 
 if [ -z "$NAME" ]; then
-      echo "Please set NAME"; exit 1
+    echo "Please set NAME"; exit 1
 fi
 
 if [ ! -d ${DEPLOY_DIR} ]; then
-      mkdir -p ${DEPLOY_DIR}
+    mkdir -p ${DEPLOY_DIR}
 fi
 
 pushd ${DEPLOY_DIR}

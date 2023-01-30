@@ -19,25 +19,25 @@ NAMESPACE=$1
 SECRET=$2
 PASSWORD=$3
 if [ -z "$NAMESPACE" ]; then
-  echo "Please set NAMESPACE as ARG1"; exit 1
+    echo "Please set NAMESPACE as ARG1"; exit 1
 fi
 
 if [ -z "$SECRET" ]; then
-      echo "Please set SECRET as ARG2"; exit 1
+    echo "Please set SECRET as ARG2"; exit 1
 fi
 
 if [ -z "$PASSWORD" ]; then
-      echo "Please set PASSWORD as ARG3"; exit 1
+    echo "Please set PASSWORD as ARG3"; exit 1
 fi
 
 if [ ! -d out/${NAMESPACE}/input ]; then
-  mkdir -p out/${NAMESPACE}/input
+    mkdir -p out/${NAMESPACE}/input
 fi
 
 DIR=out/${NAMESPACE}/input
 
 if [ ! -d ${DIR} ]; then
-      mkdir -p ${DIR}
+    mkdir -p ${DIR}
 fi
 
 pushd ${DIR}
