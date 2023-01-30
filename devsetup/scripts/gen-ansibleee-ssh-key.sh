@@ -21,7 +21,7 @@ NAMESPACE=${NAMESPACE:-"openstack"}
 OUTPUT_DIR=${OUTPUT_DIR:-"../out/edpm"}
 
 if [ ! -d ${OUTPUT_DIR} ]; then
-      mkdir -p ${OUTPUT_DIR}
+    mkdir -p ${OUTPUT_DIR}
 fi
 
 pushd ${OUTPUT_DIR}

@@ -20,29 +20,29 @@ SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 . ${SCRIPTPATH}/common.sh --source-only
 
 if [ -z "$NAMESPACE" ]; then
-  echo "Please set NAMESPACE"; exit 1
+    echo "Please set NAMESPACE"; exit 1
 fi
 
 if [ -z "$KIND" ]; then
-      echo "Please set SERVICE"; exit 1
+    echo "Please set SERVICE"; exit 1
 fi
 
 if [ -z "$SECRET" ]; then
-      echo "Please set SECRET"; exit 1
+    echo "Please set SECRET"; exit 1
 fi
 
 if [ -z "$DEPLOY_DIR" ]; then
-      echo "Please set DEPLOY_DIR"; exit 1
+    echo "Please set DEPLOY_DIR"; exit 1
 fi
 
 if [ -z "$IMAGE" ]; then
-      echo "Please set IMAGE"; exit 1
+    echo "Please set IMAGE"; exit 1
 fi
 
 NAME=${KIND,,}
 
 if [ ! -d ${DEPLOY_DIR} ]; then
-      mkdir -p ${DEPLOY_DIR}
+    mkdir -p ${DEPLOY_DIR}
 fi
 
 pushd ${DEPLOY_DIR}

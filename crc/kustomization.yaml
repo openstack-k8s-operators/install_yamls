@@ -1,2 +1,3 @@
+---
 resources:
-- storage.yaml
+  - storage.yaml

@@ -3,4 +3,4 @@
 - hosts: localhost
   vars_files: "vars/default.yaml"
   roles:
-  - download_tools
+    - download_tools
