@@ -1,5 +1,5 @@
-apiVersion: redhat.com/v1alpha1
-kind: AnsibleEE
+apiVersion: ansibleee.openstack.org/v1alpha1
+kind: OpenStackAnsibleEE
 metadata:
   name: deploy-external-dataplane-compute
   namespace: openstack
