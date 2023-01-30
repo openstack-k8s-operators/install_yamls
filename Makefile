@@ -37,6 +37,8 @@ KEYSTONEAPI_CR      ?= ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
 KEYSTONEAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-keystone:current-tripleo
 KEYSTONE_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.yaml
 KEYSTONE_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
+CINDER_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/cinder-operator/kuttl-test.yaml
+CINDER_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/cinder-operator/tests/kuttl/tests
 
 # Mariadb
 MARIADB_IMG         ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
@@ -595,6 +597,10 @@ cinder_deploy_prep: cinder_deploy_cleanup ## prepares the CR to install the serv
 cinder_deploy: input cinder_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set CINDER_REPO and CINDER_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,cinder))
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+
+.PHONY: cinder_deploy_validate
+cinder_deploy_validate: input namespace ## checks that cinder was properly deployed. Set CINDER_KUTTL_DIR to use assert file from custom repo.
+	kubectl-kuttl assert -n ${NAMESPACE} ${CINDER_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
 
 .PHONY: cinder_deploy_cleanup
 cinder_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
