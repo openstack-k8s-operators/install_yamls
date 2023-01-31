@@ -11,6 +11,7 @@ KUBEADMIN_PWD=$2
 PULL_SECRET_FILE=$3
 CPUS=${CPUS:-4}
 MEMORY=${MEMORY:-9216}
+DISK=${DISK:-31}
 
 if [ -z "${CRC_URL}" ]; then
   echo "Please set CRC_URL as ARG1"; exit 1
@@ -43,6 +44,7 @@ ${CRC_BIN} config set skip-check-daemon-systemd-unit true
 ${CRC_BIN} config set skip-check-daemon-systemd-sockets true
 ${CRC_BIN} config set cpus ${CPUS}
 ${CRC_BIN} config set memory ${MEMORY}
+${CRC_BIN} config set disk-size ${DISK}
 ${CRC_BIN} setup
 
 ${CRC_BIN} start
