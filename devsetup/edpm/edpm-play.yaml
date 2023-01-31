@@ -126,8 +126,6 @@ spec:
                     DEFAULT:
                       oslo_messaging_notifications_transport_url: '_EDPM_NOVA_NOTIFICATIONS_TRANSPORT_URL_'
                       transport_url: '_EDPM_NOVA_COMPUTE_TRANSPORT_URL_'
-                    cache:
-                      memcache_servers: standalone.ctlplane.localdomain:11211
                     cinder:
                       auth_url: http://keystone-internal.openstack.svc:5000/v3
                       password: 12345678
