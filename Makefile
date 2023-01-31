@@ -794,7 +794,7 @@ keystone_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_de
 ansibleee_prep: export IMAGE=${ANSIBLEEE_IMG}
 ansibleee_prep: ## creates the files to install the operator using olm
 	$(eval $(call vars,$@,ansibleee))
-	bash scripts/gen-olm.sh
+	OPERATOR_NAME=openstack-ansibleee bash scripts/gen-olm.sh
 
 .PHONY: ansibleee
 ansibleee: namespace ansibleee_prep ## installs the operator, also runs the prep step. Set ansibleee_IMG for custom image.
@@ -804,7 +804,7 @@ ansibleee: namespace ansibleee_prep ## installs the operator, also runs the prep
 .PHONY: ansibleee_cleanup
 ansibleee_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,ansibleee))
-	bash scripts/operator-cleanup.sh
+	OPERATOR_NAME=openstack-ansibleee bash scripts/operator-cleanup.sh
 	rm -Rf ${OPERATOR_DIR}
 
 ##@ CEPH
