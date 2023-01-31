@@ -110,7 +110,7 @@ sudo virsh net-dhcp-leases default
 
 Execute the ansible to configure the compute nodes:
 ```
-make edpm-play
+make edpm_play
 ```
 
 Cleanup:
