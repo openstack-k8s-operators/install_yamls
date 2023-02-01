@@ -37,8 +37,6 @@ KEYSTONEAPI_CR      ?= ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
 KEYSTONEAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-keystone:current-tripleo
 KEYSTONE_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.yaml
 KEYSTONE_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
-CINDER_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/cinder-operator/kuttl-test.yaml
-CINDER_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/cinder-operator/tests/kuttl/tests
 
 # Mariadb
 MARIADB_IMG         ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
@@ -96,6 +94,8 @@ CINDER_REPO      ?= https://github.com/openstack-k8s-operators/cinder-operator.g
 CINDER_BRANCH    ?= master
 CINDER           ?= config/samples/cinder_v1beta1_cinder.yaml
 CINDER_CR        ?= ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
+CINDER_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/cinder-operator/kuttl-test.yaml
+CINDER_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/cinder-operator/tests/kuttl/tests
 # TODO: Image customizations for all Cinder services
 
 # Rabbitmq
