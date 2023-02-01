@@ -175,14 +175,18 @@ cleanup: nova_cleanup octavia_cleanup neutron_cleanup ovn_cleanup ironic_cleanup
 deploy_cleanup: nova_deploy_cleanup octavia_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup ## Delete all OpenStack service objects
 
 ##@ CRC
+.PHONY: crc_storage
 crc_storage: ## initialize local storage PVs in CRC vm
+	$(eval $(call vars,$@))
 	bash scripts/create-pv.sh
 	bash scripts/gen-crc-pv-kustomize.sh
 	oc apply -f ${OUT}/crc/storage.yaml
 
+.PHONY: crc_storage_cleanup
 crc_storage_cleanup: ## cleanup local storage PVs in CRC vm
-	oc get pv | grep local | cut -f 1 -d ' ' | xargs oc delete pv
-	oc delete sc local-storage
+	$(eval $(call vars,$@))
+	oc get pv | grep ${STORAGE_CLASS} | cut -f 1 -d ' ' | xargs oc delete pv
+	oc delete sc ${STORAGE_CLASS}
 	bash scripts/delete-pv.sh
 
 ##@ NAMESPACE
