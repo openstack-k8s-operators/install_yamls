@@ -774,29 +774,42 @@ nova_deploy_cleanup: ## cleans up the service instance, Does not affect the oper
 
 ##@ KUTTL tests
 
-.PHONY: mariadb_kuttl
-mariadb_kuttl: namespace input openstack_crds deploy_cleanup mariadb_deploy_prep mariadb  ## runs kuttl tests for the mariadb operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests.
+.PHONY: mariadb_kuttl_run
+mariadb_kuttl_run: ## runs kuttl tests for the mariadb operator, assumes that everything needed for running the test was deployed beforehand.
 	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${MARIADB_KUTTL_CONF} ${MARIADB_KUTTL_DIR}
 
-.PHONY: keystone_kuttl
-keystone_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate keystone_deploy_prep keystone ## runs kuttl tests for the keystone operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests.
+.PHONY: mariadb_kuttl
+mariadb_kuttl: namespace input openstack_crds deploy_cleanup mariadb_deploy_prep mariadb  ## runs kuttl tests for the mariadb operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	make mariadb_kuttl_run
+	make deploy_cleanup
+	make mariadb_cleanup
+
+.PHONY: keystone_kuttl_run
+keystone_kuttl_run: ## runs kuttl tests for the keystone operator, assumes that everything needed for running the test was deployed beforehand.
 	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${KEYSTONE_KUTTL_CONF} ${KEYSTONE_KUTTL_DIR}
+
+.PHONY: keystone_kuttl
+keystone_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate keystone_deploy_prep keystone ## runs kuttl tests for the keystone operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	make keystone_kuttl_run
+	make deploy_cleanup
+	make keystone_cleanup
+	make mariadb_cleanup
 
 ##@ ANSIBLEEE
 .PHONY: ansibleee_prep
 ansibleee_prep: export IMAGE=${ANSIBLEEE_IMG}
 ansibleee_prep: ## creates the files to install the operator using olm
-	$(eval $(call vars,$@,ansibleee))
+	$(eval $(call vars,$@,openstack-ansibleee))
 	bash scripts/gen-olm.sh
 
 .PHONY: ansibleee
 ansibleee: namespace ansibleee_prep ## installs the operator, also runs the prep step. Set ansibleee_IMG for custom image.
-	$(eval $(call vars,$@,ansibleee))
+	$(eval $(call vars,$@,openstack-ansibleee))
 	oc apply -f ${OPERATOR_DIR}
 
 .PHONY: ansibleee_cleanup
 ansibleee_cleanup: ## deletes the operator, but does not cleanup the service resources
-	$(eval $(call vars,$@,ansibleee))
+	$(eval $(call vars,$@,openstack-ansibleee))
 	bash scripts/operator-cleanup.sh
 	rm -Rf ${OPERATOR_DIR}
 
