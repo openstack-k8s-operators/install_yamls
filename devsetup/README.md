@@ -98,14 +98,16 @@ Deploy a compute node VM:
 make edpm_compute
 ```
 
-Discover IP of the compute node VM:
+Discover IP of the compute node VM
 ```
-sudo virsh net-dhcp-leases default
+sudo virsh -q domifaddr edpm-compute-0|awk 'NF>1{print $NF}' | cut -d/ -f1
+# wait until ip address appears, then assign to a variable
+COMPUTE_IP=$( sudo virsh -q domifaddr edpm-compute-0| awk 'NF>1{print $NF}' | cut -d/ -f1 )
 ```
 
 Execute the ansible to configure the compute node:
 ```
-make edpm_play EDPM_COMPUTE_IP=<IP>
+make edpm_play EDPM_COMPUTE_IP=${COMPUTE_IP}
 ```
 
 You can also deploy additional compute node VMs:
