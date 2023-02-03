@@ -3,7 +3,7 @@ KUBEADMIN_PWD ?= 12345678
 PULL_SECRET  ?= ${PWD}/pull-secret.txt
 EDPM_COMPUTE_SUFFIX ?= 0
 EDPM_COMPUTE_IP ?= 192.168.122.139
-EDPM_RUNNER_IMG ?= quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
+OPENSTACK_RUNNER_IMG ?= quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
 EDPM_NETWORK_CONFIG_TEMPLATE ?= templates/net_config_bridge.j2
 
 ##@ General
