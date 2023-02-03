@@ -172,6 +172,9 @@ spec:
                 edpm_ovn_controller_image: quay.io/tripleomastercentos9/openstack-ovn-controller:current-tripleo
                 gather_facts: false
                 enable_debug: false
+                # edpm firewall, change the allowed CIDR if needed
+                edpm_sshd_configure_firewall: true
+                edpm_sshd_allowed_ranges: [ '192.168.122.0/24' ]
                 # SELinux module
                 edpm_selinux_mode: enforcing
                 undercloud_hosts_entries: []
