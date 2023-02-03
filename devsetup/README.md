@@ -98,7 +98,7 @@ Deploy a compute node VM:
 make edpm_compute
 ```
 
-Discover IP of the compute node VM
+Discover IP of the compute node VM:
 ```
 sudo virsh -q domifaddr edpm-compute-0|awk 'NF>1{print $NF}' | cut -d/ -f1
 # wait until ip address appears, then assign to a variable
