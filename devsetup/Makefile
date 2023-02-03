@@ -2,6 +2,7 @@ CRC_URL ?= 'https://developers.redhat.com/content-gateway/rest/mirror/pub/opensh
 KUBEADMIN_PWD ?= 12345678
 PULL_SECRET  ?= ${PWD}/pull-secret.txt
 EDPM_COMPUTE_SUFFIX ?= 0
+EDPM_COMPUTE_IP ?= 192.168.122.139
 
 ##@ General
 
@@ -58,7 +59,7 @@ edpm_compute_cleanup:
 
 .PHONY: edpm_play
 edpm_play:
-	oc create -f edpm/edpm-play.yaml
+	sed "s/_COMPUTE_IP_/${EDPM_COMPUTE_IP}/g" edpm/edpm-play.yaml | oc create -f -
 
 .PHONY: edpm_play_cleanup
 edpm_play_cleanup:

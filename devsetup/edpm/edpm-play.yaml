@@ -62,7 +62,7 @@ spec:
                 hosts:
                   # Add additional computes here, and optionally drop localhost.
                   # Add host vars under the host_vars dir.
-                  192.168.122.139:
+                  _COMPUTE_IP_:
                     ansible_ssh_user: root
                     ctlplane_ip: 192.168.24.100
                     internal_api_ip: 192.168.24.2
