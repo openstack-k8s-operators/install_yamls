@@ -602,6 +602,7 @@ cinder_deploy: input cinder_deploy_prep ## installs the service instance using k
 cinder_deploy_validate: input namespace ## checks that cinder was properly deployed. Set CINDER_KUTTL_DIR to use assert file from custom repo.
 	kubectl-kuttl assert -n ${NAMESPACE} ${CINDER_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
 
+
 .PHONY: cinder_deploy_cleanup
 cinder_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,cinder))
@@ -793,6 +794,17 @@ keystone_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_de
 	make keystone_kuttl_run
 	make deploy_cleanup
 	make keystone_cleanup
+	make mariadb_cleanup
+
+.PHONY: cinder_kuttl_run
+cinder_kuttl_run: ## runs kuttl tests for the keystone operator, assumes that everything needed for running the test was deployed beforehand.
+	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${CINDER_KUTTL_CONF} ${CINDER_KUTTL_DIR}
+
+.PHONY: cinder_kuttl
+cinder_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate cinder_deploy_prep keystone ## runs kuttl tests for the cinder operator. Installs openstack crds and cinder operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	make cinder_kuttl_run
+	make deploy_cleanup
+	make cinder_cleanup
 	make mariadb_cleanup
 
 ##@ ANSIBLEEE
