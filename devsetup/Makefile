@@ -61,9 +61,9 @@ edpm_compute_cleanup:
 
 .PHONY: edpm_play
 edpm_play:
-	sed -e "s/_COMPUTE_IP_/${EDPM_COMPUTE_IP}/g" \
-	    -e "s/_OPENSTACK_RUNNER_IMG_/${OPENSTACK_RUNNER_IMG}/g" \
-	    -e "s/_EDPM_CONFIG_NETWORK_TEMPLATE_/${EDPM_CONFIG_NETWORK_TEMPLATE}/g" \
+	sed -e "s|_COMPUTE_IP_|${EDPM_COMPUTE_IP}|g" \
+	    -e "s|_OPENSTACK_RUNNER_IMG_|${OPENSTACK_RUNNER_IMG}|g"
+	    -e "s|_EDPM_NETWORK_CONFIG_TEMPLATE_|${EDPM_NETWORK_CONFIG_TEMPLATE}|g" \
 	    edpm/edpm-play.yaml | oc create -f -
 
 .PHONY: edpm_play_cleanup
