@@ -52,7 +52,7 @@ spec:
 
     - name: Deploy EDPM run OpenStack playbook
       ansible.builtin.import_playbook: deploy-edpm-openstack-run.yml
-  image: "quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest"
+  image: "_OPENSTACK_RUNNER_IMG_"
   inventory: |
     allovercloud:
       children:
@@ -76,7 +76,7 @@ spec:
                   # edpm_network_config
                   # Default nic config template for a EDPM compute node
                   # These vars are edpm_network_config role vars
-                  edpm_network_config_template: templates/net_config_bridge.j2
+                  edpm_network_config_template: _EDPM_NETWORK_CONFIG_TEMPLATE_
                   edpm_network_config_hide_sensitive_logs: false
                   #
                   # These vars are for the network config templates themselves and are
