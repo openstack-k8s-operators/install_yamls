@@ -5,6 +5,7 @@ EDPM_COMPUTE_SUFFIX ?= 0
 EDPM_COMPUTE_IP ?= 192.168.122.139
 OPENSTACK_RUNNER_IMG ?= quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
 EDPM_NETWORK_CONFIG_TEMPLATE ?= templates/net_config_bridge.j2
+EDPM_SSHD_ALLOWED_RANGES ?= ['192.168.122.0/24']
 
 ##@ General
 
@@ -64,6 +65,7 @@ edpm_play:
 	sed -e "s|_COMPUTE_IP_|${EDPM_COMPUTE_IP}|g" \
 	    -e "s|_OPENSTACK_RUNNER_IMG_|${OPENSTACK_RUNNER_IMG}|g" \
 	    -e "s|_EDPM_NETWORK_CONFIG_TEMPLATE_|${EDPM_NETWORK_CONFIG_TEMPLATE}|g" \
+		-e "s|_EDPM_SSHD_ALLOWED_RANGES_|${EDPM_SSHD_ALLOWED_RANGES}|g" \
 	    edpm/edpm-play.yaml | oc create -f -
 
 .PHONY: edpm_play_cleanup
