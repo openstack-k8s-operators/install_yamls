@@ -123,7 +123,11 @@ OCTAVIAAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-octavia-api:cu
 NOVA_IMG       ?= quay.io/openstack-k8s-operators/nova-operator-index:latest
 NOVA_REPO      ?= https://github.com/openstack-k8s-operators/nova-operator.git
 NOVA_BRANCH    ?= master
-NOVA           ?= config/samples/nova_v1beta1_nova.yaml
+# NOTE(gibi): We intentionally not using the default nova sample here
+# as that would require two RabbitMQCluster to be deployed which a) is not what
+# the make rabbitmq_deploy target does ii) required extra resource in the dev
+# environment.
+NOVA           ?= config/samples/nova_v1beta1_nova_collapsed_cell.yaml
 NOVA_CR        ?= ${OPERATOR_BASE_DIR}/nova-operator/${NOVA}
 
 # AnsibleEE
