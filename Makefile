@@ -800,7 +800,7 @@ cinder_kuttl_run: ## runs kuttl tests for the cinder operator, assumes that ever
 	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${CINDER_KUTTL_CONF} ${CINDER_KUTTL_DIR}
 
 .PHONY: cinder_kuttl
-cinder_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy rabbitmq rabbitmq_deploykeystone keystone_deploy keystone_deploy_validate cinder_deploy_prep cinder mariadb_deploy_validate ## runs kuttl tests for the cinder operator. Installs openstack crds and cinder operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+cinder_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy rabbitmq rabbitmq_deploy keystone keystone_deploy keystone_deploy_validate cinder_deploy_prep cinder mariadb_deploy_validate ## runs kuttl tests for the cinder operator. Installs openstack crds and cinder operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make cinder_kuttl_run
 	make deploy_cleanup
 	make cinder_cleanup
