@@ -45,7 +45,7 @@ cat >> out/crc/storage.yaml <<EOF_CAT
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: ${STORAGE_CLASS}$i
+  name: "$(sed -e 's/^"//' -e 's/"$//' <<<"${STORAGE_CLASS}")$i"
   annotations:
     pv.kubernetes.io/provisioned-by: crc-devsetup
 spec:
