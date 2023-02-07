@@ -109,7 +109,8 @@ IRONIC_REPO      ?= https://github.com/openstack-k8s-operators/ironic-operator.g
 IRONIC_BRANCH    ?= master
 IRONIC           ?= config/samples/ironic_v1beta1_ironic.yaml
 IRONIC_CR        ?= ${OPERATOR_BASE_DIR}/ironic-operator/${IRONIC}
-
+IRONIC_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/ironic-operator/kuttl-test.yaml
+IRONIC_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/ironic-operator/tests/kuttl/tests
 
 # Octavia
 OCTAVIA_IMG       ?= quay.io/openstack-k8s-operators/octavia-operator-index:latest
@@ -812,6 +813,18 @@ octavia_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_dep
 	make octavia_kuttl_run
 	make deploy_cleanup
 	make octavia_cleanup
+	make keystone_cleanup
+	make mariadb_cleanup
+
+.PHONY: ironic_kuttl_run
+keystone_kuttl_run: ## runs kuttl tests for the ironic operator, assumes that everything needed for running the test was deployed beforehand.
+	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${IRONIC_KUTTL_CONF} ${IRONIC_KUTTL_DIR}
+
+.PHONY: ironic_kuttl
+ironic_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone ironic_deploy_prep ironic keystone_deploy mariadb_deploy_validate ## runs kuttl tests for the ironic operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	make ironic_kuttl_run
+	make deploy_cleanup
+	make ironic_cleanup
 	make keystone_cleanup
 	make mariadb_cleanup
 
