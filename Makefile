@@ -137,6 +137,11 @@ ANSIBLEEE_BRANCH    ?= main
 ANSIBLEEE           ?= config/samples/_v1alpha1_ansibleee.yaml
 ANSIBLEEE_CR        ?= ${OPERATOR_BASE_DIR}/ansibleee-operator/${ANSIBLEEE}
 
+# Baremetal Operator
+BAREMETAL_IMG        ?= quay.io/openstack-k8s-operators/openstack-baremetal-operator-index:latest
+BAREMETAL_REPO       ?= https://github.com/openstack-k8s-operators/openstack-baremetal-operator.git
+BAREMETAL_BRANCH     ?= master
+
 # Ceph
 CEPH_IMG       ?= quay.io/ceph/daemon:latest-quincy
 
@@ -808,6 +813,24 @@ ansibleee: namespace ansibleee_prep ## installs the operator, also runs the prep
 .PHONY: ansibleee_cleanup
 ansibleee_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,openstack-ansibleee))
+	bash scripts/operator-cleanup.sh
+	rm -Rf ${OPERATOR_DIR}
+
+##@ BAREMETAL
+.PHONY: baremetal_prep
+baremetal_prep: export IMAGE=${BAREMETAL_IMG}
+baremetal_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,openstack-baremetal))
+	bash scripts/gen-olm.sh
+
+.PHONY: baremetal
+baremetal: namespace baremetal_prep ## installs the operator, also runs the prep step. Set BAREMETAL_IMG for custom image.
+	$(eval $(call vars,$@,openstack-baremetal))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: baremetal_cleanup
+baremetal_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,openstack-baremetal))
 	bash scripts/operator-cleanup.sh
 	rm -Rf ${OPERATOR_DIR}
 
