@@ -15,6 +15,10 @@
 # under the License.
 set -ex
 
+if [ -z "$STORAGE_CLASS" ]; then
+  echo "Please set STORAGE_CLASS"; exit 1
+fi
+
 if [ ! -d out/crc ]; then
   mkdir -p out/crc
 fi
@@ -30,7 +34,7 @@ cat > out/crc/storage.yaml <<EOF_CAT
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
-  name: local-storage
+  name: ${STORAGE_CLASS}
 provisioner: kubernetes.io/no-provisioner
 volumeBindingMode: WaitForFirstConsumer
 EOF_CAT
@@ -41,11 +45,11 @@ cat >> out/crc/storage.yaml <<EOF_CAT
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: local-storage$i
+  name: ${STORAGE_CLASS}$i
   annotations:
     pv.kubernetes.io/provisioned-by: crc-devsetup
 spec:
-  storageClassName: local-storage
+  storageClassName: ${STORAGE_CLASS}
   capacity:
     storage: 10Gi
   accessModes:
