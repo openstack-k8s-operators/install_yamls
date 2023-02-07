@@ -18,7 +18,11 @@ set -ex
 # expect that the common.sh is in the same dir as the calling script
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 NAMESPACE=${NAMESPACE:-"openstack"}
+METADATA_NAME=${METADATA_NAME:-"ansibleee-ssh-key-secret"}
 OUTPUT_DIR=${OUTPUT_DIR:-"../out/edpm"}
+SSH_ALGORITHM=${SSH_ALGORITHM:-"rsa"}
+SSH_KEY_FILE=${SSH_KEY_FILE:-"ansibleee-ssh-key-id_rsa"}
+SSH_KEY_SIZE=${SSH_KEY_SIZE:-"4096"}
 
 if [ ! -d ${OUTPUT_DIR} ]; then
       mkdir -p ${OUTPUT_DIR}
@@ -33,8 +37,8 @@ if oc get secret ansibleee-ssh-key-secret 2>&1 1>/dev/null; then
     exit 0
 fi
 
-if [ ! -f ansibleee-ssh-key-id_rsa ]; then
-    ssh-keygen -f ansibleee-ssh-key-id_rsa -N ""
+if [ ! -f ${SSH_KEY_FILE} ]; then
+    ssh-keygen -f ${SSH_KEY_FILE} -N "" -t ${SSH_ALGORITHM} -b ${SSH_KEY_SIZE}
 fi
 
 cat <<EOF >ansibleee-ssh-key-secret.yaml
@@ -42,12 +46,12 @@ apiVersion: v1
 kind: Secret
 namespace: ${NAMESPACE}
 metadata:
-    name: ansibleee-ssh-key-secret
+    name: ${METADATA_NAME}
 data:
     public_ssh_key: |
-$(cat ansibleee-ssh-key-id_rsa.pub | base64 | sed 's/^/        /')
+$(cat ${SSH_KEY_FILE}.pub | base64 | sed 's/^/        /')
     private_ssh_key: |
-$(cat ansibleee-ssh-key-id_rsa | base64 | sed 's/^/        /')
+$(cat ${SSH_KEY_FILE} | base64 | sed 's/^/        /')
 EOF
 
 oc create -f ansibleee-ssh-key-secret.yaml
