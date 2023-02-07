@@ -827,6 +827,7 @@ ovn_kuttl: namespace input openstack_crds deploy_cleanup ovn_deploy_prep ovn ## 
 	make ovn_kuttl_run
 	make deploy_cleanup
 	make ovn_cleanup
+
 .PHONY: ironic_kuttl_run
 ironic_kuttl_run: ## runs kuttl tests for the ironic operator, assumes that everything needed for running the test was deployed beforehand.
 	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${IRONIC_KUTTL_CONF} ${IRONIC_KUTTL_DIR}
