@@ -1,0 +1,1575 @@
+
+{% if namespace is defined %}
+# To set the value of NAMESPACE
+export NAMESPACE={{ namespace }}
+{% endif %}
+
+{% if password is defined %}
+# To set the value of PASSWORD
+export PASSWORD={{ password }}
+{% endif %}
+
+{% if secret is defined %}
+# To set the value of SECRET
+export SECRET={{ secret }}
+{% endif %}
+
+{% if out is defined %}
+# To set the value of OUT
+export OUT={{ out }}
+{% endif %}
+
+{% if install_yamls is defined %}
+# To set the value of INSTALL_YAMLS
+export INSTALL_YAMLS={{ install_yamls }}
+{% endif %}
+
+{% if operator_base_dir is defined %}
+# To set the value of OPERATOR_BASE_DIR
+export OPERATOR_BASE_DIR={{ operator_base_dir }}
+{% endif %}
+
+{% if service_registry is defined %}
+# To set the value of SERVICE_REGISTRY
+export SERVICE_REGISTRY={{ service_registry }}
+{% endif %}
+
+{% if service_org is defined %}
+# To set the value of SERVICE_ORG
+export SERVICE_ORG={{ service_org }}
+{% endif %}
+
+{% if storage_class is defined %}
+# To set the value of STORAGE_CLASS
+export STORAGE_CLASS={{ storage_class }}
+{% endif %}
+
+{% if openstack_img is defined %}
+# To set the value of OPENSTACK_IMG
+export OPENSTACK_IMG={{ openstack_img }}
+{% endif %}
+
+{% if openstack_repo is defined %}
+# To set the value of OPENSTACK_REPO
+export OPENSTACK_REPO={{ openstack_repo }}
+{% endif %}
+
+{% if openstack_branch is defined %}
+# To set the value of OPENSTACK_BRANCH
+export OPENSTACK_BRANCH={{ openstack_branch }}
+{% endif %}
+
+{% if openstack_ctlplane is defined %}
+# To set the value of OPENSTACK_CTLPLANE
+export OPENSTACK_CTLPLANE={{ openstack_ctlplane }}
+{% endif %}
+
+{% if openstack_cr is defined %}
+# To set the value of OPENSTACK_CR
+export OPENSTACK_CR={{ openstack_cr }}
+{% endif %}
+
+{% if infra_img is defined %}
+# To set the value of INFRA_IMG
+export INFRA_IMG={{ infra_img }}
+{% endif %}
+
+{% if infra_repo is defined %}
+# To set the value of INFRA_REPO
+export INFRA_REPO={{ infra_repo }}
+{% endif %}
+
+{% if infra_branch is defined %}
+# To set the value of INFRA_BRANCH
+export INFRA_BRANCH={{ infra_branch }}
+{% endif %}
+
+{% if keystone_img is defined %}
+# To set the value of KEYSTONE_IMG
+export KEYSTONE_IMG={{ keystone_img }}
+{% endif %}
+
+{% if keystone_repo is defined %}
+# To set the value of KEYSTONE_REPO
+export KEYSTONE_REPO={{ keystone_repo }}
+{% endif %}
+
+{% if keystone_branch is defined %}
+# To set the value of KEYSTONE_BRANCH
+export KEYSTONE_BRANCH={{ keystone_branch }}
+{% endif %}
+
+{% if keystoneapi is defined %}
+# To set the value of KEYSTONEAPI
+export KEYSTONEAPI={{ keystoneapi }}
+{% endif %}
+
+{% if keystoneapi_cr is defined %}
+# To set the value of KEYSTONEAPI_CR
+export KEYSTONEAPI_CR={{ keystoneapi_cr }}
+{% endif %}
+
+{% if keystoneapi_img is defined %}
+# To set the value of KEYSTONEAPI_IMG
+export KEYSTONEAPI_IMG={{ keystoneapi_img }}
+{% endif %}
+
+{% if keystone_kuttl_conf is defined %}
+# To set the value of KEYSTONE_KUTTL_CONF
+export KEYSTONE_KUTTL_CONF={{ keystone_kuttl_conf }}
+{% endif %}
+
+{% if keystone_kuttl_dir is defined %}
+# To set the value of KEYSTONE_KUTTL_DIR
+export KEYSTONE_KUTTL_DIR={{ keystone_kuttl_dir }}
+{% endif %}
+
+{% if mariadb_img is defined %}
+# To set the value of MARIADB_IMG
+export MARIADB_IMG={{ mariadb_img }}
+{% endif %}
+
+{% if mariadb_repo is defined %}
+# To set the value of MARIADB_REPO
+export MARIADB_REPO={{ mariadb_repo }}
+{% endif %}
+
+{% if mariadb_branch is defined %}
+# To set the value of MARIADB_BRANCH
+export MARIADB_BRANCH={{ mariadb_branch }}
+{% endif %}
+
+{% if mariadb is defined %}
+# To set the value of MARIADB
+export MARIADB={{ mariadb }}
+{% endif %}
+
+{% if mariadb_cr is defined %}
+# To set the value of MARIADB_CR
+export MARIADB_CR={{ mariadb_cr }}
+{% endif %}
+
+{% if mariadb_depl_img is defined %}
+# To set the value of MARIADB_DEPL_IMG
+export MARIADB_DEPL_IMG={{ mariadb_depl_img }}
+{% endif %}
+
+{% if mariadb_kuttl_conf is defined %}
+# To set the value of MARIADB_KUTTL_CONF
+export MARIADB_KUTTL_CONF={{ mariadb_kuttl_conf }}
+{% endif %}
+
+{% if mariadb_kuttl_dir is defined %}
+# To set the value of MARIADB_KUTTL_DIR
+export MARIADB_KUTTL_DIR={{ mariadb_kuttl_dir }}
+{% endif %}
+
+{% if placement_img is defined %}
+# To set the value of PLACEMENT_IMG
+export PLACEMENT_IMG={{ placement_img }}
+{% endif %}
+
+{% if placement_repo is defined %}
+# To set the value of PLACEMENT_REPO
+export PLACEMENT_REPO={{ placement_repo }}
+{% endif %}
+
+{% if placement_branch is defined %}
+# To set the value of PLACEMENT_BRANCH
+export PLACEMENT_BRANCH={{ placement_branch }}
+{% endif %}
+
+{% if placementapi is defined %}
+# To set the value of PLACEMENTAPI
+export PLACEMENTAPI={{ placementapi }}
+{% endif %}
+
+{% if placementapi_cr is defined %}
+# To set the value of PLACEMENTAPI_CR
+export PLACEMENTAPI_CR={{ placementapi_cr }}
+{% endif %}
+
+{% if placementapi_img is defined %}
+# To set the value of PLACEMENTAPI_IMG
+export PLACEMENTAPI_IMG={{ placementapi_img }}
+{% endif %}
+
+{% if glance_img is defined %}
+# To set the value of GLANCE_IMG
+export GLANCE_IMG={{ glance_img }}
+{% endif %}
+
+{% if glance_repo is defined %}
+# To set the value of GLANCE_REPO
+export GLANCE_REPO={{ glance_repo }}
+{% endif %}
+
+{% if glance_branch is defined %}
+# To set the value of GLANCE_BRANCH
+export GLANCE_BRANCH={{ glance_branch }}
+{% endif %}
+
+{% if glance is defined %}
+# To set the value of GLANCE
+export GLANCE={{ glance }}
+{% endif %}
+
+{% if glance_cr is defined %}
+# To set the value of GLANCE_CR
+export GLANCE_CR={{ glance_cr }}
+{% endif %}
+
+{% if glanceapi_img is defined %}
+# To set the value of GLANCEAPI_IMG
+export GLANCEAPI_IMG={{ glanceapi_img }}
+{% endif %}
+
+{% if ovn_img is defined %}
+# To set the value of OVN_IMG
+export OVN_IMG={{ ovn_img }}
+{% endif %}
+
+{% if ovn_repo is defined %}
+# To set the value of OVN_REPO
+export OVN_REPO={{ ovn_repo }}
+{% endif %}
+
+{% if ovn_branch is defined %}
+# To set the value of OVN_BRANCH
+export OVN_BRANCH={{ ovn_branch }}
+{% endif %}
+
+{% if ovndbs is defined %}
+# To set the value of OVNDBS
+export OVNDBS={{ ovndbs }}
+{% endif %}
+
+{% if ovndbs_cr is defined %}
+# To set the value of OVNDBS_CR
+export OVNDBS_CR={{ ovndbs_cr }}
+{% endif %}
+
+{% if ovnnorthd is defined %}
+# To set the value of OVNNORTHD
+export OVNNORTHD={{ ovnnorthd }}
+{% endif %}
+
+{% if ovnnorthd_cr is defined %}
+# To set the value of OVNNORTHD_CR
+export OVNNORTHD_CR={{ ovnnorthd_cr }}
+{% endif %}
+
+{% if ovs_img is defined %}
+# To set the value of OVS_IMG
+export OVS_IMG={{ ovs_img }}
+{% endif %}
+
+{% if ovs_repo is defined %}
+# To set the value of OVS_REPO
+export OVS_REPO={{ ovs_repo }}
+{% endif %}
+
+{% if ovs_branch is defined %}
+# To set the value of OVS_BRANCH
+export OVS_BRANCH={{ ovs_branch }}
+{% endif %}
+
+{% if ovs is defined %}
+# To set the value of OVS
+export OVS={{ ovs }}
+{% endif %}
+
+{% if ovs_cr is defined %}
+# To set the value of OVS_CR
+export OVS_CR={{ ovs_cr }}
+{% endif %}
+
+{% if neutron_img is defined %}
+# To set the value of NEUTRON_IMG
+export NEUTRON_IMG={{ neutron_img }}
+{% endif %}
+
+{% if neutron_repo is defined %}
+# To set the value of NEUTRON_REPO
+export NEUTRON_REPO={{ neutron_repo }}
+{% endif %}
+
+{% if neutron_branch is defined %}
+# To set the value of NEUTRON_BRANCH
+export NEUTRON_BRANCH={{ neutron_branch }}
+{% endif %}
+
+{% if neutronapi is defined %}
+# To set the value of NEUTRONAPI
+export NEUTRONAPI={{ neutronapi }}
+{% endif %}
+
+{% if neutronapi_cr is defined %}
+# To set the value of NEUTRONAPI_CR
+export NEUTRONAPI_CR={{ neutronapi_cr }}
+{% endif %}
+
+{% if neutronapi_img is defined %}
+# To set the value of NEUTRONAPI_IMG
+export NEUTRONAPI_IMG={{ neutronapi_img }}
+{% endif %}
+
+{% if cinder_img is defined %}
+# To set the value of CINDER_IMG
+export CINDER_IMG={{ cinder_img }}
+{% endif %}
+
+{% if cinder_repo is defined %}
+# To set the value of CINDER_REPO
+export CINDER_REPO={{ cinder_repo }}
+{% endif %}
+
+{% if cinder_branch is defined %}
+# To set the value of CINDER_BRANCH
+export CINDER_BRANCH={{ cinder_branch }}
+{% endif %}
+
+{% if cinder is defined %}
+# To set the value of CINDER
+export CINDER={{ cinder }}
+{% endif %}
+
+{% if cinder_cr is defined %}
+# To set the value of CINDER_CR
+export CINDER_CR={{ cinder_cr }}
+{% endif %}
+
+{% if rabbitmq_img is defined %}
+# To set the value of RABBITMQ_IMG
+export RABBITMQ_IMG={{ rabbitmq_img }}
+{% endif %}
+
+{% if rabbitmq_repo is defined %}
+# To set the value of RABBITMQ_REPO
+export RABBITMQ_REPO={{ rabbitmq_repo }}
+{% endif %}
+
+{% if rabbitmq_branch is defined %}
+# To set the value of RABBITMQ_BRANCH
+export RABBITMQ_BRANCH={{ rabbitmq_branch }}
+{% endif %}
+
+{% if rabbitmq is defined %}
+# To set the value of RABBITMQ
+export RABBITMQ={{ rabbitmq }}
+{% endif %}
+
+{% if rabbitmq_cr is defined %}
+# To set the value of RABBITMQ_CR
+export RABBITMQ_CR={{ rabbitmq_cr }}
+{% endif %}
+
+{% if ironic_img is defined %}
+# To set the value of IRONIC_IMG
+export IRONIC_IMG={{ ironic_img }}
+{% endif %}
+
+{% if ironic_repo is defined %}
+# To set the value of IRONIC_REPO
+export IRONIC_REPO={{ ironic_repo }}
+{% endif %}
+
+{% if ironic_branch is defined %}
+# To set the value of IRONIC_BRANCH
+export IRONIC_BRANCH={{ ironic_branch }}
+{% endif %}
+
+{% if ironic is defined %}
+# To set the value of IRONIC
+export IRONIC={{ ironic }}
+{% endif %}
+
+{% if ironic_cr is defined %}
+# To set the value of IRONIC_CR
+export IRONIC_CR={{ ironic_cr }}
+{% endif %}
+
+{% if octavia_img is defined %}
+# To set the value of OCTAVIA_IMG
+export OCTAVIA_IMG={{ octavia_img }}
+{% endif %}
+
+{% if octavia_repo is defined %}
+# To set the value of OCTAVIA_REPO
+export OCTAVIA_REPO={{ octavia_repo }}
+{% endif %}
+
+{% if octavia_branch is defined %}
+# To set the value of OCTAVIA_BRANCH
+export OCTAVIA_BRANCH={{ octavia_branch }}
+{% endif %}
+
+{% if octaviaapi is defined %}
+# To set the value of OCTAVIAAPI
+export OCTAVIAAPI={{ octaviaapi }}
+{% endif %}
+
+{% if octaviaapi_cr is defined %}
+# To set the value of OCTAVIAAPI_CR
+export OCTAVIAAPI_CR={{ octaviaapi_cr }}
+{% endif %}
+
+{% if octaviaapi_img is defined %}
+# To set the value of OCTAVIAAPI_IMG
+export OCTAVIAAPI_IMG={{ octaviaapi_img }}
+{% endif %}
+
+{% if nova_img is defined %}
+# To set the value of NOVA_IMG
+export NOVA_IMG={{ nova_img }}
+{% endif %}
+
+{% if nova_repo is defined %}
+# To set the value of NOVA_REPO
+export NOVA_REPO={{ nova_repo }}
+{% endif %}
+
+{% if nova_branch is defined %}
+# To set the value of NOVA_BRANCH
+export NOVA_BRANCH={{ nova_branch }}
+{% endif %}
+
+{% if nova is defined %}
+# To set the value of NOVA
+export NOVA={{ nova }}
+{% endif %}
+
+{% if nova_cr is defined %}
+# To set the value of NOVA_CR
+export NOVA_CR={{ nova_cr }}
+{% endif %}
+
+{% if ansibleee_img is defined %}
+# To set the value of ANSIBLEEE_IMG
+export ANSIBLEEE_IMG={{ ansibleee_img }}
+{% endif %}
+
+{% if ansibleee_repo is defined %}
+# To set the value of ANSIBLEEE_REPO
+export ANSIBLEEE_REPO={{ ansibleee_repo }}
+{% endif %}
+
+{% if ansibleee_branch is defined %}
+# To set the value of ANSIBLEEE_BRANCH
+export ANSIBLEEE_BRANCH={{ ansibleee_branch }}
+{% endif %}
+
+{% if ansibleee is defined %}
+# To set the value of ANSIBLEEE
+export ANSIBLEEE={{ ansibleee }}
+{% endif %}
+
+{% if ansibleee_cr is defined %}
+# To set the value of ANSIBLEEE_CR
+export ANSIBLEEE_CR={{ ansibleee_cr }}
+{% endif %}
+
+{% if ceph_img is defined %}
+# To set the value of CEPH_IMG
+export CEPH_IMG={{ ceph_img }}
+{% endif %}
+
+{% if run_all is defined and run_all | bool %}
+# set run_all var to true to run **make all**
+make all
+
+# Command to run after command_after_make_all var
+{% if command_after_make_all is defined %}
+{{ command_after_make_all }}
+{% endif %}
+
+{% endif %}
+
+{% if run_help is defined and run_help | bool %}
+# set run_help var to true to run **make help**
+make help
+
+# Command to run after command_after_make_help var
+{% if command_after_make_help is defined %}
+{{ command_after_make_help }}
+{% endif %}
+
+{% endif %}
+
+{% if run_namespace is defined and run_namespace | bool %}
+# set run_namespace var to true to run **make namespace**
+make namespace
+
+# Command to run after command_after_make_namespace var
+{% if command_after_make_namespace is defined %}
+{{ command_after_make_namespace }}
+{% endif %}
+
+{% endif %}
+
+{% if run_input is defined and run_input | bool %}
+# set run_input var to true to run **make input**
+make input
+
+# Command to run after command_after_make_input var
+{% if command_after_make_input is defined %}
+{{ command_after_make_input }}
+{% endif %}
+
+{% endif %}
+
+{% if run_openstack_prep is defined and run_openstack_prep | bool %}
+# set run_openstack_prep var to true to run **make openstack_prep**
+make openstack_prep
+
+# Command to run after command_after_make_openstack_prep var
+{% if command_after_make_openstack_prep is defined %}
+{{ command_after_make_openstack_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_openstack is defined and run_openstack | bool %}
+# set run_openstack var to true to run **make openstack**
+make openstack
+
+# Command to run after command_after_make_openstack var
+{% if command_after_make_openstack is defined %}
+{{ command_after_make_openstack }}
+{% endif %}
+
+{% endif %}
+
+{% if run_openstack_deploy_prep is defined and run_openstack_deploy_prep | bool %}
+# set run_openstack_deploy_prep var to true to run **make openstack_deploy_prep**
+make openstack_deploy_prep
+
+# Command to run after command_after_make_openstack_deploy_prep var
+{% if command_after_make_openstack_deploy_prep is defined %}
+{{ command_after_make_openstack_deploy_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_openstack_deploy is defined and run_openstack_deploy | bool %}
+# set run_openstack_deploy var to true to run **make openstack_deploy**
+make openstack_deploy
+
+# Command to run after command_after_make_openstack_deploy var
+{% if command_after_make_openstack_deploy is defined %}
+{{ command_after_make_openstack_deploy }}
+{% endif %}
+
+{% endif %}
+
+{% if run_openstack_crds is defined and run_openstack_crds | bool %}
+# set run_openstack_crds var to true to run **make openstack_crds**
+make openstack_crds
+
+# Command to run after command_after_make_openstack_crds var
+{% if command_after_make_openstack_crds is defined %}
+{{ command_after_make_openstack_crds }}
+{% endif %}
+
+{% endif %}
+
+{% if run_infra_prep is defined and run_infra_prep | bool %}
+# set run_infra_prep var to true to run **make infra_prep**
+make infra_prep
+
+# Command to run after command_after_make_infra_prep var
+{% if command_after_make_infra_prep is defined %}
+{{ command_after_make_infra_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_infra is defined and run_infra | bool %}
+# set run_infra var to true to run **make infra**
+make infra
+
+# Command to run after command_after_make_infra var
+{% if command_after_make_infra is defined %}
+{{ command_after_make_infra }}
+{% endif %}
+
+{% endif %}
+
+{% if run_keystone_prep is defined and run_keystone_prep | bool %}
+# set run_keystone_prep var to true to run **make keystone_prep**
+make keystone_prep
+
+# Command to run after command_after_make_keystone_prep var
+{% if command_after_make_keystone_prep is defined %}
+{{ command_after_make_keystone_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_keystone is defined and run_keystone | bool %}
+# set run_keystone var to true to run **make keystone**
+make keystone
+
+# Command to run after command_after_make_keystone var
+{% if command_after_make_keystone is defined %}
+{{ command_after_make_keystone }}
+{% endif %}
+
+{% endif %}
+
+{% if run_keystone_deploy_prep is defined and run_keystone_deploy_prep | bool %}
+# set run_keystone_deploy_prep var to true to run **make keystone_deploy_prep**
+make keystone_deploy_prep
+
+# Command to run after command_after_make_keystone_deploy_prep var
+{% if command_after_make_keystone_deploy_prep is defined %}
+{{ command_after_make_keystone_deploy_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_keystone_deploy is defined and run_keystone_deploy | bool %}
+# set run_keystone_deploy var to true to run **make keystone_deploy**
+make keystone_deploy
+
+# Command to run after command_after_make_keystone_deploy var
+{% if command_after_make_keystone_deploy is defined %}
+{{ command_after_make_keystone_deploy }}
+{% endif %}
+
+{% endif %}
+
+{% if run_keystone_deploy_validate is defined and run_keystone_deploy_validate | bool %}
+# set run_keystone_deploy_validate var to true to run **make keystone_deploy_validate**
+make keystone_deploy_validate
+
+# Command to run after command_after_make_keystone_deploy_validate var
+{% if command_after_make_keystone_deploy_validate is defined %}
+{{ command_after_make_keystone_deploy_validate }}
+{% endif %}
+
+{% endif %}
+
+{% if run_mariadb is defined and run_mariadb | bool %}
+# set run_mariadb var to true to run **make mariadb**
+make mariadb
+
+# Command to run after command_after_make_mariadb var
+{% if command_after_make_mariadb is defined %}
+{{ command_after_make_mariadb }}
+{% endif %}
+
+{% endif %}
+
+{% if run_mariadb_deploy_prep is defined and run_mariadb_deploy_prep | bool %}
+# set run_mariadb_deploy_prep var to true to run **make mariadb_deploy_prep**
+make mariadb_deploy_prep
+
+# Command to run after command_after_make_mariadb_deploy_prep var
+{% if command_after_make_mariadb_deploy_prep is defined %}
+{{ command_after_make_mariadb_deploy_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_mariadb_deploy is defined and run_mariadb_deploy | bool %}
+# set run_mariadb_deploy var to true to run **make mariadb_deploy**
+make mariadb_deploy
+
+# Command to run after command_after_make_mariadb_deploy var
+{% if command_after_make_mariadb_deploy is defined %}
+{{ command_after_make_mariadb_deploy }}
+{% endif %}
+
+{% endif %}
+
+{% if run_mariadb_deploy_validate is defined and run_mariadb_deploy_validate | bool %}
+# set run_mariadb_deploy_validate var to true to run **make mariadb_deploy_validate**
+make mariadb_deploy_validate
+
+# Command to run after command_after_make_mariadb_deploy_validate var
+{% if command_after_make_mariadb_deploy_validate is defined %}
+{{ command_after_make_mariadb_deploy_validate }}
+{% endif %}
+
+{% endif %}
+
+{% if run_placement_prep is defined and run_placement_prep | bool %}
+# set run_placement_prep var to true to run **make placement_prep**
+make placement_prep
+
+# Command to run after command_after_make_placement_prep var
+{% if command_after_make_placement_prep is defined %}
+{{ command_after_make_placement_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_placement is defined and run_placement | bool %}
+# set run_placement var to true to run **make placement**
+make placement
+
+# Command to run after command_after_make_placement var
+{% if command_after_make_placement is defined %}
+{{ command_after_make_placement }}
+{% endif %}
+
+{% endif %}
+
+{% if run_placement_deploy_prep is defined and run_placement_deploy_prep | bool %}
+# set run_placement_deploy_prep var to true to run **make placement_deploy_prep**
+make placement_deploy_prep
+
+# Command to run after command_after_make_placement_deploy_prep var
+{% if command_after_make_placement_deploy_prep is defined %}
+{{ command_after_make_placement_deploy_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_placement_deploy is defined and run_placement_deploy | bool %}
+# set run_placement_deploy var to true to run **make placement_deploy**
+make placement_deploy
+
+# Command to run after command_after_make_placement_deploy var
+{% if command_after_make_placement_deploy is defined %}
+{{ command_after_make_placement_deploy }}
+{% endif %}
+
+{% endif %}
+
+{% if run_glance_prep is defined and run_glance_prep | bool %}
+# set run_glance_prep var to true to run **make glance_prep**
+make glance_prep
+
+# Command to run after command_after_make_glance_prep var
+{% if command_after_make_glance_prep is defined %}
+{{ command_after_make_glance_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_glance is defined and run_glance | bool %}
+# set run_glance var to true to run **make glance**
+make glance
+
+# Command to run after command_after_make_glance var
+{% if command_after_make_glance is defined %}
+{{ command_after_make_glance }}
+{% endif %}
+
+{% endif %}
+
+{% if run_glance_deploy_prep is defined and run_glance_deploy_prep | bool %}
+# set run_glance_deploy_prep var to true to run **make glance_deploy_prep**
+make glance_deploy_prep
+
+# Command to run after command_after_make_glance_deploy_prep var
+{% if command_after_make_glance_deploy_prep is defined %}
+{{ command_after_make_glance_deploy_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_glance_deploy is defined and run_glance_deploy | bool %}
+# set run_glance_deploy var to true to run **make glance_deploy**
+make glance_deploy
+
+# Command to run after command_after_make_glance_deploy var
+{% if command_after_make_glance_deploy is defined %}
+{{ command_after_make_glance_deploy }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ovn_prep is defined and run_ovn_prep | bool %}
+# set run_ovn_prep var to true to run **make ovn_prep**
+make ovn_prep
+
+# Command to run after command_after_make_ovn_prep var
+{% if command_after_make_ovn_prep is defined %}
+{{ command_after_make_ovn_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ovn is defined and run_ovn | bool %}
+# set run_ovn var to true to run **make ovn**
+make ovn
+
+# Command to run after command_after_make_ovn var
+{% if command_after_make_ovn is defined %}
+{{ command_after_make_ovn }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ovn_deploy_prep is defined and run_ovn_deploy_prep | bool %}
+# set run_ovn_deploy_prep var to true to run **make ovn_deploy_prep**
+make ovn_deploy_prep
+
+# Command to run after command_after_make_ovn_deploy_prep var
+{% if command_after_make_ovn_deploy_prep is defined %}
+{{ command_after_make_ovn_deploy_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ovn_deploy is defined and run_ovn_deploy | bool %}
+# set run_ovn_deploy var to true to run **make ovn_deploy**
+make ovn_deploy
+
+# Command to run after command_after_make_ovn_deploy var
+{% if command_after_make_ovn_deploy is defined %}
+{{ command_after_make_ovn_deploy }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ovs_prep is defined and run_ovs_prep | bool %}
+# set run_ovs_prep var to true to run **make ovs_prep**
+make ovs_prep
+
+# Command to run after command_after_make_ovs_prep var
+{% if command_after_make_ovs_prep is defined %}
+{{ command_after_make_ovs_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ovs is defined and run_ovs | bool %}
+# set run_ovs var to true to run **make ovs**
+make ovs
+
+# Command to run after command_after_make_ovs var
+{% if command_after_make_ovs is defined %}
+{{ command_after_make_ovs }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ovs_deploy_prep is defined and run_ovs_deploy_prep | bool %}
+# set run_ovs_deploy_prep var to true to run **make ovs_deploy_prep**
+make ovs_deploy_prep
+
+# Command to run after command_after_make_ovs_deploy_prep var
+{% if command_after_make_ovs_deploy_prep is defined %}
+{{ command_after_make_ovs_deploy_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ovs_deploy is defined and run_ovs_deploy | bool %}
+# set run_ovs_deploy var to true to run **make ovs_deploy**
+make ovs_deploy
+
+# Command to run after command_after_make_ovs_deploy var
+{% if command_after_make_ovs_deploy is defined %}
+{{ command_after_make_ovs_deploy }}
+{% endif %}
+
+{% endif %}
+
+{% if run_neutron_prep is defined and run_neutron_prep | bool %}
+# set run_neutron_prep var to true to run **make neutron_prep**
+make neutron_prep
+
+# Command to run after command_after_make_neutron_prep var
+{% if command_after_make_neutron_prep is defined %}
+{{ command_after_make_neutron_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_neutron is defined and run_neutron | bool %}
+# set run_neutron var to true to run **make neutron**
+make neutron
+
+# Command to run after command_after_make_neutron var
+{% if command_after_make_neutron is defined %}
+{{ command_after_make_neutron }}
+{% endif %}
+
+{% endif %}
+
+{% if run_neutron_deploy_prep is defined and run_neutron_deploy_prep | bool %}
+# set run_neutron_deploy_prep var to true to run **make neutron_deploy_prep**
+make neutron_deploy_prep
+
+# Command to run after command_after_make_neutron_deploy_prep var
+{% if command_after_make_neutron_deploy_prep is defined %}
+{{ command_after_make_neutron_deploy_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_neutron_deploy is defined and run_neutron_deploy | bool %}
+# set run_neutron_deploy var to true to run **make neutron_deploy**
+make neutron_deploy
+
+# Command to run after command_after_make_neutron_deploy var
+{% if command_after_make_neutron_deploy is defined %}
+{{ command_after_make_neutron_deploy }}
+{% endif %}
+
+{% endif %}
+
+{% if run_cinder_prep is defined and run_cinder_prep | bool %}
+# set run_cinder_prep var to true to run **make cinder_prep**
+make cinder_prep
+
+# Command to run after command_after_make_cinder_prep var
+{% if command_after_make_cinder_prep is defined %}
+{{ command_after_make_cinder_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_cinder is defined and run_cinder | bool %}
+# set run_cinder var to true to run **make cinder**
+make cinder
+
+# Command to run after command_after_make_cinder var
+{% if command_after_make_cinder is defined %}
+{{ command_after_make_cinder }}
+{% endif %}
+
+{% endif %}
+
+{% if run_cinder_deploy_prep is defined and run_cinder_deploy_prep | bool %}
+# set run_cinder_deploy_prep var to true to run **make cinder_deploy_prep**
+make cinder_deploy_prep
+
+# Command to run after command_after_make_cinder_deploy_prep var
+{% if command_after_make_cinder_deploy_prep is defined %}
+{{ command_after_make_cinder_deploy_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_cinder_deploy is defined and run_cinder_deploy | bool %}
+# set run_cinder_deploy var to true to run **make cinder_deploy**
+make cinder_deploy
+
+# Command to run after command_after_make_cinder_deploy var
+{% if command_after_make_cinder_deploy is defined %}
+{{ command_after_make_cinder_deploy }}
+{% endif %}
+
+{% endif %}
+
+{% if run_rabbitmq_prep is defined and run_rabbitmq_prep | bool %}
+# set run_rabbitmq_prep var to true to run **make rabbitmq_prep**
+make rabbitmq_prep
+
+# Command to run after command_after_make_rabbitmq_prep var
+{% if command_after_make_rabbitmq_prep is defined %}
+{{ command_after_make_rabbitmq_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_rabbitmq is defined and run_rabbitmq | bool %}
+# set run_rabbitmq var to true to run **make rabbitmq**
+make rabbitmq
+
+# Command to run after command_after_make_rabbitmq var
+{% if command_after_make_rabbitmq is defined %}
+{{ command_after_make_rabbitmq }}
+{% endif %}
+
+{% endif %}
+
+{% if run_rabbitmq_deploy_prep is defined and run_rabbitmq_deploy_prep | bool %}
+# set run_rabbitmq_deploy_prep var to true to run **make rabbitmq_deploy_prep**
+make rabbitmq_deploy_prep
+
+# Command to run after command_after_make_rabbitmq_deploy_prep var
+{% if command_after_make_rabbitmq_deploy_prep is defined %}
+{{ command_after_make_rabbitmq_deploy_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_rabbitmq_deploy is defined and run_rabbitmq_deploy | bool %}
+# set run_rabbitmq_deploy var to true to run **make rabbitmq_deploy**
+make rabbitmq_deploy
+
+# Command to run after command_after_make_rabbitmq_deploy var
+{% if command_after_make_rabbitmq_deploy is defined %}
+{{ command_after_make_rabbitmq_deploy }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ironic_prep is defined and run_ironic_prep | bool %}
+# set run_ironic_prep var to true to run **make ironic_prep**
+make ironic_prep
+
+# Command to run after command_after_make_ironic_prep var
+{% if command_after_make_ironic_prep is defined %}
+{{ command_after_make_ironic_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ironic is defined and run_ironic | bool %}
+# set run_ironic var to true to run **make ironic**
+make ironic
+
+# Command to run after command_after_make_ironic var
+{% if command_after_make_ironic is defined %}
+{{ command_after_make_ironic }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ironic_deploy_prep is defined and run_ironic_deploy_prep | bool %}
+# set run_ironic_deploy_prep var to true to run **make ironic_deploy_prep**
+make ironic_deploy_prep
+
+# Command to run after command_after_make_ironic_deploy_prep var
+{% if command_after_make_ironic_deploy_prep is defined %}
+{{ command_after_make_ironic_deploy_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ironic_deploy is defined and run_ironic_deploy | bool %}
+# set run_ironic_deploy var to true to run **make ironic_deploy**
+make ironic_deploy
+
+# Command to run after command_after_make_ironic_deploy var
+{% if command_after_make_ironic_deploy is defined %}
+{{ command_after_make_ironic_deploy }}
+{% endif %}
+
+{% endif %}
+
+{% if run_octavia_prep is defined and run_octavia_prep | bool %}
+# set run_octavia_prep var to true to run **make octavia_prep**
+make octavia_prep
+
+# Command to run after command_after_make_octavia_prep var
+{% if command_after_make_octavia_prep is defined %}
+{{ command_after_make_octavia_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_octavia is defined and run_octavia | bool %}
+# set run_octavia var to true to run **make octavia**
+make octavia
+
+# Command to run after command_after_make_octavia var
+{% if command_after_make_octavia is defined %}
+{{ command_after_make_octavia }}
+{% endif %}
+
+{% endif %}
+
+{% if run_octavia_deploy_prep is defined and run_octavia_deploy_prep | bool %}
+# set run_octavia_deploy_prep var to true to run **make octavia_deploy_prep**
+make octavia_deploy_prep
+
+# Command to run after command_after_make_octavia_deploy_prep var
+{% if command_after_make_octavia_deploy_prep is defined %}
+{{ command_after_make_octavia_deploy_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_octavia_deploy is defined and run_octavia_deploy | bool %}
+# set run_octavia_deploy var to true to run **make octavia_deploy**
+make octavia_deploy
+
+# Command to run after command_after_make_octavia_deploy var
+{% if command_after_make_octavia_deploy is defined %}
+{{ command_after_make_octavia_deploy }}
+{% endif %}
+
+{% endif %}
+
+{% if run_nova_prep is defined and run_nova_prep | bool %}
+# set run_nova_prep var to true to run **make nova_prep**
+make nova_prep
+
+# Command to run after command_after_make_nova_prep var
+{% if command_after_make_nova_prep is defined %}
+{{ command_after_make_nova_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_nova is defined and run_nova | bool %}
+# set run_nova var to true to run **make nova**
+make nova
+
+# Command to run after command_after_make_nova var
+{% if command_after_make_nova is defined %}
+{{ command_after_make_nova }}
+{% endif %}
+
+{% endif %}
+
+{% if run_nova_deploy_prep is defined and run_nova_deploy_prep | bool %}
+# set run_nova_deploy_prep var to true to run **make nova_deploy_prep**
+make nova_deploy_prep
+
+# Command to run after command_after_make_nova_deploy_prep var
+{% if command_after_make_nova_deploy_prep is defined %}
+{{ command_after_make_nova_deploy_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_nova_deploy is defined and run_nova_deploy | bool %}
+# set run_nova_deploy var to true to run **make nova_deploy**
+make nova_deploy
+
+# Command to run after command_after_make_nova_deploy var
+{% if command_after_make_nova_deploy is defined %}
+{{ command_after_make_nova_deploy }}
+{% endif %}
+
+{% endif %}
+
+{% if run_mariadb_kuttl_run is defined and run_mariadb_kuttl_run | bool %}
+# set run_mariadb_kuttl_run var to true to run **make mariadb_kuttl_run**
+make mariadb_kuttl_run
+
+# Command to run after command_after_make_mariadb_kuttl_run var
+{% if command_after_make_mariadb_kuttl_run is defined %}
+{{ command_after_make_mariadb_kuttl_run }}
+{% endif %}
+
+{% endif %}
+
+{% if run_mariadb_kuttl is defined and run_mariadb_kuttl | bool %}
+# set run_mariadb_kuttl var to true to run **make mariadb_kuttl**
+make mariadb_kuttl
+
+# Command to run after command_after_make_mariadb_kuttl var
+{% if command_after_make_mariadb_kuttl is defined %}
+{{ command_after_make_mariadb_kuttl }}
+{% endif %}
+
+{% endif %}
+
+{% if run_keystone_kuttl_run is defined and run_keystone_kuttl_run | bool %}
+# set run_keystone_kuttl_run var to true to run **make keystone_kuttl_run**
+make keystone_kuttl_run
+
+# Command to run after command_after_make_keystone_kuttl_run var
+{% if command_after_make_keystone_kuttl_run is defined %}
+{{ command_after_make_keystone_kuttl_run }}
+{% endif %}
+
+{% endif %}
+
+{% if run_keystone_kuttl is defined and run_keystone_kuttl | bool %}
+# set run_keystone_kuttl var to true to run **make keystone_kuttl**
+make keystone_kuttl
+
+# Command to run after command_after_make_keystone_kuttl var
+{% if command_after_make_keystone_kuttl is defined %}
+{{ command_after_make_keystone_kuttl }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ansibleee_prep is defined and run_ansibleee_prep | bool %}
+# set run_ansibleee_prep var to true to run **make ansibleee_prep**
+make ansibleee_prep
+
+# Command to run after command_after_make_ansibleee_prep var
+{% if command_after_make_ansibleee_prep is defined %}
+{{ command_after_make_ansibleee_prep }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ansibleee is defined and run_ansibleee | bool %}
+# set run_ansibleee var to true to run **make ansibleee**
+make ansibleee
+
+# Command to run after command_after_make_ansibleee var
+{% if command_after_make_ansibleee is defined %}
+{{ command_after_make_ansibleee }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ceph is defined and run_ceph | bool %}
+# set run_ceph var to true to run **make ceph**
+make ceph
+
+# Command to run after command_after_make_ceph var
+{% if command_after_make_ceph is defined %}
+{{ command_after_make_ceph }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ceph_cleanup is defined and run_ceph_cleanup | bool %}
+# set run_ceph_cleanup var to true to run **make ceph_cleanup**
+make ceph_cleanup
+
+# Command to run after command_after_make_ceph_cleanup var
+{% if command_after_make_ceph_cleanup is defined %}
+{{ command_after_make_ceph_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ansibleee_cleanup is defined and run_ansibleee_cleanup | bool %}
+# set run_ansibleee_cleanup var to true to run **make ansibleee_cleanup**
+make ansibleee_cleanup
+
+# Command to run after command_after_make_ansibleee_cleanup var
+{% if command_after_make_ansibleee_cleanup is defined %}
+{{ command_after_make_ansibleee_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_nova_deploy_cleanup is defined and run_nova_deploy_cleanup | bool %}
+# set run_nova_deploy_cleanup var to true to run **make nova_deploy_cleanup**
+make nova_deploy_cleanup
+
+# Command to run after command_after_make_nova_deploy_cleanup var
+{% if command_after_make_nova_deploy_cleanup is defined %}
+{{ command_after_make_nova_deploy_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_nova_cleanup is defined and run_nova_cleanup | bool %}
+# set run_nova_cleanup var to true to run **make nova_cleanup**
+make nova_cleanup
+
+# Command to run after command_after_make_nova_cleanup var
+{% if command_after_make_nova_cleanup is defined %}
+{{ command_after_make_nova_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_octavia_deploy_cleanup is defined and run_octavia_deploy_cleanup | bool %}
+# set run_octavia_deploy_cleanup var to true to run **make octavia_deploy_cleanup**
+make octavia_deploy_cleanup
+
+# Command to run after command_after_make_octavia_deploy_cleanup var
+{% if command_after_make_octavia_deploy_cleanup is defined %}
+{{ command_after_make_octavia_deploy_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_octavia_cleanup is defined and run_octavia_cleanup | bool %}
+# set run_octavia_cleanup var to true to run **make octavia_cleanup**
+make octavia_cleanup
+
+# Command to run after command_after_make_octavia_cleanup var
+{% if command_after_make_octavia_cleanup is defined %}
+{{ command_after_make_octavia_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ironic_deploy_cleanup is defined and run_ironic_deploy_cleanup | bool %}
+# set run_ironic_deploy_cleanup var to true to run **make ironic_deploy_cleanup**
+make ironic_deploy_cleanup
+
+# Command to run after command_after_make_ironic_deploy_cleanup var
+{% if command_after_make_ironic_deploy_cleanup is defined %}
+{{ command_after_make_ironic_deploy_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ironic_cleanup is defined and run_ironic_cleanup | bool %}
+# set run_ironic_cleanup var to true to run **make ironic_cleanup**
+make ironic_cleanup
+
+# Command to run after command_after_make_ironic_cleanup var
+{% if command_after_make_ironic_cleanup is defined %}
+{{ command_after_make_ironic_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_rabbitmq_deploy_cleanup is defined and run_rabbitmq_deploy_cleanup | bool %}
+# set run_rabbitmq_deploy_cleanup var to true to run **make rabbitmq_deploy_cleanup**
+make rabbitmq_deploy_cleanup
+
+# Command to run after command_after_make_rabbitmq_deploy_cleanup var
+{% if command_after_make_rabbitmq_deploy_cleanup is defined %}
+{{ command_after_make_rabbitmq_deploy_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_rabbitmq_cleanup is defined and run_rabbitmq_cleanup | bool %}
+# set run_rabbitmq_cleanup var to true to run **make rabbitmq_cleanup**
+make rabbitmq_cleanup
+
+# Command to run after command_after_make_rabbitmq_cleanup var
+{% if command_after_make_rabbitmq_cleanup is defined %}
+{{ command_after_make_rabbitmq_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_cinder_deploy_cleanup is defined and run_cinder_deploy_cleanup | bool %}
+# set run_cinder_deploy_cleanup var to true to run **make cinder_deploy_cleanup**
+make cinder_deploy_cleanup
+
+# Command to run after command_after_make_cinder_deploy_cleanup var
+{% if command_after_make_cinder_deploy_cleanup is defined %}
+{{ command_after_make_cinder_deploy_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_cinder_cleanup is defined and run_cinder_cleanup | bool %}
+# set run_cinder_cleanup var to true to run **make cinder_cleanup**
+make cinder_cleanup
+
+# Command to run after command_after_make_cinder_cleanup var
+{% if command_after_make_cinder_cleanup is defined %}
+{{ command_after_make_cinder_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_neutron_deploy_cleanup is defined and run_neutron_deploy_cleanup | bool %}
+# set run_neutron_deploy_cleanup var to true to run **make neutron_deploy_cleanup**
+make neutron_deploy_cleanup
+
+# Command to run after command_after_make_neutron_deploy_cleanup var
+{% if command_after_make_neutron_deploy_cleanup is defined %}
+{{ command_after_make_neutron_deploy_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_neutron_cleanup is defined and run_neutron_cleanup | bool %}
+# set run_neutron_cleanup var to true to run **make neutron_cleanup**
+make neutron_cleanup
+
+# Command to run after command_after_make_neutron_cleanup var
+{% if command_after_make_neutron_cleanup is defined %}
+{{ command_after_make_neutron_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ovs_deploy_cleanup is defined and run_ovs_deploy_cleanup | bool %}
+# set run_ovs_deploy_cleanup var to true to run **make ovs_deploy_cleanup**
+make ovs_deploy_cleanup
+
+# Command to run after command_after_make_ovs_deploy_cleanup var
+{% if command_after_make_ovs_deploy_cleanup is defined %}
+{{ command_after_make_ovs_deploy_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ovs_cleanup is defined and run_ovs_cleanup | bool %}
+# set run_ovs_cleanup var to true to run **make ovs_cleanup**
+make ovs_cleanup
+
+# Command to run after command_after_make_ovs_cleanup var
+{% if command_after_make_ovs_cleanup is defined %}
+{{ command_after_make_ovs_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ovn_deploy_cleanup is defined and run_ovn_deploy_cleanup | bool %}
+# set run_ovn_deploy_cleanup var to true to run **make ovn_deploy_cleanup**
+make ovn_deploy_cleanup
+
+# Command to run after command_after_make_ovn_deploy_cleanup var
+{% if command_after_make_ovn_deploy_cleanup is defined %}
+{{ command_after_make_ovn_deploy_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_ovn_cleanup is defined and run_ovn_cleanup | bool %}
+# set run_ovn_cleanup var to true to run **make ovn_cleanup**
+make ovn_cleanup
+
+# Command to run after command_after_make_ovn_cleanup var
+{% if command_after_make_ovn_cleanup is defined %}
+{{ command_after_make_ovn_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_glance_deploy_cleanup is defined and run_glance_deploy_cleanup | bool %}
+# set run_glance_deploy_cleanup var to true to run **make glance_deploy_cleanup**
+make glance_deploy_cleanup
+
+# Command to run after command_after_make_glance_deploy_cleanup var
+{% if command_after_make_glance_deploy_cleanup is defined %}
+{{ command_after_make_glance_deploy_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_glance_cleanup is defined and run_glance_cleanup | bool %}
+# set run_glance_cleanup var to true to run **make glance_cleanup**
+make glance_cleanup
+
+# Command to run after command_after_make_glance_cleanup var
+{% if command_after_make_glance_cleanup is defined %}
+{{ command_after_make_glance_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_placement_deploy_cleanup is defined and run_placement_deploy_cleanup | bool %}
+# set run_placement_deploy_cleanup var to true to run **make placement_deploy_cleanup**
+make placement_deploy_cleanup
+
+# Command to run after command_after_make_placement_deploy_cleanup var
+{% if command_after_make_placement_deploy_cleanup is defined %}
+{{ command_after_make_placement_deploy_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_placement_cleanup is defined and run_placement_cleanup | bool %}
+# set run_placement_cleanup var to true to run **make placement_cleanup**
+make placement_cleanup
+
+# Command to run after command_after_make_placement_cleanup var
+{% if command_after_make_placement_cleanup is defined %}
+{{ command_after_make_placement_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_mariadb_deploy_cleanup is defined and run_mariadb_deploy_cleanup | bool %}
+# set run_mariadb_deploy_cleanup var to true to run **make mariadb_deploy_cleanup**
+make mariadb_deploy_cleanup
+
+# Command to run after command_after_make_mariadb_deploy_cleanup var
+{% if command_after_make_mariadb_deploy_cleanup is defined %}
+{{ command_after_make_mariadb_deploy_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_mariadb_cleanup is defined and run_mariadb_cleanup | bool %}
+# set run_mariadb_cleanup var to true to run **make mariadb_cleanup**
+make mariadb_cleanup
+
+# Command to run after command_after_make_mariadb_cleanup var
+{% if command_after_make_mariadb_cleanup is defined %}
+{{ command_after_make_mariadb_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_keystone_deploy_cleanup is defined and run_keystone_deploy_cleanup | bool %}
+# set run_keystone_deploy_cleanup var to true to run **make keystone_deploy_cleanup**
+make keystone_deploy_cleanup
+
+# Command to run after command_after_make_keystone_deploy_cleanup var
+{% if command_after_make_keystone_deploy_cleanup is defined %}
+{{ command_after_make_keystone_deploy_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_keystone_cleanup is defined and run_keystone_cleanup | bool %}
+# set run_keystone_cleanup var to true to run **make keystone_cleanup**
+make keystone_cleanup
+
+# Command to run after command_after_make_keystone_cleanup var
+{% if command_after_make_keystone_cleanup is defined %}
+{{ command_after_make_keystone_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_infra_cleanup is defined and run_infra_cleanup | bool %}
+# set run_infra_cleanup var to true to run **make infra_cleanup**
+make infra_cleanup
+
+# Command to run after command_after_make_infra_cleanup var
+{% if command_after_make_infra_cleanup is defined %}
+{{ command_after_make_infra_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_openstack_deploy_cleanup is defined and run_openstack_deploy_cleanup | bool %}
+# set run_openstack_deploy_cleanup var to true to run **make openstack_deploy_cleanup**
+make openstack_deploy_cleanup
+
+# Command to run after command_after_make_openstack_deploy_cleanup var
+{% if command_after_make_openstack_deploy_cleanup is defined %}
+{{ command_after_make_openstack_deploy_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_openstack_cleanup is defined and run_openstack_cleanup | bool %}
+# set run_openstack_cleanup var to true to run **make openstack_cleanup**
+make openstack_cleanup
+
+# Command to run after command_after_make_openstack_cleanup var
+{% if command_after_make_openstack_cleanup is defined %}
+{{ command_after_make_openstack_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_input_cleanup is defined and run_input_cleanup | bool %}
+# set run_input_cleanup var to true to run **make input_cleanup**
+make input_cleanup
+
+# Command to run after command_after_make_input_cleanup var
+{% if command_after_make_input_cleanup is defined %}
+{{ command_after_make_input_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_namespace_cleanup is defined and run_namespace_cleanup | bool %}
+# set run_namespace_cleanup var to true to run **make namespace_cleanup**
+make namespace_cleanup
+
+# Command to run after command_after_make_namespace_cleanup var
+{% if command_after_make_namespace_cleanup is defined %}
+{{ command_after_make_namespace_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_deploy_cleanup is defined and run_deploy_cleanup | bool %}
+# set run_deploy_cleanup var to true to run **make deploy_cleanup**
+make deploy_cleanup
+
+# Command to run after command_after_make_deploy_cleanup var
+{% if command_after_make_deploy_cleanup is defined %}
+{{ command_after_make_deploy_cleanup }}
+{% endif %}
+
+{% endif %}
+
+{% if run_cleanup is defined and run_cleanup | bool %}
+# set run_cleanup var to true to run **make cleanup**
+make cleanup
+
+# Command to run after command_after_make_cleanup var
+{% if command_after_make_cleanup is defined %}
+{{ command_after_make_cleanup }}
+{% endif %}
+
+{% endif %}

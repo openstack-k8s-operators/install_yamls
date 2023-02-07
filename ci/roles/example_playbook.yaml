@@ -1,0 +1,17 @@
+---
+- hosts: localhost
+  tasks:
+    - include_role:
+        name: use_install_yamls
+      vars:
+        namespace: openstack
+        openstack_img: quay.rdoproject.org/openstack-k8s-operators/openstack-operator-index:latest
+        openstack_repo: "{{ ansible_user_dir }}/openstack-operator"
+        openstack_branch: feature_branch
+        run_openstack: true
+        run_openstack_deploy: true
+        command_after_make_openstack: |
+          oc get csv
+        command_after_make_openstack_deploy: |
+          oc get pods
+        run_openstack_deploy_cleanup: true

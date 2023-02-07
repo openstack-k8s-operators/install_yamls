@@ -1,0 +1,43 @@
+---
+- name: Include vars
+  ansible.builtin.include_vars:
+    dir: 'vars'
+
+- name: Set the value of script directory
+  ansible.builtin.set_fact:
+    deployment_artifacts: "{{ deployment_artifacts | default('~/openstack') }}"
+
+- name: Make sure deployment_artifacts directory exists
+  ansible.builtin.file:
+    path: "{{ deployment_artifacts }}"
+    state: directory
+
+- name: Create Deployment scripts
+  ansible.builtin.template:
+    src: "install_yamls.sh.j2"
+    dest: "{{ deployment_artifacts }}/install_yamls.sh"
+
+- name: Remove blank line from scripts
+  ansible.builtin.shell: |
+    awk -i inplace NF {{ deployment_artifacts }}/install_yamls.sh
+    sed -i '/^#/d' {{ deployment_artifacts }}/install_yamls.sh
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: Get install_yamls.sh script content for later debug
+  register: slurp_install_yamls
+  ansible.builtin.slurp:
+    path: "{{ deployment_artifacts }}/install_yamls.sh"
+
+- name: Output install_yamls.sh content
+  debug:
+    msg: "{{ slurp_install_yamls['content'] | b64decode }}"
+
+- name: Run Podified Deployment
+  ansible.builtin.shell: |
+    bash {{ deployment_artifacts }}/install_yamls.sh
+  args:
+    chdir: "{{ install_yamls_repo }}"
+    executable: /bin/bash
+  when: run_script | default('false') | bool

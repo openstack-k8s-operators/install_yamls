@@ -1,0 +1,300 @@
+
+# Add command to be executed after **make all**
+# uncomment command_after_make_all var: | and add the command the below that
+
+# Add command to be executed after **make help**
+# uncomment command_after_make_help var: | and add the command the below that
+
+# Add command to be executed after **make cleanup**
+# uncomment command_after_make_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make deploy_cleanup**
+# uncomment command_after_make_deploy_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make namespace**
+# uncomment command_after_make_namespace var: | and add the command the below that
+
+# Add command to be executed after **make namespace_cleanup**
+# uncomment command_after_make_namespace_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make input**
+# uncomment command_after_make_input var: | and add the command the below that
+
+# Add command to be executed after **make input_cleanup**
+# uncomment command_after_make_input_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make openstack_prep**
+# uncomment command_after_make_openstack_prep var: | and add the command the below that
+
+# Add command to be executed after **make openstack**
+# uncomment command_after_make_openstack var: | and add the command the below that
+
+# Add command to be executed after **make openstack_cleanup**
+# uncomment command_after_make_openstack_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make openstack_deploy_prep**
+# uncomment command_after_make_openstack_deploy_prep var: | and add the command the below that
+
+# Add command to be executed after **make openstack_deploy**
+# uncomment command_after_make_openstack_deploy var: | and add the command the below that
+
+# Add command to be executed after **make openstack_deploy_cleanup**
+# uncomment command_after_make_openstack_deploy_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make openstack_crds**
+# uncomment command_after_make_openstack_crds var: | and add the command the below that
+
+# Add command to be executed after **make infra_prep**
+# uncomment command_after_make_infra_prep var: | and add the command the below that
+
+# Add command to be executed after **make infra**
+# uncomment command_after_make_infra var: | and add the command the below that
+
+# Add command to be executed after **make infra_cleanup**
+# uncomment command_after_make_infra_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make keystone_prep**
+# uncomment command_after_make_keystone_prep var: | and add the command the below that
+
+# Add command to be executed after **make keystone**
+# uncomment command_after_make_keystone var: | and add the command the below that
+
+# Add command to be executed after **make keystone_cleanup**
+# uncomment command_after_make_keystone_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make keystone_deploy_prep**
+# uncomment command_after_make_keystone_deploy_prep var: | and add the command the below that
+
+# Add command to be executed after **make keystone_deploy**
+# uncomment command_after_make_keystone_deploy var: | and add the command the below that
+
+# Add command to be executed after **make keystone_deploy_validate**
+# uncomment command_after_make_keystone_deploy_validate var: | and add the command the below that
+
+# Add command to be executed after **make keystone_deploy_cleanup**
+# uncomment command_after_make_keystone_deploy_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make mariadb**
+# uncomment command_after_make_mariadb var: | and add the command the below that
+
+# Add command to be executed after **make mariadb_cleanup**
+# uncomment command_after_make_mariadb_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make mariadb_deploy_prep**
+# uncomment command_after_make_mariadb_deploy_prep var: | and add the command the below that
+
+# Add command to be executed after **make mariadb_deploy**
+# uncomment command_after_make_mariadb_deploy var: | and add the command the below that
+
+# Add command to be executed after **make mariadb_deploy_validate**
+# uncomment command_after_make_mariadb_deploy_validate var: | and add the command the below that
+
+# Add command to be executed after **make mariadb_deploy_cleanup**
+# uncomment command_after_make_mariadb_deploy_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make placement_prep**
+# uncomment command_after_make_placement_prep var: | and add the command the below that
+
+# Add command to be executed after **make placement**
+# uncomment command_after_make_placement var: | and add the command the below that
+
+# Add command to be executed after **make placement_cleanup**
+# uncomment command_after_make_placement_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make placement_deploy_prep**
+# uncomment command_after_make_placement_deploy_prep var: | and add the command the below that
+
+# Add command to be executed after **make placement_deploy**
+# uncomment command_after_make_placement_deploy var: | and add the command the below that
+
+# Add command to be executed after **make placement_deploy_cleanup**
+# uncomment command_after_make_placement_deploy_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make glance_prep**
+# uncomment command_after_make_glance_prep var: | and add the command the below that
+
+# Add command to be executed after **make glance**
+# uncomment command_after_make_glance var: | and add the command the below that
+
+# Add command to be executed after **make glance_cleanup**
+# uncomment command_after_make_glance_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make glance_deploy_prep**
+# uncomment command_after_make_glance_deploy_prep var: | and add the command the below that
+
+# Add command to be executed after **make glance_deploy**
+# uncomment command_after_make_glance_deploy var: | and add the command the below that
+
+# Add command to be executed after **make glance_deploy_cleanup**
+# uncomment command_after_make_glance_deploy_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make ovn_prep**
+# uncomment command_after_make_ovn_prep var: | and add the command the below that
+
+# Add command to be executed after **make ovn**
+# uncomment command_after_make_ovn var: | and add the command the below that
+
+# Add command to be executed after **make ovn_cleanup**
+# uncomment command_after_make_ovn_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make ovn_deploy_prep**
+# uncomment command_after_make_ovn_deploy_prep var: | and add the command the below that
+
+# Add command to be executed after **make ovn_deploy**
+# uncomment command_after_make_ovn_deploy var: | and add the command the below that
+
+# Add command to be executed after **make ovn_deploy_cleanup**
+# uncomment command_after_make_ovn_deploy_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make ovs_prep**
+# uncomment command_after_make_ovs_prep var: | and add the command the below that
+
+# Add command to be executed after **make ovs**
+# uncomment command_after_make_ovs var: | and add the command the below that
+
+# Add command to be executed after **make ovs_cleanup**
+# uncomment command_after_make_ovs_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make ovs_deploy_prep**
+# uncomment command_after_make_ovs_deploy_prep var: | and add the command the below that
+
+# Add command to be executed after **make ovs_deploy**
+# uncomment command_after_make_ovs_deploy var: | and add the command the below that
+
+# Add command to be executed after **make ovs_deploy_cleanup**
+# uncomment command_after_make_ovs_deploy_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make neutron_prep**
+# uncomment command_after_make_neutron_prep var: | and add the command the below that
+
+# Add command to be executed after **make neutron**
+# uncomment command_after_make_neutron var: | and add the command the below that
+
+# Add command to be executed after **make neutron_cleanup**
+# uncomment command_after_make_neutron_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make neutron_deploy_prep**
+# uncomment command_after_make_neutron_deploy_prep var: | and add the command the below that
+
+# Add command to be executed after **make neutron_deploy**
+# uncomment command_after_make_neutron_deploy var: | and add the command the below that
+
+# Add command to be executed after **make neutron_deploy_cleanup**
+# uncomment command_after_make_neutron_deploy_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make cinder_prep**
+# uncomment command_after_make_cinder_prep var: | and add the command the below that
+
+# Add command to be executed after **make cinder**
+# uncomment command_after_make_cinder var: | and add the command the below that
+
+# Add command to be executed after **make cinder_cleanup**
+# uncomment command_after_make_cinder_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make cinder_deploy_prep**
+# uncomment command_after_make_cinder_deploy_prep var: | and add the command the below that
+
+# Add command to be executed after **make cinder_deploy**
+# uncomment command_after_make_cinder_deploy var: | and add the command the below that
+
+# Add command to be executed after **make cinder_deploy_cleanup**
+# uncomment command_after_make_cinder_deploy_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make rabbitmq_prep**
+# uncomment command_after_make_rabbitmq_prep var: | and add the command the below that
+
+# Add command to be executed after **make rabbitmq**
+# uncomment command_after_make_rabbitmq var: | and add the command the below that
+
+# Add command to be executed after **make rabbitmq_cleanup**
+# uncomment command_after_make_rabbitmq_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make rabbitmq_deploy_prep**
+# uncomment command_after_make_rabbitmq_deploy_prep var: | and add the command the below that
+
+# Add command to be executed after **make rabbitmq_deploy**
+# uncomment command_after_make_rabbitmq_deploy var: | and add the command the below that
+
+# Add command to be executed after **make rabbitmq_deploy_cleanup**
+# uncomment command_after_make_rabbitmq_deploy_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make ironic_prep**
+# uncomment command_after_make_ironic_prep var: | and add the command the below that
+
+# Add command to be executed after **make ironic**
+# uncomment command_after_make_ironic var: | and add the command the below that
+
+# Add command to be executed after **make ironic_cleanup**
+# uncomment command_after_make_ironic_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make ironic_deploy_prep**
+# uncomment command_after_make_ironic_deploy_prep var: | and add the command the below that
+
+# Add command to be executed after **make ironic_deploy**
+# uncomment command_after_make_ironic_deploy var: | and add the command the below that
+
+# Add command to be executed after **make ironic_deploy_cleanup**
+# uncomment command_after_make_ironic_deploy_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make octavia_prep**
+# uncomment command_after_make_octavia_prep var: | and add the command the below that
+
+# Add command to be executed after **make octavia**
+# uncomment command_after_make_octavia var: | and add the command the below that
+
+# Add command to be executed after **make octavia_cleanup**
+# uncomment command_after_make_octavia_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make octavia_deploy_prep**
+# uncomment command_after_make_octavia_deploy_prep var: | and add the command the below that
+
+# Add command to be executed after **make octavia_deploy**
+# uncomment command_after_make_octavia_deploy var: | and add the command the below that
+
+# Add command to be executed after **make octavia_deploy_cleanup**
+# uncomment command_after_make_octavia_deploy_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make nova_prep**
+# uncomment command_after_make_nova_prep var: | and add the command the below that
+
+# Add command to be executed after **make nova**
+# uncomment command_after_make_nova var: | and add the command the below that
+
+# Add command to be executed after **make nova_cleanup**
+# uncomment command_after_make_nova_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make nova_deploy_prep**
+# uncomment command_after_make_nova_deploy_prep var: | and add the command the below that
+
+# Add command to be executed after **make nova_deploy**
+# uncomment command_after_make_nova_deploy var: | and add the command the below that
+
+# Add command to be executed after **make nova_deploy_cleanup**
+# uncomment command_after_make_nova_deploy_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make mariadb_kuttl_run**
+# uncomment command_after_make_mariadb_kuttl_run var: | and add the command the below that
+
+# Add command to be executed after **make mariadb_kuttl**
+# uncomment command_after_make_mariadb_kuttl var: | and add the command the below that
+
+# Add command to be executed after **make keystone_kuttl_run**
+# uncomment command_after_make_keystone_kuttl_run var: | and add the command the below that
+
+# Add command to be executed after **make keystone_kuttl**
+# uncomment command_after_make_keystone_kuttl var: | and add the command the below that
+
+# Add command to be executed after **make ansibleee_prep**
+# uncomment command_after_make_ansibleee_prep var: | and add the command the below that
+
+# Add command to be executed after **make ansibleee**
+# uncomment command_after_make_ansibleee var: | and add the command the below that
+
+# Add command to be executed after **make ansibleee_cleanup**
+# uncomment command_after_make_ansibleee_cleanup var: | and add the command the below that
+
+# Add command to be executed after **make ceph**
+# uncomment command_after_make_ceph var: | and add the command the below that
+
+# Add command to be executed after **make ceph_cleanup**
+# uncomment command_after_make_ceph_cleanup var: | and add the command the below that

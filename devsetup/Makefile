@@ -71,3 +71,9 @@ edpm_play:
 .PHONY: edpm_play_cleanup
 edpm_play_cleanup:
 	-oc delete openstackansibleee deploy-external-dataplane-compute
+
+.PHONY: ansible_role_sync
+ansible_role_sync:
+	cd ../ci/roles/use_install_yamls; rm -f defaults/main.yaml vars/command_after_make_target.yaml templates/install_yamls.sh.j2;
+	cd ../ci/scripts; python makefile_to_install_yamls.py ../../Makefile;
+	tree ../ci/roles/use_install_yamls;

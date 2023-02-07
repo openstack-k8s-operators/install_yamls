@@ -1,0 +1,685 @@
+
+## The default value of namespace is openstack
+# namespace: openstack
+
+## The default value of password is 12345678
+# password: 12345678
+
+## The default value of secret is osp-secret
+# secret: osp-secret
+
+## The default value of out is ${PWD}/out
+# out: ${PWD}/out
+
+## The default value of install_yamls is ${PWD}  # used for kuttl tests
+# install_yamls: ${PWD}  # used for kuttl tests
+
+## The default value of operator_base_dir is ${OUT}/operator
+# operator_base_dir: ${OUT}/operator
+
+## The default value of service_registry is quay.io
+# service_registry: quay.io
+
+## The default value of service_org is tripleozedcentos9
+# service_org: tripleozedcentos9
+
+## The default value of storage_class is "local-storage"
+# storage_class: "local-storage"
+
+## The default value of openstack_img is quay.io/openstack-k8s-operators/openstack-operator-index:latest
+# openstack_img: quay.io/openstack-k8s-operators/openstack-operator-index:latest
+
+## The default value of openstack_repo is https://github.com/openstack-k8s-operators/openstack-operator.git
+# openstack_repo: https://github.com/openstack-k8s-operators/openstack-operator.git
+
+## The default value of openstack_branch is master
+# openstack_branch: master
+
+## The default value of openstack_ctlplane is config/samples/core_v1beta1_openstackcontrolplane.yaml
+# openstack_ctlplane: config/samples/core_v1beta1_openstackcontrolplane.yaml
+
+## The default value of openstack_cr is ${OPERATOR_BASE_DIR}/openstack-operator/${OPENSTACK_CTLPLANE}
+# openstack_cr: ${OPERATOR_BASE_DIR}/openstack-operator/${OPENSTACK_CTLPLANE}
+
+## The default value of infra_img is quay.io/openstack-k8s-operators/infra-operator-index:latest
+# infra_img: quay.io/openstack-k8s-operators/infra-operator-index:latest
+
+## The default value of infra_repo is https://github.com/openstack-k8s-operators/infra-operator.git
+# infra_repo: https://github.com/openstack-k8s-operators/infra-operator.git
+
+## The default value of infra_branch is master
+# infra_branch: master
+
+## The default value of keystone_img is quay.io/openstack-k8s-operators/keystone-operator-index:latest
+# keystone_img: quay.io/openstack-k8s-operators/keystone-operator-index:latest
+
+## The default value of keystone_repo is https://github.com/openstack-k8s-operators/keystone-operator.git
+# keystone_repo: https://github.com/openstack-k8s-operators/keystone-operator.git
+
+## The default value of keystone_branch is master
+# keystone_branch: master
+
+## The default value of keystoneapi is config/samples/keystone_v1beta1_keystoneapi.yaml
+# keystoneapi: config/samples/keystone_v1beta1_keystoneapi.yaml
+
+## The default value of keystoneapi_cr is ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
+# keystoneapi_cr: ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
+
+## The default value of keystoneapi_img is ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-keystone:current-tripleo
+# keystoneapi_img: ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-keystone:current-tripleo
+
+## The default value of keystone_kuttl_conf is ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.yaml
+# keystone_kuttl_conf: ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.yaml
+
+## The default value of keystone_kuttl_dir is ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
+# keystone_kuttl_dir: ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
+
+## The default value of mariadb_img is quay.io/openstack-k8s-operators/mariadb-operator-index:latest
+# mariadb_img: quay.io/openstack-k8s-operators/mariadb-operator-index:latest
+
+## The default value of mariadb_repo is https://github.com/openstack-k8s-operators/mariadb-operator.git
+# mariadb_repo: https://github.com/openstack-k8s-operators/mariadb-operator.git
+
+## The default value of mariadb_branch is master
+# mariadb_branch: master
+
+## The default value of mariadb is config/samples/mariadb_v1beta1_mariadb.yaml
+# mariadb: config/samples/mariadb_v1beta1_mariadb.yaml
+
+## The default value of mariadb_cr is ${OPERATOR_BASE_DIR}/mariadb-operator/${MARIADB}
+# mariadb_cr: ${OPERATOR_BASE_DIR}/mariadb-operator/${MARIADB}
+
+## The default value of mariadb_depl_img is ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-mariadb:current-tripleo
+# mariadb_depl_img: ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-mariadb:current-tripleo
+
+## The default value of mariadb_kuttl_conf is ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
+# mariadb_kuttl_conf: ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
+
+## The default value of mariadb_kuttl_dir is ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
+# mariadb_kuttl_dir: ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
+
+## The default value of placement_img is quay.io/openstack-k8s-operators/placement-operator-index:latest
+# placement_img: quay.io/openstack-k8s-operators/placement-operator-index:latest
+
+## The default value of placement_repo is https://github.com/openstack-k8s-operators/placement-operator.git
+# placement_repo: https://github.com/openstack-k8s-operators/placement-operator.git
+
+## The default value of placement_branch is master
+# placement_branch: master
+
+## The default value of placementapi is config/samples/placement_v1beta1_placementapi.yaml
+# placementapi: config/samples/placement_v1beta1_placementapi.yaml
+
+## The default value of placementapi_cr is ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI}
+# placementapi_cr: ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI}
+
+## The default value of placementapi_img is ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-placement-api:current-tripleo
+# placementapi_img: ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-placement-api:current-tripleo
+
+## The default value of glance_img is quay.io/openstack-k8s-operators/glance-operator-index:latest
+# glance_img: quay.io/openstack-k8s-operators/glance-operator-index:latest
+
+## The default value of glance_repo is https://github.com/openstack-k8s-operators/glance-operator.git
+# glance_repo: https://github.com/openstack-k8s-operators/glance-operator.git
+
+## The default value of glance_branch is master
+# glance_branch: master
+
+## The default value of glance is config/samples/glance_v1beta1_glance.yaml
+# glance: config/samples/glance_v1beta1_glance.yaml
+
+## The default value of glance_cr is ${OPERATOR_BASE_DIR}/glance-operator/${GLANCE}
+# glance_cr: ${OPERATOR_BASE_DIR}/glance-operator/${GLANCE}
+
+## The default value of glanceapi_img is ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-glance-api:current-tripleo
+# glanceapi_img: ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-glance-api:current-tripleo
+
+## The default value of ovn_img is quay.io/openstack-k8s-operators/ovn-operator-index:latest
+# ovn_img: quay.io/openstack-k8s-operators/ovn-operator-index:latest
+
+## The default value of ovn_repo is https://github.com/openstack-k8s-operators/ovn-operator.git
+# ovn_repo: https://github.com/openstack-k8s-operators/ovn-operator.git
+
+## The default value of ovn_branch is main
+# ovn_branch: main
+
+## The default value of ovndbs is config/samples/ovn_v1beta1_ovndbcluster.yaml
+# ovndbs: config/samples/ovn_v1beta1_ovndbcluster.yaml
+
+## The default value of ovndbs_cr is ${OPERATOR_BASE_DIR}/ovn-operator/${OVNDBS}
+# ovndbs_cr: ${OPERATOR_BASE_DIR}/ovn-operator/${OVNDBS}
+
+## The default value of ovnnorthd is config/samples/ovn_v1beta1_ovnnorthd.yaml
+# ovnnorthd: config/samples/ovn_v1beta1_ovnnorthd.yaml
+
+## The default value of ovnnorthd_cr is ${OPERATOR_BASE_DIR}/ovn-operator/${OVNNORTHD}
+# ovnnorthd_cr: ${OPERATOR_BASE_DIR}/ovn-operator/${OVNNORTHD}
+
+## The default value of ovs_img is quay.io/openstack-k8s-operators/ovs-operator-index:latest
+# ovs_img: quay.io/openstack-k8s-operators/ovs-operator-index:latest
+
+## The default value of ovs_repo is https://github.com/openstack-k8s-operators/ovs-operator.git
+# ovs_repo: https://github.com/openstack-k8s-operators/ovs-operator.git
+
+## The default value of ovs_branch is main
+# ovs_branch: main
+
+## The default value of ovs is config/samples/ovs_v1beta1_ovs.yaml
+# ovs: config/samples/ovs_v1beta1_ovs.yaml
+
+## The default value of ovs_cr is ${OPERATOR_BASE_DIR}/ovs-operator/${OVS}
+# ovs_cr: ${OPERATOR_BASE_DIR}/ovs-operator/${OVS}
+
+## The default value of neutron_img is quay.io/openstack-k8s-operators/neutron-operator-index:latest
+# neutron_img: quay.io/openstack-k8s-operators/neutron-operator-index:latest
+
+## The default value of neutron_repo is https://github.com/openstack-k8s-operators/neutron-operator.git
+# neutron_repo: https://github.com/openstack-k8s-operators/neutron-operator.git
+
+## The default value of neutron_branch is master
+# neutron_branch: master
+
+## The default value of neutronapi is config/samples/neutron_v1beta1_neutronapi.yaml
+# neutronapi: config/samples/neutron_v1beta1_neutronapi.yaml
+
+## The default value of neutronapi_cr is ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
+# neutronapi_cr: ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
+
+## The default value of neutronapi_img is ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-neutron-server:current-tripleo
+# neutronapi_img: ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-neutron-server:current-tripleo
+
+## The default value of cinder_img is quay.io/openstack-k8s-operators/cinder-operator-index:latest
+# cinder_img: quay.io/openstack-k8s-operators/cinder-operator-index:latest
+
+## The default value of cinder_repo is https://github.com/openstack-k8s-operators/cinder-operator.git
+# cinder_repo: https://github.com/openstack-k8s-operators/cinder-operator.git
+
+## The default value of cinder_branch is master
+# cinder_branch: master
+
+## The default value of cinder is config/samples/cinder_v1beta1_cinder.yaml
+# cinder: config/samples/cinder_v1beta1_cinder.yaml
+
+## The default value of cinder_cr is ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
+# cinder_cr: ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
+
+## The default value of rabbitmq_img is quay.io/openstack-k8s-operators/rabbitmq-cluster-operator-index:latest
+# rabbitmq_img: quay.io/openstack-k8s-operators/rabbitmq-cluster-operator-index:latest
+
+## The default value of rabbitmq_repo is https://github.com/openstack-k8s-operators/rabbitmq-cluster-operator.git
+# rabbitmq_repo: https://github.com/openstack-k8s-operators/rabbitmq-cluster-operator.git
+
+## The default value of rabbitmq_branch is patches
+# rabbitmq_branch: patches
+
+## The default value of rabbitmq is docs/examples/default-security-context/rabbitmq.yaml
+# rabbitmq: docs/examples/default-security-context/rabbitmq.yaml
+
+## The default value of rabbitmq_cr is ${OPERATOR_BASE_DIR}/rabbitmq-operator/${RABBITMQ}
+# rabbitmq_cr: ${OPERATOR_BASE_DIR}/rabbitmq-operator/${RABBITMQ}
+
+## The default value of ironic_img is quay.io/openstack-k8s-operators/ironic-operator-index:latest
+# ironic_img: quay.io/openstack-k8s-operators/ironic-operator-index:latest
+
+## The default value of ironic_repo is https://github.com/openstack-k8s-operators/ironic-operator.git
+# ironic_repo: https://github.com/openstack-k8s-operators/ironic-operator.git
+
+## The default value of ironic_branch is master
+# ironic_branch: master
+
+## The default value of ironic is config/samples/ironic_v1beta1_ironic.yaml
+# ironic: config/samples/ironic_v1beta1_ironic.yaml
+
+## The default value of ironic_cr is ${OPERATOR_BASE_DIR}/ironic-operator/${IRONIC}
+# ironic_cr: ${OPERATOR_BASE_DIR}/ironic-operator/${IRONIC}
+
+## The default value of octavia_img is quay.io/openstack-k8s-operators/octavia-operator-index:latest
+# octavia_img: quay.io/openstack-k8s-operators/octavia-operator-index:latest
+
+## The default value of octavia_repo is https://github.com/openstack-k8s-operators/octavia-operator.git
+# octavia_repo: https://github.com/openstack-k8s-operators/octavia-operator.git
+
+## The default value of octavia_branch is main
+# octavia_branch: main
+
+## The default value of octaviaapi is config/samples/octavia_v1beta1_octaviaapi.yaml
+# octaviaapi: config/samples/octavia_v1beta1_octaviaapi.yaml
+
+## The default value of octaviaapi_cr is ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIAAPI}
+# octaviaapi_cr: ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIAAPI}
+
+## The default value of octaviaapi_img is ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-octavia-api:current-tripleo
+# octaviaapi_img: ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-octavia-api:current-tripleo
+
+## The default value of nova_img is quay.io/openstack-k8s-operators/nova-operator-index:latest
+# nova_img: quay.io/openstack-k8s-operators/nova-operator-index:latest
+
+## The default value of nova_repo is https://github.com/openstack-k8s-operators/nova-operator.git
+# nova_repo: https://github.com/openstack-k8s-operators/nova-operator.git
+
+## The default value of nova_branch is master
+# nova_branch: master
+
+## The default value of nova is config/samples/nova_v1beta1_nova_collapsed_cell.yaml
+# nova: config/samples/nova_v1beta1_nova_collapsed_cell.yaml
+
+## The default value of nova_cr is ${OPERATOR_BASE_DIR}/nova-operator/${NOVA}
+# nova_cr: ${OPERATOR_BASE_DIR}/nova-operator/${NOVA}
+
+## The default value of ansibleee_img is quay.io/openstack-k8s-operators/openstack-ansibleee-operator-index:latest
+# ansibleee_img: quay.io/openstack-k8s-operators/openstack-ansibleee-operator-index:latest
+
+## The default value of ansibleee_repo is https://github.com/openstack-k8s-operators/openstack-ansibleee-operator
+# ansibleee_repo: https://github.com/openstack-k8s-operators/openstack-ansibleee-operator
+
+## The default value of ansibleee_branch is main
+# ansibleee_branch: main
+
+## The default value of ansibleee is config/samples/_v1alpha1_ansibleee.yaml
+# ansibleee: config/samples/_v1alpha1_ansibleee.yaml
+
+## The default value of ansibleee_cr is ${OPERATOR_BASE_DIR}/ansibleee-operator/${ANSIBLEEE}
+# ansibleee_cr: ${OPERATOR_BASE_DIR}/ansibleee-operator/${ANSIBLEEE}
+
+## The default value of ceph_img is quay.io/ceph/daemon:latest-quincy
+# ceph_img: quay.io/ceph/daemon:latest-quincy
+
+# For running **make all**
+# Set the value of run_all to true
+# run_all: false
+
+# For running **make help**
+# Set the value of run_help to true
+# run_help: false
+
+# For running **make cleanup**
+# Set the value of run_cleanup to true
+# run_cleanup: false
+
+# For running **make deploy_cleanup**
+# Set the value of run_deploy_cleanup to true
+# run_deploy_cleanup: false
+
+# For running **make namespace**
+# Set the value of run_namespace to true
+# run_namespace: false
+
+# For running **make namespace_cleanup**
+# Set the value of run_namespace_cleanup to true
+# run_namespace_cleanup: false
+
+# For running **make input**
+# Set the value of run_input to true
+# run_input: false
+
+# For running **make input_cleanup**
+# Set the value of run_input_cleanup to true
+# run_input_cleanup: false
+
+# For running **make openstack_prep**
+# Set the value of run_openstack_prep to true
+# run_openstack_prep: false
+
+# For running **make openstack**
+# Set the value of run_openstack to true
+# run_openstack: false
+
+# For running **make openstack_cleanup**
+# Set the value of run_openstack_cleanup to true
+# run_openstack_cleanup: false
+
+# For running **make openstack_deploy_prep**
+# Set the value of run_openstack_deploy_prep to true
+# run_openstack_deploy_prep: false
+
+# For running **make openstack_deploy**
+# Set the value of run_openstack_deploy to true
+# run_openstack_deploy: false
+
+# For running **make openstack_deploy_cleanup**
+# Set the value of run_openstack_deploy_cleanup to true
+# run_openstack_deploy_cleanup: false
+
+# For running **make openstack_crds**
+# Set the value of run_openstack_crds to true
+# run_openstack_crds: false
+
+# For running **make infra_prep**
+# Set the value of run_infra_prep to true
+# run_infra_prep: false
+
+# For running **make infra**
+# Set the value of run_infra to true
+# run_infra: false
+
+# For running **make infra_cleanup**
+# Set the value of run_infra_cleanup to true
+# run_infra_cleanup: false
+
+# For running **make keystone_prep**
+# Set the value of run_keystone_prep to true
+# run_keystone_prep: false
+
+# For running **make keystone**
+# Set the value of run_keystone to true
+# run_keystone: false
+
+# For running **make keystone_cleanup**
+# Set the value of run_keystone_cleanup to true
+# run_keystone_cleanup: false
+
+# For running **make keystone_deploy_prep**
+# Set the value of run_keystone_deploy_prep to true
+# run_keystone_deploy_prep: false
+
+# For running **make keystone_deploy**
+# Set the value of run_keystone_deploy to true
+# run_keystone_deploy: false
+
+# For running **make keystone_deploy_validate**
+# Set the value of run_keystone_deploy_validate to true
+# run_keystone_deploy_validate: false
+
+# For running **make keystone_deploy_cleanup**
+# Set the value of run_keystone_deploy_cleanup to true
+# run_keystone_deploy_cleanup: false
+
+# For running **make mariadb**
+# Set the value of run_mariadb to true
+# run_mariadb: false
+
+# For running **make mariadb_cleanup**
+# Set the value of run_mariadb_cleanup to true
+# run_mariadb_cleanup: false
+
+# For running **make mariadb_deploy_prep**
+# Set the value of run_mariadb_deploy_prep to true
+# run_mariadb_deploy_prep: false
+
+# For running **make mariadb_deploy**
+# Set the value of run_mariadb_deploy to true
+# run_mariadb_deploy: false
+
+# For running **make mariadb_deploy_validate**
+# Set the value of run_mariadb_deploy_validate to true
+# run_mariadb_deploy_validate: false
+
+# For running **make mariadb_deploy_cleanup**
+# Set the value of run_mariadb_deploy_cleanup to true
+# run_mariadb_deploy_cleanup: false
+
+# For running **make placement_prep**
+# Set the value of run_placement_prep to true
+# run_placement_prep: false
+
+# For running **make placement**
+# Set the value of run_placement to true
+# run_placement: false
+
+# For running **make placement_cleanup**
+# Set the value of run_placement_cleanup to true
+# run_placement_cleanup: false
+
+# For running **make placement_deploy_prep**
+# Set the value of run_placement_deploy_prep to true
+# run_placement_deploy_prep: false
+
+# For running **make placement_deploy**
+# Set the value of run_placement_deploy to true
+# run_placement_deploy: false
+
+# For running **make placement_deploy_cleanup**
+# Set the value of run_placement_deploy_cleanup to true
+# run_placement_deploy_cleanup: false
+
+# For running **make glance_prep**
+# Set the value of run_glance_prep to true
+# run_glance_prep: false
+
+# For running **make glance**
+# Set the value of run_glance to true
+# run_glance: false
+
+# For running **make glance_cleanup**
+# Set the value of run_glance_cleanup to true
+# run_glance_cleanup: false
+
+# For running **make glance_deploy_prep**
+# Set the value of run_glance_deploy_prep to true
+# run_glance_deploy_prep: false
+
+# For running **make glance_deploy**
+# Set the value of run_glance_deploy to true
+# run_glance_deploy: false
+
+# For running **make glance_deploy_cleanup**
+# Set the value of run_glance_deploy_cleanup to true
+# run_glance_deploy_cleanup: false
+
+# For running **make ovn_prep**
+# Set the value of run_ovn_prep to true
+# run_ovn_prep: false
+
+# For running **make ovn**
+# Set the value of run_ovn to true
+# run_ovn: false
+
+# For running **make ovn_cleanup**
+# Set the value of run_ovn_cleanup to true
+# run_ovn_cleanup: false
+
+# For running **make ovn_deploy_prep**
+# Set the value of run_ovn_deploy_prep to true
+# run_ovn_deploy_prep: false
+
+# For running **make ovn_deploy**
+# Set the value of run_ovn_deploy to true
+# run_ovn_deploy: false
+
+# For running **make ovn_deploy_cleanup**
+# Set the value of run_ovn_deploy_cleanup to true
+# run_ovn_deploy_cleanup: false
+
+# For running **make ovs_prep**
+# Set the value of run_ovs_prep to true
+# run_ovs_prep: false
+
+# For running **make ovs**
+# Set the value of run_ovs to true
+# run_ovs: false
+
+# For running **make ovs_cleanup**
+# Set the value of run_ovs_cleanup to true
+# run_ovs_cleanup: false
+
+# For running **make ovs_deploy_prep**
+# Set the value of run_ovs_deploy_prep to true
+# run_ovs_deploy_prep: false
+
+# For running **make ovs_deploy**
+# Set the value of run_ovs_deploy to true
+# run_ovs_deploy: false
+
+# For running **make ovs_deploy_cleanup**
+# Set the value of run_ovs_deploy_cleanup to true
+# run_ovs_deploy_cleanup: false
+
+# For running **make neutron_prep**
+# Set the value of run_neutron_prep to true
+# run_neutron_prep: false
+
+# For running **make neutron**
+# Set the value of run_neutron to true
+# run_neutron: false
+
+# For running **make neutron_cleanup**
+# Set the value of run_neutron_cleanup to true
+# run_neutron_cleanup: false
+
+# For running **make neutron_deploy_prep**
+# Set the value of run_neutron_deploy_prep to true
+# run_neutron_deploy_prep: false
+
+# For running **make neutron_deploy**
+# Set the value of run_neutron_deploy to true
+# run_neutron_deploy: false
+
+# For running **make neutron_deploy_cleanup**
+# Set the value of run_neutron_deploy_cleanup to true
+# run_neutron_deploy_cleanup: false
+
+# For running **make cinder_prep**
+# Set the value of run_cinder_prep to true
+# run_cinder_prep: false
+
+# For running **make cinder**
+# Set the value of run_cinder to true
+# run_cinder: false
+
+# For running **make cinder_cleanup**
+# Set the value of run_cinder_cleanup to true
+# run_cinder_cleanup: false
+
+# For running **make cinder_deploy_prep**
+# Set the value of run_cinder_deploy_prep to true
+# run_cinder_deploy_prep: false
+
+# For running **make cinder_deploy**
+# Set the value of run_cinder_deploy to true
+# run_cinder_deploy: false
+
+# For running **make cinder_deploy_cleanup**
+# Set the value of run_cinder_deploy_cleanup to true
+# run_cinder_deploy_cleanup: false
+
+# For running **make rabbitmq_prep**
+# Set the value of run_rabbitmq_prep to true
+# run_rabbitmq_prep: false
+
+# For running **make rabbitmq**
+# Set the value of run_rabbitmq to true
+# run_rabbitmq: false
+
+# For running **make rabbitmq_cleanup**
+# Set the value of run_rabbitmq_cleanup to true
+# run_rabbitmq_cleanup: false
+
+# For running **make rabbitmq_deploy_prep**
+# Set the value of run_rabbitmq_deploy_prep to true
+# run_rabbitmq_deploy_prep: false
+
+# For running **make rabbitmq_deploy**
+# Set the value of run_rabbitmq_deploy to true
+# run_rabbitmq_deploy: false
+
+# For running **make rabbitmq_deploy_cleanup**
+# Set the value of run_rabbitmq_deploy_cleanup to true
+# run_rabbitmq_deploy_cleanup: false
+
+# For running **make ironic_prep**
+# Set the value of run_ironic_prep to true
+# run_ironic_prep: false
+
+# For running **make ironic**
+# Set the value of run_ironic to true
+# run_ironic: false
+
+# For running **make ironic_cleanup**
+# Set the value of run_ironic_cleanup to true
+# run_ironic_cleanup: false
+
+# For running **make ironic_deploy_prep**
+# Set the value of run_ironic_deploy_prep to true
+# run_ironic_deploy_prep: false
+
+# For running **make ironic_deploy**
+# Set the value of run_ironic_deploy to true
+# run_ironic_deploy: false
+
+# For running **make ironic_deploy_cleanup**
+# Set the value of run_ironic_deploy_cleanup to true
+# run_ironic_deploy_cleanup: false
+
+# For running **make octavia_prep**
+# Set the value of run_octavia_prep to true
+# run_octavia_prep: false
+
+# For running **make octavia**
+# Set the value of run_octavia to true
+# run_octavia: false
+
+# For running **make octavia_cleanup**
+# Set the value of run_octavia_cleanup to true
+# run_octavia_cleanup: false
+
+# For running **make octavia_deploy_prep**
+# Set the value of run_octavia_deploy_prep to true
+# run_octavia_deploy_prep: false
+
+# For running **make octavia_deploy**
+# Set the value of run_octavia_deploy to true
+# run_octavia_deploy: false
+
+# For running **make octavia_deploy_cleanup**
+# Set the value of run_octavia_deploy_cleanup to true
+# run_octavia_deploy_cleanup: false
+
+# For running **make nova_prep**
+# Set the value of run_nova_prep to true
+# run_nova_prep: false
+
+# For running **make nova**
+# Set the value of run_nova to true
+# run_nova: false
+
+# For running **make nova_cleanup**
+# Set the value of run_nova_cleanup to true
+# run_nova_cleanup: false
+
+# For running **make nova_deploy_prep**
+# Set the value of run_nova_deploy_prep to true
+# run_nova_deploy_prep: false
+
+# For running **make nova_deploy**
+# Set the value of run_nova_deploy to true
+# run_nova_deploy: false
+
+# For running **make nova_deploy_cleanup**
+# Set the value of run_nova_deploy_cleanup to true
+# run_nova_deploy_cleanup: false
+
+# For running **make mariadb_kuttl_run**
+# Set the value of run_mariadb_kuttl_run to true
+# run_mariadb_kuttl_run: false
+
+# For running **make mariadb_kuttl**
+# Set the value of run_mariadb_kuttl to true
+# run_mariadb_kuttl: false
+
+# For running **make keystone_kuttl_run**
+# Set the value of run_keystone_kuttl_run to true
+# run_keystone_kuttl_run: false
+
+# For running **make keystone_kuttl**
+# Set the value of run_keystone_kuttl to true
+# run_keystone_kuttl: false
+
+# For running **make ansibleee_prep**
+# Set the value of run_ansibleee_prep to true
+# run_ansibleee_prep: false
+
+# For running **make ansibleee**
+# Set the value of run_ansibleee to true
+# run_ansibleee: false
+
+# For running **make ansibleee_cleanup**
+# Set the value of run_ansibleee_cleanup to true
+# run_ansibleee_cleanup: false
+
+# For running **make ceph**
+# Set the value of run_ceph to true
+# run_ceph: false
+
+# For running **make ceph_cleanup**
+# Set the value of run_ceph_cleanup to true
+# run_ceph_cleanup: false
