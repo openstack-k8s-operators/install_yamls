@@ -52,7 +52,7 @@ spec:
 
     - name: Deploy EDPM run OpenStack playbook
       ansible.builtin.import_playbook: deploy-edpm-openstack-run.yml
-  image: "quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest"
+  image: "_OPENSTACK_RUNNER_IMG_"
   inventory: |
     allovercloud:
       children:
@@ -62,7 +62,7 @@ spec:
                 hosts:
                   # Add additional computes here, and optionally drop localhost.
                   # Add host vars under the host_vars dir.
-                  192.168.122.139:
+                  _COMPUTE_IP_:
                     ansible_ssh_user: root
                     ctlplane_ip: 192.168.24.100
                     internal_api_ip: 192.168.24.2
@@ -76,7 +76,7 @@ spec:
                   # edpm_network_config
                   # Default nic config template for a EDPM compute node
                   # These vars are edpm_network_config role vars
-                  edpm_network_config_template: templates/net_config_bridge.j2
+                  edpm_network_config_template: _EDPM_NETWORK_CONFIG_TEMPLATE_
                   edpm_network_config_hide_sensitive_logs: false
                   #
                   # These vars are for the network config templates themselves and are
@@ -172,6 +172,9 @@ spec:
                 edpm_ovn_controller_image: quay.io/tripleomastercentos9/openstack-ovn-controller:current-tripleo
                 gather_facts: false
                 enable_debug: false
+                # edpm firewall, change the allowed CIDR if needed
+                edpm_sshd_configure_firewall: true
+                edpm_sshd_allowed_ranges: _EDPM_SSHD_ALLOWED_RANGES_
                 # SELinux module
                 edpm_selinux_mode: enforcing
                 undercloud_hosts_entries: []
