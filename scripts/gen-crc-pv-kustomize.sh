@@ -46,6 +46,8 @@ kind: PersistentVolume
 apiVersion: v1
 metadata:
   name: ${STORAGE_CLASS}$i
+  annotations:
+    pv.kubernetes.io/provisioned-by: crc-devsetup
 spec:
   storageClassName: ${STORAGE_CLASS}
   capacity:
