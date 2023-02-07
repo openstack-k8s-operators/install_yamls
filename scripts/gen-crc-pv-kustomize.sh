@@ -42,6 +42,8 @@ kind: PersistentVolume
 apiVersion: v1
 metadata:
   name: local-storage$i
+  annotations:
+    pv.kubernetes.io/provisioned-by: crc-devsetup
 spec:
   storageClassName: local-storage
   capacity:
