@@ -50,6 +50,7 @@ secretGenerator:
 - name: ${SECRET}
   literals:
   - AdminPassword=${PASSWORD}
+  - CeilometerPassword=${PASSWORD}
   - DbRootPassword=${PASSWORD}
   - DatabasePassword=${PASSWORD}
   - KeystoneDatabasePassword=${PASSWORD}
