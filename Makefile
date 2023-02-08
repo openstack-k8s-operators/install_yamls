@@ -81,6 +81,8 @@ OVS_REPO            ?= https://github.com/openstack-k8s-operators/ovs-operator.g
 OVS_BRANCH          ?= main
 OVS                 ?= config/samples/ovs_v1beta1_ovs.yaml
 OVS_CR              ?= ${OPERATOR_BASE_DIR}/ovs-operator/${OVS}
+OVS_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/ovs-operator/kuttl-test.yaml
+OVS_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovs-operator/tests/kuttl/tests
 
 # Neutron
 NEUTRON_IMG        ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
@@ -822,6 +824,17 @@ ovn_kuttl: namespace input openstack_crds deploy_cleanup ovn_deploy_prep ovn ## 
 	make ovn_kuttl_run
 	make deploy_cleanup
 	make ovn_cleanup
+
+.PHONY: ovs_kuttl_run
+ovs_kuttl_run: ## runs kuttl tests for the ovs operator, assumes that everything needed for running the test was deployed beforehand.
+	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${OVS_KUTTL_CONF} ${OVS_KUTTL_DIR}
+
+.PHONY: ovs_kuttl
+ovs_kuttl: namespace input openstack_crds deploy_cleanup ovn ovn_deploy ovs_deploy_prep ovs ## runs kuttl tests for the ovs operator. Installs openstack crds and ovn and ovs operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	make ovs_kuttl_run
+	make deploy_cleanup
+	make ovn_cleanup
+	make ovs_cleanup
 
 ##@ ANSIBLEEE
 .PHONY: ansibleee_prep
