@@ -693,6 +693,7 @@ ironic_deploy_cleanup: ## cleans up the service instance, Does not affect the op
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/ironic-operator ${DEPLOY_DIR}
 	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database ironic;" || true
+	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database ironic_inspector;" || true
 
 ##@ OCTAVIA
 .PHONY: octavia_prep
