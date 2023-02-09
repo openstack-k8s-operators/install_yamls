@@ -19,10 +19,12 @@ set -ex
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 NAMESPACE=${NAMESPACE:-"openstack"}
 METADATA_NAME=${METADATA_NAME:-"ansibleee-ssh-key-secret"}
-OUTPUT_DIR=${OUTPUT_DIR:-"../out/edpm"}
+OUTPUT_DIR=${OUTPUT_DIR:-"../../out/edpm"}
 SSH_ALGORITHM=${SSH_ALGORITHM:-"rsa"}
 SSH_KEY_FILE=${SSH_KEY_FILE:-"ansibleee-ssh-key-id_rsa"}
 SSH_KEY_SIZE=${SSH_KEY_SIZE:-"4096"}
+
+pushd ${SCRIPTPATH}
 
 if [ ! -d ${OUTPUT_DIR} ]; then
       mkdir -p ${OUTPUT_DIR}
@@ -56,4 +58,5 @@ EOF
 
 oc create -f ansibleee-ssh-key-secret.yaml
 
+popd
 popd
