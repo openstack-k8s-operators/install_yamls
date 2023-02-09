@@ -72,6 +72,8 @@ OVNDBS              ?= config/samples/ovn_v1beta1_ovndbcluster.yaml
 OVNDBS_CR           ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNDBS}
 OVNNORTHD           ?= config/samples/ovn_v1beta1_ovnnorthd.yaml
 OVNNORTHD_CR        ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNNORTHD}
+OVN_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/ovn-operator/kuttl-test.yaml
+OVN_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovn-operator/tests/kuttl/tests
 
 # Ovs
 OVS_IMG             ?= quay.io/openstack-k8s-operators/ovs-operator-index:latest
@@ -814,6 +816,16 @@ octavia_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_dep
 	make octavia_cleanup
 	make keystone_cleanup
 	make mariadb_cleanup
+
+.PHONY: ovn_kuttl_run
+ovn_kuttl_run: ## runs kuttl tests for the ovn operator, assumes that everything needed for running the test was deployed beforehand.
+	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${OVN_KUTTL_CONF} ${OVN_KUTTL_DIR}
+
+.PHONY: ovn_kuttl
+ovn_kuttl: namespace input openstack_crds deploy_cleanup ovn_deploy_prep ovn ## runs kuttl tests for the ovn operator. Installs openstack crds and ovn operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	make ovn_kuttl_run
+	make deploy_cleanup
+	make ovn_cleanup
 
 ##@ ANSIBLEEE
 .PHONY: ansibleee_prep
