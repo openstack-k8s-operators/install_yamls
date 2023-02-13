@@ -89,6 +89,8 @@ NEUTRON_BRANCH     ?= master
 NEUTRONAPI         ?= config/samples/neutron_v1beta1_neutronapi.yaml
 NEUTRONAPI_CR      ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
 NEUTRONAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-neutron-server:current-tripleo
+NEUTRON_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/neutron-operator/kuttl-test.yaml
+NEUTRON_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/neutron-operator/test/kuttl/tests
 
 # Cinder
 CINDER_IMG       ?= quay.io/openstack-k8s-operators/cinder-operator-index:latest
@@ -803,6 +805,23 @@ keystone_kuttl_run: ## runs kuttl tests for the keystone operator, assumes that 
 keystone_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate keystone_deploy_prep keystone ## runs kuttl tests for the keystone operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make keystone_kuttl_run
 	make deploy_cleanup
+	make keystone_cleanup
+	make mariadb_cleanup
+
+.PHONY: neutron_kuttl_run
+neutron_kuttl_run: ## runs kuttl tests for the neutron operator, assumes that everything needed for running the test was deployed beforehand.
+	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${NEUTRON_KUTTL_CONF} ${NEUTRON_KUTTL_DIR}
+
+.PHONY: neutron_kuttl
+neutron_kuttl: namespace input openstack_crds deploy_cleanup mariadb neutron_deploy_prep neutron mariadb_deploy keystone rabbitmq keystone_deploy ovn rabbitmq_deploy infra ovn_deploy   mariadb_deploy_validate ## runs kuttl tests for the neutron operator. Installs openstack crds and mariadb, keystone, rabbitmq, ovn, infra and neutron operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	make neutron_kuttl_run
+	make rabbitmq_deploy_cleanup
+	make ovn_deploy_cleanup
+	make deploy_cleanup
+	make neutron_cleanup
+	make ovn_cleanup
+	make infra_cleanup
+	make rabbitmq_cleanup
 	make keystone_cleanup
 	make mariadb_cleanup
 
