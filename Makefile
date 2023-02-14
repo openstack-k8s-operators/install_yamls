@@ -12,8 +12,6 @@ OPERATOR_BASE_DIR   ?= ${OUT}/operator
 # default registry and org to pull service images from
 SERVICE_REGISTRY    ?= quay.io
 SERVICE_ORG         ?= tripleozedcentos9
-CONTAINER_TAG	    ?= current-tripleo
-PREFIX		    ?= openstack
 
 # storage (used by some operators)
 STORAGE_CLASS       ?= "local-storage"
@@ -41,7 +39,7 @@ KEYSTONE_REPO       ?= https://github.com/openstack-k8s-operators/keystone-opera
 KEYSTONE_BRANCH     ?= master
 KEYSTONEAPI         ?= config/samples/keystone_v1beta1_keystoneapi.yaml
 KEYSTONEAPI_CR      ?= ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
-KEYSTONEAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-keystone:${CONTAINER_TAG}
+KEYSTONEAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-keystone:current-tripleo
 KEYSTONE_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.yaml
 KEYSTONE_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
 
@@ -51,7 +49,7 @@ MARIADB_REPO        ?= https://github.com/openstack-k8s-operators/mariadb-operat
 MARIADB_BRANCH      ?= master
 MARIADB             ?= config/samples/mariadb_v1beta1_mariadb.yaml
 MARIADB_CR          ?= ${OPERATOR_BASE_DIR}/mariadb-operator/${MARIADB}
-MARIADB_DEPL_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-mariadb:${CONTAINER_TAG}
+MARIADB_DEPL_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-mariadb:current-tripleo
 MARIADB_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
 MARIADB_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
 
@@ -61,7 +59,7 @@ PLACEMENT_REPO      ?= https://github.com/openstack-k8s-operators/placement-oper
 PLACEMENT_BRANCH    ?= master
 PLACEMENTAPI        ?= config/samples/placement_v1beta1_placementapi.yaml
 PLACEMENTAPI_CR     ?= ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI}
-PLACEMENTAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-placement-api:${CONTAINER_TAG}
+PLACEMENTAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-placement-api:current-tripleo
 
 # Sir Glancealot
 GLANCE_IMG          ?= quay.io/openstack-k8s-operators/glance-operator-index:latest
@@ -69,7 +67,7 @@ GLANCE_REPO         ?= https://github.com/openstack-k8s-operators/glance-operato
 GLANCE_BRANCH       ?= master
 GLANCE              ?= config/samples/glance_v1beta1_glance.yaml
 GLANCE_CR           ?= ${OPERATOR_BASE_DIR}/glance-operator/${GLANCE}
-GLANCEAPI_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-glance-api:${CONTAINER_TAG}
+GLANCEAPI_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-glance-api:current-tripleo
 
 # Ovn
 OVN_IMG             ?= quay.io/openstack-k8s-operators/ovn-operator-index:latest
@@ -81,10 +79,6 @@ OVNNORTHD           ?= config/samples/ovn_v1beta1_ovnnorthd.yaml
 OVNNORTHD_CR        ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNNORTHD}
 OVN_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/ovn-operator/kuttl-test.yaml
 OVN_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovn-operator/tests/kuttl/tests
-OVNBDS_IMG	        ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-ovn-nb-db-server:${CONTAINER_TAG}
-OVSBDS_IMG	        ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-ovn-sb-db-server:${CONTAINER_TAG}
-OVNCONTROLLER_IMG   ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-ovn-controller:${CONTAINER_TAG}
-OVNNORTHD_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-ovn-northd:${CONTAINER_TAG}
 
 # Ovs
 OVS_IMG             ?= quay.io/openstack-k8s-operators/ovs-operator-index:latest
@@ -92,7 +86,6 @@ OVS_REPO            ?= https://github.com/openstack-k8s-operators/ovs-operator.g
 OVS_BRANCH          ?= main
 OVS                 ?= config/samples/ovs_v1beta1_ovs.yaml
 OVS_CR              ?= ${OPERATOR_BASE_DIR}/ovs-operator/${OVS}
-OVSSERVICE_IMG             ?= ${SERVICE_REGISTRY}/skaplons/ovs:latest"}
 
 # Neutron
 NEUTRON_IMG        ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
@@ -101,7 +94,6 @@ NEUTRON_BRANCH     ?= master
 NEUTRONAPI         ?= config/samples/neutron_v1beta1_neutronapi.yaml
 NEUTRONAPI_CR      ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
 NEUTRONAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-neutron-server:current-tripleo
-NEUTRONSERVER_IMG  ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-neutron-server:${CONTAINER_TAG}
 
 # Cinder
 CINDER_IMG       ?= quay.io/openstack-k8s-operators/cinder-operator-index:latest
@@ -109,10 +101,7 @@ CINDER_REPO      ?= https://github.com/openstack-k8s-operators/cinder-operator.g
 CINDER_BRANCH    ?= master
 CINDER           ?= config/samples/cinder_v1beta1_cinder.yaml
 CINDER_CR        ?= ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
-CINDERAPI_IMG	 ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-cinder-api:${CONTAINER_TAG}
-CINDERSCHEDULER_IMG ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-cinder-schedular:${CONTAINER_TAG}
-CINDERBACKUP_IMG ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-cinder-backup:${CONTAINER_TAG}
-CINDERVOLUME_IMG ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-cinder-volume:${CONTAINER_TAG}
+# TODO: Image customizations for all Cinder services
 
 # Rabbitmq
 RABBITMQ_IMG         ?= quay.io/openstack-k8s-operators/rabbitmq-cluster-operator-index:latest
@@ -175,21 +164,6 @@ ${1}: export OUT=${OUT}
 ${1}: export OPERATOR_NAME=${2}
 ${1}: export OPERATOR_DIR=${OUT}/${NAMESPACE}/${2}/op
 ${1}: export DEPLOY_DIR=${OUT}/${NAMESPACE}/${2}/cr
-# Openstack Services Containers
-export KEYSTONEAPI_IMG=${KEYSTONEAPI_IMG}
-export MARIADB_DEPL_IMG=${MARIADB_DEPL_IMG}
-export PLACEMENTAPI_IMG=${PLACEMENTAPI_IMG}
-export GLANCEAPI_IMG=${GLANCEAPI_IMG}
-export CINDERAPI_IMG=${CINDERAPI_IMG}
-export CINDERSCHEDULER_IMG=${CINDERSCHEDULER_IMG}
-export CINDERBACKUP_IMG=${CINDERBACKUP_IMG}
-export CINDERVOLUME_IMG=${CINDERVOLUME_IMG}
-export OVNBDS_IMG=${OVNBDS_IMG}
-export OVSBDS_IMG=${OVSBDS_IMG}
-export OVNNORTHD_IMG=${OVNNORTHD_IMG}
-export OVSSERVICE_IMG=${OVSSERVICE_IMG}
-export OVNCONTROLLER_IMG=${OVNCONTROLLER_IMG}
-export NEUTRONSERVER_IMG=${NEUTRONSERVER_IMG}
 endef
 
 .PHONY: all
@@ -289,7 +263,6 @@ openstack_deploy_prep: openstack_deploy_cleanup ## prepares the CR to install th
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${OPENSTACK_BRANCH} ${OPENSTACK_REPO} && popd
 	cp ${OPENSTACK_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
-	bash scripts/gen-service-container-kustomize.sh
 
 .PHONY: openstack_deploy
 openstack_deploy: input openstack_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
