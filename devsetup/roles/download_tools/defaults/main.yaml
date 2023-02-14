@@ -6,7 +6,7 @@ kuttl_version: 0.15.0
 opm_version: latest
 
 # operator-sdk version to use (must be specific version)
-#sdk_version: v0.19.2 - cnosp is right now based on that version
+# sdk_version: v0.19.2 - cnosp is right now based on that version
 sdk_version: v1.26.0
 
 # golang version
@@ -14,4 +14,3 @@ go_version: 1.19.5
 
 # kustomize version to use (must be specific version)
 kustomize_version: v4.5.7
-

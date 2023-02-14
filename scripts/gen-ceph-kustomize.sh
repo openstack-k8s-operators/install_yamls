@@ -127,8 +127,7 @@ function get_pod_ip {
 
 function ceph_is_ready {
     echo "Waiting the cluster to be up"
-    until oc rsh ceph ls /etc/ceph/I_AM_A_DEMO &> /dev/null
-    do
+    until oc rsh ceph ls /etc/ceph/I_AM_A_DEMO &> /dev/null; do
         sleep 1
         echo -n .
         (( TIMEOUT-- ))

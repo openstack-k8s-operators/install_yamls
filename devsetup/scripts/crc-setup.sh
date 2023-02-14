@@ -1,9 +1,9 @@
 #!/bin/bash
 # set -x
 
-if [ "$EUID" -eq 0 ]
-  then echo "Please do not run as root."
-  exit
+if [ "$EUID" -eq 0 ]; then
+    echo "Please do not run as root."
+    exit
 fi
 
 CRC_URL=$1
@@ -14,24 +14,24 @@ MEMORY=${MEMORY:-9216}
 DISK=${DISK:-31}
 
 if [ -z "${CRC_URL}" ]; then
-  echo "Please set CRC_URL as ARG1"; exit 1
+    echo "Please set CRC_URL as ARG1"; exit 1
 fi
 if [ -z "${KUBEADMIN_PWD}" ]; then
-  echo "Please set KUBEADMIN_PWD as ARG2"; exit 1
+    echo "Please set KUBEADMIN_PWD as ARG2"; exit 1
 fi
 if [ -z "${PULL_SECRET_FILE}" ]; then
-  echo "Please set PULL_SECRET_FILE as ARG3"; exit 1
+    echo "Please set PULL_SECRET_FILE as ARG3"; exit 1
 fi
 # verify pull secret file exist
 if [ ! -f "${PULL_SECRET_FILE}" ]; then
-  echo "Pull secret file ${PULL_SECRET_FILE} does not exist, Please download from https://cloud.redhat.com/openshift/create/local"; exit 1
+    echo "Pull secret file ${PULL_SECRET_FILE} does not exist, Please download from https://cloud.redhat.com/openshift/create/local"; exit 1
 fi
 
 CRC_BIN=$(which crc)
 if [ -z "${CRC_BIN}" ]; then
-  mkdir -p ~/bin
-  curl -L "${CRC_URL}" | tar -U --strip-components=1 -C ~/bin -xJf - *crc
-  CRC_BIN=$(which crc)
+    mkdir -p ~/bin
+    curl -L "${CRC_URL}" | tar -U --strip-components=1 -C ~/bin -xJf - *crc
+    CRC_BIN=$(which crc)
 fi
 
 # config CRC
