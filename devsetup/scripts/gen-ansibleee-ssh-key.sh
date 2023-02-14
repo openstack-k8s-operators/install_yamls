@@ -25,7 +25,7 @@ SSH_KEY_FILE=${SSH_KEY_FILE:-"ansibleee-ssh-key-id_rsa"}
 SSH_KEY_SIZE=${SSH_KEY_SIZE:-"4096"}
 
 if [ ! -d ${OUTPUT_DIR} ]; then
-      mkdir -p ${OUTPUT_DIR}
+    mkdir -p ${OUTPUT_DIR}
 fi
 
 pushd ${OUTPUT_DIR}

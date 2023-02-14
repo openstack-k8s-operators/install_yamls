@@ -21,12 +21,12 @@ set -e
 # directory to the resources section of the kustomization.yaml file
 #
 function kustomization_add_resources {
-  echo merge config dir $1
+    echo merge config dir $1
 
-  # it is not possible to use wild cards in resources field
-  # https://github.com/kubernetes-sigs/kustomize/issues/119
-  yamls=$(find . -type f -name "*.yaml" | grep -v kustomization)
-  for y in ${yamls[@]}; do
-    kustomize edit add resource $y
-  done
+    # it is not possible to use wild cards in resources field
+    # https://github.com/kubernetes-sigs/kustomize/issues/119
+    yamls=$(find . -type f -name "*.yaml" | grep -v kustomization)
+    for y in ${yamls[@]}; do
+        kustomize edit add resource $y
+    done
 }
