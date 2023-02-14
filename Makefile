@@ -220,6 +220,7 @@ openstack_prep: export IMAGE=${OPENSTACK_IMG}
 openstack_prep: ## creates the files to install the operator using olm
 	$(eval $(call vars,$@,openstack))
 	bash scripts/gen-olm.sh
+	bash scripts/create-webhook-secret.sh
 
 .PHONY: openstack
 openstack: namespace openstack_prep ## installs the operator, also runs the prep step. Set OPENSTACK_IMG for custom image.
