@@ -14,6 +14,7 @@ SERVICE_REGISTRY    ?= quay.io
 SERVICE_ORG         ?= tripleozedcentos9
 CONTAINER_TAG	    ?= current-tripleo
 PREFIX		    ?= openstack
+UPDATE_CONTAINERS   ?= false
 
 # storage (used by some operators)
 STORAGE_CLASS       ?= "local-storage"

@@ -63,54 +63,64 @@ patches:
       path: /spec/storageClass
       value: ${STORAGE_CLASS}
 EOF
-if [ "$KIND" == "OpenStackControlPlane" ]; then
-cat <<EOF >>kustomization.yaml
-    - op: replace
-      path: /spec/keystone/template/containerImage
-      value: ${KEYSTONEAPI_IMG}
-    - op: replace
-      path: /spec/mariadb/template/containerImage
-      value: ${MARIADB_DEPL_IMG}
-    - op: replace
-      path: /spec/placement/template/containerImage
-      value: ${PLACEMENTAPI_IMG}
-    - op: replace
-      path: /spec/glance/template/containerImage
-      value: ${GLANCEAPI_IMG}
-    - op: replace
-      path: /spec/glance/template/glanceAPIInternal/containerImage
-      value: ${GLANCEAPI_IMG}
-    - op: replace
-      path: /spec/glance/template/glanceAPIExternal/containerImage
-      value: ${GLANCEAPI_IMG}
-    - op: replace
-      path: /spec/cinder/template/cinderAPI/containerImage
-      value: ${CINDERAPI_IMG}
-    - op: replace
-      path: /spec/cinder/template/cinderScheduler/containerImage
-      value: ${CINDERSCHEDULER_IMG}
-    - op: replace
-      path: /spec/cinder/template/cinderBackup/containerImage
-      value: ${CINDERBACKUP_IMG}
-    - op: replace
-      path: /spec/cinder/template/cinderVolumes/volume1/containerImage
-      value: ${CINDERVOLUME_IMG}
-    - op: replace
-      path: /spec/ovn/template/ovnDBCluster/ovndbcluster-nb/containerImage
-      value: ${OVNBDS_IMG}
-    - op: replace
-      path: /spec/ovn/template/ovnDBCluster/ovndbcluster-sb/containerImage
-      value: ${OVSBDS_IMG}
-    - op: replace
-      path: /spec/ovn/template/ovnNorthd/containerImage
-      value: ${OVNNORTHD_IMG}
-    - op: replace
-      path: /spec/ovs/template/ovsContainerImage
-      value: ${OVSSERVICE_IMG}
-    - op: replace
-      path: /spec/ovs/template/ovnContainerImage
-      value: ${OVNCONTROLLER_IMG}
+
+if [ "$UPDATE_CONTAINERS" == "true" ]; then
+cat <<EOF >update_containers_patch.yaml
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackControlPlane
+metadata:
+  name: openstack
+spec:
+  keystone:
+    template:
+      containerImage: ${KEYSTONEAPI_IMG}
+  mariadb:
+    template:
+      containerImage: ${MARIADB_DEPL_IMG}
+  placement:
+    template:
+      containerImage: ${PLACEMENTAPI_IMG}
+  glance:
+    template:
+      containerImage: ${GLANCEAPI_IMG}
+      glanceAPIInternal:
+        containerImage: ${GLANCEAPI_IMG}
+      glanceAPIExternal:
+        containerImage: ${GLANCEAPI_IMG}
+  cinder:
+    template:
+      cinderAPI:
+        containerImage: ${CINDERAPI_IMG}
+      cinderScheduler:
+        containerImage: ${CINDERSCHEDULER_IMG}
+      cinderBackup:
+        containerImage: ${CINDERBACKUP_IMG}
+      cinderVolumes:
+        volume1:
+          containerImage: ${CINDERVOLUME_IMG}
+  ovn:
+    template:
+      ovnDBCluster:
+        ovndbcluster-nb:
+          containerImage: ${OVNBDS_IMG}
+        ovndbcluster-sb:
+          containerImage: ${OVSBDS_IMG}
+      ovnNorthd:
+        containerImage: ${OVNNORTHD_IMG}
+  ovs:
+    template:
+      ovsContainerImage: ${OVSSERVICE_IMG}
+      ovnContainerImage: ${OVNCONTROLLER_IMG}
+  neutron:
+    template:
+      containerImage: ${NEUTRONSERVER_IMG}
 EOF
+
+cat <<EOF >>kustomization.yaml
+patchesStrategicMerge:
+  - update_containers_patch.yaml
+EOF
+
 fi
 if [ "$IMAGE" != "unused" ]; then
 cat <<EOF >>kustomization.yaml
