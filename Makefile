@@ -289,6 +289,7 @@ openstack_deploy_prep: openstack_deploy_cleanup ## prepares the CR to install th
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${OPENSTACK_BRANCH} ${OPENSTACK_REPO} && popd
 	cp ${OPENSTACK_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
+	bash scripts/gen-service-container-kustomize.sh
 
 .PHONY: openstack_deploy
 openstack_deploy: input openstack_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
