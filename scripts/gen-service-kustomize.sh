@@ -63,6 +63,55 @@ patches:
       path: /spec/storageClass
       value: ${STORAGE_CLASS}
 EOF
+if [ "$KIND" == "OpenStackControlPlane" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/keystone/template/containerImage
+      value: ${KEYSTONEAPI_IMG}
+    - op: replace
+      path: /spec/mariadb/template/containerImage
+      value: ${MARIADB_DEPL_IMG}
+    - op: replace
+      path: /spec/placement/template/containerImage
+      value: ${PLACEMENTAPI_IMG}
+    - op: replace
+      path: /spec/glance/template/containerImage
+      value: ${GLANCEAPI_IMG}
+    - op: replace
+      path: /spec/glance/template/glanceAPIInternal/containerImage
+      value: ${GLANCEAPI_IMG}
+    - op: replace
+      path: /spec/glance/template/glanceAPIExternal/containerImage
+      value: ${GLANCEAPI_IMG}
+    - op: replace
+      path: /spec/cinder/template/cinderAPI/containerImage
+      value: ${CINDERAPI_IMG}
+    - op: replace
+      path: /spec/cinder/template/cinderScheduler/containerImage
+      value: ${CINDERSCHEDULER_IMG}
+    - op: replace
+      path: /spec/cinder/template/cinderBackup/containerImage
+      value: ${CINDERBACKUP_IMG}
+    - op: replace
+      path: /spec/cinder/template/cinderVolumes/volume1/containerImage
+      value: ${CINDERVOLUME_IMG}
+    - op: replace
+      path: /spec/ovn/template/ovnDBCluster/ovndbcluster-nb/containerImage
+      value: ${OVNBDS_IMG}
+    - op: replace
+      path: /spec/ovn/template/ovnDBCluster/ovndbcluster-sb/containerImage
+      value: ${OVSBDS_IMG}
+    - op: replace
+      path: /spec/ovn/template/ovnNorthd/containerImage
+      value: ${OVNNORTHD_IMG}
+    - op: replace
+      path: /spec/ovs/template/ovsContainerImage
+      value: ${OVSSERVICE_IMG}
+    - op: replace
+      path: /spec/ovs/template/ovnContainerImage
+      value: ${OVNCONTROLLER_IMG}
+EOF
+fi
 if [ "$IMAGE" != "unused" ]; then
 cat <<EOF >>kustomization.yaml
     - op: replace
