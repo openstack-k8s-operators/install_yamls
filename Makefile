@@ -152,7 +152,7 @@ BAREMETAL_REPO       ?= https://github.com/openstack-k8s-operators/openstack-bar
 BAREMETAL_BRANCH     ?= master
 
 # Ceph
-CEPH_IMG       ?= quay.io/ceph/daemon:latest-quincy
+CEPH_IMG       ?= quay.io/ceph/demo:latest
 
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
@@ -897,6 +897,12 @@ baremetal_cleanup: ## deletes the operator, but does not cleanup the service res
 	rm -Rf ${OPERATOR_DIR}
 
 ##@ CEPH
+.PHONY: ceph_help
+ceph_help: export IMAGE=${CEPH_IMG}
+ceph_help: ## Ceph helper
+	$(eval $(call vars,$@,ceph))
+	bash scripts/gen-ceph-kustomize.sh "help" "full"
+
 .PHONY: ceph
 ceph: export IMAGE=${CEPH_IMG}
 ceph: namespace ## deploy the Ceph Pod
