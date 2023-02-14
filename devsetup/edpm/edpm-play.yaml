@@ -177,7 +177,7 @@ spec:
                   edpm_ovn_dbs:
                   - 192.168.24.1
             vars:
-                edpm_ovn_controller_image: >-
+                edpm_ovn_controller_image:
                   "quay.io/tripleomastercentos9/openstack-ovn-controller:current-tripleo"
                 gather_facts: false
                 enable_debug: false
