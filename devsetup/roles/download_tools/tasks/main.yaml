@@ -49,9 +49,9 @@
 
 - name: Download operator-sdk
   ansible.builtin.get_url:
-    url: >
-      https://github.com/operator-framework/operator-sdk/releases/download/
-      {{ sdk_version }}/{{ _operator_sdk_file }}
+    url:
+      "https://github.com/operator-framework/operator-sdk/releases/download/\
+      {{ sdk_version }}/{{ _operator_sdk_file }}"
     dest: "{{ lookup('env', 'HOME') }}/bin/operator-sdk"
     mode: '0755'
     force: true
