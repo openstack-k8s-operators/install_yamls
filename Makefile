@@ -151,6 +151,11 @@ BAREMETAL_IMG        ?= quay.io/openstack-k8s-operators/openstack-baremetal-oper
 BAREMETAL_REPO       ?= https://github.com/openstack-k8s-operators/openstack-baremetal-operator.git
 BAREMETAL_BRANCH     ?= master
 
+# Dataplane Operator
+DATAPLANE_IMG        ?= quay.io/openstack-k8s-operators/dataplane-operator-index:latest
+DATAPLANE_REPO       ?= https://github.com/openstack-k8s-operators/dataplane-operator.git
+DATAPLANE_BRANCH     ?= main
+
 # Ceph
 CEPH_IMG       ?= quay.io/ceph/demo:latest
 
@@ -893,6 +898,24 @@ baremetal: namespace baremetal_prep ## installs the operator, also runs the prep
 .PHONY: baremetal_cleanup
 baremetal_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,openstack-baremetal))
+	bash scripts/operator-cleanup.sh
+	rm -Rf ${OPERATOR_DIR}
+
+##@ DATAPLANE
+.PHONY: dataplane_prep
+dataplane_prep: export IMAGE=${DATAPLANE_IMG}
+dataplane_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,dataplane))
+	bash scripts/gen-olm.sh
+
+.PHONY: dataplane
+dataplane: namespace dataplane_prep ## installs the operator, also runs the prep step. Set DATAPLANE_IMG for custom image.
+	$(eval $(call vars,$@,dataplane))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: dataplane_cleanup
+dataplane_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,dataplane))
 	bash scripts/operator-cleanup.sh
 	rm -Rf ${OPERATOR_DIR}
 
