@@ -111,13 +111,9 @@ cat <<EOF >>kustomization.yaml
       path: /spec/ovs/template/ovnContainerImage
       value: ${OVNCONTROLLER_IMG}
     - op: replace
-      path: /spec/nova/template/apiServiceTemplate/containerImage
-      value: ${NOVAAPI_IMG}
-    - op: replace
-      path: /spec/nova/template/schedulerServiceTemplate/containerImage
-      value: ${NOVASCHEDULER_IMG}
+      path: /spec/neutron/template/containerImage
+      value: ${NEUTRONSERVER_IMG}
 EOF
-fi
 if [ "$IMAGE" != "unused" ]; then
 cat <<EOF >>kustomization.yaml
     - op: replace

@@ -100,6 +100,7 @@ NEUTRON_REPO       ?= https://github.com/openstack-k8s-operators/neutron-operato
 NEUTRON_BRANCH     ?= master
 NEUTRONAPI         ?= config/samples/neutron_v1beta1_neutronapi.yaml
 NEUTRONAPI_CR      ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
+NEUTRONAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-neutron-server:current-tripleo
 NEUTRONSERVER_IMG  ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-neutron-server:${CONTAINER_TAG}
 
 # Cinder
@@ -146,13 +147,8 @@ NOVA_BRANCH    ?= master
 # as that would require two RabbitMQCluster to be deployed which a) is not what
 # the make rabbitmq_deploy target does ii) required extra resource in the dev
 # environment.
-NOVA               ?= config/samples/nova_v1beta1_nova_collapsed_cell.yaml
-NOVA_CR            ?= ${OPERATOR_BASE_DIR}/nova-operator/${NOVA}
-NOVAAPI_IMG	   ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-nova-api:${CONTAINER_TAG}
-NOVASCHEDULER_IMG  ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-nova-scheduler:${CONTAINER_TAG}
-NOVACONDUCTOR_IMG  ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-nova-conductor:${CONTAINER_TAG}
-NOVANOVNCPROXY_IMG ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-nova-novncproxy:${CONTAINER_TAG}
-NOVAMETADATA_IMG   ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/${PREFIX}-nova-metadata:${CONTAINER_TAG}
+NOVA           ?= config/samples/nova_v1beta1_nova_collapsed_cell.yaml
+NOVA_CR        ?= ${OPERATOR_BASE_DIR}/nova-operator/${NOVA}
 
 # AnsibleEE
 ANSIBLEEE_IMG       ?= quay.io/openstack-k8s-operators/openstack-ansibleee-operator-index:latest
@@ -180,25 +176,20 @@ ${1}: export OPERATOR_NAME=${2}
 ${1}: export OPERATOR_DIR=${OUT}/${NAMESPACE}/${2}/op
 ${1}: export DEPLOY_DIR=${OUT}/${NAMESPACE}/${2}/cr
 # Openstack Services Containers
-${1}: export KEYSTONEAPI_IMG=${KEYSTONEAPI_IMG}
-${1}: export MARIADB_DEPL_IMG=${MARIADB_DEPL_IMG}
-${1}: export PLACEMENTAPI_IMG=${PLACEMENTAPI_IMG}
-${1}: export GLANCEAPI_IMG=${GLANCEAPI_IMG}
-${1}: export CINDERAPI_IMG=${CINDERAPI_IMG}
-${1}: export CINDERSCHEDULER_IMG=${CINDERSCHEDULER_IMG}
-${1}: export CINDERBACKUP_IMG=${CINDERBACKUP_IMG}
-${1}: export CINDERVOLUME_IMG=${CINDERVOLUME_IMG}
-${1}: export OVNBDS_IMG=${OVNBDS_IMG}
-${1}: export OVSBDS_IMG=${OVSBDS_IMG}
-${1}: export OVNNORTHD_IMG=${OVNNORTHD_IMG}
-${1}: export OVSSERVICE_IMG=${OVSSERVICE_IMG}
-${1}: export OVNCONTROLLER_IMG=${OVNCONTROLLER_IMG}
-${1}: export NEUTRONSERVER_IMG=${NEUTRONSERVER_IMG}
-${1}: export NOVAAPI_IMG=${NOVAAPI_IMG}
-${1}: export NOVASCHEDULER_IMG=${NOVASCHEDULER_IMG}
-${1}: export NOVACONDUCTOR_IMG=${NOVACONDUCTOR_IMG}
-${1}: export NOVANOVNCPROXY_IMG=${NOVANOVNCPROXY_IMG}
-${1}: export NOVAMETADATA_IMG=${NOVAMETADATA_IMG}
+export KEYSTONEAPI_IMG=${KEYSTONEAPI_IMG}
+export MARIADB_DEPL_IMG=${MARIADB_DEPL_IMG}
+export PLACEMENTAPI_IMG=${PLACEMENTAPI_IMG}
+export GLANCEAPI_IMG=${GLANCEAPI_IMG}
+export CINDERAPI_IMG=${CINDERAPI_IMG}
+export CINDERSCHEDULER_IMG=${CINDERSCHEDULER_IMG}
+export CINDERBACKUP_IMG=${CINDERBACKUP_IMG}
+export CINDERVOLUME_IMG=${CINDERVOLUME_IMG}
+export OVNBDS_IMG=${OVNBDS_IMG}
+export OVSBDS_IMG=${OVSBDS_IMG}
+export OVNNORTHD_IMG=${OVNNORTHD_IMG}
+export OVSSERVICE_IMG=${OVSSERVICE_IMG}
+export OVNCONTROLLER_IMG=${OVNCONTROLLER_IMG}
+export NEUTRONSERVER_IMG=${NEUTRONSERVER_IMG}
 endef
 
 .PHONY: all
