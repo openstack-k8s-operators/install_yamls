@@ -22,6 +22,7 @@ OPENSTACK_REPO       ?= https://github.com/openstack-k8s-operators/openstack-ope
 OPENSTACK_BRANCH     ?= master
 OPENSTACK_CTLPLANE   ?= config/samples/core_v1beta1_openstackcontrolplane.yaml
 OPENSTACK_CR         ?= ${OPERATOR_BASE_DIR}/openstack-operator/${OPENSTACK_CTLPLANE}
+OPENSTACK_BUNDLE_IMG ?= quay.io/openstack-k8s-operators/openstack-operator-bundle:latest
 
 # Infra Operator
 INFRA_IMG        ?= quay.io/openstack-k8s-operators/infra-operator-index:latest
@@ -288,8 +289,7 @@ openstack_deploy_cleanup: ## cleans up the service instance, Does not affect the
 .PHONY: openstack_crds
 openstack_crds: ## installs all openstack CRDs. Useful for infrastructure dev
 	mkdir -p ${OUT}/openstack_crds
-	podman pull quay.io/openstack-k8s-operators/openstack-operator-bundle:latest
-	podman image save -o ${OUT}/openstack_crds --compress --format docker-dir quay.io/openstack-k8s-operators/openstack-operator-bundle:latest
+	skopeo copy "docker://${OPENSTACK_BUNDLE_IMG}" dir:${OUT}/openstack_crds
 	tar xvf $$(file ${OUT}/openstack_crds/* | grep gzip | cut -f 1 -d ':') -C ${OUT}/openstack_crds
 	for X in $$(grep -l CustomResourceDefinition out/openstack_crds/manifests/*); do oc apply -f $$X; done
 
