@@ -16,6 +16,12 @@
 set -ex
 PV_NUM=${PV_NUM:-12}
 
+released=$(oc get pv -o json | jq -r '.items[] | select(.status.phase | test("Released")).metadata.name')
+
+for name in $released; do
+  oc patch pv -p '{"spec":{"claimRef": null}}' $name
+done
+
 NODE_NAMES=$(oc get node -o name -l node-role.kubernetes.io/worker)
 if [ -z "$NODE_NAMES" ]; then
     echo "Unable to determine node name with 'oc' command."
