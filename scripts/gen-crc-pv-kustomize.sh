@@ -16,7 +16,7 @@
 set -ex
 
 if [ -z "$STORAGE_CLASS" ]; then
-  echo "Please set STORAGE_CLASS"; exit 1
+    echo "Please set STORAGE_CLASS"; exit 1
 fi
 
 if [ ! -d out/crc ]; then
