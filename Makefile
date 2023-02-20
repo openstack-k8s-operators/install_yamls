@@ -908,7 +908,7 @@ ironic_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_depl
 	make deploy_cleanup
 	make ironic_cleanup
 	make keystone_cleanup
-	make mariadb_cleanup 
+	make mariadb_cleanup
 
 ##@ ANSIBLEEE
 .PHONY: ansibleee_prep
