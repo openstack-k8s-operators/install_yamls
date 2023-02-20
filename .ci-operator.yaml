@@ -1,3 +1,4 @@
+---
 build_root_image:
   name: tools
   namespace: openstack-k8s-operators
