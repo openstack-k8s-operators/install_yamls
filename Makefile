@@ -910,6 +910,9 @@ ironic_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_depl
 	make keystone_cleanup
 	make mariadb_cleanup
 
+.PHONY: ironic_kuttl_crc
+ironic_kuttl_crc: crc_storage ironic_kuttl
+
 ##@ ANSIBLEEE
 .PHONY: ansibleee_prep
 ansibleee_prep: export IMAGE=${ANSIBLEEE_IMG}
