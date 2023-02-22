@@ -24,6 +24,8 @@ CRC_POOL=${CRC_POOL:-"$HOME/.crc/machines/crc"}
 DISK_FILENAME=${DISK_FILENAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2"}
 DISK_FILEPATH=${DISK_FILEPATH:-"${CRC_POOL}/${DISK_FILENAME}"}
 SSH_PUBLIC_KEY=${SSH_PUBLIC_KEY:-"../out/edpm/ansibleee-ssh-key-id_rsa.pub"}
+MAC_ADDRESS=${MAC_ADDRESS:-"$(echo -n 52:54:00; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':')"}
+IP_ADRESS_SUFFIX=${IP_ADRESS_SUFFIX:-"$((100+${EDPM_COMPUTE_SUFFIX}))"}
 
 cat <<EOF >../out/edpm/${EDPM_COMPUTE_NAME}.xml
 <domain type='kvm'>
@@ -103,6 +105,7 @@ cat <<EOF >../out/edpm/${EDPM_COMPUTE_NAME}.xml
       <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>
     </filesystem>
     <interface type='network'>
+      <mac address='${MAC_ADDRESS}'/>
       <source network='default'/>
       <model type='virtio'/>
       <address type='pci' domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>
@@ -161,8 +164,9 @@ if [ ! -f ${DISK_FILEPATH} ]; then
     fi
 fi
 
+sudo virsh net-update default add-last ip-dhcp-host --xml "<host mac='${MAC_ADDRESS}' name='${EDPM_COMPUTE_NAME}' ip='192.168.122.${IP_ADRESS_SUFFIX}'/>" --config --live
 sudo virsh define ../out/edpm/${EDPM_COMPUTE_NAME}.xml
 sudo virt-copy-out -d ${EDPM_COMPUTE_NAME} /root/.ssh/id_rsa.pub ../out/edpm
-mv ../out/edpm/id_rsa.pub ../out/edpm/${EDPM_COMPUTE_NAME}-id_rsa.pub
+mv -t ../out/edpm/id_rsa.pub ../out/edpm/${EDPM_COMPUTE_NAME}-id_rsa.pub
 cat ../out/edpm/${EDPM_COMPUTE_NAME}-id_rsa.pub | sudo tee -a /root/.ssh/authorized_keys
 sudo virsh start ${EDPM_COMPUTE_NAME}
