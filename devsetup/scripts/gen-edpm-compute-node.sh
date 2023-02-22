@@ -25,6 +25,17 @@ DISK_FILENAME=${DISK_FILENAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2"}
 DISK_FILEPATH=${DISK_FILEPATH:-"${CRC_POOL}/${DISK_FILENAME}"}
 SSH_PUBLIC_KEY=${SSH_PUBLIC_KEY:-"../out/edpm/ansibleee-ssh-key-id_rsa.pub"}
 
+if [ ! -f ${SSH_PUBLIC_KEY} ]; then
+    echo "${SSH_PUBLIC_KEY} is missing. Run gen-ansibleee-ssh-key.sh"
+    exit 1
+fi
+
+if sudo test -f "/root/.ssh"; then
+    sudo mkdir /root/.ssh
+    sudo chmod 700 /root/.ssh
+    sudo chcon unconfined_u:object_r:ssh_home_t:s0 /root/.ssh
+fi
+
 cat <<EOF >../out/edpm/${EDPM_COMPUTE_NAME}.xml
 <domain type='kvm'>
   <name>${EDPM_COMPUTE_NAME}</name>
