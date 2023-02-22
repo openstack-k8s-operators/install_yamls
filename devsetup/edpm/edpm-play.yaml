@@ -1,3 +1,4 @@
+---
 apiVersion: ansibleee.openstack.org/v1alpha1
 kind: OpenStackAnsibleEE
 metadata:
@@ -22,9 +23,6 @@ spec:
 
     - name: Deploy EDPM facts playbook
       ansible.builtin.import_playbook: deploy-edpm-facts.yml
-
-    - name: Deploy EDPM SELinux playbook
-      ansible.builtin.import_playbook: deploy-edpm-selinux.yml
 
     - name: Deploy EDPM pre-network playbook
       ansible.builtin.import_playbook: deploy-edpm-pre-network.yml
@@ -52,7 +50,7 @@ spec:
 
     - name: Deploy EDPM run OpenStack playbook
       ansible.builtin.import_playbook: deploy-edpm-openstack-run.yml
-  image: "quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest"
+  image: "_OPENSTACK_RUNNER_IMG_"
   inventory: |
     allovercloud:
       children:
@@ -62,7 +60,7 @@ spec:
                 hosts:
                   # Add additional computes here, and optionally drop localhost.
                   # Add host vars under the host_vars dir.
-                  192.168.122.139:
+                  _COMPUTE_IP_:
                     ansible_ssh_user: root
                     ctlplane_ip: 192.168.24.100
                     internal_api_ip: 192.168.24.2
@@ -76,7 +74,7 @@ spec:
                   # edpm_network_config
                   # Default nic config template for a EDPM compute node
                   # These vars are edpm_network_config role vars
-                  edpm_network_config_template: templates/net_config_bridge.j2
+                  edpm_network_config_template: _EDPM_NETWORK_CONFIG_TEMPLATE_
                   edpm_network_config_hide_sensitive_logs: false
                   #
                   # These vars are for the network config templates themselves and are
@@ -94,14 +92,19 @@ spec:
                   ctlplane_dns_nameservers:
                   - 192.168.122.1
                   dns_search_domains: []
-                  edpm_nova_compute_DEFAULT_transport_url: rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.localdomain:5672/?ssl=0
+                  edpm_nova_compute_DEFAULT_transport_url:
+                    "rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.\
+                    localdomain:5672/?ssl=0"
                   edpm_nova_compute_cache_memcache_servers: standalone.ctlplane.localdomain:11211
                   edpm_nova_compute_cinder_auth_url: http://192.168.24.3:5000/v3
                   edpm_nova_compute_cinder_password: ip3VDO3mq6JObAQqfekzt85kp
                   edpm_nova_compute_config_overrides:
                     DEFAULT:
-                      oslo_messaging_notifications_transport_url: rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.localdomain:5672/?ssl=0
-                      transport_url: rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.localdomain:5672/?ssl=0
+                      oslo_messaging_notifications_transport_url:
+                          "rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.\
+                          localdomain:5672/?ssl=0"
+                      transport_url: "rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.\
+                                      ctlplane.localdomain:5672/?ssl=0"
                     cache:
                       memcache_servers: standalone.ctlplane.localdomain:11211
                     cinder:
@@ -146,7 +149,9 @@ spec:
                   edpm_nova_compute_neutron_region_name: regionOne
                   edpm_nova_compute_neutron_user_domain_name: Default
                   edpm_nova_compute_neutron_username: neutron
-                  edpm_nova_compute_oslo_messaging_notifications_transport_url: rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.localdomain:5672/?ssl=0
+                  edpm_nova_compute_oslo_messaging_notifications_transport_url:
+                    "rabbit://guest:ar3TXOAYMaznW29fRLj2ILXKs@standalone.ctlplane.\
+                    localdomain:5672/?ssl=0"
                   edpm_nova_compute_placement_auth_type: password
                   edpm_nova_compute_placement_auth_url: http://192.168.24.3:5000
                   edpm_nova_compute_placement_password: Tnqq58zC6mD9O2jaC8xfiyt3M
@@ -169,9 +174,13 @@ spec:
                   edpm_ovn_dbs:
                   - 192.168.24.1
             vars:
-                edpm_ovn_controller_image: quay.io/tripleomastercentos9/openstack-ovn-controller:current-tripleo
+                edpm_ovn_controller_image:
+                  "quay.io/tripleomastercentos9/openstack-ovn-controller:current-tripleo"
                 gather_facts: false
                 enable_debug: false
+                # edpm firewall, change the allowed CIDR if needed
+                edpm_sshd_configure_firewall: true
+                edpm_sshd_allowed_ranges: _EDPM_SSHD_ALLOWED_RANGES_
                 # SELinux module
                 edpm_selinux_mode: enforcing
                 undercloud_hosts_entries: []
@@ -201,4 +210,3 @@ spec:
         - name: ssh-key
           mountPath: /runner/env/ssh_key
           subPath: ssh_key
-

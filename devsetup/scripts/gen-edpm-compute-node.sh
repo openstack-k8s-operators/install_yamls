@@ -146,17 +146,16 @@ if [ ! -f ${DISK_FILEPATH} ]; then
     fi
     VIRT_HOST_KNOWN_HOSTS=$(ssh-keyscan 192.168.122.1)
     virt-customize -a ${DISK_FILEPATH} \
-		--root-password password:12345678 \
-		--hostname ${EDPM_COMPUTE_NAME} \
-		--run-command "systemctl disable cloud-init cloud-config cloud-final cloud-init-local" \
-		--run-command "xfs_growfs / || true" \
+        --root-password password:12345678 \
+        --hostname ${EDPM_COMPUTE_NAME} \
+        --run-command "systemctl disable cloud-init cloud-config cloud-final cloud-init-local" \
+        --run-command "xfs_growfs / || true" \
         --run-command "echo 'PermitRootLogin yes' > /etc/ssh/sshd_config.d/99-root-login.conf" \
         --run-command "mkdir -p /root/.ssh; chmod 0700 /root/.ssh" \
         --run-command "ssh-keygen -f /root/.ssh/id_rsa -N ''" \
         --run-command "echo \"${VIRT_HOST_KNOWN_HOSTS}\" >> /root/.ssh/known_hosts" \
-		--ssh-inject root:string:"$(cat $SSH_PUBLIC_KEY)" \
-		--selinux-relabel \
-        || rm -f ${DISK_FILEPATH}
+        --ssh-inject root:string:"$(cat $SSH_PUBLIC_KEY)" \
+        --selinux-relabel || rm -f ${DISK_FILEPATH}
     if [ ! -f ${DISK_FILEPATH} ]; then
         exit 1
     fi

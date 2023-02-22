@@ -16,17 +16,17 @@
 set -ex
 
 if [ -z "$OUT" ]; then
-  echo "Please set OUT"; exit 1
+    echo "Please set OUT"; exit 1
 fi
 
 if [ -z "$NAMESPACE" ]; then
-  echo "Please set NAMESPACE"; exit 1
+    echo "Please set NAMESPACE"; exit 1
 fi
 
 OUT_DIR=${OUT}/${NAMESPACE}
 
 if [ ! -d ${OUT_DIR} ]; then
-  mkdir -p ${OUT_DIR}
+    mkdir -p ${OUT_DIR}
 fi
 
 # can share this for all the operators, won't get re-applied if it already exists

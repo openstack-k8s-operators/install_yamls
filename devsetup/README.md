@@ -92,31 +92,40 @@ After completing the devsetup, attach the crc VM to the default network:
 make crc_attach_default_interface
 ```
 
-Deploy additional VM's for compute nodes:
+Deploy a compute node VM:
 ```
 # Creates edpm-compute-0:
 make edpm_compute
+```
+
+Discover IP of the compute node VM:
+```
+sudo virsh -q domifaddr edpm-compute-0 | awk 'NF>1{print $NF}' | cut -d/ -f1
+# wait until ip address appears, then assign to a variable
+COMPUTE_IP=$( sudo virsh -q domifaddr edpm-compute-0 | awk 'NF>1{print $NF}' | cut -d/ -f1 )
+```
+
+Execute the ansible to configure the compute node:
+```
+make edpm_play EDPM_COMPUTE_IP=${COMPUTE_IP}
+```
+
+You can also deploy additional compute node VMs:
+```
 # Set $EDPM_COMPUTE_SUFFIX to create additional VM's beyond 0:
 make edpm_compute EDPM_COMPUTE_SUFFIX=1
 ```
 
-Edit edpm/edpm-play.yaml and set the compute node VM IP addresses in the
-inventory. The IP address in the inventory (192.168.122.139) needs to be
-changed to the right IP for edpm-compute-0 in the environment. The
-edpm-compute-0 IP can be discovered with the following command:
-```
-sudo virsh net-dhcp-leases default
-```
-
-Execute the ansible to configure the compute nodes:
-```
-make edpm_play
-```
+Then edit inventory in edpm/edpm-play.yaml.
 
 Cleanup:
 ```
 make edpm_play_cleanup
 # Will delete VM's!:
 make edpm_compute_cleanup
+```
+
+In case additional compute node VMs are deployed, run:
+```
 make edpm_compute_cleanup EDPM_COMPUTE_SUFFIX=1
 ```

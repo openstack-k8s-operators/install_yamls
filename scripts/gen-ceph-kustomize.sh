@@ -36,9 +36,7 @@ fi
 pushd ${DEPLOY_DIR}
 
 TIMEOUT=${TIMEOUT:-30}
-POD_IP=${POD_IP:-false}
-HOSTNETWORK=${HOSTNETWORK:-false}
-NET_DISCOVERY=${NET_DISCOVERY:-"2"}
+HOSTNETWORK=${HOSTNETWORK:-true}
 POOLS=("volumes" "images" "backups")
 
 function add_ceph_pod {
@@ -61,8 +59,6 @@ spec:
      env:
      - name: MON_IP
        value: "$MON_IP"
-     - name: NETWORK_AUTO_DETECT
-       value: "$NET_DISCOVERY"
      - name: CEPH_DAEMON
        value: demo
      - name: CEPH_PUBLIC_NETWORK
@@ -122,13 +118,11 @@ function get_pod_ip {
         exit 1
     fi
     MON_IP=$(oc get nodes -o 'jsonpath={.items[*].status.addresses[?(.type=="InternalIP")].address}')
-    NET_DISCOVERY="0"
 }
 
 function ceph_is_ready {
     echo "Waiting the cluster to be up"
-    until oc rsh ceph ls /etc/ceph/I_AM_A_DEMO &> /dev/null
-    do
+    until oc rsh ceph ls /etc/ceph/I_AM_A_DEMO &> /dev/null; do
         sleep 1
         echo -n .
         (( TIMEOUT-- ))
@@ -193,10 +187,38 @@ function create_secret {
     oc create secret generic $SECRET_NAME --from-file=$TEMPDIR/ceph.conf --from-file=$TEMPDIR/ceph.$client.keyring -n $NAMESPACE
 }
 
+function usage {
+    # Display Help
+    echo
+    echo "Relevant Parameters"
+    echo
+    echo "* HOSTNETWORK: true by default, used to bind the pod to the hostNetwork of the worker node"
+    echo "* MON_IP: the IP address (if known in  advance) to bind the mon when the cluster is run"
+    echo "* NETWORKS_ANNOTATION: the NAD(s) that will be applied to the pod using kustomize"
+    echo
+
+    if [[ "$1" == "full" ]]; then
+        echo
+        echo "Syntax: $0 [build|isready|help|secret]" 1>&2;
+        echo
+        echo "Examples"
+        echo
+
+        echo  "1. make ceph # the pod is bound to the hostNetwork by default"
+        echo
+        echo  "2. MON_IP=<YOUR_HOST_IP_ADDRESS> make ceph # the pod uses hostNetworking and the container will be bound to the specified ip address"
+        echo
+        echo  "3. NETWORKS_ANNOTATION="[{\"Name\":\"storage\",\"Namespace\":\"openstack\"}]" make ceph # attach the NAD to the POD provided it's precreated."
+        echo
+        echo  "4. HOSTNETWORK=false NETWORKS_ANNOTATION=\'[{\"Name\":\"storage\",\"Namespace\":\"openstack\",\"ips\":[\"172\.18\.0\.51\/24\"]}]\' MON_IP="172.18.0.51" make ceph # example of binding the Ceph Pod to the storage NAD"
+        echo
+    fi
+}
+
 ## MAIN
 case "$1" in
     "build")
-        [ "$POD_IP" == "true" ] && get_pod_ip;
+        [[ -z "$MON_IP" ]] && get_pod_ip;
         add_ceph_pod
         ceph_kustomize
         kustomization_add_resources
@@ -209,5 +231,8 @@ case "$1" in
         ;;
     "isready")
         ceph_is_ready
+        ;;
+    "help")
+        usage "$2"
         ;;
 esac
