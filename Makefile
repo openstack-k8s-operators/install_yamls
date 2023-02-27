@@ -861,6 +861,9 @@ cinder_kuttl_run: ## runs kuttl tests for the cinder operator, assumes that ever
 .PHONY: cinder_kuttl
 cinder_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy rabbitmq rabbitmq_deploy keystone_deploy_prep keystone keystone_deploy cinder_deploy_prep cinder infra mariadb_deploy_validate ## runs kuttl tests for the cinder operator. Installs openstack crds and cinder operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make cinder_kuttl_run
+	make infra_cleanup
+    make rabbit_deploy_cleanup
+    make rabbit_clenaup
 	make deploy_cleanup
 	make cinder_cleanup
 	make keystone_cleanup
