@@ -144,6 +144,14 @@ NOVA_BRANCH    ?= master
 NOVA           ?= config/samples/nova_v1beta1_nova_collapsed_cell.yaml
 NOVA_CR        ?= ${OPERATOR_BASE_DIR}/nova-operator/${NOVA}
 
+# Horizon
+HORIZON_IMG    ?= quay.io/openstack-k8s-operators/horizon-operator-index:latest
+HORIZON_REPO   ?= https://github.com/openstack-k8s-operators/horizon-operator.git
+HORIZON_BRANCH ?= main
+HORIZON        ?= config/samples/horizon_v1alpha1_horizon.yaml
+HORIZON_CR     ?= ${OPERATOR_BASE_DIR}/horizon-operator/${HORIZON}
+HORIZONAPI_IMG ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-horizon:current-tripleo
+
 # AnsibleEE
 ANSIBLEEE_IMG       ?= quay.io/openstack-k8s-operators/openstack-ansibleee-operator-index:latest
 ANSIBLEEE_REPO      ?= https://github.com/openstack-k8s-operators/openstack-ansibleee-operator
@@ -197,10 +205,10 @@ help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 .PHONY: cleanup
-cleanup: nova_cleanup octavia_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup keystone_cleanup mariadb_cleanup ## Delete all operators
+cleanup: horizon_cleanup nova_cleanup octavia_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup keystone_cleanup mariadb_cleanup ## Delete all operators
 
 .PHONY: deploy_cleanup
-deploy_cleanup: nova_deploy_cleanup octavia_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup ## Delete all OpenStack service objects
+deploy_cleanup: horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup ## Delete all OpenStack service objects
 
 ##@ CRC
 .PHONY: crc_storage
@@ -912,6 +920,45 @@ ironic_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_depl
 
 .PHONY: ironic_kuttl_crc
 ironic_kuttl_crc: crc_storage ironic_kuttl
+
+##@ HORIZON
+.PHONY: horizon_prep
+horizon_prep: export IMAGE=${HORIZON_IMG}
+horizon_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,horizon))
+	bash scripts/gen-olm.sh
+
+.PHONY: horizon
+horizon: namespace horizon_prep ## installs the operator, also runs the prep step. Set HORIZON_IMG for custom image.
+	$(eval $(call vars,$@,horizon))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: horizon_cleanup
+horizon_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,horizon))
+	bash scripts/operator-cleanup.sh
+	rm -Rf ${OPERATOR_DIR}
+
+.PHONY: horizon_deploy_prep
+horizon_deploy_prep: export KIND=Horizon
+horizon_deploy_prep: export IMAGE=${HORIZONAPI_IMG}
+horizon_deploy_prep: horizon_deploy_cleanup ## prepares the CR to install the service based on the service sample file HORIZON
+	$(eval $(call vars,$@,horizon))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone -b ${HORIZON_BRANCH} ${HORIZON_REPO} && popd
+	cp ${HORIZON_CR} ${DEPLOY_DIR}
+	bash scripts/gen-service-kustomize.sh
+
+.PHONY: horizon_deploy
+horizon_deploy: input horizon_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set HORIZON_REPO and HORIZON_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,horizon))
+	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+
+.PHONY: horizon_deploy_cleanup
+horizon_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,horizon))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	rm -Rf ${OPERATOR_BASE_DIR}/horizon-operator ${DEPLOY_DIR}
 
 ##@ ANSIBLEEE
 .PHONY: ansibleee_prep
