@@ -127,7 +127,7 @@ IRONIC_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/ironic-operator/tests/kuttl/tests
 OCTAVIA_IMG       ?= quay.io/openstack-k8s-operators/octavia-operator-index:latest
 OCTAVIA_REPO      ?= https://github.com/openstack-k8s-operators/octavia-operator.git
 OCTAVIA_BRANCH    ?= main
-OCTAVIAAPI        ?= config/samples/octavia_v1beta1_octaviaapi.yaml
+OCTAVIAAPI        ?= config/samples/octavia_v1beta1_octavia.yaml
 OCTAVIAAPI_CR     ?= ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIAAPI}
 OCTAVIAAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-octavia-api:current-tripleo
 OCTAVIA_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/octavia-operator/kuttl-test.yaml
@@ -764,8 +764,8 @@ octavia_cleanup: ## deletes the operator, but does not cleanup the service resou
 	rm -Rf ${OPERATOR_DIR}
 
 .PHONY: octavia_deploy_prep
-octavia_deploy_prep: export KIND=OctaviaAPI
-octavia_deploy_prep: export IMAGE="${OCTAVIAAPI_IMG}"
+octavia_deploy_prep: export KIND=Octavia
+octavia_deploy_prep: export IMAGE=unused
 octavia_deploy_prep: octavia_deploy_cleanup ## prepares the CR to install the service based on the service sample file OCTAVIA
 	$(eval $(call vars,$@,octavia))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
