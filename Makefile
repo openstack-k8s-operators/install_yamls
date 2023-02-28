@@ -839,7 +839,7 @@ mariadb_kuttl: namespace input openstack_crds deploy_cleanup mariadb_deploy_prep
 
 .PHONY: keystone_kuttl_run
 keystone_kuttl_run: ## runs kuttl tests for the keystone operator, assumes that everything needed for running the test was deployed beforehand.
-	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${KEYSTONE_KUTTL_CONF} ${KEYSTONE_KUTTL_DIR}
+	INSTALL_YAMLS=${INSTALL_YAMLS} KEYSTONE_KUTTL_DIR=${KEYSTONE_KUTTL_DIR} kubectl-kuttl test --config ${KEYSTONE_KUTTL_CONF} ${KEYSTONE_KUTTL_DIR}
 
 .PHONY: keystone_kuttl
 keystone_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate keystone_deploy_prep keystone ## runs kuttl tests for the keystone operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
