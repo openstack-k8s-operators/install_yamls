@@ -141,8 +141,13 @@ if [ ! -f ${DISK_FILEPATH} ]; then
         popd
     fi
     qemu-img create -f qcow2 -F qcow2 -b centos-9-stream-base.qcow2 ${DISK_FILEPATH} 20G
-    if ! rpm -q guestfs-tools; then
-        sudo dnf -y install guestfs-tools
+    if [[ ! -e /usr/bin/virt-customize ]]; then
+        if [[ $(awk '{print $6}' /etc/redhat-release) =~ ^8.* ]]; then
+            sudo dnf -y install hexedit libguestfs-tools-c
+        fi
+        if [[ $(awk '{print $6}' /etc/redhat-release) =~ ^9.* ]]; then
+            sudo dnf -y install guestfs-tools
+        fi
     fi
     VIRT_HOST_KNOWN_HOSTS=$(ssh-keyscan 192.168.122.1)
     virt-customize -a ${DISK_FILEPATH} \
