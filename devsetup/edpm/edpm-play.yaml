@@ -202,9 +202,9 @@ spec:
     - volumes:
         - name: ssh-key
           secret:
-            secretName: ansibleee-ssh-key-secret
+            secretName: dataplane-ansible-ssh-private-key-secret
             items:
-              - key: private_ssh_key
+              - key: ssh-privatekey
                 path: ssh_key
       mounts:
         - name: ssh-key
