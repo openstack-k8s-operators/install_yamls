@@ -183,6 +183,6 @@ fi
 sudo virsh net-update default add-last ip-dhcp-host --xml "<host mac='${MAC_ADDRESS}' name='${EDPM_COMPUTE_NAME}' ip='192.168.122.${IP_ADRESS_SUFFIX}'/>" --config --live
 sudo virsh define ../out/edpm/${EDPM_COMPUTE_NAME}.xml
 sudo virt-copy-out -d ${EDPM_COMPUTE_NAME} /root/.ssh/id_rsa.pub ../out/edpm
-mv -t ../out/edpm/id_rsa.pub ../out/edpm/${EDPM_COMPUTE_NAME}-id_rsa.pub
+mv ../out/edpm/id_rsa.pub ../out/edpm/${EDPM_COMPUTE_NAME}-id_rsa.pub
 cat ../out/edpm/${EDPM_COMPUTE_NAME}-id_rsa.pub | sudo tee -a /root/.ssh/authorized_keys
 sudo virsh start ${EDPM_COMPUTE_NAME}
