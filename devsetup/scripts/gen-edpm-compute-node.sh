@@ -179,9 +179,7 @@ if [ ! -f ${DISK_FILEPATH} ]; then
         exit 1
     fi
 fi
-if [[ $(sudo virsh net-dumpxml default | grep -q ${MAC_ADDRESS}) ]]; then
-    sudo virsh net-update default add-last ip-dhcp-host --xml "<host mac='${MAC_ADDRESS}' name='${EDPM_COMPUTE_NAME}' ip='192.168.122.${IP_ADRESS_SUFFIX}'/>" --config --live
-fi
+sudo virsh net-update default add-last ip-dhcp-host --xml "<host mac='${MAC_ADDRESS}' name='${EDPM_COMPUTE_NAME}' ip='192.168.122.${IP_ADRESS_SUFFIX}'/>" --config --live
 sudo virsh define ../out/edpm/${EDPM_COMPUTE_NAME}.xml
 sudo virt-copy-out -d ${EDPM_COMPUTE_NAME} /root/.ssh/id_rsa.pub ../out/edpm
 mv ../out/edpm/id_rsa.pub ../out/edpm/${EDPM_COMPUTE_NAME}-id_rsa.pub
