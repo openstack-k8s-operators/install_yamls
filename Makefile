@@ -6,6 +6,9 @@ SECRET              ?= osp-secret
 OUT                 ?= ${PWD}/out
 INSTALL_YAMLS       ?= ${PWD}  # used for kuttl tests
 
+# are we deploying to microshift
+MICROSHIFT ?= 0
+
 # operators gets cloned here
 OPERATOR_BASE_DIR   ?= ${OUT}/operator
 
@@ -233,7 +236,12 @@ namespace: ## creates the namespace specified via NAMESPACE env var (defaults to
 	bash scripts/gen-namespace.sh
 	oc apply -f ${OUT}/${NAMESPACE}/namespace.yaml
 	sleep 2
+ifeq ($(MICROSHIFT) ,0)
 	oc project ${NAMESPACE}
+else
+	oc config set-context --current --namespace=${NAMESPACE}
+	oc adm policy add-scc-to-user privileged -z default --namespace ${NAMESPACE}
+endif
 
 .PHONY: namespace_cleanup
 namespace_cleanup: ## deletes the namespace specified via NAMESPACE env var, also runs cleanup for all services to cleanup the namespace prior delete it.
