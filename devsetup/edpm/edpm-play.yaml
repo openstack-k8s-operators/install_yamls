@@ -174,8 +174,16 @@ spec:
                   edpm_ovn_dbs:
                   - 192.168.24.1
             vars:
-                edpm_ovn_controller_image:
-                  "quay.io/tripleomastercentos9/openstack-ovn-controller:current-tripleo"
+                registry_name: "quay.io"
+                registry_namespace: "tripleomastercentos9"
+                image_tag: "current-tripleo"
+                edpm_ovn_controller_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ovn-controller:{{ image_tag }}"
+                edpm_iscsid_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-iscsid:{{ image_tag }}"
+                edpm_logrotate_crond_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-cron:{{ image_tag }}"
+                edpm_nova_compute_container_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-nova-compute:{{ image_tag }}"
+                edpm_nova_libvirt_container_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-nova-libvirt:{{ image_tag }}"
+                edpm_ovn_metadata_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
+
                 gather_facts: false
                 enable_debug: false
                 # edpm firewall, change the allowed CIDR if needed
