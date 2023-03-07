@@ -24,8 +24,7 @@ if [[ -n "$XML" ]]; then
     sudo virsh net-update default delete ip-dhcp-host --config --live --xml "$XML"
 fi
 
-sudo virsh destroy edpm-compute-${EDPM_COMPUTE_SUFFIX}
-sudo virsh undefine edpm-compute-${EDPM_COMPUTE_SUFFIX}
+sudo virsh destroy edpm-compute-${EDPM_COMPUTE_SUFFIX} || :
+sudo virsh undefine --snapshots-metadata --remove-all-metadata edpm-compute-${EDPM_COMPUTE_SUFFIX} || :
 rm -f ${HOME}/.crc/machines/crc/edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2
 rm -f ../out/edpm/edpm-compute-*-id_rsa.pub
-oc delete -f ../out/edpm/dataplane-ansible-ssh-private-key-secret.yaml
