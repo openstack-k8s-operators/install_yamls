@@ -173,6 +173,9 @@ DATAPLANE_BRANCH     ?= main
 # Ceph
 CEPH_IMG       ?= quay.io/ceph/demo:latest
 
+# NNCP
+NNCP_INTERFACE ?= enp6s0
+
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
 ${1}: export NAMESPACE=${NAMESPACE}
@@ -1036,3 +1039,89 @@ ceph_cleanup: ## deletes the ceph pod
 	$(eval $(call vars,$@,ceph))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${DEPLOY_DIR}
+
+##@ NMSTATE
+.PHONY: nmstate
+nmstate: export NAMESPACE=openshift-nmstate
+nmstate: ## installs nmstate operator in the openshift-nmstate namespace
+	$(eval $(call vars,$@,nmstate))
+	bash scripts/gen-namespace.sh
+	oc apply -f ${OUT}/${NAMESPACE}/namespace.yaml
+	sleep 2
+	bash scripts/gen-olm-nmstate.sh
+	oc apply -f ${OPERATOR_DIR}
+	while ! (oc get pod --no-headers=true -l app=kubernetes-nmstate-operator -n ${NAMESPACE}| grep "nmstate-operator"); do sleep 10; done
+	oc wait pod -n ${NAMESPACE} --for condition=Ready -l app=kubernetes-nmstate-operator --timeout=300s
+	oc apply -f ${DEPLOY_DIR}
+	while ! (oc get pod --no-headers=true -l component=kubernetes-nmstate-handler -n ${NAMESPACE}| grep "nmstate-handler"); do sleep 10; done
+	oc wait pod -n ${NAMESPACE} -l component=kubernetes-nmstate-handler --for condition=Ready --timeout=300s
+	while ! (oc get pod --no-headers=true -l component=kubernetes-nmstate-webhook -n ${NAMESPACE}| grep "nmstate-webhook"); do sleep 10; done
+	oc wait pod -n ${NAMESPACE} -l component=kubernetes-nmstate-webhook --for condition=Ready --timeout=300s
+
+.PHONY: nncp
+nncp: export INTERFACE=${NNCP_INTERFACE}
+nncp: ## installs the nncp resources to configure the interface connected to the edpm node, right now only single nic vlan. Interface referenced via NNCP_INTERFACE
+	$(eval $(call vars,$@,nncp))
+	WORKERS=$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}") \
+	bash scripts/gen-nncp.sh
+	oc apply -f ${DEPLOY_DIR}/
+	oc wait nncp -l osp/interface=${NNCP_INTERFACE} --for condition=available --timeout=120s
+
+.PHONY: nncp_cleanup
+nncp_cleanup: export INTERFACE=${NNCP_INTERFACE}
+nncp_cleanup: ## unconfigured nncp configuration on worker node and deletes the nncp resource
+	$(eval $(call vars,$@,nncp))
+	sed -i 's/state: up/state: absent/' ${DEPLOY_DIR}/*_nncp.yaml
+	oc apply -f ${DEPLOY_DIR}/
+	oc wait nncp -l osp/interface=${NNCP_INTERFACE} --for condition=available --timeout=120s
+	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/
+	rm -Rf ${DEPLOY_DIR}
+
+.PHONY: netattach
+netattach: export INTERFACE=${NNCP_INTERFACE}
+netattach: namespace ## Creates network-attachment-definitions for the networks the workers are attached via nncp
+	$(eval $(call vars,$@,netattach))
+	bash scripts/gen-netatt.sh
+	oc apply -f ${DEPLOY_DIR}/
+
+.PHONY: netattach_cleanup
+netattach_cleanup: ## Deletes the network-attachment-definitions
+	$(eval $(call vars,$@,netattach))
+	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/
+	rm -Rf ${DEPLOY_DIR}
+
+##@ METALLB
+.PHONY: metallb
+metallb: export NAMESPACE=metallb-system
+metallb: export INTERFACE=${NNCP_INTERFACE}
+metallb: ## installs metallb operator in the metallb-system namespace
+	$(eval $(call vars,$@,metallb))
+	bash scripts/gen-namespace.sh
+	oc apply -f ${OUT}/${NAMESPACE}/namespace.yaml
+	sleep 2
+	bash scripts/gen-olm-metallb.sh
+	oc apply -f ${OPERATOR_DIR}
+	while ! (oc get pod --no-headers=true -l control-plane=controller-manager -n ${NAMESPACE}| grep "metallb-operator-controller"); do sleep 10; done
+	oc wait pod -n ${NAMESPACE} --for condition=Ready -l control-plane=controller-manager --timeout=300s
+	while ! (oc get pod --no-headers=true -l component=webhook-server -n ${NAMESPACE}| grep "metallb-operator-webhook"); do sleep 10; done
+	oc wait pod -n ${NAMESPACE} --for condition=Ready -l component=webhook-server --timeout=300s
+	oc apply -f ${DEPLOY_DIR}/deploy_operator.yaml
+	while ! (oc get pod --no-headers=true -l component=speaker -n ${NAMESPACE} | grep "speaker"); do sleep 10; done
+	oc wait pod -n ${NAMESPACE} -l component=speaker --for condition=Ready --timeout=300s
+
+.PHONY: metallb_config
+metallb_config: export NAMESPACE=metallb-system
+metallb_config: export INTERFACE=${NNCP_INTERFACE}
+metallb_config: ## creates the IPAddressPools and l2advertisement resources
+	$(eval $(call vars,$@,metallb))
+	bash scripts/gen-olm-metallb.sh
+	oc apply -f ${DEPLOY_DIR}/ipaddresspools.yaml
+	oc apply -f ${DEPLOY_DIR}/l2advertisement.yaml
+
+.PHONY: metallb_config_cleanup
+metallb_config_cleanup: export NAMESPACE=metallb-system
+metallb_config_cleanup: ## deletes the IPAddressPools and l2advertisement resources
+	$(eval $(call vars,$@,metallb))
+	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/ipaddresspools.yaml
+	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/l2advertisement.yaml
+	rm -f ${DEPLOY_DIR}/ipaddresspools.yaml ${DEPLOY_DIR}/l2advertisement.yaml
