@@ -3,7 +3,7 @@ extends: default
 
 rules:
   line-length:
-    max: 100
+    max: 150
     level: warning
   truthy:
     allowed-values:
