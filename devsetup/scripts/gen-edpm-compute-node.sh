@@ -154,7 +154,12 @@ if [ ! -f ${DISK_FILEPATH} ]; then
         curl -L -k ${CENTOS_9_STREAM_URL} -o centos-9-stream-base.qcow2
         popd
     fi
-    qemu-img create -f qcow2 -F qcow2 -b centos-9-stream-base.qcow2 ${DISK_FILEPATH} 20G
+    qemu-img create -f qcow2 -F qcow2 -b centos-9-stream-base.qcow2 ${DISK_FILEPATH}
+    truncate -r ${DISK_FILEPATH} ${DISK_FILEPATH}.new
+    truncate -s +20G ${DISK_FILEPATH}.new
+    virt-resize --expand /dev/vda1 ${DISK_FILEPATH} ${DISK_FILEPATH}.new
+    qemu-img convert -f raw -O qcow2 ${DISK_FILEPATH}.new ${DISK_FILEPATH}
+    rm -f ${DISK_FILEPATH}.new
     if [[ ! -e /usr/bin/virt-customize ]]; then
         if [[ $(awk '{print $6}' /etc/redhat-release) =~ ^8.* ]]; then
             sudo dnf -y install hexedit libguestfs-tools-c
@@ -168,7 +173,6 @@ if [ ! -f ${DISK_FILEPATH} ]; then
         --root-password password:12345678 \
         --hostname ${EDPM_COMPUTE_NAME} \
         --run-command "systemctl disable cloud-init cloud-config cloud-final cloud-init-local" \
-        --run-command "xfs_growfs / || true" \
         --run-command "echo 'PermitRootLogin yes' > /etc/ssh/sshd_config.d/99-root-login.conf" \
         --run-command "mkdir -p /root/.ssh; chmod 0700 /root/.ssh" \
         --run-command "ssh-keygen -f /root/.ssh/id_rsa -N ''" \
