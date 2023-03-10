@@ -878,10 +878,12 @@ octavia_kuttl_run: ## runs kuttl tests for the octavia operator, assumes that ev
 	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${OCTAVIA_KUTTL_CONF} ${OCTAVIA_KUTTL_DIR}
 
 .PHONY: octavia_kuttl
-octavia_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone octavia_deploy_prep octavia keystone_deploy mariadb_deploy_validate ## runs kuttl tests for the octavia operator. Installs openstack crds and mariadb, keystone, octavia operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+octavia_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone ovn octavia_deploy_prep octavia ovn_deploy keystone_deploy mariadb_deploy_validate ## runs kuttl tests for the octavia operator. Installs openstack crds and mariadb, keystone, octavia, ovn operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make octavia_kuttl_run
+	make ovn_deploy_cleanup
 	make deploy_cleanup
 	make octavia_cleanup
+	make ovn_cleanup
 	make keystone_cleanup
 	make mariadb_cleanup
 
