@@ -75,6 +75,8 @@ secretGenerator:
   - NovaCell0MessageBusPassword=${PASSWORD}
   - NovaCell1DatabasePassword=${PASSWORD}
   - NovaCell1MessageBusPassword=${PASSWORD}
+  - ManilaDatabasePassword=${PASSWORD}
+  - ManilaPassword=${PASSWORD}
 generatorOptions:
   disableNameSuffixHash: true
   labels:

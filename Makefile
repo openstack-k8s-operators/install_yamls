@@ -170,6 +170,13 @@ DATAPLANE_IMG        ?= quay.io/openstack-k8s-operators/dataplane-operator-index
 DATAPLANE_REPO       ?= https://github.com/openstack-k8s-operators/dataplane-operator.git
 DATAPLANE_BRANCH     ?= main
 
+# Manila
+MANILA_IMG       ?= quay.io/openstack-k8s-operators/manila-operator-index:latest
+MANILA_REPO      ?= https://github.com/openstack-k8s-operators/manila-operator.git
+MANILA_BRANCH    ?= main
+MANILA           ?= config/samples/manila_v1beta1_manila.yaml
+MANILA_CR        ?= ${OPERATOR_BASE_DIR}/manila-operator/${MANILA}
+
 # Ceph
 CEPH_IMG       ?= quay.io/ceph/demo:latest
 
@@ -1031,6 +1038,7 @@ ceph: namespace ## deploy the Ceph Pod
 	bash scripts/gen-ceph-kustomize.sh "build"
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 	bash scripts/gen-ceph-kustomize.sh "isready"
+	bash scripts/gen-ceph-kustomize.sh "cephfs"
 	bash scripts/gen-ceph-kustomize.sh "pools"
 	bash scripts/gen-ceph-kustomize.sh "secret"
 
@@ -1125,3 +1133,43 @@ metallb_config_cleanup: ## deletes the IPAddressPools and l2advertisement resour
 	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/ipaddresspools.yaml
 	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/l2advertisement.yaml
 	rm -f ${DEPLOY_DIR}/ipaddresspools.yaml ${DEPLOY_DIR}/l2advertisement.yaml
+
+##@ MANILA
+.PHONY: manila_prep
+manila_prep: export IMAGE=${MANILA_IMG}
+manila_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,manila))
+	bash scripts/gen-olm.sh
+
+.PHONY: manila
+manila: namespace manila_prep ## installs the operator, also runs the prep step. Set MANILA_IMG for custom image.
+	$(eval $(call vars,$@,manila))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: manila_cleanup
+manila_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,manila))
+	bash scripts/operator-cleanup.sh
+	rm -Rf ${OPERATOR_DIR}
+
+.PHONY: manila_deploy_prep
+manila_deploy_prep: export KIND=Manila
+manila_deploy_prep: export IMAGE=unused
+manila_deploy_prep: manila_deploy_cleanup ## prepares the CR to install the service based on the service sample file MANILA
+	$(eval $(call vars,$@,manila))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone -b ${MANILA_BRANCH} ${MANILA_REPO} && popd
+	cp ${MANILA_CR} ${DEPLOY_DIR}
+	bash scripts/gen-service-kustomize.sh
+
+.PHONY: manila_deploy
+manila_deploy: input manila_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set CINDER_REPO and CINDER_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,manila))
+	# oc kustomize ${DEPLOY_DIR} | oc apply -f -
+
+.PHONY: manila_deploy_cleanup
+manila_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,manila))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	rm -Rf ${OPERATOR_BASE_DIR}/manila-operator ${DEPLOY_DIR}
+	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database manila;" || true
