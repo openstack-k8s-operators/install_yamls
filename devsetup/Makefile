@@ -100,3 +100,11 @@ edpm_play: ## Deploy EDPM node using openstackansibleee resource
 .PHONY: edpm_play_cleanup
 edpm_play_cleanup: ## Cleanup EDPM openstackansibleee resource
 	-oc delete openstackansibleee deploy-external-dataplane-compute
+
+.PHONY: cifmw_prepare
+cifmw_prepare: ## Clone the ci-framework repository in the ci-framework directory. That location is ignored from git.
+	git clone https://github.com/openstack-k8s-operators/ci-framework ci-framework
+
+.PHONY: cifmw_cleanup
+cifmw_cleanup: ## Clean ci-framework git clone
+	rm -rf ci-framework
