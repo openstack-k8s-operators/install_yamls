@@ -19,7 +19,7 @@ EDPM_COMPUTE_SUFFIX=${1:-"0"}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
 
 XML="$(sudo virsh net-dumpxml default | grep $EDPM_COMPUTE_NAME \
-       | sed -e 's/^[ \t]*//' | tr -d '\n')"
+    | sed -e 's/^[ \t]*//' | tr -d '\n')"
 if [[ -n "$XML" ]]; then
     sudo virsh net-update default delete ip-dhcp-host --config --live --xml "$XML"
 fi
