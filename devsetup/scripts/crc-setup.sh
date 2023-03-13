@@ -28,7 +28,10 @@ if [ ! -f "${PULL_SECRET_FILE}" ]; then
 fi
 
 CRC_BIN=$(which crc)
+export_path=0
 if [ -z "${CRC_BIN}" ]; then
+    export PATH="~/bin:${PATH}"
+    export_path=1
     mkdir -p ~/bin
     curl -L "${CRC_URL}" | tar -U --strip-components=1 -C ~/bin -xJf - *crc
     CRC_BIN=$(which crc)
@@ -61,3 +64,6 @@ echo -n "Adding router-ca to system certs to allow accessing the crc image regis
 oc extract secret/router-ca --keys=tls.crt -n openshift-ingress-operator --confirm --to=/tmp
 sudo cp -f /tmp/tls.crt /etc/pki/ca-trust/source/anchors/crc-router-ca.pem
 sudo update-ca-trust
+if [ $export_path == 1 ]; then
+    echo "WARNING: you must add ~/bin in your PATH in order to access to crc binary"
+fi
