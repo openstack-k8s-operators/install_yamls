@@ -3,10 +3,10 @@
 opm_version: latest
 
 # operator-sdk version to use (must be specific version)
-sdk_version: v1.26.0
+sdk_version: v1.26.1
 
 # golang version
-go_version: 1.19.5
+go_version: 1.19.7
 
 # kustomize version to use (must be specific version)
 kustomize_version: v4.5.7
