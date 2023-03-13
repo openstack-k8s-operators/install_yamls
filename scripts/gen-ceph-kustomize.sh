@@ -37,7 +37,8 @@ pushd ${DEPLOY_DIR}
 
 TIMEOUT=${TIMEOUT:-30}
 HOSTNETWORK=${HOSTNETWORK:-true}
-POOLS=("volumes" "images" "backups")
+POOLS=("volumes" "images" "backups" "cephfs.cephfs.meta" "cephfs.cephfs.data")
+DAEMONS="osd,mds"
 
 function add_ceph_pod {
 cat <<EOF >ceph-pod.yaml
@@ -64,7 +65,7 @@ spec:
      - name: CEPH_PUBLIC_NETWORK
        value: "0.0.0.0/0"
      - name: DEMO_DAEMONS
-       value: "osd"
+       value: "$DAEMONS"
      volumeMounts:
       - mountPath: /var/lib/ceph
         name: data
@@ -136,8 +137,10 @@ function create_pool {
     [ "${#POOLS[@]}" -eq 0 ] && return;
 
     for pool in "${POOLS[@]}"; do
+        app="rbd"
         oc rsh ceph ceph osd pool create $pool 4
-        oc rsh ceph ceph osd pool application enable $pool rbd
+        [[ $pool = *"cephfs"* ]] && app=cephfs
+        oc rsh ceph ceph osd pool application enable $pool $app
     done
 }
 
@@ -187,6 +190,12 @@ function create_secret {
     oc create secret generic $SECRET_NAME --from-file=$TEMPDIR/ceph.conf --from-file=$TEMPDIR/ceph.$client.keyring -n $NAMESPACE
 }
 
+function create_volume {
+    # Create cephfs volume for manila service
+    echo "Creating cephfs volume"
+    oc rsh ceph ceph fs volume create cephfs >/dev/null || true
+}
+
 function usage {
     # Display Help
     echo
@@ -231,6 +240,9 @@ case "$1" in
         ;;
     "isready")
         ceph_is_ready
+        ;;
+    "cephfs")
+        create_volume
         ;;
     "help")
         usage "$2"
