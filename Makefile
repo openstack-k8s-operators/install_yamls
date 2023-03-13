@@ -183,6 +183,16 @@ CEPH_IMG       ?= quay.io/ceph/demo:latest
 # NNCP
 NNCP_INTERFACE ?= enp6s0
 
+# Ceilometer
+CEILOMETER_IMG                 ?= quay.io/openstack-k8s-operators/ceilometer-operator-index:main-latest
+CEILOMETER_REPO                ?= https://github.com/openstack-k8s-operators/ceilometer-operator.git
+CEILOMETER_BRANCH              ?= main
+CEILOMETER                     ?= config/samples/ceilometer_v1beta1_ceilometer.yaml
+CEILOMETER_CR                  ?= ${OPERATOR_BASE_DIR}/ceilometer-operator/${CEILOMETER}
+CEILOMETERAPI_CENTRAL_IMG      ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-ceilometer-central:current-tripleo
+CEILOMETERAPI_NOTIFICATION_IMG ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-ceilometer-notification:current-tripleo
+CEILOMETERAPI_SG_CORE_IMG      ?= ${SERVICE_REGISTRY}/infrawatch/sg-core:latest
+
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
 ${1}: export NAMESPACE=${NAMESPACE}
@@ -216,10 +226,10 @@ help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 .PHONY: cleanup
-cleanup: horizon_cleanup nova_cleanup octavia_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup keystone_cleanup mariadb_cleanup ## Delete all operators
+cleanup: horizon_cleanup nova_cleanup octavia_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup keystone_cleanup mariadb_cleanup ceilometer_cleanup ## Delete all operators
 
 .PHONY: deploy_cleanup
-deploy_cleanup: horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup ## Delete all OpenStack service objects
+deploy_cleanup: horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup ceilometer_deploy_cleanup ## Delete all OpenStack service objects
 
 ##@ CRC
 .PHONY: crc_storage
@@ -1173,3 +1183,44 @@ manila_deploy_cleanup: ## cleans up the service instance, Does not affect the op
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/manila-operator ${DEPLOY_DIR}
 	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database manila;" || true
+
+##@ CEILOMETER
+.PHONY: ceilometer_prep
+ceilometer_prep: export IMAGE=${CEILOMETER_IMG}
+ceilometer_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,ceilometer))
+	bash scripts/gen-olm.sh
+
+.PHONY: ceilometer
+ceilometer: namespace ceilometer_prep ## installs the operator, also runs the prep step. Set CEILOMETER_IMG for custom image.
+	$(eval $(call vars,$@,ceilometer))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: ceilometer_cleanup
+ceilometer_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,ceilometer))
+	bash scripts/operator-cleanup.sh
+	rm -Rf ${OPERATOR_DIR}
+
+.PHONY: ceilometer_deploy_prep
+ceilometer_deploy_prep: export KIND=Ceilometer
+ceilometer_deploy_prep: export CENTRAL_IMAGE=${CEILOMETERAPI_CENTRAL_IMG}
+ceilometer_deploy_prep: export NOTIFICATION_IMAGE=${CEILOMETERAPI_NOTIFICATION_IMG}
+ceilometer_deploy_prep: export SG_CORE_IMAGE=${CEILOMETERAPI_SG_CORE_IMG}
+ceilometer_deploy_prep: ceilometer_deploy_cleanup ## prepares the CR to install the service based on the service sample file CEILOMETER
+	$(eval $(call vars,$@,ceilometer))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone -b ${CEILOMETER_BRANCH} ${CEILOMETER_REPO} && popd
+	cp ${CEILOMETER_CR} ${DEPLOY_DIR}
+	bash scripts/gen-ceilometer-kustomize.sh
+
+.PHONY: ceilometer_deploy
+ceilometer_deploy: input ceilometer_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set CEILOMETER_REPO and CEILOMETER_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,ceilometer))
+	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+
+.PHONY: ceilometer_deploy_cleanup
+ceilometer_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,ceilometer))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	rm -Rf ${OPERATOR_BASE_DIR}/ceilometer-operator ${DEPLOY_DIR}
