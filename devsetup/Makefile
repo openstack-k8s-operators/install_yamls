@@ -67,6 +67,10 @@ edpm_compute: ## Create EDPM compute VM
 	scripts/gen-ansibleee-ssh-key.sh
 	scripts/gen-edpm-compute-node.sh ${EDPM_COMPUTE_SUFFIX}
 
+.PHONY: edpm_compute_repos
+edpm_compute_repos: ## Configure EDPM compute VM with repositories
+	scripts/edpm-compute-repos.sh ${EDPM_COMPUTE_SUFFIX}
+
 .PHONY: edpm_compute_cleanup
 edpm_compute_cleanup: ## Delete EDPM compute VM
 	scripts/edpm-compute-cleanup.sh ${EDPM_COMPUTE_SUFFIX}
