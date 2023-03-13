@@ -8,6 +8,7 @@ OPENSTACK_RUNNER_IMG ?= quay.io/openstack-k8s-operators/openstack-ansibleee-runn
 EDPM_NETWORK_CONFIG_TEMPLATE ?= templates/single_nic_vlans/single_nic_vlans.j2
 EDPM_SSHD_ALLOWED_RANGES ?= ['192.168.122.0/24']
 EDPM_CHRONY_NTP_SERVER ?= clock.redhat.com
+EDPM_PLAY_CRD ?= edpm/edpm-play.yaml
 
 ##@ General
 
@@ -99,7 +100,7 @@ edpm_play: ## Deploy EDPM node using openstackansibleee resource
 	    -e "s|_EDPM_OVN_METADATA_AGENT_BIND_HOST_|${EDPM_OVN_METADATA_AGENT_BIND_HOST}|g" \
 	    -e "s|_EDPM_NOVA_COMPUTE_TRANSPORT_URL_|${EDPM_NOVA_COMPUTE_TRANSPORT_URL}|g" \
 	    -e "s|_EDPM_NOVA_NOTIFICATIONS_TRANSPORT_URL_|${EDPM_NOVA_NOTIFICATIONS_TRANSPORT_URL}|g" \
-	    edpm/edpm-play.yaml | oc create -f -
+	    ${EDPM_PLAY_CRD} | oc create -f -
 
 .PHONY: edpm_play_cleanup
 edpm_play_cleanup: ## Cleanup EDPM openstackansibleee resource
