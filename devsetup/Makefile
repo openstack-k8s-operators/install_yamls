@@ -103,7 +103,7 @@ edpm_play: ## Deploy EDPM node using openstackansibleee resource
 
 .PHONY: edpm_play_cleanup
 edpm_play_cleanup: ## Cleanup EDPM openstackansibleee resource
-	-oc delete openstackansibleee deploy-external-dataplane-compute
+	-oc delete -f edpm/edpm-play.yaml
 
 .PHONY: cifmw_prepare
 cifmw_prepare: ## Clone the ci-framework repository in the ci-framework directory. That location is ignored from git.
