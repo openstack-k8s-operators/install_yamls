@@ -24,13 +24,7 @@ if [[ -n "$XML" ]]; then
     sudo virsh net-update default delete ip-dhcp-host --config --live --xml "$XML"
 fi
 
-RM_METADATA="--remove-all-metadata"
-if [[ $(awk '{print $6}' /etc/redhat-release) =~ ^8.* ]]; then
-    # virsh provided by RHEL8 Hypervisors does not support this option
-    RM_METADATA=""
-fi
-
 sudo virsh destroy edpm-compute-${EDPM_COMPUTE_SUFFIX} || :
-sudo virsh undefine --snapshots-metadata $RM_METADATA edpm-compute-${EDPM_COMPUTE_SUFFIX} || :
+sudo virsh undefine --snapshots-metadata --remove-all-storage edpm-compute-${EDPM_COMPUTE_SUFFIX} || :
 rm -f ${HOME}/.crc/machines/crc/edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2
 rm -f ../out/edpm/edpm-compute-*-id_rsa.pub
