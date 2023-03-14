@@ -11,7 +11,7 @@ OPERATOR_BASE_DIR   ?= ${OUT}/operator
 
 # default registry and org to pull service images from
 SERVICE_REGISTRY    ?= quay.io
-SERVICE_ORG         ?= tripleozedcentos9
+SERVICE_ORG         ?= podified-zed-centos9
 
 # storage (used by some operators)
 STORAGE_CLASS       ?= "local-storage"
@@ -32,7 +32,7 @@ INFRA_BRANCH     ?= master
 # Memcached
 MEMCACHED           ?= config/samples/memcached_v1beta1_memcached.yaml
 MEMCACHED_CR        ?= ${OPERATOR_BASE_DIR}/infra-operator/${MEMCACHED}
-MEMCACHED_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-memcached:current-tripleo
+MEMCACHED_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-memcached:current-podified
 
 # Keystone
 KEYSTONE_IMG        ?= quay.io/openstack-k8s-operators/keystone-operator-index:latest
@@ -40,7 +40,7 @@ KEYSTONE_REPO       ?= https://github.com/openstack-k8s-operators/keystone-opera
 KEYSTONE_BRANCH     ?= master
 KEYSTONEAPI         ?= config/samples/keystone_v1beta1_keystoneapi.yaml
 KEYSTONEAPI_CR      ?= ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
-KEYSTONEAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-keystone:current-tripleo
+KEYSTONEAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-keystone:current-podified
 KEYSTONE_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.yaml
 KEYSTONE_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
 
@@ -50,7 +50,7 @@ MARIADB_REPO        ?= https://github.com/openstack-k8s-operators/mariadb-operat
 MARIADB_BRANCH      ?= master
 MARIADB             ?= config/samples/mariadb_v1beta1_mariadb.yaml
 MARIADB_CR          ?= ${OPERATOR_BASE_DIR}/mariadb-operator/${MARIADB}
-MARIADB_DEPL_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-mariadb:current-tripleo
+MARIADB_DEPL_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-mariadb:current-podified
 MARIADB_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
 MARIADB_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
 
@@ -60,7 +60,7 @@ PLACEMENT_REPO      ?= https://github.com/openstack-k8s-operators/placement-oper
 PLACEMENT_BRANCH    ?= master
 PLACEMENTAPI        ?= config/samples/placement_v1beta1_placementapi.yaml
 PLACEMENTAPI_CR     ?= ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI}
-PLACEMENTAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-placement-api:current-tripleo
+PLACEMENTAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-placement-api:current-podified
 
 # Sir Glancealot
 GLANCE_IMG          ?= quay.io/openstack-k8s-operators/glance-operator-index:latest
@@ -68,7 +68,7 @@ GLANCE_REPO         ?= https://github.com/openstack-k8s-operators/glance-operato
 GLANCE_BRANCH       ?= master
 GLANCE              ?= config/samples/glance_v1beta1_glance.yaml
 GLANCE_CR           ?= ${OPERATOR_BASE_DIR}/glance-operator/${GLANCE}
-GLANCEAPI_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-glance-api:current-tripleo
+GLANCEAPI_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-glance-api:current-podified
 
 # Ovn
 OVN_IMG             ?= quay.io/openstack-k8s-operators/ovn-operator-index:latest
@@ -96,7 +96,7 @@ NEUTRON_REPO       ?= https://github.com/openstack-k8s-operators/neutron-operato
 NEUTRON_BRANCH     ?= master
 NEUTRONAPI         ?= config/samples/neutron_v1beta1_neutronapi.yaml
 NEUTRONAPI_CR      ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
-NEUTRONAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-neutron-server:current-tripleo
+NEUTRONAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-neutron-server:current-podified
 NEUTRON_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/neutron-operator/kuttl-test.yaml
 NEUTRON_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/neutron-operator/test/kuttl/tests
 
@@ -130,7 +130,7 @@ OCTAVIA_REPO      ?= https://github.com/openstack-k8s-operators/octavia-operator
 OCTAVIA_BRANCH    ?= main
 OCTAVIAAPI        ?= config/samples/octavia_v1beta1_octavia.yaml
 OCTAVIAAPI_CR     ?= ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIAAPI}
-OCTAVIAAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-octavia-api:current-tripleo
+OCTAVIAAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-octavia-api:current-podified
 OCTAVIA_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/octavia-operator/kuttl-test.yaml
 OCTAVIA_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/octavia-operator/tests/kuttl/tests
 
@@ -151,7 +151,7 @@ HORIZON_REPO   ?= https://github.com/openstack-k8s-operators/horizon-operator.gi
 HORIZON_BRANCH ?= main
 HORIZON        ?= config/samples/horizon_v1alpha1_horizon.yaml
 HORIZON_CR     ?= ${OPERATOR_BASE_DIR}/horizon-operator/${HORIZON}
-HORIZONAPI_IMG ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-horizon:current-tripleo
+HORIZONAPI_IMG ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-horizon:current-podified
 
 # AnsibleEE
 ANSIBLEEE_IMG       ?= quay.io/openstack-k8s-operators/openstack-ansibleee-operator-index:latest

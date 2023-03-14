@@ -207,8 +207,8 @@ spec:
                   - _EDPM_OVN_DBS_
             vars:
                 registry_name: "quay.io"
-                registry_namespace: "tripleozedcentos9"
-                image_tag: "current-tripleo"
+                registry_namespace: "podified-zed-centos9"
+                image_tag: "current-podified"
                 edpm_ovn_controller_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ovn-controller:{{ image_tag }}"
                 edpm_iscsid_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-iscsid:{{ image_tag }}"
                 edpm_logrotate_crond_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-cron:{{ image_tag }}"
