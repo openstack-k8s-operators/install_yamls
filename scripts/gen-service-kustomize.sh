@@ -35,10 +35,6 @@ if [ -z "$DEPLOY_DIR" ]; then
     echo "Please set DEPLOY_DIR"; exit 1
 fi
 
-if [ -z "$IMAGE" ]; then
-    echo "Please set IMAGE"; exit 1
-fi
-
 NAME=${KIND,,}
 
 if [ ! -d ${DEPLOY_DIR} ]; then
@@ -63,7 +59,7 @@ patches:
       path: /spec/storageClass
       value: ${STORAGE_CLASS}
 EOF
-if [ "$IMAGE" != "unused" ]; then
+if [ -n "$IMAGE" ] && [ "$IMAGE" != "unused" ]; then
 cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/containerImage
