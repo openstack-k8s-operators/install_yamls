@@ -14,7 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 set -ex
-
+export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
 # expect that the common.sh is in the same dir as the calling script
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
@@ -32,10 +32,10 @@ if [ ! -f ${SSH_PUBLIC_KEY} ]; then
     exit 1
 fi
 
-if sudo test -f "/root/.ssh"; then
-    sudo mkdir /root/.ssh
-    sudo chmod 700 /root/.ssh
-    sudo chcon unconfined_u:object_r:ssh_home_t:s0 /root/.ssh
+if test -f "${HOME}/.ssh"; then
+    mkdir "${HOME}/.ssh"
+    chmod 700 "${HOME}/.ssh"
+    chcon unconfined_u:object_r:ssh_home_t:s0 "${HOME}/.ssh"
 fi
 
 cat <<EOF >../out/edpm/${EDPM_COMPUTE_NAME}.xml
@@ -184,9 +184,9 @@ if [ ! -f ${DISK_FILEPATH} ]; then
     fi
 fi
 
-sudo virsh net-update default add-last ip-dhcp-host --xml "<host mac='${MAC_ADDRESS}' name='${EDPM_COMPUTE_NAME}' ip='192.168.122.${IP_ADRESS_SUFFIX}'/>" --config --live
-sudo virsh define ../out/edpm/${EDPM_COMPUTE_NAME}.xml
-sudo virt-copy-out -d ${EDPM_COMPUTE_NAME} /root/.ssh/id_rsa.pub ../out/edpm
+virsh net-update default add-last ip-dhcp-host --xml "<host mac='${MAC_ADDRESS}' name='${EDPM_COMPUTE_NAME}' ip='192.168.122.${IP_ADRESS_SUFFIX}'/>" --config --live
+virsh define ../out/edpm/${EDPM_COMPUTE_NAME}.xml
+virt-copy-out -d ${EDPM_COMPUTE_NAME} /root/.ssh/id_rsa.pub ../out/edpm
 mv -f ../out/edpm/id_rsa.pub ../out/edpm/${EDPM_COMPUTE_NAME}-id_rsa.pub
 cat ../out/edpm/${EDPM_COMPUTE_NAME}-id_rsa.pub | sudo tee -a /root/.ssh/authorized_keys
-sudo virsh start ${EDPM_COMPUTE_NAME}
+virsh start ${EDPM_COMPUTE_NAME}

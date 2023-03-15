@@ -14,10 +14,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 set -ex
+export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
-IP=$( sudo virsh -q domifaddr $EDPM_COMPUTE_NAME | awk 'NF>1{print $NF}' | cut -d/ -f1 )
+IP=$(virsh -q domifaddr $EDPM_COMPUTE_NAME | awk 'NF>1{print $NF}' | cut -d/ -f1 )
 SSH_KEY="$SCRIPTPATH/../../out/edpm/ansibleee-ssh-key-id_rsa"
 SSH_OPT="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $SSH_KEY"
 CMDS_FILE="/tmp/edpm_compute_repos"

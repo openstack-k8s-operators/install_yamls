@@ -49,17 +49,17 @@ crc_cleanup: ## Destroys the CRC env, but does NOT clear ( --clear-cache ) the c
 .PHONY: crc_attach_default_interface
 crc_attach_default_interface: crc_attach_default_interface_cleanup ## Attach default libvirt network to CRC
 	MAC_ADDRESS=$(shell echo -n 52:54:00; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':'); \
-	sudo virsh net-update default add-last ip-dhcp-host --xml "<host mac='$$MAC_ADDRESS' name='crc' ip='${CRC_DEFAULT_NETWORK_IP}'/>" --config --live; \
-	sudo virsh attach-interface crc --source default --type network --model virtio --mac $$MAC_ADDRESS --config --persistent; \
+	virsh --connect=qemu:///system net-update default add-last ip-dhcp-host --xml "<host mac='$$MAC_ADDRESS' name='crc' ip='${CRC_DEFAULT_NETWORK_IP}'/>" --config --live; \
+	virsh --connect=qemu:///system attach-interface crc --source default --type network --model virtio --mac $$MAC_ADDRESS --config --persistent; \
 	sleep 10; \
 	WORKER=$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}"); \
 	oc debug node/$$WORKER -- ip -o link | awk 'toupper($$0) ~ /ETHER $$MAC_ADDRESS/{print $$2}'  | awk -F: '{print $$1}'
 
 .PHONY: crc_attach_default_interface_cleanup
 crc_attach_default_interface_cleanup: ## Detach default libvirt network from CRC
-	-MAC_ADDRESS=$(shell sudo virsh net-dumpxml default | grep crc | sed -e "s/.*mac='\(.*\)' name.*/\1/"); \
-	sudo virsh detach-interface crc network --mac "$$MAC_ADDRESS"
-	-sudo virsh net-update default delete ip-dhcp-host "<host name='crc'/>" --config --live
+	-MAC_ADDRESS=$(shell virsh --connect=qemu:///system net-dumpxml default | grep crc | sed -e "s/.*mac='\(.*\)' name.*/\1/"); \
+	virsh --connect=qemu:///system detach-interface crc network --mac "$$MAC_ADDRESS"
+	-virsh --connect=qemu:///system net-update default delete ip-dhcp-host "<host name='crc'/>" --config --live
 	sleep 5
 
 ##@ EDPM
