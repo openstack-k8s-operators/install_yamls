@@ -100,9 +100,9 @@ make edpm_compute
 
 Discover IP of the compute node VM:
 ```
-sudo virsh -q domifaddr edpm-compute-0 | awk 'NF>1{print $NF}' | cut -d/ -f1
+virsh --connect=qemu:///system -q domifaddr edpm-compute-0 | awk 'NF>1{print $NF}' | cut -d/ -f1
 # wait until ip address appears, then assign to a variable
-COMPUTE_IP=$( sudo virsh -q domifaddr edpm-compute-0 | awk 'NF>1{print $NF}' | cut -d/ -f1 )
+COMPUTE_IP=$(virsh --connect=qemu:///system -q domifaddr edpm-compute-0 | awk 'NF>1{print $NF}' | cut -d/ -f1 )
 ```
 
 Execute the ansible to configure the compute node:

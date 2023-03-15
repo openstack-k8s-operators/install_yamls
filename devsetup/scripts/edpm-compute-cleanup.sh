@@ -14,17 +14,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 set -ex
+export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
 
-XML="$(sudo virsh net-dumpxml default | grep $EDPM_COMPUTE_NAME \
+XML="$(virsh net-dumpxml default | grep $EDPM_COMPUTE_NAME \
     | sed -e 's/^[ \t]*//' | tr -d '\n')"
 if [[ -n "$XML" ]]; then
-    sudo virsh net-update default delete ip-dhcp-host --config --live --xml "$XML"
+    virsh net-update default delete ip-dhcp-host --config --live --xml "$XML"
 fi
 
-sudo virsh destroy edpm-compute-${EDPM_COMPUTE_SUFFIX} || :
-sudo virsh undefine --snapshots-metadata --remove-all-storage edpm-compute-${EDPM_COMPUTE_SUFFIX} || :
+virsh destroy edpm-compute-${EDPM_COMPUTE_SUFFIX} || :
+virsh undefine --snapshots-metadata --remove-all-storage edpm-compute-${EDPM_COMPUTE_SUFFIX} || :
 rm -f ${HOME}/.crc/machines/crc/edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2
 rm -f ../out/edpm/edpm-compute-*-id_rsa.pub
