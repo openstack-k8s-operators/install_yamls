@@ -106,6 +106,8 @@ CINDER_REPO      ?= https://github.com/openstack-k8s-operators/cinder-operator.g
 CINDER_BRANCH    ?= master
 CINDER           ?= config/samples/cinder_v1beta1_cinder.yaml
 CINDER_CR        ?= ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
+CINDER_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/cinder-operator/kuttl-test.yaml
+CINDER_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/cinder-operator/tests/kuttl/tests
 # TODO: Image customizations for all Cinder services
 
 # Rabbitmq
@@ -668,6 +670,10 @@ cinder_deploy: input cinder_deploy_prep ## installs the service instance using k
 	$(eval $(call vars,$@,cinder))
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 
+.PHONY: cinder_deploy_validate
+cinder_deploy_validate: input namespace ## checks that cinder was properly deployed. Set CINDER_KUTTL_DIR to use assert file from custom repo.
+	kubectl-kuttl assert -n ${NAMESPACE} ${CINDER_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
+
 .PHONY: cinder_deploy_cleanup
 cinder_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,cinder))
@@ -863,6 +869,21 @@ keystone_kuttl_run: ## runs kuttl tests for the keystone operator, assumes that 
 keystone_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate keystone_deploy_prep keystone ## runs kuttl tests for the keystone operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make keystone_kuttl_run
 	make deploy_cleanup
+	make keystone_cleanup
+	make mariadb_cleanup
+
+.PHONY: cinder_kuttl_run
+cinder_kuttl_run: ## runs kuttl tests for the cinder operator, assumes that everything needed for running the test was deployed beforehand.
+	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${CINDER_KUTTL_CONF} ${CINDER_KUTTL_DIR}
+
+.PHONY: cinder_kuttl
+cinder_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy rabbitmq rabbitmq_deploy keystone_deploy_prep keystone keystone_deploy cinder_deploy_prep cinder infra mariadb_deploy_validate ## runs kuttl tests for the cinder operator. Installs openstack crds and cinder operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	make cinder_kuttl_run
+	make infra_cleanup
+	make rabbitmq_deploy_cleanup
+	make rabbitmq_cleanup
+	make deploy_cleanup
+	make cinder_cleanup
 	make keystone_cleanup
 	make mariadb_cleanup
 
