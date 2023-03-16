@@ -184,7 +184,7 @@ CEPH_IMG       ?= quay.io/ceph/demo:latest
 NNCP_INTERFACE ?= enp6s0
 
 # Ceilometer
-CEILOMETER_IMG                 ?= quay.io/openstack-k8s-operators/ceilometer-operator-index:main-latest
+CEILOMETER_IMG                 ?= quay.io/openstack-k8s-operators/ceilometer-operator-index:latest
 CEILOMETER_REPO                ?= https://github.com/openstack-k8s-operators/ceilometer-operator.git
 CEILOMETER_BRANCH              ?= main
 CEILOMETER                     ?= config/samples/ceilometer_v1beta1_ceilometer.yaml
