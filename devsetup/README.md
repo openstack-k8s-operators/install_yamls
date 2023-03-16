@@ -98,6 +98,11 @@ Deploy a compute node VM:
 make edpm_compute
 ```
 
+Enable repositories:
+```
+make edpm_compute_repos
+```
+
 Discover IP of the compute node VM:
 ```
 virsh --connect=qemu:///system -q domifaddr edpm-compute-0 | awk 'NF>1{print $NF}' | cut -d/ -f1
