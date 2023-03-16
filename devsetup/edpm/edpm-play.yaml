@@ -123,7 +123,7 @@ spec:
                   edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host: '_EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST_'
                   edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret: '_EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET_'
                   edpm_ovn_metadata_agent_DEFAULT_bind_host: '_EDPM_OVN_METADATA_AGENT_BIND_HOST_'
-                  epdm_chrony_ntp_servers:
+                  edpm_chrony_ntp_servers:
                   - '_EDPM_CHRONY_NTP_SERVER_'
 
                   # 99-standalone-vars
