@@ -11,6 +11,9 @@ spec:
     - name: Deploy EDPM facts playbook
       ansible.builtin.import_playbook: deploy-edpm-facts.yml
 
+    - name: Deploy EDPM growvols playbook
+      ansible.builtin.import_playbook: deploy-edpm-growvols.yml
+
     - name: Deploy EDPM pre-network playbook
       ansible.builtin.import_playbook: deploy-edpm-pre-network.yml
 
