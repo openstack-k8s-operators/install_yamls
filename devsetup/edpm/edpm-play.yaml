@@ -8,19 +8,6 @@ spec:
   # We can specify either playbook, which will run with default ansible-runner options,
   # or args, which allows specify the whole command that we want to execute
   play: |
-
-    - hosts: all
-      tasks:
-        - name: Enable tripleo-repos
-          shell: |
-            rpm -q git || sudo yum -y install git
-            sudo yum -y install python-setuptools python-requests python3-pip
-            git clone https://git.openstack.org/openstack/tripleo-repos
-            pushd tripleo-repos
-            sudo python3 setup.py install
-            popd
-            sudo /usr/local/bin/tripleo-repos current-tripleo-dev
-
     - name: Deploy EDPM facts playbook
       ansible.builtin.import_playbook: deploy-edpm-facts.yml
 
