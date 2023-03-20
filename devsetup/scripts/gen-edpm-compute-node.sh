@@ -156,6 +156,11 @@ cat <<EOF >${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}.xml
 </domain>
 EOF
 
+cat <<EOF >${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
+growpart /dev/vda 1
+xfs_growfs /
+EOF
+
 if [ ! -f ${DISK_FILEPATH} ]; then
     if [ ! -f ${CRC_POOL}/centos-9-stream-base.qcow2 ]; then
         pushd ${CRC_POOL}
@@ -175,8 +180,7 @@ if [ ! -f ${DISK_FILEPATH} ]; then
     virt-customize -a ${DISK_FILEPATH} \
         --root-password password:12345678 \
         --hostname ${EDPM_COMPUTE_NAME} \
-        --firstboot-command "growpart /dev/sda 1" |
-        --firstboot-command "xfs_growfs /" \
+        --firstboot ${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}-firstboot.sh \
         --run-command "systemctl disable cloud-init cloud-config cloud-final cloud-init-local" \
         --run-command "echo 'PermitRootLogin yes' > /etc/ssh/sshd_config.d/99-root-login.conf" \
         --run-command "mkdir -p /root/.ssh; chmod 0700 /root/.ssh" \
@@ -191,7 +195,7 @@ fi
 
 virsh net-update default add-last ip-dhcp-host --xml "<host mac='${MAC_ADDRESS}' name='${EDPM_COMPUTE_NAME}' ip='192.168.122.${IP_ADRESS_SUFFIX}'/>" --config --live
 virsh define "${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}.xml"
-virt-copy-out -d ${EDPM_COMPUTE_NAME} /root/.ssh/id_rsa.pub "${OUTPUT_BASEDIR}"
+virt-copy-out -c ${VIRSH_DEFAULT_CONNECT_URI} -d ${EDPM_COMPUTE_NAME} /root/.ssh/id_rsa.pub "${OUTPUT_BASEDIR}"
 mv -f "${OUTPUT_BASEDIR}/id_rsa.pub" "${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}-id_rsa.pub"
 cat "${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}-id_rsa.pub" | sudo tee -a /root/.ssh/authorized_keys
 virsh start ${EDPM_COMPUTE_NAME}
