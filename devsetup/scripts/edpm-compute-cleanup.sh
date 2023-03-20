@@ -18,6 +18,8 @@ export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
+CRC_POOL=${CRC_POOL:-"$HOME/.crc/machines/crc"}
+OUTPUT_BASEDIR=${OUTPUT_BASEDIR:-"../out/edpm/"}
 
 XML="$(virsh net-dumpxml default | grep $EDPM_COMPUTE_NAME \
     | sed -e 's/^[ \t]*//' | tr -d '\n')"
@@ -27,5 +29,5 @@ fi
 
 virsh destroy edpm-compute-${EDPM_COMPUTE_SUFFIX} || :
 virsh undefine --snapshots-metadata --remove-all-storage edpm-compute-${EDPM_COMPUTE_SUFFIX} || :
-rm -f ${HOME}/.crc/machines/crc/edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2
-rm -f ../out/edpm/edpm-compute-*-id_rsa.pub
+rm -f "${CRC_POOL}/edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2"
+rm -f ${OUTPUT_BASEDIR}/edpm-compute-*-id_rsa.pub
