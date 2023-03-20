@@ -17,13 +17,21 @@ set -ex
 export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
 # expect that the common.sh is in the same dir as the calling script
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+CRC_POOL=${CRC_POOL:-"$HOME/.crc/machines/crc"}
+OUTPUT_BASEDIR=${OUTPUT_BASEDIR:-"../out/edpm/"}
+
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
+EDPM_COMPUTE_VCPUS=${EDPM_COMPUTE_VCPUS:-2}
+EDPM_COMPUTE_RAM=${EDPM_COMPUTE_RAM:-4}
+EDPM_COMPUTE_DISK_SIZE=${EDPM_COMPUTE_DISK_SIZE:-20}
+
 CENTOS_9_STREAM_URL=${CENTOS_9_STREAM_URL:-"https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-20230123.0.x86_64.qcow2"}
-CRC_POOL=${CRC_POOL:-"$HOME/.crc/machines/crc"}
+
 DISK_FILENAME=${DISK_FILENAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2"}
 DISK_FILEPATH=${DISK_FILEPATH:-"${CRC_POOL}/${DISK_FILENAME}"}
-SSH_PUBLIC_KEY=${SSH_PUBLIC_KEY:-"../out/edpm/ansibleee-ssh-key-id_rsa.pub"}
+
+SSH_PUBLIC_KEY=${SSH_PUBLIC_KEY:-"${OUTPUT_BASEDIR}/ansibleee-ssh-key-id_rsa.pub"}
 MAC_ADDRESS=${MAC_ADDRESS:-"$(echo -n 52:54:00; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':')"}
 IP_ADRESS_SUFFIX=${IP_ADRESS_SUFFIX:-"$((100+${EDPM_COMPUTE_SUFFIX}))"}
 
@@ -38,16 +46,16 @@ if test -f "${HOME}/.ssh"; then
     chcon unconfined_u:object_r:ssh_home_t:s0 "${HOME}/.ssh"
 fi
 
-cat <<EOF >../out/edpm/${EDPM_COMPUTE_NAME}.xml
+cat <<EOF >${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}.xml
 <domain type='kvm'>
   <name>${EDPM_COMPUTE_NAME}</name>
-  <memory unit='GiB'>4</memory>
-  <currentMemory unit='GiB'>4</currentMemory>
+  <memory unit='GiB'>${EDPM_COMPUTE_RAM}</memory>
+  <currentMemory unit='GiB'>${EDPM_COMPUTE_RAM}</currentMemory>
   <memoryBacking>
     <source type='memfd'/>
     <access mode='shared'/>
   </memoryBacking>
-  <vcpu placement='static'>2</vcpu>
+  <vcpu placement='static'>${EDPM_COMPUTE_VCPUS}</vcpu>
   <os>
     <type arch='x86_64' machine='q35'>hvm</type>
     <boot dev='hd'/>
@@ -154,12 +162,7 @@ if [ ! -f ${DISK_FILEPATH} ]; then
         curl -L -k ${CENTOS_9_STREAM_URL} -o centos-9-stream-base.qcow2
         popd
     fi
-    qemu-img create -f qcow2 -F qcow2 -b centos-9-stream-base.qcow2 ${DISK_FILEPATH}
-    truncate -r ${DISK_FILEPATH} ${DISK_FILEPATH}.new
-    truncate -s +20G ${DISK_FILEPATH}.new
-    virt-resize --expand /dev/vda1 ${DISK_FILEPATH} ${DISK_FILEPATH}.new
-    qemu-img convert -f raw -O qcow2 ${DISK_FILEPATH}.new ${DISK_FILEPATH}
-    rm -f ${DISK_FILEPATH}.new
+    qemu-img create -o backing_file=${CRC_POOL}/centos-9-stream-base.qcow2,backing_fmt=qcow2 -f qcow2 "${DISK_FILEPATH}" "${EDPM_COMPUTE_DISK_SIZE}G"
     if [[ ! -e /usr/bin/virt-customize ]]; then
         if [[ $(awk '{print $6}' /etc/redhat-release) =~ ^8.* ]]; then
             sudo dnf -y install hexedit libguestfs-tools-c
@@ -172,6 +175,8 @@ if [ ! -f ${DISK_FILEPATH} ]; then
     virt-customize -a ${DISK_FILEPATH} \
         --root-password password:12345678 \
         --hostname ${EDPM_COMPUTE_NAME} \
+        --firstboot-command "growpart /dev/sda 1" |
+        --firstboot-command "xfs_growfs /" \
         --run-command "systemctl disable cloud-init cloud-config cloud-final cloud-init-local" \
         --run-command "echo 'PermitRootLogin yes' > /etc/ssh/sshd_config.d/99-root-login.conf" \
         --run-command "mkdir -p /root/.ssh; chmod 0700 /root/.ssh" \
@@ -185,8 +190,8 @@ if [ ! -f ${DISK_FILEPATH} ]; then
 fi
 
 virsh net-update default add-last ip-dhcp-host --xml "<host mac='${MAC_ADDRESS}' name='${EDPM_COMPUTE_NAME}' ip='192.168.122.${IP_ADRESS_SUFFIX}'/>" --config --live
-virsh define ../out/edpm/${EDPM_COMPUTE_NAME}.xml
-virt-copy-out -d ${EDPM_COMPUTE_NAME} /root/.ssh/id_rsa.pub ../out/edpm
-mv -f ../out/edpm/id_rsa.pub ../out/edpm/${EDPM_COMPUTE_NAME}-id_rsa.pub
-cat ../out/edpm/${EDPM_COMPUTE_NAME}-id_rsa.pub | sudo tee -a /root/.ssh/authorized_keys
+virsh define "${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}.xml"
+virt-copy-out -d ${EDPM_COMPUTE_NAME} /root/.ssh/id_rsa.pub "${OUTPUT_BASEDIR}"
+mv -f "${OUTPUT_BASEDIR}/id_rsa.pub" "${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}-id_rsa.pub"
+cat "${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}-id_rsa.pub" | sudo tee -a /root/.ssh/authorized_keys
 virsh start ${EDPM_COMPUTE_NAME}
