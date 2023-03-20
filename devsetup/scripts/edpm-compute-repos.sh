@@ -35,7 +35,7 @@ git clone https://git.openstack.org/openstack/tripleo-repos
 pushd tripleo-repos
 sudo python3 setup.py install
 popd
-sudo /usr/local/bin/tripleo-repos current-tripleo-dev
+sudo /usr/local/bin/tripleo-repos current-podified-dev
 EOF
 
 scp $SSH_OPT $CMDS_FILE root@$IP:$CMDS_FILE
