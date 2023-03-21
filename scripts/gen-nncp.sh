@@ -106,6 +106,5 @@ spec:
     node-role.kubernetes.io/worker: ""
 EOF_CAT
 
-  IP_ADRESS_SUFFIX=$((${IP_ADRESS_SUFFIX}+1))
+    IP_ADRESS_SUFFIX=$((${IP_ADRESS_SUFFIX}+1))
 done
-
