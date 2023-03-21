@@ -31,11 +31,12 @@ fi
 cat <<EOF > $CMDS_FILE
 rpm -q git || sudo yum -y install git
 sudo yum -y install python-setuptools python-requests python3-pip
-git clone https://git.openstack.org/openstack/tripleo-repos
-pushd tripleo-repos
+git clone https://github.com/openstack-k8s-operators/repo-setup
+pushd repo-setup
+sudo pip install -r requirements.txt
 sudo python3 setup.py install
 popd
-sudo /usr/local/bin/tripleo-repos current-podified-dev
+sudo /usr/local/bin/repo-setup current-podified-dev
 EOF
 
 scp $SSH_OPT $CMDS_FILE root@$IP:$CMDS_FILE
