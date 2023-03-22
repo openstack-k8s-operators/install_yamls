@@ -329,7 +329,7 @@ openstack_crds: ## installs all openstack CRDs. Useful for infrastructure dev
 	mkdir -p ${OUT}/openstack_crds
 	skopeo copy "docker://${OPENSTACK_BUNDLE_IMG}" dir:${OUT}/openstack_crds
 	tar xvf $$(file ${OUT}/openstack_crds/* | grep gzip | cut -f 1 -d ':') -C ${OUT}/openstack_crds
-	for X in $$(grep -l CustomResourceDefinition out/openstack_crds/manifests/*); do oc apply -f $$X; done
+	for X in $$(grep -l CustomResourceDefinition ${OUT}/openstack_crds/manifests/*); do oc apply -f $$X; done
 
 ##@ INFRA
 .PHONY: infra_prep

@@ -14,6 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 set -ex
+OUT=${OUT:-out}
 
 NAMESPACE=$1
 SECRET=$2
@@ -30,11 +31,7 @@ if [ -z "$PASSWORD" ]; then
     echo "Please set PASSWORD as ARG3"; exit 1
 fi
 
-if [ ! -d out/${NAMESPACE}/input ]; then
-    mkdir -p out/${NAMESPACE}/input
-fi
-
-DIR=out/${NAMESPACE}/input
+DIR=${OUT}/${NAMESPACE}/input
 
 if [ ! -d ${DIR} ]; then
     mkdir -p ${DIR}
