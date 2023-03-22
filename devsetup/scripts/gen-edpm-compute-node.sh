@@ -14,7 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 set -ex
-export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
+export LIBVIRT_DEFAULT_URI=qemu:///system
 # expect that the common.sh is in the same dir as the calling script
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 CRC_POOL=${CRC_POOL:-"$HOME/.crc/machines/crc"}
