@@ -14,13 +14,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 set -ex
+OUT=${OUT:-out}
 
 if [ -z "$STORAGE_CLASS" ]; then
     echo "Please set STORAGE_CLASS"; exit 1
 fi
 
-if [ ! -d out/crc ]; then
-    mkdir -p out/crc
+if [ ! -d ${OUT}/crc ]; then
+    mkdir -p ${OUT}/crc
 fi
 PV_NUM=${PV_NUM:-12}
 
@@ -30,7 +31,7 @@ if [ -z "$NODE_NAMES" ]; then
     exit 1
 fi
 
-cat > out/crc/storage.yaml <<EOF_CAT
+cat > ${OUT}/crc/storage.yaml <<EOF_CAT
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
@@ -40,7 +41,7 @@ volumeBindingMode: WaitForFirstConsumer
 EOF_CAT
 
 for i in `seq -w $PV_NUM`; do
-cat >> out/crc/storage.yaml <<EOF_CAT
+cat >> ${OUT}/crc/storage.yaml <<EOF_CAT
 ---
 kind: PersistentVolume
 apiVersion: v1
