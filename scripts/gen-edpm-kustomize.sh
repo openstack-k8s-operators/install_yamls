@@ -114,7 +114,6 @@ patches:
         - InternalApi
         - Storage
         - Tenant
-        - External
         networks_lower:
           External: external
           InternalApi: internal_api
