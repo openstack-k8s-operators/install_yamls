@@ -162,11 +162,14 @@ HORIZON_CR     ?= ${OPERATOR_BASE_DIR}/horizon-operator/${HORIZON}
 HORIZONAPI_IMG ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-horizon:current-tripleo
 
 # AnsibleEE
-ANSIBLEEE_IMG       ?= quay.io/openstack-k8s-operators/openstack-ansibleee-operator-index:latest
-ANSIBLEEE_REPO      ?= https://github.com/openstack-k8s-operators/openstack-ansibleee-operator
-ANSIBLEEE_BRANCH    ?= main
-ANSIBLEEE           ?= config/samples/_v1alpha1_ansibleee.yaml
-ANSIBLEEE_CR        ?= ${OPERATOR_BASE_DIR}/ansibleee-operator/${ANSIBLEEE}
+ANSIBLEEE_IMG        ?= quay.io/openstack-k8s-operators/openstack-ansibleee-operator-index:latest
+ANSIBLEEE_REPO       ?= https://github.com/openstack-k8s-operators/openstack-ansibleee-operator
+ANSIBLEEE_BRANCH     ?= main
+ANSIBLEEE            ?= config/samples/_v1alpha1_ansibleee.yaml
+ANSIBLEEE_CR         ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/${ANSIBLEEE}
+ANSIBLEEE_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/kuttl-test.yaml
+ANSIBLEEE_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/tests/kuttl/tests
+
 
 # Baremetal Operator
 BAREMETAL_IMG        ?= quay.io/openstack-k8s-operators/openstack-baremetal-operator-index:latest
@@ -1023,6 +1026,26 @@ ironic_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_depl
 
 .PHONY: ironic_kuttl_crc
 ironic_kuttl_crc: crc_storage ironic_kuttl
+
+.PHONY: ansibleee_kuttl_run
+ansibleee_kuttl_run: ## runs kuttl tests for the openstack-ansibleee operator, assumes that everything needed for running the test was deployed beforehand.
+	kubectl-kuttl test --config ${ANSIBLEEE_KUTTL_CONF} ${ANSIBLEEE_KUTTL_DIR}
+
+.PHONY: ansibleee_kuttl_cleanup
+ansibleee_kuttl_cleanup:
+	$(eval $(call vars,$@,openstack-ansibleee))
+	rm -Rf ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator
+
+.PHONY: ansibleee_kuttl_prep
+ansibleee_kuttl_prep: ansibleee_kuttl_cleanup
+	$(eval $(call vars,$@,openstack-ansibleee))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone -b ${ANSIBLEEE_BRANCH} ${ANSIBLEEE_REPO} && popd
+
+.PHONY: ansibleee_kuttl
+ansibleee_kuttl: namespace input ansibleee_kuttl_prep ansibleee ## runs kuttl tests for the openstack-ansibleee operator. Installs openstack crds and openstack-ansibleee operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	make ansibleee_kuttl_run
+	make ansibleee_cleanup
 
 ##@ HORIZON
 .PHONY: horizon_prep
