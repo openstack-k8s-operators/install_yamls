@@ -19,11 +19,14 @@ SERVICE_ORG         ?= tripleozedcentos9
 # storage (used by some operators)
 STORAGE_CLASS       ?= "local-storage"
 
+# network isolation
+NETWORK_ISOLATION   ?= true
+
 # OpenStack Operator
 OPENSTACK_IMG        ?= quay.io/openstack-k8s-operators/openstack-operator-index:latest
 OPENSTACK_REPO       ?= https://github.com/openstack-k8s-operators/openstack-operator.git
 OPENSTACK_BRANCH     ?= master
-OPENSTACK_CTLPLANE   ?= config/samples/core_v1beta1_openstackcontrolplane.yaml
+OPENSTACK_CTLPLANE   ?= $(if $(findstring true,$(NETWORK_ISOLATION)),config/samples/core_v1beta1_openstackcontrolplane_network_isolation.yaml,config/samples/core_v1beta1_openstackcontrolplane.yaml)
 OPENSTACK_CR         ?= ${OPERATOR_BASE_DIR}/openstack-operator/${OPENSTACK_CTLPLANE}
 OPENSTACK_BUNDLE_IMG ?= quay.io/openstack-k8s-operators/openstack-operator-bundle:latest
 
@@ -171,9 +174,22 @@ BAREMETAL_REPO       ?= https://github.com/openstack-k8s-operators/openstack-bar
 BAREMETAL_BRANCH     ?= master
 
 # Dataplane Operator
-DATAPLANE_IMG        ?= quay.io/openstack-k8s-operators/dataplane-operator-index:latest
-DATAPLANE_REPO       ?= https://github.com/openstack-k8s-operators/dataplane-operator.git
-DATAPLANE_BRANCH     ?= main
+DATAPLANE_IMG                                    ?= quay.io/openstack-k8s-operators/dataplane-operator-index:latest
+DATAPLANE_REPO                                   ?= https://github.com/openstack-k8s-operators/dataplane-operator.git
+DATAPLANE_BRANCH                                 ?= main
+OPENSTACK_DATAPLANE                              ?= config/samples/dataplane_v1beta1_openstackdataplane.yaml
+DATAPLANE_CR                                     ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANE}
+DATAPLANE_ANSIBLE_SECRET                         ?=dataplane-ansible-ssh-private-key-secret
+DATAPLANE_COMPUTE_IP                             ?=192.168.122.100
+DATAPLANE_COMPUTE_1_IP                           ?=192.168.122.101
+DATAPLANE_RUNNER_IMG                             ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
+DATAPLANE_NETWORK_CONFIG_TEMPLATE                ?=templates/single_nic_vlans/single_nic_vlans.j2
+DATAPLANE_SSHD_ALLOWED_RANGES                    ?=['192.168.122.0/24']
+DATAPLANE_CHRONY_NTP_SERVER                      ?=clock.redhat.com
+DATAPLANE_OVN_METADATA_AGENT_NOVA_METADATA_HOST  ?=127.0.0.1
+DATAPLANE_OVN_METADATA_AGENT_PROXY_SHARED_SECRET ?=12345678
+DATAPLANE_OVN_METADATA_AGENT_BIND_HOST           ?=127.0.0.1
+DATAPLANE_SINGLE_NODE                            ?=true
 
 # Manila
 MANILA_IMG       ?= quay.io/openstack-k8s-operators/manila-operator-index:latest
@@ -288,7 +304,7 @@ input_cleanup: ## deletes the secret/CM, used by the services as input
 ##@ OPENSTACK
 .PHONY: openstack_prep
 openstack_prep: export IMAGE=${OPENSTACK_IMG}
-openstack_prep: ## creates the files to install the operator using olm
+openstack_prep: $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config) ## creates the files to install the operator using olm
 	$(eval $(call vars,$@,openstack))
 	bash scripts/gen-olm.sh
 
@@ -306,7 +322,7 @@ openstack_cleanup: ## deletes the operator, but does not cleanup the service res
 .PHONY: openstack_deploy_prep
 openstack_deploy_prep: export KIND=OpenStackControlPlane
 openstack_deploy_prep: export IMAGE=unused
-openstack_deploy_prep: openstack_deploy_cleanup ## prepares the CR to install the service based on the service sample file OPENSTACK
+openstack_deploy_prep: openstack_deploy_cleanup $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config)  ## prepares the CR to install the service based on the service sample file OPENSTACK
 	$(eval $(call vars,$@,openstack))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${OPENSTACK_BRANCH} ${OPENSTACK_REPO} && popd
@@ -323,6 +339,42 @@ openstack_deploy_cleanup: ## cleans up the service instance, Does not affect the
 	$(eval $(call vars,$@,openstack))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/openstack-operator ${DEPLOY_DIR}
+
+.PHONY: edpm_deploy_prep
+edpm_deploy_prep: export KIND=OpenStackDataPlane
+edpm_deploy_prep: export EDPM_ANSIBLE_SECRET=${DATAPLANE_ANSIBLE_SECRET}
+edpm_deploy_prep: export EDPM_SINGLE_NODE=${DATAPLANE_SINGLE_NODE}
+edpm_deploy_prep: export EDPM_COMPUTE_IP=${DATAPLANE_COMPUTE_IP}
+edpm_deploy_prep: export EDPM_COMPUTE_1_IP=${DATAPLANE_COMPUTE_1_IP}
+edpm_deploy_prep: export OPENSTACK_RUNNER_IMG=${DATAPLANE_RUNNER_IMG}
+edpm_deploy_prep: export EDPM_NETWORK_CONFIG_TEMPLATE=${DATAPLANE_NETWORK_CONFIG_TEMPLATE}
+edpm_deploy_prep: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALLOWED_RANGES}
+edpm_deploy_prep: export EDPM_CHRONY_NTP_SERVER=${DATAPLANE_CHRONY_NTP_SERVER}
+edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST=${DATAPLANE_OVN_METADATA_AGENT_NOVA_METADATA_HOST}
+edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET=${DATAPLANE_OVN_METADATA_AGENT_PROXY_SHARED_SECRET}
+edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_BIND_HOST=${DATAPLANE_OVN_METADATA_AGENT_BIND_HOST}
+edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_TRANSPORT_URL=$(shell oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
+edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_SB_CONNECTION=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
+edpm_deploy_prep: export EDPM_OVN_DBS=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"[0]')
+edpm_deploy_prep: export EDPM_NADS=$(shell oc get network-attachment-definitions -o json | jq -r "[.items[].metadata.name]")
+edpm_deploy_prep: edpm_deploy_cleanup $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config) ## prepares the CR to install the data plane
+	$(eval $(call vars,$@,dataplane))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone -b ${DATAPLANE_BRANCH} ${DATAPLANE_REPO} && popd
+	cp ${DATAPLANE_CR} ${DEPLOY_DIR}
+	bash scripts/gen-edpm-kustomize.sh
+	devsetup/scripts/gen-ansibleee-ssh-key.sh
+
+.PHONY: edpm_deploy_cleanup
+edpm_deploy_cleanup: ## cleans up the edpm instance, Does not affect the operator.
+	$(eval $(call vars,$@,dataplane))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	rm -Rf ${OPERATOR_BASE_DIR}/dataplane-operator ${DEPLOY_DIR}
+
+.PHONY: edpm_deploy
+edpm_deploy: input edpm_deploy_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,dataplane))
+	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 
 .PHONY: openstack_crds
 openstack_crds: ## installs all openstack CRDs. Useful for infrastructure dev
