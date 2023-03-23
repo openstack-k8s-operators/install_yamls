@@ -236,6 +236,11 @@ cleanup: horizon_cleanup nova_cleanup octavia_cleanup neutron_cleanup ovn_cleanu
 .PHONY: deploy_cleanup
 deploy_cleanup: horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup ceilometer_deploy_cleanup ## Delete all OpenStack service objects
 
+.PHONY: wait
+wait: ## wait for an operator's controller-manager pod to be ready (requires OPERATOR_NAME to be explicitly passed!)
+	$(eval $(call vars,$@,$(value OPERATOR_NAME)))
+	bash scripts/operator-wait.sh
+
 ##@ CRC
 .PHONY: crc_storage
 crc_storage: ## initialize local storage PVs in CRC vm
@@ -316,7 +321,7 @@ openstack_deploy_prep: openstack_deploy_cleanup ## prepares the CR to install th
 .PHONY: openstack_deploy
 openstack_deploy: input openstack_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,openstack))
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/operator-deploy-resources.sh
 
 .PHONY: openstack_deploy_cleanup
 openstack_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
@@ -363,7 +368,7 @@ memcached_deploy_prep: memcached_deploy_cleanup ## prepares the CR to install th
 .PHONY: memcached_deploy
 memcached_deploy: input memcached_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set INFRA_REPO and INFRA_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,infra))
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/operator-deploy-resources.sh
 
 .PHONY: memcached_deploy_cleanup
 memcached_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
@@ -402,7 +407,7 @@ keystone_deploy_prep: keystone_deploy_cleanup ## prepares the CR to install the 
 .PHONY: keystone_deploy
 keystone_deploy: input keystone_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set KEYSTONE_REPO and KEYSTONE_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,keystone))
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/operator-deploy-resources.sh
 
 .PHONY: keystone_deploy_validate
 keystone_deploy_validate: input namespace ## checks that keystone was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
@@ -445,7 +450,7 @@ mariadb_deploy_prep: mariadb_deploy_cleanup ## prepares the CRs files to install
 .PHONY: mariadb_deploy
 mariadb_deploy: input mariadb_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set MARIADB_REPO and MARIADB_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,mariadb))
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/operator-deploy-resources.sh
 
 .PHONY: mariadb_deploy_validate
 mariadb_deploy_validate: input namespace ## checks that mariadb was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
@@ -488,7 +493,7 @@ placement_deploy_prep: placement_deploy_cleanup ## prepares the CR to install th
 .PHONY: placement_deploy
 placement_deploy: input placement_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set PLACEMENT_REPO and PLACEMENT_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,placement))
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/operator-deploy-resources.sh
 
 .PHONY: placement_deploy_cleanup
 placement_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
@@ -528,7 +533,7 @@ glance_deploy_prep: glance_deploy_cleanup ## prepares the CR to install the serv
 .PHONY: glance_deploy
 glance_deploy: input glance_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set GLANCE_REPO and GLANCE_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,glance))
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/operator-deploy-resources.sh
 
 .PHONY: glance_deploy_cleanup
 glance_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
@@ -568,7 +573,7 @@ ovn_deploy_prep: ovn_deploy_cleanup ## prepares the CR to install the service ba
 .PHONY: ovn_deploy
 ovn_deploy: ovn_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set OVN_REPO and OVN_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,ovn))
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/operator-deploy-resources.sh
 
 .PHONY: ovn_deploy_cleanup
 ovn_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
@@ -607,7 +612,7 @@ ovs_deploy_prep: ovs_deploy_cleanup ## prepares the CR to install the service ba
 .PHONY: ovs_deploy
 ovs_deploy: ovs_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set OVS_REPO and OVS_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,ovs))
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/operator-deploy-resources.sh
 
 .PHONY: ovs_deploy_cleanup
 ovs_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
@@ -646,7 +651,7 @@ neutron_deploy_prep: neutron_deploy_cleanup ## prepares the CR to install the se
 .PHONY: neutron_deploy
 neutron_deploy: input neutron_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set NEUTRON_REPO and NEUTRON_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,neutron))
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/operator-deploy-resources.sh
 
 .PHONY: neutron_deploy_cleanup
 neutron_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
@@ -686,7 +691,7 @@ cinder_deploy_prep: cinder_deploy_cleanup ## prepares the CR to install the serv
 .PHONY: cinder_deploy
 cinder_deploy: input cinder_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set CINDER_REPO and CINDER_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,cinder))
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/operator-deploy-resources.sh
 
 .PHONY: cinder_deploy_validate
 cinder_deploy_validate: input namespace ## checks that cinder was properly deployed. Set CINDER_KUTTL_DIR to use assert file from custom repo.
@@ -730,7 +735,7 @@ rabbitmq_deploy_prep: rabbitmq_deploy_cleanup ## prepares the CR to install the 
 rabbitmq_deploy: input rabbitmq_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set RABBITMQ_REPO and RABBITMQ_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,rabbitmq))
 	KIND=RabbitmqCluster NAME=rabbitmq bash scripts/gen-name-kustomize.sh
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/operator-deploy-resources.sh
 
 .PHONY: rabbitmq_deploy_cleanup
 rabbitmq_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
@@ -769,7 +774,7 @@ ironic_deploy_prep: ironic_deploy_cleanup ## prepares the CR to install the serv
 .PHONY: ironic_deploy
 ironic_deploy: input ironic_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set IRONIC_REPO and IRONIC_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,ironic))
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/operator-deploy-resources.sh
 
 .PHONY: ironic_deploy_cleanup
 ironic_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
@@ -810,7 +815,7 @@ octavia_deploy_prep: octavia_deploy_cleanup ## prepares the CR to install the se
 .PHONY: octavia_deploy
 octavia_deploy: input octavia_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set OCTAVIA_REPO and OCTAVIA_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,octavia))
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/operator-deploy-resources.sh
 
 .PHONY: octavia_deploy_validate
 octavia_deploy_validate: input namespace ## checks that octavia was properly deployed. Set OCTAVIA_KUTTL_DIR to use assert file from custom repo.
@@ -858,7 +863,7 @@ nova_deploy_prep: nova_deploy_cleanup ## prepares the CR to install the service 
 .PHONY: nova_deploy
 nova_deploy: input nova_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set NOVA_REPO and NOVA_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,nova))
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/operator-deploy-resources.sh
 
 .PHONY: nova_deploy_cleanup
 nova_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
@@ -1003,7 +1008,7 @@ horizon_deploy_prep: horizon_deploy_cleanup ## prepares the CR to install the se
 .PHONY: horizon_deploy
 horizon_deploy: input horizon_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set HORIZON_REPO and HORIZON_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,horizon))
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/operator-deploy-resources.sh
 
 .PHONY: horizon_deploy_cleanup
 horizon_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
@@ -1077,7 +1082,7 @@ ceph: export IMAGE=${CEPH_IMG}
 ceph: namespace ## deploy the Ceph Pod
 	$(eval $(call vars,$@,ceph))
 	bash scripts/gen-ceph-kustomize.sh "build"
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/operator-deploy-resources.sh
 	bash scripts/gen-ceph-kustomize.sh "isready"
 	bash scripts/gen-ceph-kustomize.sh "cephfs"
 	bash scripts/gen-ceph-kustomize.sh "pools"
@@ -1206,7 +1211,7 @@ manila_deploy_prep: manila_deploy_cleanup ## prepares the CR to install the serv
 .PHONY: manila_deploy
 manila_deploy: input manila_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set CINDER_REPO and CINDER_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,manila))
-	# oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	# bash scripts/operator-deploy-resources.sh
 
 .PHONY: manila_deploy_cleanup
 manila_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
@@ -1248,7 +1253,7 @@ ceilometer_deploy_prep: ceilometer_deploy_cleanup ## prepares the CR to install 
 .PHONY: ceilometer_deploy
 ceilometer_deploy: input ceilometer_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set CEILOMETER_REPO and CEILOMETER_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,ceilometer))
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/operator-deploy-resources.sh
 
 .PHONY: ceilometer_deploy_cleanup
 ceilometer_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
