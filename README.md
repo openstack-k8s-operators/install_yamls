@@ -36,3 +36,6 @@ make mariadb_deploy
 # Deploy Keystone
 make keystone_deploy
 ```
+
+### Workflows
+- [EDPM](docs/edpm.md)
