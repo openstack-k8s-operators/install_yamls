@@ -110,9 +110,10 @@ virsh --connect=qemu:///system -q domifaddr edpm-compute-0 | awk 'NF>1{print $NF
 COMPUTE_IP=$(virsh --connect=qemu:///system -q domifaddr edpm-compute-0 | awk 'NF>1{print $NF}' | cut -d/ -f1 )
 ```
 
-Execute the ansible to configure the compute node:
+Execute the edpm_deploy step:
 ```
-make edpm_play EDPM_COMPUTE_IP=${COMPUTE_IP}
+cd ..
+make edpm_deploy
 ```
 
 You can also deploy additional compute node VMs:
