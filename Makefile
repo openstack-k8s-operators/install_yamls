@@ -321,8 +321,6 @@ openstack_cleanup: ## deletes the operator, but does not cleanup the service res
 	$(eval $(call vars,$@,openstack))
 	bash scripts/operator-cleanup.sh
 	rm -Rf ${OPERATOR_DIR}
-	oc delete subscription manila-operator-alpha-openstack-operator-index-openstack --ignore-not-found=false
-	oc delete csv manila-operator.v0.0.1 --ignore-not-found=false
 
 .PHONY: openstack_deploy_prep
 openstack_deploy_prep: export KIND=OpenStackControlPlane
