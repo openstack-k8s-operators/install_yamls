@@ -1,0 +1,6 @@
+---
+- project:
+    name: openstack-k8s-operators/install_yamls
+    github-check:
+      jobs:
+        - centos-9-crc-singlenode-podified-deployment
