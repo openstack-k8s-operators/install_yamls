@@ -1,0 +1,61 @@
+---
+- hosts: controller
+  vars:
+    install_yamls_basedir: "{{ ansible_user_dir }}/src/github.com/openstack-k8s-operators/install_yamls"
+  tasks:
+    - name: Install Ansible, Make, Tar
+      become: true
+      ansible.builtin.package:
+        name:
+          - ansible-core
+          - make
+          - tar
+        state: latest
+
+    - name: Install devsetup dependencies
+      community.general.make:
+        chdir: "{{ install_yamls_basedir }}/devsetup"
+        target: download_tools
+
+    - name: Deploy Openstack Operators
+      community.general.make:
+        chdir: "{{ install_yamls_basedir }}"
+        target: openstack
+        params: &install_yamls_out
+          OUT: "{{ install_yamls_basedir }}/out"
+          MICROSHIFT: 1
+
+    - name: Wait for operator to get deployed
+      ansible.builtin.shell: |
+        oc get csv --no-headers=true | grep -i "succeeded"
+      register: operator_status
+      until: operator_status.rc == 0
+      retries: 20
+      delay: 5
+
+    - name: Print Operator Status
+      ansible.builtin.shell: |
+        oc get csv;
+        oc get pods;
+
+    - name: Deploy OpenStack Services
+      community.general.make:
+        chdir: "{{ install_yamls_basedir }}"
+        target: openstack_deploy
+        params:
+          <<: *install_yamls_out
+          OPENSTACK_REPO: "{{ ansible_user_dir }}/src/github.com/openstack-k8s-operators/openstack-operator"
+
+    - name: Wait for OpenStack services to deployed
+      ansible.builtin.shell: |
+        # Cinder is disabled due to missing ceph support
+        oc get OpenStackControlPlane openstack -o json | \
+        jq -r '.status.conditions[] | select(.type | test("^OpenStackControlPlane(?!Cinder)")).type' | \
+        timeout 240 xargs -d '\n' -I {} sh -c 'echo testing condition={}; \
+        oc wait openstackcontrolplane.core.openstack.org/openstack --for=condition={} --timeout=-1s'
+      ignore_errors: true
+
+    - name: Print Pod and OpenStack resources Status
+      ansible.builtin.shell: |
+        oc get pods;
+        oc get OpenStackControlPlane openstack -o json | jq -r '.status.conditions[].type';
