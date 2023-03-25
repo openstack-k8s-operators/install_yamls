@@ -60,8 +60,9 @@ oc login -u kubeadmin -p 12345678 https://api.crc.testing:6443
 ```
 
 * attach libvirt default network to the crc (default IP 192.168.122.10). This network is used as a vlan trunk to isolate the networks using vlans.
+Try running `crc ip` command to get the default crc network ip.
 ```bash
-make crc_attach_default_interface
+CRC_DEFAULT_NETWORK_IP=$(crc ip) make crc_attach_default_interface
 ```
 
 * create edpm node
