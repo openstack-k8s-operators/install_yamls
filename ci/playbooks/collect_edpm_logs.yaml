@@ -1,0 +1,42 @@
+---
+- hosts: all,
+  vars:
+    become: true
+    ansible_user: root
+    ansible_ssh_private_key_file: "/home/zuul-worker/src/github.com/openstack-k8s-operators/install_yamls/out/edpm/ansibleee-ssh-key-id_rsa"
+  tasks:
+    - name: Install ansible
+      become: true
+      package:
+        name: 
+          - ansible-core
+          - rsync
+        state: present
+
+    - name: Install ansible.posix
+      ansible.builtin.shell: |
+        ansible-galaxy collection install ansible.posix
+
+    - name: Collect logs from EDPM node
+      ansible.builtin.shell: |
+        mkdir edpm_node
+        pushd edpm_node
+        ip a > network.txt
+        ip ro ls >> network.txt
+        rpm -qa > rpm_qa.txt
+        sudo podman images > podman_images.txt
+        sudo cp -r /etc/nftables .
+        sudo cp -r /var/lib/edpm-config .
+        sudo journalctl -p warning -t kernel -o short -g DROPPING --no-pager &> firewall-drops.txt
+        sudo journalctl -o short --no-pager -u sshd > sshd.log
+        popd
+        sudo chmod -R 777 {{ ansible_user_dir }}
+      args:
+        chdir: "{{ ansible_user_dir }}"
+
+    - name: Copy edpm logs on the controller node
+      become: true
+      ansible.posix.synchronize:
+        src: "{{ ansible_user_dir }}/edpm_node"
+        dest: "/home/zuul-worker/zuul-output/logs"
+        mode: pull
