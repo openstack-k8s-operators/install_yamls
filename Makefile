@@ -1045,7 +1045,7 @@ ansibleee_kuttl_prep: ansibleee_kuttl_cleanup
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${ANSIBLEEE_BRANCH} ${ANSIBLEEE_REPO} && popd
 
 .PHONY: ansibleee_kuttl
-ansibleee_kuttl: namespace input ansibleee_kuttl_prep ansibleee ## runs kuttl tests for the openstack-ansibleee operator. Installs openstack crds and openstack-ansibleee operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+ansibleee_kuttl: namespace input openstack_crds ansibleee_kuttl_prep ansibleee ## runs kuttl tests for the openstack-ansibleee operator. Installs openstack crds and openstack-ansibleee operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make ansibleee_kuttl_run
 	make ansibleee_cleanup
 
