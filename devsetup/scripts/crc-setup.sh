@@ -9,6 +9,7 @@ fi
 CRC_URL=$1
 KUBEADMIN_PWD=$2
 PULL_SECRET_FILE=$3
+CRC_BUNDLE=${CRC_BUNDLE:-""}
 CPUS=${CPUS:-4}
 MEMORY=${MEMORY:-9216}
 DISK=${DISK:-31}
@@ -48,6 +49,9 @@ ${CRC_BIN} config set skip-check-daemon-systemd-sockets true
 ${CRC_BIN} config set cpus ${CPUS}
 ${CRC_BIN} config set memory ${MEMORY}
 ${CRC_BIN} config set disk-size ${DISK}
+if [ -n ${CRC_BUNDLE} ]; then
+  ${CRC_BIN} config set bundle ${CRC_BUNDLE}
+fi
 ${CRC_BIN} setup
 
 ${CRC_BIN} start
