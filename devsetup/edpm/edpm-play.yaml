@@ -213,7 +213,8 @@ spec:
                 undercloud_hosts_entries: []
                 # edpm_hosts_entries role
                 extra_hosts_entries:
-                - 172.17.0.80 glance-internal.openstack.svc neutron-internal.openstack.svc cinder-internal.openstack.svc nova-internal.openstack.svc placement-internal.openstack.svc keystone-internal.openstack.svc
+                - "172.17.0.80 glance-internal.openstack.svc neutron-internal.openstack.svc cinder-internal.openstack.svc \
+                  nova-internal.openstack.svc placement-internal.openstack.svc keystone-internal.openstack.svc"
                 - 172.17.0.85 rabbitmq.openstack.svc
                 - 172.17.0.86 rabbitmq-cell1.openstack.svc
                 vip_hosts_entries: []

@@ -125,4 +125,3 @@ spec:
       }
     }
 EOF_CAT
-
