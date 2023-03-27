@@ -2,7 +2,7 @@
 apiVersion: ansibleee.openstack.org/v1alpha1
 kind: OpenStackAnsibleEE
 metadata:
-  name: osp.edpm.deploy-external-dataplane-compute
+  name: deploy-external-dataplane-compute
   namespace: openstack
 spec:
   # We can specify either playbook, which will run with default ansible-runner options,
