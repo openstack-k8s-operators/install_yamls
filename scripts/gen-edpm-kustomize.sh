@@ -124,11 +124,11 @@ patches:
         edpm_nodes_validation_validate_controllers_icmp: false
         edpm_nodes_validation_validate_gateway_icmp: false
 
-        edpm_ovn_metadata_agent_default_transport_url: ${EDPM_OVN_METADATA_AGENT_TRANSPORT_URL}
+        edpm_ovn_metadata_agent_DEFAULT_transport_url: ${EDPM_OVN_METADATA_AGENT_TRANSPORT_URL}
         edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection: ${EDPM_OVN_METADATA_AGENT_SB_CONNECTION}
-        edpm_ovn_metadata_agent_metadata_agent_default_nova_metadata_host: ${EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST}
-        edpm_ovn_metadata_agent_metadata_agent_default_metadata_proxy_shared_secret: ${EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET}
-        edpm_ovn_metadata_agent_default_bind_host: ${EDPM_OVN_METADATA_AGENT_BIND_HOST}
+        edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host: ${EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST}
+        edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret: ${EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET}
+        edpm_ovn_metadata_agent_DEFAULT_bind_host: ${EDPM_OVN_METADATA_AGENT_BIND_HOST}
         edpm_chrony_ntp_servers:
         - ${EDPM_CHRONY_NTP_SERVER}
 
