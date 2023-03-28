@@ -1,0 +1,61 @@
+---
+# Note make download_tools and make openstack commands run
+# in https://github.com/rdo-infra/review.rdoproject.org-config/blob/master/playbooks/crc/openstack.yaml
+# We can override the openstack operator image by defining openstack_img in the zuul job
+
+- hosts: controller
+  vars:
+    install_yamls_basedir: "{{ ansible_user_dir }}/src/github.com/openstack-k8s-operators/install_yamls"
+  tasks:
+    - name: Add crc creds
+      include_role:
+        name: rhol_crc
+        tasks_from: add_crc_creds
+
+    - name: Checkout to OpenStack Namespace
+      ansible.builtin.command: oc project openstack
+
+    - name: Make sure all Openstack operators are deployed
+      ansible.builtin.shell: |
+        oc get csv -l operators.coreos.com/openstack-operator.openstack --no-headers=true | grep -i "succeeded"
+      register: operator_status
+      until: operator_status.rc == 0
+      retries: 30
+      delay: 30
+
+    - name: Configure local storage
+      community.general.make:
+        chdir: "{{ install_yamls_basedir }}"
+        target: crc_storage
+        params:  &install_yamls_out
+          OUT: "{{ install_yamls_basedir }}/out"
+
+    - name: Deploy OpenStack
+      community.general.make:
+        chdir: "{{ install_yamls_basedir }}"
+        target: openstack_deploy
+        params: *install_yamls_out
+
+    - name: Make sure Nova api service is up and running
+      ansible.builtin.shell: |
+        oc get pods --selector service=nova-api -o jsonpath={.items[*].status.phase}
+      register: nova_service
+      until: nova_service.stdout == "Running"
+      retries: 100
+      delay: 50
+
+    - name: List compute services and make sure they are enabled
+      ansible.builtin.shell: |
+        oc rsh openstackclient openstack compute service list | grep enabled
+      register: nova_api_status
+      until: nova_api_status.rc == 0
+      retries: 50
+      delay: 50
+
+    - name: Print Pod and OpenStack resources Status
+      ansible.builtin.shell: |
+        oc get pv;
+        oc get pods;
+        oc get secrets;
+        oc rsh openstackclient openstack compute service list;
+        oc rsh openstackclient openstack network agent list;

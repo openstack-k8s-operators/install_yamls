@@ -1,0 +1,61 @@
+---
+- hosts: all
+  gather_facts: false
+  tasks:
+    - name: Create log dir
+      file:
+        path: "{{ ansible_user_dir }}/zuul-output/logs"
+        state: directory
+        mode: 0755
+
+- hosts: controller
+  gather_facts: false
+  tasks:
+    - name: Create log dir
+      file:
+        path: "{{ ansible_user_dir }}/zuul-output/logs/controller"
+        state: directory
+        mode: 0755
+
+    - name: Collect pod logs
+      ansible.builtin.shell: |
+        source ~/.bashrc
+        pushd {{ ansible_user_dir }}/src/github.com/openstack-k8s-operators/install_yamls/out/openstack
+        mkdir {{ ansible_user_dir }}/zuul-output/logs/openstack
+        cp namespace.yaml {{ ansible_user_dir }}/zuul-output/logs/openstack
+        cp -R openstack/cr {{ ansible_user_dir }}/zuul-output/logs/openstack
+        cp -R dataplane/cr {{ ansible_user_dir }}/zuul-output/logs/openstack
+        popd
+        cp /etc/resolv.conf .
+        cp /etc/hosts .
+        ip a > network.txt
+        ip ro ls >> network.txt
+        oc get pods > all_pods.txt
+        oc get secrets > all_secrets.txt
+        oc get pv > all_pv.txt
+        oc get events > oc_events.txt
+        oc get routes > oc_routes.txt
+        oc get all > oc_all.txt
+        oc get -o yaml openstackdataplane > openstackdataplane.yaml
+        oc get -o yaml openstackdataplanerole > openstackdataplanerole.yaml
+        oc get -o yaml openstackdataplanenode > openstackdataplanenode.yaml
+        all_pods=$(oc get pods -o name)
+        mkdir pod
+        for pod in $all_pods; do
+          echo $pod
+          oc logs $pod > ${pod}-logs.txt
+          oc get -o yaml $pod > ${pod}.yaml
+          oc describe $pod > ${pod}-describe.txt
+        done
+      args:
+        chdir: "{{ ansible_user_dir }}/zuul-output/logs/controller"
+      changed_when: true
+      ignore_errors: true
+
+- hosts: all
+  gather_facts: false
+  tasks:
+    - name: Copy files from {{ work_dir }} on node
+      include_role:
+        name: fetch-output
+
