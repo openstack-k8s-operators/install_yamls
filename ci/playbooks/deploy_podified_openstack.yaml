@@ -12,16 +12,17 @@
         name: rhol_crc
         tasks_from: add_crc_creds
 
-    - name: Checkout to OpenStack Namespace
-      ansible.builtin.command: oc project openstack
-
-    - name: Make sure all Openstack operators are deployed
+    - name: Checkout to OpenStack Namespace and list installed csvs
       ansible.builtin.shell: |
-        oc get csv -l operators.coreos.com/openstack-operator.openstack --no-headers=true | grep -i "succeeded"
-      register: operator_status
-      until: operator_status.rc == 0
-      retries: 30
-      delay: 30
+        oc project openstack
+        oc get csv
+
+    - name: Make sure all Openstack operator is installed
+      community.general.make:
+        chdir: "{{ install_yamls_basedir }}"
+        target: wait
+        params:
+          OPERATOR_NAME: openstack
 
     - name: Configure local storage
       community.general.make:

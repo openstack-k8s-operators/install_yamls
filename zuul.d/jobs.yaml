@@ -30,3 +30,9 @@
     vars:
       network_isolation: true
       crc_attach_default_interface: true
+    irrelevant-files:
+      - ^.*\.md$
+      - ^doc/.*$
+      - .ci-operator.yaml$
+      - .pre-commit-config.yaml$
+      - .yamllint$
