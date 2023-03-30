@@ -8,6 +8,9 @@ spec:
   # We can specify either playbook, which will run with default ansible-runner options,
   # or args, which allows specify the whole command that we want to execute
   play: |
+    - name: Deploy EDPM test host
+      ansible.builtin.import_playbook: prepare-test-host.yml
+
     - name: Deploy EDPM facts playbook
       ansible.builtin.import_playbook: deploy-edpm-facts.yml
 
