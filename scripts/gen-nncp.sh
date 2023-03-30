@@ -35,24 +35,19 @@ echo DEPLOY_DIR ${DEPLOY_DIR}
 echo WORKERS ${WORKERS}
 echo INTERFACE ${INTERFACE}
 
-IP_ADRESS_SUFFIX=10
-for WORKER in ${WORKERS}; do
-  cat > ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+cat > ${DEPLOY_DIR}/${INTERFACE}-osp_nncp.yaml <<EOF_CAT
 apiVersion: nmstate.io/v1
 kind: NodeNetworkConfigurationPolicy
 metadata:
   labels:
     osp/interface: ${INTERFACE}
-  name: ${INTERFACE}-${WORKER}
+  name: osp-${INTERFACE}
 spec:
   desiredState:
     interfaces:
     - description: internalapi vlan interface
       ipv4:
-        address:
-        - ip: 172.17.0.${IP_ADRESS_SUFFIX}
-          prefix-length: 24
-        enabled: true
+        enabled: false
       ipv6:
         enabled: false
       name: ${INTERFACE}.20
@@ -63,10 +58,7 @@ spec:
         id: 20
     - description: storage vlan interface
       ipv4:
-        address:
-        - ip: 172.18.0.${IP_ADRESS_SUFFIX}
-          prefix-length: 24
-        enabled: true
+        enabled: false
       ipv6:
         enabled: false
       name: ${INTERFACE}.21
@@ -77,10 +69,7 @@ spec:
         id: 21
     - description: tenant vlan interface
       ipv4:
-        address:
-        - ip: 172.19.0.${IP_ADRESS_SUFFIX}
-          prefix-length: 24
-        enabled: true
+        enabled: false
       ipv6:
         enabled: false
       name: ${INTERFACE}.22
@@ -91,10 +80,7 @@ spec:
         id: 22
     - description: Configuring ${INTERFACE}
       ipv4:
-        address:
-        - ip: 192.168.122.${IP_ADRESS_SUFFIX}
-          prefix-length: 24
-        enabled: true
+        enabled: false
       ipv6:
         enabled: false
       mtu: 1500
@@ -102,9 +88,6 @@ spec:
       state: up
       type: ethernet
   nodeSelector:
-    kubernetes.io/hostname: ${WORKER}
     node-role.kubernetes.io/worker: ""
 EOF_CAT
 
-    IP_ADRESS_SUFFIX=$((${IP_ADRESS_SUFFIX}+1))
-done
