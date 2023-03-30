@@ -156,9 +156,28 @@ cat <<EOF >${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}.xml
 </domain>
 EOF
 
+# Set network variables for firstboot script
+IP="192.168.122.${IP_ADRESS_SUFFIX}"
+NETDEV=eth0
+NETSCRIPT="/etc/sysconfig/network-scripts/ifcfg-${NETDEV}"
+GATEWAY=192.168.122.1
+DNS=192.168.122.1
+PREFIX=24
+
 cat <<EOF >${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
 growpart /dev/vda 1
 xfs_growfs /
+
+# Set network for current session
+nmcli device modify $NETDEV ipv4.addresses $IP/$PREFIX ipv4.gateway $GATEWAY ipv4.dns $DNS ipv4.method manual
+
+# Set network to survive reboots
+echo IPADDR=$IP >> $NETSCRIPT
+echo PREFIX=$PREFIX >> $NETSCRIPT
+echo GATEWAY=$GATEWAY >> $NETSCRIPT
+echo DNS1=$DNS >> $NETSCRIPT
+sed -i s/dhcp/none/g $NETSCRIPT
+sed -i /PERSISTENT_DHCLIENT/d $NETSCRIPT
 EOF
 
 if [ ! -f ${DISK_FILEPATH} ]; then
@@ -193,7 +212,6 @@ if [ ! -f ${DISK_FILEPATH} ]; then
     fi
 fi
 
-virsh net-update default add-last ip-dhcp-host --xml "<host mac='${MAC_ADDRESS}' name='${EDPM_COMPUTE_NAME}' ip='192.168.122.${IP_ADRESS_SUFFIX}'/>" --config --live
 virsh define "${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}.xml"
 virt-copy-out -d ${EDPM_COMPUTE_NAME} /root/.ssh/id_rsa.pub "${OUTPUT_BASEDIR}"
 mv -f "${OUTPUT_BASEDIR}/id_rsa.pub" "${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}-id_rsa.pub"

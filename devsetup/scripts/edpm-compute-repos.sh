@@ -18,7 +18,8 @@ export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
-IP=$(virsh -q domifaddr $EDPM_COMPUTE_NAME | awk 'NF>1{print $NF}' | cut -d/ -f1 )
+IP_ADRESS_SUFFIX=${IP_ADRESS_SUFFIX:-"$((100+${EDPM_COMPUTE_SUFFIX}))"}
+IP="192.168.122.${IP_ADRESS_SUFFIX}"
 SSH_KEY="$SCRIPTPATH/../../out/edpm/ansibleee-ssh-key-id_rsa"
 SSH_OPT="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $SSH_KEY"
 CMDS_FILE="/tmp/edpm_compute_repos"
