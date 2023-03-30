@@ -23,18 +23,14 @@
       retries: 30
       delay: 30
 
-    - name: Configure local storage
-      community.general.make:
-        chdir: "{{ install_yamls_basedir }}"
-        target: crc_storage
-        params:  &install_yamls_out
-          OUT: "{{ install_yamls_basedir }}/out"
-
+      # Note(chandan): Use default crc storage class `crc-csi-hostpath-provisioner`
     - name: Deploy OpenStack
       community.general.make:
         chdir: "{{ install_yamls_basedir }}"
         target: openstack_deploy
-        params: *install_yamls_out
+        params:
+          OUT: "{{ install_yamls_basedir }}/out"
+          STORAGE_CLASS: crc-csi-hostpath-provisioner
 
     - name: Make sure Nova api service is up and running
       ansible.builtin.shell: |
