@@ -103,13 +103,6 @@ Enable repositories:
 make edpm_compute_repos
 ```
 
-Discover IP of the compute node VM:
-```
-virsh --connect=qemu:///system -q domifaddr edpm-compute-0 | awk 'NF>1{print $NF}' | cut -d/ -f1
-# wait until ip address appears, then assign to a variable
-COMPUTE_IP=$(virsh --connect=qemu:///system -q domifaddr edpm-compute-0 | awk 'NF>1{print $NF}' | cut -d/ -f1 )
-```
-
 Execute the edpm_deploy step:
 ```
 cd ..
@@ -121,6 +114,8 @@ You can also deploy additional compute node VMs:
 # Set $EDPM_COMPUTE_SUFFIX to create additional VM's beyond 0:
 make edpm_compute EDPM_COMPUTE_SUFFIX=1
 ```
+The IP of the compute node will be statically assigned starting at
+192.168.122.100 (based on the default EDPM_COMPUTE_SUFFIX=0).
 
 Then edit inventory in edpm/edpm-play.yaml.
 
