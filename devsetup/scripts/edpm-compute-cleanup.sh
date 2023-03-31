@@ -21,12 +21,6 @@ EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
 CRC_POOL=${CRC_POOL:-"$HOME/.crc/machines/crc"}
 OUTPUT_BASEDIR=${OUTPUT_BASEDIR:-"../out/edpm/"}
 
-XML="$(virsh net-dumpxml default | grep $EDPM_COMPUTE_NAME \
-    | sed -e 's/^[ \t]*//' | tr -d '\n')"
-if [[ -n "$XML" ]]; then
-    virsh net-update default delete ip-dhcp-host --config --live --xml "$XML"
-fi
-
 virsh destroy edpm-compute-${EDPM_COMPUTE_SUFFIX} || :
 virsh undefine --snapshots-metadata --remove-all-storage edpm-compute-${EDPM_COMPUTE_SUFFIX} || :
 rm -f "${CRC_POOL}/edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2"
