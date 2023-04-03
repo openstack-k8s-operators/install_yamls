@@ -102,6 +102,12 @@ edpm_play: ## Deploy EDPM node using openstackansibleee resource
 	    -e "s|_EDPM_NOVA_NOTIFICATIONS_TRANSPORT_URL_|${EDPM_NOVA_NOTIFICATIONS_TRANSPORT_URL}|g" \
 	    ${EDPM_PLAY_CRD} | oc create -f -
 
+.PHONY: edpm_deploy_instance
+edpm_deploy_instance: ## Spin a instance on edpm node
+	-oc rsh openstackclient sudo touch /dev/log && ls /dev/log # Workaround for lp/1999553
+	-oc cp scripts/edpm-deploy-instance.sh openstackclient:/tmp/
+	-oc rsh openstackclient bash /tmp/edpm-deploy-instance.sh
+
 .PHONY: edpm_play_cleanup
 edpm_play_cleanup: ## Cleanup EDPM openstackansibleee resource
 	-oc delete openstackansibleee deploy-external-dataplane-compute
