@@ -213,6 +213,4 @@ if [ ! -f ${DISK_FILEPATH} ]; then
 fi
 
 virsh define "${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}.xml"
-virt-copy-out -d ${EDPM_COMPUTE_NAME} /root/.ssh/id_rsa.pub "${OUTPUT_BASEDIR}"
-mv -f "${OUTPUT_BASEDIR}/id_rsa.pub" "${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}-id_rsa.pub"
 virsh start ${EDPM_COMPUTE_NAME}
