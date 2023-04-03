@@ -163,47 +163,7 @@ openstack network agent list
 
 ## Simple steps to validate the deployment
 
-Inside the openstackclient pod run
-
-* create image
-```bash
-curl -L -o /tmp/cirros.img http://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img
-qemu-img convert -O raw /tmp/cirros.img /tmp/cirros.raw
-openstack image create --container-format bare --disk-format raw --file /tmp/cirros.raw cirros
 ```
-
-* create networks
-```bash
-openstack network create private --share
-openstack subnet create priv_sub --subnet-range 192.168.0.0/24 --network private
-openstack network create public --external  --provider-network-type flat --provider-physical-network datacentre
-openstack subnet create pub_sub --subnet-range 192.168.122.0/24 --allocation-pool start=192.168.122.200,end=192.168.122.210 --gateway 192.168.122.1 --no-dhcp --network public
-openstack router create priv_router
-openstack router add subnet priv_router priv_sub
-openstack router set priv_router --external-gateway public
-```
-
-* create flavor
-```bash
-openstack flavor create --ram 512 --vcpus 1 --disk 1 --ephemeral 1 m1.small
-```
-
-*create an instance
-```bash
-openstack server create --flavor m1.small --image cirros --nic net-id=private test
-openstack floating ip create public --floating-ip-address 192.168.122.20
-openstack server add floating ip test 192.168.122.20
-openstack server list
-+--------------------------------------+------+--------+---------------------------------------+--------+----------+
-| ID                                   | Name | Status | Networks                              | Image  | Flavor   |
-+--------------------------------------+------+--------+---------------------------------------+--------+----------+
-| a45e1674-cc72-4b19-b852-2d0d44f2e9c9 | test | ACTIVE | private=192.168.0.77, 192.168.122.20  | cirros | m1.small |
-+--------------------------------------+------+--------+---------------------------------------+--------+----------+
-
-openstack security group rule create --protocol icmp --ingress --icmp-type -1 $(openstack security group list --project admin -f value -c ID)
-openstack security group rule create --protocol tcp --ingress --dst-port 22 $(openstack security group list --project admin -f value -c ID)
-
-# check connectivity via FIP
-ping -c4 192.168.122.20
-
+cd devsetup
+make edpm_deploy_instance
 ```
