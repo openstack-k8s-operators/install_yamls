@@ -24,4 +24,3 @@ OUTPUT_BASEDIR=${OUTPUT_BASEDIR:-"../out/edpm/"}
 virsh destroy edpm-compute-${EDPM_COMPUTE_SUFFIX} || :
 virsh undefine --snapshots-metadata --remove-all-storage edpm-compute-${EDPM_COMPUTE_SUFFIX} || :
 rm -f "${CRC_POOL}/edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2"
-rm -f ${OUTPUT_BASEDIR}/edpm-compute-*-id_rsa.pub
