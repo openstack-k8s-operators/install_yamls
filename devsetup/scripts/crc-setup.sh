@@ -50,7 +50,7 @@ ${CRC_BIN} config set cpus ${CPUS}
 ${CRC_BIN} config set memory ${MEMORY}
 ${CRC_BIN} config set disk-size ${DISK}
 if [ -n ${CRC_BUNDLE} ]; then
-  ${CRC_BIN} config set bundle ${CRC_BUNDLE}
+    ${CRC_BIN} config set bundle ${CRC_BUNDLE}
 fi
 ${CRC_BIN} setup
 

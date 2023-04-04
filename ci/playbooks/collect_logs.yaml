@@ -1,18 +1,20 @@
 ---
 - hosts: all
+  name: Create log dir on controller
   gather_facts: false
   tasks:
     - name: Create log dir
-      file:
+      ansible.builtin.file:
         path: "{{ ansible_user_dir }}/zuul-output/logs"
         state: directory
         mode: 0755
 
 - hosts: controller
+  name: Collect logs on the controller
   gather_facts: false
   tasks:
     - name: Create log dir
-      file:
+      ansible.builtin.file:
         path: "{{ ansible_user_dir }}/zuul-output/logs/controller"
         state: directory
         mode: 0755
@@ -51,11 +53,13 @@
         chdir: "{{ ansible_user_dir }}/zuul-output/logs/controller"
       changed_when: true
       ignore_errors: true
+      tags:
+        - skip_ansible_lint
 
 - hosts: all
+  name: Copy files from controller on node
   gather_facts: false
   tasks:
-    - name: Copy files from {{ work_dir }} on node
-      include_role:
+    - name: Copy files from controller on node
+      ansible.builtin.include_role:
         name: fetch-output
-

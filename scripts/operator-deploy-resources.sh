@@ -20,7 +20,7 @@ set -x
 # This will help smooth-out potentially transient errors resulting from:
 #   1. OLM being slow to install CRDs
 #   2. OLM installing webhook configuration quickly, but the operator's
-#      controller-manager pod being slow to reach the ready state 
+#      controller-manager pod being slow to reach the ready state
 #
 
 if [ -z "$DEPLOY_DIR" ]; then
