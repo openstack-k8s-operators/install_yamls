@@ -56,6 +56,18 @@
       tags:
         - skip_ansible_lint
 
+    - name: Install ansible.posix
+      ansible.builtin.shell: |
+        ansible-galaxy collection install ansible.posix
+
+    - name: Collect logs from EDPM VM
+      ansible.builtin.shell: |
+        ansible-playbook collect_edpm_logs.yaml --ssh-common-args='-o StrictHostKeyChecking=no' -i 192.168.122.100,
+      args:
+        chdir: "{{ ansible_user_dir }}/src/github.com/openstack-k8s-operators/install_yamls/ci/playbooks"
+      changed_when: true
+      ignore_errors: true
+
 - hosts: all
   name: Copy files from controller on node
   gather_facts: false

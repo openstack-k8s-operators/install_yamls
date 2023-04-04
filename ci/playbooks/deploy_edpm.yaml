@@ -1,0 +1,78 @@
+---
+- hosts: controller
+  vars:
+    install_yamls_basedir: "{{ ansible_user_dir }}/src/github.com/openstack-k8s-operators/install_yamls"
+  tasks:
+    - name: Install libguestfs-tools-c package
+      become: true
+      package:
+        name: libguestfs-tools-c
+        state: present
+
+    - name: Run make edpm_compute
+      community.general.make:
+        target: edpm_compute
+        chdir: "{{ install_yamls_basedir }}/devsetup"
+        params:
+          OUT: "{{ install_yamls_basedir }}/out"
+          EDPM_COMPUTE_SUFFIX: 0
+
+    - name: Sleep for 60 secs to get compute node up
+      ansible.builtin.shell: |
+        sleep 60;
+
+    - name: Run make edpm_compute_repos
+      community.general.make:
+        target: edpm_compute_repos
+        chdir: "{{ install_yamls_basedir }}/devsetup"
+        params:
+          EDPM_COMPUTE_SUFFIX: 0
+
+    - name: Run EDPM Deploy
+      community.general.make:
+        target: edpm_deploy
+        chdir: "{{ install_yamls_basedir }}"
+        params:
+          OUT: "{{ install_yamls_basedir }}/out"
+          DATAPLANE_CHRONY_NTP_SERVER:  pool.ntp.org
+
+    - name: Get info about dataplane node
+      ansible.builtin.shell: |
+        sleep 60;
+        oc get openstackdataplane
+        oc get openstackdataplanerole
+        oc get openstackdataplanenode
+        oc get pods | grep edpm
+      ignore_errors: true
+
+    - name: Get nova-edpm-compute-0-deploy-nova pod name
+      register: edpm_pod
+      ansible.builtin.shell:
+        cmd: oc get pods -o name | grep -m1  nova-edpm-compute-0-deploy-nova
+        executable: /bin/bash
+      until: edpm_pod.rc == 0
+      retries: 150
+      delay: 50
+
+    - name: Wait for nova-edpm-compute-0-deploy-nova pod to finish
+      register: deploy_status
+      ansible.builtin.shell:
+        cmd: "oc wait --timeout=0 --for=jsonpath='{.status.phase}'=Succeeded {{ edpm_pod.stdout |trim }}"
+      until: deploy_status.rc == 0
+      retries: 100
+      delay: 20
+
+    - name: Get the logs of EDPM Play
+      ansible.builtin.shell:
+        for POD in $(oc get pods -o name | egrep "dataplane-deployment-|nova-edpm-compute"); do echo $POD; oc logs $POD; done
+
+    - name: Run validations on EDPM node
+      community.general.make:
+        target: edpm_deploy_instance
+        chdir: "{{ install_yamls_basedir }}/devsetup"
+      register: validation_log
+
+    - name: Dump validation logs
+      ansible.builtin.copy:
+        content: "{{ validation_log.stdout }}"
+        dest: "{{ install_yamls_basedir }}/out/openstack/edpm_validation.log"

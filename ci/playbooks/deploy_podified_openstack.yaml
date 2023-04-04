@@ -26,6 +26,10 @@
       retries: 30
       delay: 30
 
+    - name: Disable the openshift-marketplace
+      ansible.builtin.shell: |
+        oc patch operatorhubs/cluster --type merge --patch '{"spec":{"sources":[{"disabled": true,"name": "redhat-marketplace"}]}}'
+
       # Note(chandan): Use default crc storage class `crc-csi-hostpath-provisioner`
     - name: Deploy OpenStack
       community.general.make:
@@ -61,3 +65,7 @@
         oc get secrets;
         oc rsh openstackclient openstack compute service list;
         oc rsh openstackclient openstack network agent list;
+
+    - name: Restart nova-scheduler to pick up cell1
+      ansible.builtin.shell: |
+        oc delete pod -l service=nova-scheduler
