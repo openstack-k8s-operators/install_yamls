@@ -129,12 +129,10 @@ cat <<EOF >${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}.xml
       <model type='virtio'/>
       <address type='pci' domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>
     </interface>
-    <serial type='stdio'>
-      <target type='isa-serial' port='0'>
-        <model name='isa-serial'/>
-      </target>
+    <serial type='pty'>
+      <target port='0'/>
     </serial>
-    <console type='stdio'>
+    <console type='pty'>
       <target type='serial' port='0'/>
     </console>
     <input type='mouse' bus='ps2'/>
