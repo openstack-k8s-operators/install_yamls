@@ -325,8 +325,8 @@ openstack_cleanup: ## deletes the operator, but does not cleanup the service res
 	$(eval $(call vars,$@,openstack))
 	bash scripts/operator-cleanup.sh
 	rm -Rf ${OPERATOR_DIR}
-	oc delete subscription openstack-storage-operators-alpha-openstack-operator-index-openstack --ignore-not-found=false
-	oc delete csv openstack-storage-operators.v0.0.1 --ignore-not-found=false
+	oc delete subscription openstack-storage-operators-alpha-openstack-operator-index-openstack --ignore-not-found=true
+	oc delete csv openstack-storage-operators.v0.0.1 --ignore-not-found=true
 
 .PHONY: openstack_deploy_prep
 openstack_deploy_prep: export KIND=OpenStackControlPlane
