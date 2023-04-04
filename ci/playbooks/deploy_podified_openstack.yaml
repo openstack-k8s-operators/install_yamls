@@ -4,22 +4,25 @@
 # We can override the openstack operator image by defining openstack_img in the zuul job
 
 - hosts: controller
+  name: Deploy podified control plane
   vars:
     install_yamls_basedir: "{{ ansible_user_dir }}/src/github.com/openstack-k8s-operators/install_yamls"
   tasks:
     - name: Add crc creds
-      include_role:
+      ansible.builtin.include_role:
         name: rhol_crc
         tasks_from: add_crc_creds
 
     - name: Checkout to OpenStack Namespace
       ansible.builtin.command: oc project openstack
+      changed_when: false
 
     - name: Make sure all Openstack operators are deployed
       ansible.builtin.shell: |
-        oc get csv -l operators.coreos.com/openstack-operator.openstack --no-headers=true | grep -i "succeeded"
+        set -o pipefail && oc get csv -l operators.coreos.com/openstack-operator.openstack --no-headers=true | grep -i "succeeded"
       register: operator_status
       until: operator_status.rc == 0
+      changed_when: false
       retries: 30
       delay: 30
 
@@ -37,18 +40,21 @@
         oc get pods --selector service=nova-api -o jsonpath={.items[*].status.phase}
       register: nova_service
       until: nova_service.stdout == "Running"
+      changed_when: false
       retries: 100
       delay: 50
 
     - name: List compute services and make sure they are enabled
       ansible.builtin.shell: |
-        oc rsh openstackclient openstack compute service list | grep enabled
+        set -o pipefail && oc rsh openstackclient openstack compute service list | grep enabled
       register: nova_api_status
       until: nova_api_status.rc == 0
+      changed_when: false
       retries: 50
       delay: 50
 
     - name: Print Pod and OpenStack resources Status
+      changed_when: false
       ansible.builtin.shell: |
         oc get pv;
         oc get pods;
