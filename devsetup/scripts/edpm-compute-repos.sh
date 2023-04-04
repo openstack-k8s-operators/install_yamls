@@ -20,9 +20,9 @@ EDPM_COMPUTE_SUFFIX=${1:-"0"}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
 IP_ADRESS_SUFFIX=${IP_ADRESS_SUFFIX:-"$((100+${EDPM_COMPUTE_SUFFIX}))"}
 IP="192.168.122.${IP_ADRESS_SUFFIX}"
-SSH_KEY="$SCRIPTPATH/../../out/edpm/ansibleee-ssh-key-id_rsa"
+SSH_KEY=${SSH_KEY:-"${SCRIPTPATH}/../../out/edpm/ansibleee-ssh-key-id_rsa"}
 SSH_OPT="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $SSH_KEY"
-CMDS_FILE="/tmp/edpm_compute_repos"
+CMDS_FILE=${CMDS_FILE:-"/tmp/edpm_compute_repos"}
 
 if [[ ! -f $SSH_KEY ]]; then
     echo "$SSH_KEY is missing"
@@ -40,6 +40,6 @@ popd
 sudo /usr/local/bin/repo-setup current-podified-dev
 EOF
 
-scp $SSH_OPT $CMDS_FILE root@$IP:$CMDS_FILE
-ssh $SSH_OPT root@$IP "bash $CMDS_FILE; rm -f $CMDS_FILE"
+scp $SSH_OPT $CMDS_FILE root@$IP:/tmp/repo-setup.sh
+ssh $SSH_OPT root@$IP "bash /tmp/repo-setup.sh; rm -f /tmp/repo-setup.sh"
 rm -f $CMDS_FILE
