@@ -188,7 +188,7 @@ openstack router set priv_router --external-gateway public
 openstack flavor create --ram 512 --vcpus 1 --disk 1 --ephemeral 1 m1.small
 ```
 
-*create an instance
+* create an instance
 ```bash
 openstack server create --flavor m1.small --image cirros --nic net-id=private test
 openstack floating ip create public --floating-ip-address 192.168.122.20
