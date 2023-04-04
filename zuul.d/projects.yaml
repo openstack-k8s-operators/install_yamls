@@ -4,3 +4,4 @@
     github-check:
       jobs:
         - centos-9-crc-singlenode-podified-deployment
+        - centos-9-crc-singlenode-podified-edpm-deployment
