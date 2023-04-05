@@ -58,7 +58,7 @@ resources:
 namespace: ${NAMESPACE}
 patches:
 - target:
-    kind: Ceilometer
+    kind: Telemetry
   patch: |-
     - op: replace
       path: /spec/secret
