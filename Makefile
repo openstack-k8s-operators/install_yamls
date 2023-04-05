@@ -75,6 +75,8 @@ GLANCE_BRANCH       ?= master
 GLANCE              ?= config/samples/glance_v1beta1_glance.yaml
 GLANCE_CR           ?= ${OPERATOR_BASE_DIR}/glance-operator/${GLANCE}
 GLANCEAPI_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-glance-api:current-tripleo
+GLANCE_KUTTL_CONF   ?= ${OPERATOR_BASE_DIR}/glance-operator/kuttl-test.yaml
+GLANCE_KUTTL_DIR    ?= ${OPERATOR_BASE_DIR}/glance-operator/tests/kuttl/tests
 
 # Ovn
 OVN_IMG             ?= quay.io/openstack-k8s-operators/ovn-operator-index:latest
@@ -1052,6 +1054,16 @@ ansibleee_kuttl_prep: ansibleee_kuttl_cleanup
 ansibleee_kuttl: namespace input openstack_crds ansibleee_kuttl_prep ansibleee ## runs kuttl tests for the openstack-ansibleee operator. Installs openstack crds and openstack-ansibleee operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make ansibleee_kuttl_run
 	make ansibleee_cleanup
+
+.PHONY: glance_kuttl_run
+glance_kuttl_run: ## runs kuttl tests for the glance operator, assumes that everything needed for running the test was deployed beforehand.
+	kubectl-kuttl test --config ${GLANCE_KUTTL_CONF} ${GLANCE_KUTTL_DIR}
+
+.PHONY: glance_kuttl
+glance_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy glance_deploy_prep glance ## runs kuttl tests for the glance operator. Installs openstack crds and ... and glance operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	make glance_kuttl_run
+	make deploy_cleanup
+	make cleanup
 
 ##@ HORIZON
 .PHONY: horizon_prep
