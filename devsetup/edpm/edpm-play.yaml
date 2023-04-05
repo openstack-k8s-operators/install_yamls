@@ -9,34 +9,34 @@ spec:
   # or args, which allows specify the whole command that we want to execute
   play: |
     - name: Deploy EDPM facts playbook
-      ansible.builtin.import_playbook: deploy-edpm-facts.yml
+      ansible.builtin.import_playbook: osp.edpm.deploy_edpm_facts
 
     - name: Deploy EDPM pre-network playbook
-      ansible.builtin.import_playbook: deploy-edpm-pre-network.yml
+      ansible.builtin.import_playbook: osp.edpm.deploy_edpm_pre_network
 
     - name: Deploy EDPM network playbook
-      ansible.builtin.import_playbook: deploy-edpm-network-configure.yml
+      ansible.builtin.import_playbook: osp.edpm.deploy_edpm_network_configure
 
     - name: Deploy EDPM network validation playbook
-      ansible.builtin.import_playbook: deploy-edpm-network-validate.yml
+      ansible.builtin.import_playbook: osp.edpm.deploy_edpm_network_validate
 
     - name: Deploy EDPM install operating system playbook
-      ansible.builtin.import_playbook: deploy-edpm-os-install.yml
+      ansible.builtin.import_playbook: osp.edpm.deploy_edpm_os_install
 
     - name: Deploy EDPM configure operating system playbook
-      ansible.builtin.import_playbook: deploy-edpm-os-configure.yml
+      ansible.builtin.import_playbook: osp.edpm.deploy_edpm_os_configure
 
     - name: Deploy EDPM run operating system playbook
-      ansible.builtin.import_playbook: deploy-edpm-os-run.yml
+      ansible.builtin.import_playbook: osp.edpm.deploy_edpm_os_run
 
     - name: Deploy EDPM install OpenStack playbook
-      ansible.builtin.import_playbook: deploy-edpm-openstack-install.yml
+      ansible.builtin.import_playbook: osp.edpm.deploy_edpm_openstack_install
 
     - name: Deploy EDPM configure OpenStack playbook
-      ansible.builtin.import_playbook: deploy-edpm-openstack-configure.yml
+      ansible.builtin.import_playbook: osp.edpm.deploy_edpm_openstack_configure
 
     - name: Deploy EDPM run OpenStack playbook
-      ansible.builtin.import_playbook: deploy-edpm-openstack-run.yml
+      ansible.builtin.import_playbook: osp.edpm.deploy_edpm_openstack_run
   image: "_OPENSTACK_RUNNER_IMG_"
   inventory: |
     allovercloud:
