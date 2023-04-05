@@ -38,14 +38,14 @@ MEMCACHED_CR        ?= ${OPERATOR_BASE_DIR}/infra-operator/${MEMCACHED}
 MEMCACHED_DEPL_IMG  ?= unused
 
 # Keystone
-KEYSTONE_IMG        ?= quay.io/openstack-k8s-operators/keystone-operator-index:latest
-KEYSTONE_REPO       ?= https://github.com/openstack-k8s-operators/keystone-operator.git
-KEYSTONE_BRANCH     ?= master
-KEYSTONEAPI         ?= config/samples/keystone_v1beta1_keystoneapi.yaml
-KEYSTONEAPI_CR      ?= ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
-KEYSTONEAPI_IMG     ?= unused
-KEYSTONE_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.yaml
-KEYSTONE_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
+KEYSTONE_IMG         ?= quay.io/openstack-k8s-operators/keystone-operator-index:latest
+KEYSTONE_REPO        ?= https://github.com/openstack-k8s-operators/keystone-operator.git
+KEYSTONE_BRANCH      ?= master
+KEYSTONEAPI          ?= config/samples/keystone_v1beta1_keystoneapi.yaml
+KEYSTONEAPI_CR       ?= ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
+KEYSTONEAPI_DEPL_IMG ?= unused
+KEYSTONE_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.yaml
+KEYSTONE_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
 
 # Mariadb
 MARIADB_IMG         ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
@@ -58,12 +58,12 @@ MARIADB_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
 MARIADB_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
 
 # Placement
-PLACEMENT_IMG       ?= quay.io/openstack-k8s-operators/placement-operator-index:latest
-PLACEMENT_REPO      ?= https://github.com/openstack-k8s-operators/placement-operator.git
-PLACEMENT_BRANCH    ?= master
-PLACEMENTAPI        ?= config/samples/placement_v1beta1_placementapi.yaml
-PLACEMENTAPI_CR     ?= ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI}
-PLACEMENTAPI_IMG    ?= unused
+PLACEMENT_IMG         ?= quay.io/openstack-k8s-operators/placement-operator-index:latest
+PLACEMENT_REPO        ?= https://github.com/openstack-k8s-operators/placement-operator.git
+PLACEMENT_BRANCH      ?= master
+PLACEMENTAPI          ?= config/samples/placement_v1beta1_placementapi.yaml
+PLACEMENTAPI_CR       ?= ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI}
+PLACEMENTAPI_DEPL_IMG ?= unused
 
 # Sir Glancealot
 GLANCE_IMG          ?= quay.io/openstack-k8s-operators/glance-operator-index:latest
@@ -71,7 +71,7 @@ GLANCE_REPO         ?= https://github.com/openstack-k8s-operators/glance-operato
 GLANCE_BRANCH       ?= master
 GLANCE              ?= config/samples/glance_v1beta1_glance.yaml
 GLANCE_CR           ?= ${OPERATOR_BASE_DIR}/glance-operator/${GLANCE}
-GLANCEAPI_IMG       ?= unused
+GLANCEAPI_DEPL_IMG  ?= unused
 GLANCE_KUTTL_CONF   ?= ${OPERATOR_BASE_DIR}/glance-operator/kuttl-test.yaml
 GLANCE_KUTTL_DIR    ?= ${OPERATOR_BASE_DIR}/glance-operator/tests/kuttl/tests
 
@@ -103,7 +103,7 @@ NEUTRON_REPO        ?= https://github.com/openstack-k8s-operators/neutron-operat
 NEUTRON_BRANCH      ?= master
 NEUTRONAPI          ?= config/samples/neutron_v1beta1_neutronapi.yaml
 NEUTRONAPI_CR       ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
-NEUTRONAPI_IMG      ?= unused
+NEUTRONAPI_DEPL_IMG ?= unused
 # TODO: Do we need interfaces to customize images for the other services ?
 NEUTRON_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/neutron-operator/kuttl-test.yaml
 NEUTRON_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/neutron-operator/test/kuttl/tests
@@ -140,7 +140,7 @@ IRONIC_KUTTL_DIR    ?= ${OPERATOR_BASE_DIR}/ironic-operator/tests/kuttl/tests
 OCTAVIA_IMG         ?= quay.io/openstack-k8s-operators/octavia-operator-index:latest
 OCTAVIA_REPO        ?= https://github.com/openstack-k8s-operators/octavia-operator.git
 OCTAVIA_BRANCH      ?= main
-OCTAVIA    	        ?= config/samples/octavia_v1beta1_octavia.yaml
+OCTAVIA             ?= config/samples/octavia_v1beta1_octavia.yaml
 OCTAVIA_CR          ?= ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIA}
 # TODO: Image customizations for all Octavia services
 OCTAVIA_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/octavia-operator/kuttl-test.yaml
@@ -213,14 +213,14 @@ CEPH_IMG            ?= quay.io/ceph/demo:latest
 NNCP_INTERFACE      ?= enp6s0
 
 # Telemetry
-TELEMETRY_IMG               ?= quay.io/openstack-k8s-operators/telemetry-operator-index:latest
-TELEMETRY_REPO              ?= https://github.com/openstack-k8s-operators/telemetry-operator.git
-TELEMETRY_BRANCH            ?= main
-TELEMETRY                   ?= config/samples/telemetry_v1beta1_telemetry.yaml
-TELEMETRY_CR                ?= ${OPERATOR_BASE_DIR}/telemetry-operator/${TELEMETRY}
-CEILOMETER_CENTRAL_IMG      ?= unused
-CEILOMETER_NOTIFICATION_IMG ?= unused
-SG_CORE_IMG                 ?= unused
+TELEMETRY_IMG                    ?= quay.io/openstack-k8s-operators/telemetry-operator-index:latest
+TELEMETRY_REPO                   ?= https://github.com/openstack-k8s-operators/telemetry-operator.git
+TELEMETRY_BRANCH                 ?= main
+TELEMETRY                        ?= config/samples/telemetry_v1beta1_telemetry.yaml
+TELEMETRY_CR                     ?= ${OPERATOR_BASE_DIR}/telemetry-operator/${TELEMETRY}
+CEILOMETER_CENTRAL_DEPL_IMG      ?= unused
+CEILOMETER_NOTIFICATION_DEPL_IMG ?= unused
+SG_CORE_DEPL_IMG                 ?= unused
 
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
@@ -458,7 +458,7 @@ keystone_cleanup: ## deletes the operator, but does not cleanup the service reso
 
 .PHONY: keystone_deploy_prep
 keystone_deploy_prep: export KIND=KeystoneAPI
-keystone_deploy_prep: export IMAGE=${KEYSTONEAPI_IMG}
+keystone_deploy_prep: export IMAGE=${KEYSTONEAPI_DEPL_IMG}
 keystone_deploy_prep: keystone_deploy_cleanup ## prepares the CR to install the service based on the service sample file KEYSTONEAPI
 	$(eval $(call vars,$@,keystone))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -544,7 +544,7 @@ placement_cleanup: ## deletes the operator, but does not cleanup the service res
 
 .PHONY: placement_deploy_prep
 placement_deploy_prep: export KIND=PlacementAPI
-placement_deploy_prep: export IMAGE=${PLACEMENTAPI_IMG}
+placement_deploy_prep: export IMAGE=${PLACEMENTAPI_DEPL_IMG}
 placement_deploy_prep: placement_deploy_cleanup ## prepares the CR to install the service based on the service sample file PLACEMENTAPI
 	$(eval $(call vars,$@,placement))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -584,7 +584,7 @@ glance_cleanup: ## deletes the operator, but does not cleanup the service resour
 
 .PHONY: glance_deploy_prep
 glance_deploy_prep: export KIND=Glance
-glance_deploy_prep: export IMAGE=${GLANCEAPI_IMG}
+glance_deploy_prep: export IMAGE=${GLANCEAPI_DEPL_IMG}
 glance_deploy_prep: glance_deploy_cleanup ## prepares the CR to install the service based on the service sample file GLANCE
 	$(eval $(call vars,$@,glance))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -702,7 +702,7 @@ neutron_cleanup: ## deletes the operator, but does not cleanup the service resou
 
 .PHONY: neutron_deploy_prep
 neutron_deploy_prep: export KIND=NeutronAPI
-neutron_deploy_prep: export IMAGE=${NEUTRONAPI_IMG}
+neutron_deploy_prep: export IMAGE=${NEUTRONAPI_DEPL_IMG}
 neutron_deploy_prep: neutron_deploy_cleanup ## prepares the CR to install the service based on the service sample file NEUTRONAPI
 	$(eval $(call vars,$@,neutron))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -1332,9 +1332,9 @@ telemetry_cleanup: ## deletes the operator, but does not cleanup the service res
 
 .PHONY: telemetry_deploy_prep
 telemetry_deploy_prep: export KIND=Telemetry
-telemetry_deploy_prep: export CENTRAL_IMAGE=${CEILOMETER_CENTRAL_IMG}
-telemetry_deploy_prep: export NOTIFICATION_IMAGE=${CEILOMETER_NOTIFICATION_IMG}
-telemetry_deploy_prep: export SG_CORE_IMAGE=${SG_CORE_IMG}
+telemetry_deploy_prep: export CENTRAL_IMAGE=${CEILOMETER_CENTRAL_DEPL_IMG}
+telemetry_deploy_prep: export NOTIFICATION_IMAGE=${CEILOMETER_NOTIFICATION_DEPL_IMG}
+telemetry_deploy_prep: export SG_CORE_IMAGE=${SG_CORE_DEPL_IMG}
 telemetry_deploy_prep: telemetry_deploy_cleanup ## prepares the CR to install the service based on the service sample file TELEMETRY
 	$(eval $(call vars,$@,telemetry))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
