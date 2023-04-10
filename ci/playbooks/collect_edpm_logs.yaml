@@ -8,7 +8,7 @@
     - name: Install ansible
       become: true
       package:
-        name: 
+        name:
           - ansible-core
           - rsync
         state: present
