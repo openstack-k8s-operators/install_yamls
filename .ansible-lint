@@ -1,0 +1,2 @@
+warn_list:
+  - syntax-check[specific] # couldn't resolve module/action "foo"
