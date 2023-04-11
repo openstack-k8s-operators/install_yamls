@@ -23,12 +23,13 @@ STORAGE_CLASS       ?= "local-storage"
 NETWORK_ISOLATION   ?= true
 
 # OpenStack Operator
-OPENSTACK_IMG        ?= quay.io/openstack-k8s-operators/openstack-operator-index:latest
-OPENSTACK_REPO       ?= https://github.com/openstack-k8s-operators/openstack-operator.git
-OPENSTACK_BRANCH     ?= master
-OPENSTACK_CTLPLANE   ?= $(if $(findstring true,$(NETWORK_ISOLATION)),config/samples/core_v1beta1_openstackcontrolplane_network_isolation.yaml,config/samples/core_v1beta1_openstackcontrolplane.yaml)
-OPENSTACK_CR         ?= ${OPERATOR_BASE_DIR}/openstack-operator/${OPENSTACK_CTLPLANE}
-OPENSTACK_BUNDLE_IMG ?= quay.io/openstack-k8s-operators/openstack-operator-bundle:latest
+OPENSTACK_IMG                ?= quay.io/openstack-k8s-operators/openstack-operator-index:latest
+OPENSTACK_REPO               ?= https://github.com/openstack-k8s-operators/openstack-operator.git
+OPENSTACK_BRANCH             ?= master
+OPENSTACK_CTLPLANE           ?= $(if $(findstring true,$(NETWORK_ISOLATION)),config/samples/core_v1beta1_openstackcontrolplane_network_isolation.yaml,config/samples/core_v1beta1_openstackcontrolplane.yaml)
+OPENSTACK_CR                 ?= ${OPERATOR_BASE_DIR}/openstack-operator/${OPENSTACK_CTLPLANE}
+OPENSTACK_BUNDLE_IMG         ?= quay.io/openstack-k8s-operators/openstack-operator-bundle:latest
+OPENSTACK_STORAGE_BUNDLE_IMG ?= quay.io/openstack-k8s-operators/openstack-operator-storage-bundle:latest
 
 # Infra Operator
 INFRA_IMG        ?= quay.io/openstack-k8s-operators/infra-operator-index:latest
@@ -393,6 +394,11 @@ openstack_crds: ## installs all openstack CRDs. Useful for infrastructure dev
 	skopeo copy "docker://${OPENSTACK_BUNDLE_IMG}" dir:${OUT}/openstack_crds
 	for X in $$(file ${OUT}/openstack_crds/* | grep gzip | cut -f 1 -d ':'); do tar xvf $$X -C ${OUT}/openstack_crds/; done
 	for X in $$(grep -l CustomResourceDefinition ${OUT}/openstack_crds/manifests/*); do oc apply -f $$X; done
+
+.PHONY: openstack_storage_crds
+openstack_storage_crds: export OPENSTACK_BUNDLE_IMG=${OPENSTACK_STORAGE_BUNDLE_IMG}
+openstack_storage_crds: ## installs storage openstack CRDs. Useful for infrastructure dev
+	make openstack_crds
 
 ##@ INFRA
 .PHONY: infra_prep
@@ -958,7 +964,7 @@ cinder_kuttl_run: ## runs kuttl tests for the cinder operator, assumes that ever
 	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${CINDER_KUTTL_CONF} ${CINDER_KUTTL_DIR}
 
 .PHONY: cinder_kuttl
-cinder_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy rabbitmq rabbitmq_deploy keystone_deploy_prep keystone keystone_deploy cinder_deploy_prep cinder infra mariadb_deploy_validate ## runs kuttl tests for the cinder operator. Installs openstack crds and cinder operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+cinder_kuttl: namespace input openstack_crds openstack_storage_crds deploy_cleanup mariadb mariadb_deploy rabbitmq rabbitmq_deploy keystone_deploy_prep keystone keystone_deploy cinder_deploy_prep cinder infra mariadb_deploy_validate ## runs kuttl tests for the cinder operator. Installs openstack crds and cinder operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make cinder_kuttl_run
 	make infra_cleanup
 	make rabbitmq_deploy_cleanup
@@ -1060,7 +1066,7 @@ glance_kuttl_run: ## runs kuttl tests for the glance operator, assumes that ever
 	kubectl-kuttl test --config ${GLANCE_KUTTL_CONF} ${GLANCE_KUTTL_DIR}
 
 .PHONY: glance_kuttl
-glance_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy glance_deploy_prep glance ## runs kuttl tests for the glance operator. Installs openstack crds and ... and glance operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+glance_kuttl: namespace input openstack_crds openstack_storage_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy glance_deploy_prep glance ## runs kuttl tests for the glance operator. Installs openstack and openstack-storage crds, mariadb, keystone and glance operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make glance_kuttl_run
 	make deploy_cleanup
 	make cleanup
