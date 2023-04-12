@@ -170,6 +170,8 @@ HEAT_BRANCH ?= main
 HEAT        ?= config/samples/heat_v1beta1_heat.yaml
 HEAT_CR     ?= ${OPERATOR_BASE_DIR}/heat-operator/${HEAT}
 # TODO: Image customizations for all Heat services
+HEAT_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/heat-operator/kuttl-test.yaml
+HEAT_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/heat-operator/tests/kuttl/tests
 
 # AnsibleEE
 ANSIBLEEE_IMG        ?= quay.io/openstack-k8s-operators/openstack-ansibleee-operator-index:latest
@@ -1042,6 +1044,21 @@ ironic_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_depl
 
 .PHONY: ironic_kuttl_crc
 ironic_kuttl_crc: crc_storage ironic_kuttl
+
+.PHONY: heat_kuttl_run
+heat_kuttl_run: ## runs kuttl tests for the heat operator, assumes that everything needed for running the test was deployed beforehand.
+	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${HEAT_KUTTL_CONF} ${HEAT_KUTTL_DIR}
+
+.PHONY: heat_kuttl
+heat_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy heat heat_deploy_prep heat_deploy  ## runs kuttl tests for the heat operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	make heat_kuttl_run
+	make deploy_cleanup
+	make heat_cleanup
+	make keystone_cleanup
+	make mariadb_cleanup
+
+.PHONY: heat_kuttl_crc
+heat_kuttl_crc: crc_storage heat_kuttl
 
 .PHONY: ansibleee_kuttl_run
 ansibleee_kuttl_run: ## runs kuttl tests for the openstack-ansibleee operator, assumes that everything needed for running the test was deployed beforehand.
