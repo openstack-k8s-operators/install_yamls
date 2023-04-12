@@ -210,5 +210,13 @@ if [ ! -f ${DISK_FILEPATH} ]; then
     fi
 fi
 
-virsh define "${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}.xml"
-virsh start ${EDPM_COMPUTE_NAME}
+if ! virsh domuuid ${EDPM_COMPUTE_NAME}; then
+    virsh define "${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}.xml"
+else
+    echo "${EDPM_COMPUTE_NAME} already defined in libvirt, not redefining."
+fi
+if [ "$(virsh domstate ${EDPM_COMPUTE_NAME})" != "running" ]; then
+    virsh start ${EDPM_COMPUTE_NAME}
+else
+    echo "${EDPM_COMPUTE_NAME} already running."
+fi
