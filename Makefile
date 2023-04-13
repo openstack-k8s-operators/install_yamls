@@ -1,10 +1,11 @@
 # general
 SHELL := /bin/bash
-NAMESPACE           ?= openstack
-PASSWORD            ?= 12345678
-SECRET              ?= osp-secret
-OUT                 ?= ${PWD}/out
-INSTALL_YAMLS       ?= ${PWD}  # used for kuttl tests
+NAMESPACE              ?= openstack
+PASSWORD               ?= 12345678
+SECRET                 ?= osp-secret
+OUT                    ?= ${PWD}/out
+INSTALL_YAMLS          ?= ${PWD}  # used for kuttl tests
+METADATA_SHARED_SECRET ?= 1234567842
 
 # are we deploying to microshift
 MICROSHIFT ?= 0
@@ -201,7 +202,6 @@ DATAPLANE_RUNNER_IMG                             ?=quay.io/openstack-k8s-operato
 DATAPLANE_NETWORK_CONFIG_TEMPLATE                ?=templates/single_nic_vlans/single_nic_vlans.j2
 DATAPLANE_SSHD_ALLOWED_RANGES                    ?=['192.168.122.0/24']
 DATAPLANE_CHRONY_NTP_SERVER                      ?=clock.redhat.com
-DATAPLANE_OVN_METADATA_AGENT_PROXY_SHARED_SECRET ?=42
 DATAPLANE_OVN_METADATA_AGENT_BIND_HOST           ?=127.0.0.1
 DATAPLANE_SINGLE_NODE                            ?=true
 
@@ -312,7 +312,7 @@ namespace_cleanup: ## deletes the namespace specified via NAMESPACE env var, als
 .PHONY: input
 input: namespace ## creates required secret/CM, used by the services as input
 	$(eval $(call vars,$@))
-	bash scripts/gen-input-kustomize.sh ${NAMESPACE} ${SECRET} ${PASSWORD}
+	bash scripts/gen-input-kustomize.sh ${NAMESPACE} ${SECRET} ${PASSWORD} ${METADATA_SHARED_SECRET}
 	oc get secret/${SECRET} || oc kustomize ${OUT}/${NAMESPACE}/input | oc apply -f -
 
 .PHONY: input_cleanup
@@ -372,7 +372,7 @@ edpm_deploy_prep: export EDPM_NETWORK_CONFIG_TEMPLATE=${DATAPLANE_NETWORK_CONFIG
 edpm_deploy_prep: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALLOWED_RANGES}
 edpm_deploy_prep: export EDPM_CHRONY_NTP_SERVER=${DATAPLANE_CHRONY_NTP_SERVER}
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST=$(shell oc get svc nova-metadata-internal -o json |jq -r '.status.loadBalancer.ingress[0].ip')
-edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET=${DATAPLANE_OVN_METADATA_AGENT_PROXY_SHARED_SECRET}
+edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET=${METADATA_SHARED_SECRET}
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_BIND_HOST=${DATAPLANE_OVN_METADATA_AGENT_BIND_HOST}
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_TRANSPORT_URL=$(shell oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_SB_CONNECTION=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
