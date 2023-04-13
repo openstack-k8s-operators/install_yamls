@@ -19,6 +19,8 @@ OUT=${OUT:-out}
 NAMESPACE=$1
 SECRET=$2
 PASSWORD=$3
+METADATA_SHARED_SECRET=$4
+
 if [ -z "$NAMESPACE" ]; then
     echo "Please set NAMESPACE as ARG1"; exit 1
 fi
@@ -29,6 +31,10 @@ fi
 
 if [ -z "$PASSWORD" ]; then
     echo "Please set PASSWORD as ARG3"; exit 1
+fi
+
+if [ -z "$METADATA_SHARED_SECRET" ]; then
+    echo "Please set METADATA_SHARED_SECRET as ARG4"; exit 1
 fi
 
 DIR=${OUT}/${NAMESPACE}/input
@@ -74,6 +80,7 @@ secretGenerator:
   - NovaCell1MessageBusPassword=${PASSWORD}
   - ManilaDatabasePassword=${PASSWORD}
   - ManilaPassword=${PASSWORD}
+  - MetadataSecret=${METADATA_SHARED_SECRET}
 generatorOptions:
   disableNameSuffixHash: true
   labels:
