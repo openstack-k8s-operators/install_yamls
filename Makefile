@@ -204,7 +204,7 @@ DATAPLANE_COMPUTE_1_IP                           ?=192.168.122.101
 DATAPLANE_RUNNER_IMG                             ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
 DATAPLANE_NETWORK_CONFIG_TEMPLATE                ?=templates/single_nic_vlans/single_nic_vlans.j2
 DATAPLANE_SSHD_ALLOWED_RANGES                    ?=['192.168.122.0/24']
-DATAPLANE_CHRONY_NTP_SERVER                      ?=clock.redhat.com
+DATAPLANE_CHRONY_NTP_SERVER                      ?=pool.ntp.org
 DATAPLANE_OVN_METADATA_AGENT_BIND_HOST           ?=127.0.0.1
 DATAPLANE_SINGLE_NODE                            ?=true
 
