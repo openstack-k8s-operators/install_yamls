@@ -23,6 +23,7 @@ IP="192.168.122.${IP_ADRESS_SUFFIX}"
 SSH_KEY=${SSH_KEY:-"${SCRIPTPATH}/../../out/edpm/ansibleee-ssh-key-id_rsa"}
 SSH_OPT="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $SSH_KEY"
 CMDS_FILE=${CMDS_FILE:-"/tmp/edpm_compute_repos"}
+REPO_SETUP_CMD=${REPO_SETUP_CMD:-"current-podified-dev"}
 
 if [[ ! -f $SSH_KEY ]]; then
     echo "$SSH_KEY is missing"
@@ -37,7 +38,7 @@ pushd repo-setup
 sudo pip install -r requirements.txt
 sudo python3 setup.py install
 popd
-sudo /usr/local/bin/repo-setup current-podified-dev
+sudo /usr/local/bin/repo-setup ${REPO_SETUP_CMD}
 EOF
 
 scp $SSH_OPT $CMDS_FILE root@$IP:/tmp/repo-setup.sh
