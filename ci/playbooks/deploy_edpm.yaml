@@ -34,7 +34,6 @@
         chdir: "{{ install_yamls_basedir }}"
         params:
           OUT: "{{ install_yamls_basedir }}/out"
-          DATAPLANE_CHRONY_NTP_SERVER: pool.ntp.org
 
     - name: Get info about dataplane node
       ansible.builtin.shell: |
