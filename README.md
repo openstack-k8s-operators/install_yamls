@@ -135,7 +135,7 @@ oc delete pod -l service=nova-scheduler
 
 * deploy edpm compute
 ```bash
-make edpm_deploy
+DATAPLANE_SINGLE_NODE=false make edpm_deploy
 ```
 
 * wait until finished, then can check the env
@@ -145,19 +145,22 @@ openstack compute service list
 +--------------------------------------+----------------+------------------------+----------+---------+-------+----------------------------+
 | ID                                   | Binary         | Host                   | Zone     | Status  | State | Updated At                 |
 +--------------------------------------+----------------+------------------------+----------+---------+-------+----------------------------+
-| 25ce958d-5c7b-47b8-a98a-8b84fb7e8790 | nova-conductor | nova-cell0-conductor-0 | internal | enabled | up    | 2023-03-06T15:29:09.000000 |
-| 0ccc4465-f382-44db-8130-82503ad49a9a | nova-scheduler | nova-scheduler-0       | internal | enabled | up    | 2023-03-06T15:29:09.000000 |
-| b64d6016-9c58-4657-8a4d-6fc5d73a4908 | nova-conductor | nova-cell1-conductor-0 | internal | enabled | up    | 2023-03-06T15:29:06.000000 |
-| db60bfe7-be1a-4b8b-9939-5faf368ba96e | nova-compute   | edpm-compute-0         | nova     | enabled | up    | 2023-03-06T15:29:08.000000 |
+| f464521e-19d0-4b2d-9cdb-92aa17c677c9 | nova-conductor | nova-cell0-conductor-0 | internal | enabled | up    | 2023-04-11T17:36:27.000000 |
+| bdec6195-e9e0-463c-a64a-0ab0bc5238af | nova-scheduler | nova-scheduler-0       | internal | enabled | up    | 2023-04-11T17:36:19.000000 |
+| e8a6d8d1-8a56-490c-8adb-19ec8b1fb8c9 | nova-conductor | nova-cell1-conductor-0 | internal | enabled | up    | 2023-04-11T17:36:27.000000 |
+| 2833213e-7ba7-4fc2-a5b6-3467f04368e4 | nova-compute   | edpm-compute-1         | nova     | enabled | up    | 2023-04-11T17:36:23.000000 |
+| bafb827c-6380-408d-afea-2cc2167b3916 | nova-compute   | edpm-compute-0         | nova     | enabled | up    | 2023-04-11T17:36:23.000000 |
 +--------------------------------------+----------------+------------------------+----------+---------+-------+----------------------------+
 
 openstack network agent list
 +--------------------------------------+------------------------------+--------------------+-------------------+-------+-------+----------------------------+
 | ID                                   | Agent Type                   | Host               | Availability Zone | Alive | State | Binary                     |
 +--------------------------------------+------------------------------+--------------------+-------------------+-------+-------+----------------------------+
-| 03cec1ed-c20f-4f3e-9786-ad9c9b3f8937 | OVN Controller agent         | crc-9ltqk-master-0 |                   | :-)   | UP    | ovn-controller             |
-| 5d0fd2b2-e8e8-478b-b8ad-26fa5692afcd | OVN Controller Gateway agent | edpm-compute-0     |                   | :-)   | UP    | ovn-controller             |
-| e20a1b5d-990e-57cc-838d-ffe34b27bef9 | OVN Metadata agent           | edpm-compute-0     |                   | :-)   | UP    | neutron-ovn-metadata-agent |
+| 74bdefce-79df-4d0a-8bb4-1fe7cb6b0af5 | OVN Controller agent         | crc-9ltqk-master-0 |                   | :-)   | UP    | ovn-controller             |
+| b319f055-d7da-4fb3-92f2-ea30e82b7452 | OVN Controller Gateway agent | edpm-compute-0     |                   | :-)   | UP    | ovn-controller             |
+| 2fe19901-a7ee-4820-a43f-f5d32a303165 | OVN Controller Gateway agent | edpm-compute-1     |                   | :-)   | UP    | ovn-controller             |
+| 24ac30d9-35ce-5c0e-a6b1-7cb098c4ecbf | OVN Metadata agent           | edpm-compute-1     |                   | :-)   | UP    | neutron-ovn-metadata-agent |
+| 9d5bdc6f-225e-5309-8e82-c43b839996cc | OVN Metadata agent           | edpm-compute-0     |                   | :-)   | UP    | neutron-ovn-metadata-agent |
 +--------------------------------------+------------------------------+--------------------+-------------------+-------+-------+----------------------------+
 ```
 
