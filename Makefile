@@ -12,10 +12,6 @@ MICROSHIFT ?= 0
 # operators gets cloned here
 OPERATOR_BASE_DIR   ?= ${OUT}/operator
 
-# default registry and org to pull service images from
-SERVICE_REGISTRY    ?= quay.io
-SERVICE_ORG         ?= tripleozedcentos9
-
 # storage (used by some operators)
 STORAGE_CLASS       ?= "local-storage"
 
@@ -31,24 +27,25 @@ OPENSTACK_CR         ?= ${OPERATOR_BASE_DIR}/openstack-operator/${OPENSTACK_CTLP
 OPENSTACK_BUNDLE_IMG ?= quay.io/openstack-k8s-operators/openstack-operator-bundle:latest
 
 # Infra Operator
-INFRA_IMG        ?= quay.io/openstack-k8s-operators/infra-operator-index:latest
-INFRA_REPO       ?= https://github.com/openstack-k8s-operators/infra-operator.git
-INFRA_BRANCH     ?= master
+INFRA_IMG           ?= quay.io/openstack-k8s-operators/infra-operator-index:latest
+INFRA_REPO          ?= https://github.com/openstack-k8s-operators/infra-operator.git
+INFRA_BRANCH        ?= master
 
 # Memcached
+# MEMCACHED_IMG     ?= (tis is unused because this is part of infra operator)
 MEMCACHED           ?= config/samples/memcached_v1beta1_memcached.yaml
 MEMCACHED_CR        ?= ${OPERATOR_BASE_DIR}/infra-operator/${MEMCACHED}
-MEMCACHED_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-memcached:current-tripleo
+MEMCACHED_DEPL_IMG  ?= unused
 
 # Keystone
-KEYSTONE_IMG        ?= quay.io/openstack-k8s-operators/keystone-operator-index:latest
-KEYSTONE_REPO       ?= https://github.com/openstack-k8s-operators/keystone-operator.git
-KEYSTONE_BRANCH     ?= master
-KEYSTONEAPI         ?= config/samples/keystone_v1beta1_keystoneapi.yaml
-KEYSTONEAPI_CR      ?= ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
-KEYSTONEAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-keystone:current-tripleo
-KEYSTONE_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.yaml
-KEYSTONE_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
+KEYSTONE_IMG         ?= quay.io/openstack-k8s-operators/keystone-operator-index:latest
+KEYSTONE_REPO        ?= https://github.com/openstack-k8s-operators/keystone-operator.git
+KEYSTONE_BRANCH      ?= master
+KEYSTONEAPI          ?= config/samples/keystone_v1beta1_keystoneapi.yaml
+KEYSTONEAPI_CR       ?= ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
+KEYSTONEAPI_DEPL_IMG ?= unused
+KEYSTONE_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.yaml
+KEYSTONE_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
 
 # Mariadb
 MARIADB_IMG         ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
@@ -56,17 +53,17 @@ MARIADB_REPO        ?= https://github.com/openstack-k8s-operators/mariadb-operat
 MARIADB_BRANCH      ?= master
 MARIADB             ?= config/samples/mariadb_v1beta1_mariadb.yaml
 MARIADB_CR          ?= ${OPERATOR_BASE_DIR}/mariadb-operator/${MARIADB}
-MARIADB_DEPL_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-mariadb:current-tripleo
-MARIADB_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
-MARIADB_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
+MARIADB_DEPL_IMG    ?= unused
+MARIADB_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
+MARIADB_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
 
 # Placement
-PLACEMENT_IMG       ?= quay.io/openstack-k8s-operators/placement-operator-index:latest
-PLACEMENT_REPO      ?= https://github.com/openstack-k8s-operators/placement-operator.git
-PLACEMENT_BRANCH    ?= master
-PLACEMENTAPI        ?= config/samples/placement_v1beta1_placementapi.yaml
-PLACEMENTAPI_CR     ?= ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI}
-PLACEMENTAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-placement-api:current-tripleo
+PLACEMENT_IMG         ?= quay.io/openstack-k8s-operators/placement-operator-index:latest
+PLACEMENT_REPO        ?= https://github.com/openstack-k8s-operators/placement-operator.git
+PLACEMENT_BRANCH      ?= master
+PLACEMENTAPI          ?= config/samples/placement_v1beta1_placementapi.yaml
+PLACEMENTAPI_CR       ?= ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI}
+PLACEMENTAPI_DEPL_IMG ?= unused
 
 # Sir Glancealot
 GLANCE_IMG          ?= quay.io/openstack-k8s-operators/glance-operator-index:latest
@@ -74,7 +71,7 @@ GLANCE_REPO         ?= https://github.com/openstack-k8s-operators/glance-operato
 GLANCE_BRANCH       ?= master
 GLANCE              ?= config/samples/glance_v1beta1_glance.yaml
 GLANCE_CR           ?= ${OPERATOR_BASE_DIR}/glance-operator/${GLANCE}
-GLANCEAPI_IMG       ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-glance-api:current-tripleo
+GLANCEAPI_DEPL_IMG  ?= unused
 GLANCE_KUTTL_CONF   ?= ${OPERATOR_BASE_DIR}/glance-operator/kuttl-test.yaml
 GLANCE_KUTTL_DIR    ?= ${OPERATOR_BASE_DIR}/glance-operator/tests/kuttl/tests
 
@@ -86,6 +83,7 @@ OVNDBS              ?= config/samples/ovn_v1beta1_ovndbcluster.yaml
 OVNDBS_CR           ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNDBS}
 OVNNORTHD           ?= config/samples/ovn_v1beta1_ovnnorthd.yaml
 OVNNORTHD_CR        ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNNORTHD}
+# TODO: Image customizations for all OVN services
 OVN_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/ovn-operator/kuttl-test.yaml
 OVN_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovn-operator/tests/kuttl/tests
 
@@ -95,73 +93,78 @@ OVS_REPO            ?= https://github.com/openstack-k8s-operators/ovs-operator.g
 OVS_BRANCH          ?= main
 OVS                 ?= config/samples/ovs_v1beta1_ovs.yaml
 OVS_CR              ?= ${OPERATOR_BASE_DIR}/ovs-operator/${OVS}
+# TODO: Image customizations for all OVS services
 OVS_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/ovs-operator/kuttl-test.yaml
 OVS_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovs-operator/tests/kuttl/tests
 
 # Neutron
-NEUTRON_IMG        ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
-NEUTRON_REPO       ?= https://github.com/openstack-k8s-operators/neutron-operator.git
-NEUTRON_BRANCH     ?= master
-NEUTRONAPI         ?= config/samples/neutron_v1beta1_neutronapi.yaml
-NEUTRONAPI_CR      ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
-NEUTRONAPI_IMG     ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-neutron-server:current-tripleo
-NEUTRON_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/neutron-operator/kuttl-test.yaml
-NEUTRON_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/neutron-operator/test/kuttl/tests
+NEUTRON_IMG         ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
+NEUTRON_REPO        ?= https://github.com/openstack-k8s-operators/neutron-operator.git
+NEUTRON_BRANCH      ?= master
+NEUTRONAPI          ?= config/samples/neutron_v1beta1_neutronapi.yaml
+NEUTRONAPI_CR       ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
+NEUTRONAPI_DEPL_IMG ?= unused
+# TODO: Do we need interfaces to customize images for the other services ?
+NEUTRON_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/neutron-operator/kuttl-test.yaml
+NEUTRON_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/neutron-operator/test/kuttl/tests
 
 # Cinder
-CINDER_IMG       ?= quay.io/openstack-k8s-operators/cinder-operator-index:latest
-CINDER_REPO      ?= https://github.com/openstack-k8s-operators/cinder-operator.git
-CINDER_BRANCH    ?= master
-CINDER           ?= config/samples/cinder_v1beta1_cinder.yaml
-CINDER_CR        ?= ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
-CINDER_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/cinder-operator/kuttl-test.yaml
-CINDER_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/cinder-operator/tests/kuttl/tests
+CINDER_IMG          ?= quay.io/openstack-k8s-operators/cinder-operator-index:latest
+CINDER_REPO         ?= https://github.com/openstack-k8s-operators/cinder-operator.git
+CINDER_BRANCH       ?= master
+CINDER              ?= config/samples/cinder_v1beta1_cinder.yaml
+CINDER_CR           ?= ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
 # TODO: Image customizations for all Cinder services
+CINDER_KUTTL_CONF   ?= ${OPERATOR_BASE_DIR}/cinder-operator/kuttl-test.yaml
+CINDER_KUTTL_DIR    ?= ${OPERATOR_BASE_DIR}/cinder-operator/tests/kuttl/tests
 
-# Rabbitmq
-RABBITMQ_IMG         ?= quay.io/openstack-k8s-operators/rabbitmq-cluster-operator-index:latest
-RABBITMQ_REPO      ?= https://github.com/openstack-k8s-operators/rabbitmq-cluster-operator.git
-RABBITMQ_BRANCH    ?= patches
-RABBITMQ           ?= docs/examples/default-security-context/rabbitmq.yaml
-RABBITMQ_CR        ?= ${OPERATOR_BASE_DIR}/rabbitmq-operator/${RABBITMQ}
+# RabbitMQ
+RABBITMQ_IMG        ?= quay.io/openstack-k8s-operators/rabbitmq-cluster-operator-index:latest
+RABBITMQ_REPO       ?= https://github.com/openstack-k8s-operators/rabbitmq-cluster-operator.git
+RABBITMQ_BRANCH     ?= patches
+RABBITMQ            ?= docs/examples/default-security-context/rabbitmq.yaml
+RABBITMQ_CR         ?= ${OPERATOR_BASE_DIR}/rabbitmq-operator/${RABBITMQ}
+# TODO: Image customizations for all RabbitMQ services
 
 # Ironic
-IRONIC_IMG       ?= quay.io/openstack-k8s-operators/ironic-operator-index:latest
-IRONIC_REPO      ?= https://github.com/openstack-k8s-operators/ironic-operator.git
-IRONIC_BRANCH    ?= master
-IRONIC           ?= config/samples/ironic_v1beta1_ironic.yaml
-IRONIC_CR        ?= ${OPERATOR_BASE_DIR}/ironic-operator/${IRONIC}
-IRONIC_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/ironic-operator/kuttl-test.yaml
-IRONIC_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/ironic-operator/tests/kuttl/tests
+IRONIC_IMG          ?= quay.io/openstack-k8s-operators/ironic-operator-index:latest
+IRONIC_REPO         ?= https://github.com/openstack-k8s-operators/ironic-operator.git
+IRONIC_BRANCH       ?= master
+IRONIC              ?= config/samples/ironic_v1beta1_ironic.yaml
+IRONIC_CR           ?= ${OPERATOR_BASE_DIR}/ironic-operator/${IRONIC}
+# TODO: Image customizations for all Ironic services
+IRONIC_KUTTL_CONF   ?= ${OPERATOR_BASE_DIR}/ironic-operator/kuttl-test.yaml
+IRONIC_KUTTL_DIR    ?= ${OPERATOR_BASE_DIR}/ironic-operator/tests/kuttl/tests
 
 # Octavia
-OCTAVIA_IMG       ?= quay.io/openstack-k8s-operators/octavia-operator-index:latest
-OCTAVIA_REPO      ?= https://github.com/openstack-k8s-operators/octavia-operator.git
-OCTAVIA_BRANCH    ?= main
-OCTAVIAAPI        ?= config/samples/octavia_v1beta1_octavia.yaml
-OCTAVIAAPI_CR     ?= ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIAAPI}
-OCTAVIAAPI_IMG    ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-octavia-api:current-tripleo
-OCTAVIA_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/octavia-operator/kuttl-test.yaml
-OCTAVIA_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/octavia-operator/tests/kuttl/tests
+OCTAVIA_IMG         ?= quay.io/openstack-k8s-operators/octavia-operator-index:latest
+OCTAVIA_REPO        ?= https://github.com/openstack-k8s-operators/octavia-operator.git
+OCTAVIA_BRANCH      ?= main
+OCTAVIA             ?= config/samples/octavia_v1beta1_octavia.yaml
+OCTAVIA_CR          ?= ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIA}
+# TODO: Image customizations for all Octavia services
+OCTAVIA_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/octavia-operator/kuttl-test.yaml
+OCTAVIA_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/octavia-operator/tests/kuttl/tests
 
 # Nova
-NOVA_IMG       ?= quay.io/openstack-k8s-operators/nova-operator-index:latest
-NOVA_REPO      ?= https://github.com/openstack-k8s-operators/nova-operator.git
-NOVA_BRANCH    ?= master
+NOVA_IMG            ?= quay.io/openstack-k8s-operators/nova-operator-index:latest
+NOVA_REPO           ?= https://github.com/openstack-k8s-operators/nova-operator.git
+NOVA_BRANCH         ?= master
 # NOTE(gibi): We intentionally not using the default nova sample here
 # as that would require two RabbitMQCluster to be deployed which a) is not what
 # the make rabbitmq_deploy target does ii) required extra resource in the dev
 # environment.
-NOVA           ?= config/samples/nova_v1beta1_nova_collapsed_cell.yaml
-NOVA_CR        ?= ${OPERATOR_BASE_DIR}/nova-operator/${NOVA}
+NOVA                ?= config/samples/nova_v1beta1_nova_collapsed_cell.yaml
+NOVA_CR             ?= ${OPERATOR_BASE_DIR}/nova-operator/${NOVA}
+# TODO: Image customizations for all Nova services
 
 # Horizon
-HORIZON_IMG    ?= quay.io/openstack-k8s-operators/horizon-operator-index:latest
-HORIZON_REPO   ?= https://github.com/openstack-k8s-operators/horizon-operator.git
-HORIZON_BRANCH ?= main
-HORIZON        ?= config/samples/horizon_v1alpha1_horizon.yaml
-HORIZON_CR     ?= ${OPERATOR_BASE_DIR}/horizon-operator/${HORIZON}
-HORIZONAPI_IMG ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-horizon:current-tripleo
+HORIZON_IMG         ?= quay.io/openstack-k8s-operators/horizon-operator-index:latest
+HORIZON_REPO        ?= https://github.com/openstack-k8s-operators/horizon-operator.git
+HORIZON_BRANCH      ?= main
+HORIZON             ?= config/samples/horizon_v1alpha1_horizon.yaml
+HORIZON_CR          ?= ${OPERATOR_BASE_DIR}/horizon-operator/${HORIZON}
+HORIZON_DEPL_IMG    ?= unused
 
 # Heat
 HEAT_IMG    ?= quay.io/openstack-k8s-operators/heat-operator-index:latest
@@ -184,9 +187,9 @@ ANSIBLEEE_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/tests/
 
 
 # Baremetal Operator
-BAREMETAL_IMG        ?= quay.io/openstack-k8s-operators/openstack-baremetal-operator-index:latest
-BAREMETAL_REPO       ?= https://github.com/openstack-k8s-operators/openstack-baremetal-operator.git
-BAREMETAL_BRANCH     ?= master
+BAREMETAL_IMG       ?= quay.io/openstack-k8s-operators/openstack-baremetal-operator-index:latest
+BAREMETAL_REPO      ?= https://github.com/openstack-k8s-operators/openstack-baremetal-operator.git
+BAREMETAL_BRANCH    ?= master
 
 # Dataplane Operator
 DATAPLANE_IMG                                    ?= quay.io/openstack-k8s-operators/dataplane-operator-index:latest
@@ -206,27 +209,28 @@ DATAPLANE_OVN_METADATA_AGENT_BIND_HOST           ?=127.0.0.1
 DATAPLANE_SINGLE_NODE                            ?=true
 
 # Manila
-MANILA_IMG       ?= quay.io/openstack-k8s-operators/manila-operator-index:latest
-MANILA_REPO      ?= https://github.com/openstack-k8s-operators/manila-operator.git
-MANILA_BRANCH    ?= main
-MANILA           ?= config/samples/manila_v1beta1_manila.yaml
-MANILA_CR        ?= ${OPERATOR_BASE_DIR}/manila-operator/${MANILA}
+MANILA_IMG          ?= quay.io/openstack-k8s-operators/manila-operator-index:latest
+MANILA_REPO         ?= https://github.com/openstack-k8s-operators/manila-operator.git
+MANILA_BRANCH       ?= main
+MANILA              ?= config/samples/manila_v1beta1_manila.yaml
+MANILA_CR           ?= ${OPERATOR_BASE_DIR}/manila-operator/${MANILA}
+# TODO: Image customizations for all Manila services
 
 # Ceph
-CEPH_IMG       ?= quay.io/ceph/demo:latest
+CEPH_IMG            ?= quay.io/ceph/demo:latest
 
 # NNCP
-NNCP_INTERFACE ?= enp6s0
+NNCP_INTERFACE      ?= enp6s0
 
 # Telemetry
-TELEMETRY_IMG                 ?= quay.io/openstack-k8s-operators/telemetry-operator-index:latest
-TELEMETRY_REPO                ?= https://github.com/openstack-k8s-operators/telemetry-operator.git
-TELEMETRY_BRANCH              ?= main
-TELEMETRY                     ?= config/samples/telemetry_v1beta1_telemetry.yaml
-TELEMETRY_CR                  ?= ${OPERATOR_BASE_DIR}/telemetry-operator/${TELEMETRY}
-TELEMETRYAPI_CENTRAL_IMG      ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-telemetry-central:current-tripleo
-TELEMETRYAPI_NOTIFICATION_IMG ?= ${SERVICE_REGISTRY}/${SERVICE_ORG}/openstack-telemetry-notification:current-tripleo
-TELEMETRYAPI_SG_CORE_IMG      ?= ${SERVICE_REGISTRY}/infrawatch/sg-core:latest
+TELEMETRY_IMG                    ?= quay.io/openstack-k8s-operators/telemetry-operator-index:latest
+TELEMETRY_REPO                   ?= https://github.com/openstack-k8s-operators/telemetry-operator.git
+TELEMETRY_BRANCH                 ?= main
+TELEMETRY                        ?= config/samples/telemetry_v1beta1_telemetry.yaml
+TELEMETRY_CR                     ?= ${OPERATOR_BASE_DIR}/telemetry-operator/${TELEMETRY}
+CEILOMETER_CENTRAL_DEPL_IMG      ?= unused
+CEILOMETER_NOTIFICATION_DEPL_IMG ?= unused
+SG_CORE_DEPL_IMG                 ?= unused
 
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
@@ -425,7 +429,7 @@ infra_cleanup: ## deletes the operator, but does not cleanup the service resourc
 ##@ MEMCACHED
 .PHONY: memcached_deploy_prep
 memcached_deploy_prep: export KIND=Memcached
-memcached_deploy_prep: export IMAGE=${MEMCACHED_IMG}
+memcached_deploy_prep: export IMAGE=${MEMCACHED_DEPL_IMG}
 memcached_deploy_prep: memcached_deploy_cleanup ## prepares the CR to install the service based on the service sample file MEMCACHED
 	$(eval $(call vars,$@,infra))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -464,7 +468,7 @@ keystone_cleanup: ## deletes the operator, but does not cleanup the service reso
 
 .PHONY: keystone_deploy_prep
 keystone_deploy_prep: export KIND=KeystoneAPI
-keystone_deploy_prep: export IMAGE=${KEYSTONEAPI_IMG}
+keystone_deploy_prep: export IMAGE=${KEYSTONEAPI_DEPL_IMG}
 keystone_deploy_prep: keystone_deploy_cleanup ## prepares the CR to install the service based on the service sample file KEYSTONEAPI
 	$(eval $(call vars,$@,keystone))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -550,7 +554,7 @@ placement_cleanup: ## deletes the operator, but does not cleanup the service res
 
 .PHONY: placement_deploy_prep
 placement_deploy_prep: export KIND=PlacementAPI
-placement_deploy_prep: export IMAGE=${PLACEMENTAPI_IMG}
+placement_deploy_prep: export IMAGE=${PLACEMENTAPI_DEPL_IMG}
 placement_deploy_prep: placement_deploy_cleanup ## prepares the CR to install the service based on the service sample file PLACEMENTAPI
 	$(eval $(call vars,$@,placement))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -590,7 +594,7 @@ glance_cleanup: ## deletes the operator, but does not cleanup the service resour
 
 .PHONY: glance_deploy_prep
 glance_deploy_prep: export KIND=Glance
-glance_deploy_prep: export IMAGE=${GLANCEAPI_IMG}
+glance_deploy_prep: export IMAGE=${GLANCEAPI_DEPL_IMG}
 glance_deploy_prep: glance_deploy_cleanup ## prepares the CR to install the service based on the service sample file GLANCE
 	$(eval $(call vars,$@,glance))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -708,7 +712,7 @@ neutron_cleanup: ## deletes the operator, but does not cleanup the service resou
 
 .PHONY: neutron_deploy_prep
 neutron_deploy_prep: export KIND=NeutronAPI
-neutron_deploy_prep: export IMAGE=${NEUTRONAPI_IMG}
+neutron_deploy_prep: export IMAGE=${NEUTRONAPI_DEPL_IMG}
 neutron_deploy_prep: neutron_deploy_cleanup ## prepares the CR to install the service based on the service sample file NEUTRONAPI
 	$(eval $(call vars,$@,neutron))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -877,7 +881,7 @@ octavia_deploy_prep: octavia_deploy_cleanup ## prepares the CR to install the se
 	$(eval $(call vars,$@,octavia))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${OCTAVIA_BRANCH} ${OCTAVIA_REPO} && popd
-	cp ${OCTAVIAAPI_CR} ${DEPLOY_DIR}
+	cp ${OCTAVIA_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: octavia_deploy
@@ -1110,7 +1114,7 @@ horizon_cleanup: ## deletes the operator, but does not cleanup the service resou
 
 .PHONY: horizon_deploy_prep
 horizon_deploy_prep: export KIND=Horizon
-horizon_deploy_prep: export IMAGE=${HORIZONAPI_IMG}
+horizon_deploy_prep: export IMAGE=${HORIZON_DEPL_IMG}
 horizon_deploy_prep: horizon_deploy_cleanup ## prepares the CR to install the service based on the service sample file HORIZON
 	$(eval $(call vars,$@,horizon))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -1392,9 +1396,9 @@ telemetry_cleanup: ## deletes the operator, but does not cleanup the service res
 
 .PHONY: telemetry_deploy_prep
 telemetry_deploy_prep: export KIND=Telemetry
-telemetry_deploy_prep: export CENTRAL_IMAGE=${TELEMETRYAPI_CENTRAL_IMG}
-telemetry_deploy_prep: export NOTIFICATION_IMAGE=${TELEMETRYAPI_NOTIFICATION_IMG}
-telemetry_deploy_prep: export SG_CORE_IMAGE=${TELEMETRYAPI_SG_CORE_IMG}
+telemetry_deploy_prep: export CENTRAL_IMAGE=${CEILOMETER_CENTRAL_DEPL_IMG}
+telemetry_deploy_prep: export NOTIFICATION_IMAGE=${CEILOMETER_NOTIFICATION_DEPL_IMG}
+telemetry_deploy_prep: export SG_CORE_IMAGE=${SG_CORE_DEPL_IMG}
 telemetry_deploy_prep: telemetry_deploy_cleanup ## prepares the CR to install the service based on the service sample file TELEMETRY
 	$(eval $(call vars,$@,telemetry))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
