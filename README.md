@@ -135,6 +135,7 @@ oc delete pod -l service=nova-scheduler
 
 * deploy edpm compute
 ```bash
+# To use a NTP server other than the ntp.pool.org default one, override the DATAPLANE_CHRONY_NTP_SERVER variable
 DATAPLANE_SINGLE_NODE=false make edpm_deploy
 ```
 

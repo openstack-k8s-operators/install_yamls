@@ -7,7 +7,7 @@ EDPM_COMPUTE_IP ?= 192.168.122.100
 OPENSTACK_RUNNER_IMG ?= quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
 EDPM_NETWORK_CONFIG_TEMPLATE ?= templates/single_nic_vlans/single_nic_vlans.j2
 EDPM_SSHD_ALLOWED_RANGES ?= ['192.168.122.0/24']
-EDPM_CHRONY_NTP_SERVER ?= clock.redhat.com
+EDPM_CHRONY_NTP_SERVER ?= pool.ntp.org
 EDPM_PLAY_CRD ?= edpm/edpm-play.yaml
 
 ##@ General
