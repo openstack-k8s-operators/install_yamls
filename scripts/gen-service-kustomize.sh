@@ -38,6 +38,7 @@ fi
 if [ -z "$IMAGE" ]; then
     echo "Please set IMAGE"; exit 1
 fi
+IMAGE_PATH=${IMAGE_PATH:-containerImage}
 
 NAME=${KIND,,}
 
@@ -63,13 +64,26 @@ patches:
       path: /spec/storageClass
       value: ${STORAGE_CLASS}
 EOF
-if [ "$IMAGE" != "unused" ]; then
-cat <<EOF >>kustomization.yaml
-    - op: replace
-      path: /spec/containerImage
-      value: ${IMAGE}
-EOF
+
+IFS=',' read -ra IMAGES <<< "$IMAGE"
+IFS=',' read -ra IMAGE_PATHS <<< "$IMAGE_PATH"
+
+if [ ${#IMAGES[@]} != ${#IMAGE_PATHS[@]} ]; then
+    echo "IMAGE and IMAGE_PATH should have the same length"; exit 1
 fi
+
+for (( i=0; i < ${#IMAGES[@]}; i++)); do
+    SPEC_PATH=${IMAGE_PATHS[$i]}
+    SPEC_VALUE=${IMAGES[$i]}
+
+    if [ "${SPEC_VALUE}" != "unused" ]; then
+        cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/${SPEC_PATH}
+      value: ${SPEC_VALUE}
+EOF
+    fi
+done
 
 kustomization_add_resources
 

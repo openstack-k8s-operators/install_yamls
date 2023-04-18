@@ -594,7 +594,8 @@ glance_cleanup: ## deletes the operator, but does not cleanup the service resour
 
 .PHONY: glance_deploy_prep
 glance_deploy_prep: export KIND=Glance
-glance_deploy_prep: export IMAGE=${GLANCEAPI_DEPL_IMG}
+glance_deploy_prep: export IMAGE=${GLANCEAPI_DEPL_IMG},${GLANCEAPI_DEPL_IMG},${GLANCEAPI_DEPL_IMG}
+glance_deploy_prep: export IMAGE_PATH=containerImage,glanceAPIInternal/containerImage,glanceAPIExternal/containerImage
 glance_deploy_prep: glance_deploy_cleanup ## prepares the CR to install the service based on the service sample file GLANCE
 	$(eval $(call vars,$@,glance))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -1396,15 +1397,14 @@ telemetry_cleanup: ## deletes the operator, but does not cleanup the service res
 
 .PHONY: telemetry_deploy_prep
 telemetry_deploy_prep: export KIND=Telemetry
-telemetry_deploy_prep: export CENTRAL_IMAGE=${CEILOMETER_CENTRAL_DEPL_IMG}
-telemetry_deploy_prep: export NOTIFICATION_IMAGE=${CEILOMETER_NOTIFICATION_DEPL_IMG}
-telemetry_deploy_prep: export SG_CORE_IMAGE=${SG_CORE_DEPL_IMG}
+telemetry_deploy_prep: export IMAGE=${CEILOMETER_CENTRAL_DEPL_IMG},${CEILOMETER_NOTIFICATION_DEPL_IMG},${SG_CORE_IMAGE}
+telemetry_deploy_prep: export IMAGE_PATH=centralImage,notiifcationImage,sgCoreImage
 telemetry_deploy_prep: telemetry_deploy_cleanup ## prepares the CR to install the service based on the service sample file TELEMETRY
 	$(eval $(call vars,$@,telemetry))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${TELEMETRY_BRANCH} ${TELEMETRY_REPO} && popd
 	cp ${TELEMETRY_CR} ${DEPLOY_DIR}
-	bash scripts/gen-telemetry-kustomize.sh
+	bash scripts/gen-service-kustomize.sh
 
 .PHONY: telemetry_deploy
 telemetry_deploy: input telemetry_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set TELEMETRY_REPO and TELEMETRY_BRANCH to deploy from a custom repo.
