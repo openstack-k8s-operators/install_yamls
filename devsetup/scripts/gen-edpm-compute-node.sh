@@ -186,10 +186,12 @@ if [ ! -f ${DISK_FILEPATH} ]; then
     fi
     qemu-img create -o backing_file=${CRC_POOL}/centos-9-stream-base.qcow2,backing_fmt=qcow2 -f qcow2 "${DISK_FILEPATH}" "${EDPM_COMPUTE_DISK_SIZE}G"
     if [[ ! -e /usr/bin/virt-customize ]]; then
-        if [[ $(awk '{print $6}' /etc/redhat-release) =~ ^8.* ]]; then
+        if [[ $(awk '{print $6}' /etc/redhat-release) =~ ^8.* ]] || \
+           [[ $(awk '{print $4}' /etc/centos-release) =~ ^8.* ]]; then
             sudo dnf -y install hexedit libguestfs-tools-c
         fi
-        if [[ $(awk '{print $6}' /etc/redhat-release) =~ ^9.* ]]; then
+        if [[ $(awk '{print $6}' /etc/redhat-release) =~ ^9.* ]] || \
+           [[ $(awk '{print $4}' /etc/centos-release) =~ ^9.* ]]; then
             sudo dnf -y install guestfs-tools
         fi
     fi
