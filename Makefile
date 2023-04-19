@@ -1278,7 +1278,7 @@ nmstate: ## installs nmstate operator in the openshift-nmstate namespace
 nncp: export INTERFACE=${NNCP_INTERFACE}
 nncp: ## installs the nncp resources to configure the interface connected to the edpm node, right now only single nic vlan. Interface referenced via NNCP_INTERFACE
 	$(eval $(call vars,$@,nncp))
-	WORKERS=$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}") \
+	WORKERS='$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}")' \
 	bash scripts/gen-nncp.sh
 	oc apply -f ${DEPLOY_DIR}/
 	oc wait nncp -l osp/interface=${NNCP_INTERFACE} --for condition=available --timeout=240s
