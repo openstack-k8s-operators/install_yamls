@@ -206,6 +206,7 @@ DATAPLANE_RUNNER_IMG                             ?=quay.io/openstack-k8s-operato
 DATAPLANE_NETWORK_CONFIG_TEMPLATE                ?=templates/single_nic_vlans/single_nic_vlans.j2
 DATAPLANE_SSHD_ALLOWED_RANGES                    ?=['192.168.122.0/24']
 DATAPLANE_CHRONY_NTP_SERVER                      ?=pool.ntp.org
+DATAPLANE_DNS_SERVER                             ?=192.168.122.1
 DATAPLANE_OVN_METADATA_AGENT_BIND_HOST           ?=127.0.0.1
 DATAPLANE_SINGLE_NODE                            ?=true
 
@@ -376,6 +377,7 @@ edpm_deploy_prep: export OPENSTACK_RUNNER_IMG=${DATAPLANE_RUNNER_IMG}
 edpm_deploy_prep: export EDPM_NETWORK_CONFIG_TEMPLATE=${DATAPLANE_NETWORK_CONFIG_TEMPLATE}
 edpm_deploy_prep: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALLOWED_RANGES}
 edpm_deploy_prep: export EDPM_CHRONY_NTP_SERVER=${DATAPLANE_CHRONY_NTP_SERVER}
+edpm_deploy_prep: export EDPM_DNS_SERVER=${DATAPLANE_DNS_SERVER}
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST=$(shell oc get svc nova-metadata-internal -o json |jq -r '.status.loadBalancer.ingress[0].ip')
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET=${METADATA_SHARED_SECRET}
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_BIND_HOST=${DATAPLANE_OVN_METADATA_AGENT_BIND_HOST}
