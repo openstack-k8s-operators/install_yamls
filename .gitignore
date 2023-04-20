@@ -3,3 +3,4 @@ pull-secret.txt
 kuttl-test-*.json
 kubeconfig
 devsetup/ci-framework
+devsetup/tls.crt
