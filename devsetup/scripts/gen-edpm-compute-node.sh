@@ -25,6 +25,9 @@ EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
 EDPM_COMPUTE_VCPUS=${EDPM_COMPUTE_VCPUS:-2}
 EDPM_COMPUTE_RAM=${EDPM_COMPUTE_RAM:-4}
 EDPM_COMPUTE_DISK_SIZE=${EDPM_COMPUTE_DISK_SIZE:-20}
+EDPM_COMPUTE_NETWORK=${EDPM_COMPUTE_NETWORK:-default}
+EDPM_COMPUTE_NETWORK_TYPE=${EDPM_COMPUTE_NETWORK_TYPE:-network}
+DATAPLANE_DNS_SERVER=${DATAPLANE_DNS_SERVER:-192.168.122.1}
 
 CENTOS_9_STREAM_URL=${CENTOS_9_STREAM_URL:-"https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-20230410.0.x86_64.qcow2"}
 
@@ -123,9 +126,9 @@ cat <<EOF >${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}.xml
       <target dir='dir0'/>
       <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>
     </filesystem>
-    <interface type='network'>
+    <interface type='${EDPM_COMPUTE_NETWORK_TYPE}'>
       <mac address='${MAC_ADDRESS}'/>
-      <source network='default'/>
+      <source ${EDPM_COMPUTE_NETWORK_TYPE}='${EDPM_COMPUTE_NETWORK}'/>
       <model type='virtio'/>
       <address type='pci' domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>
     </interface>
@@ -159,7 +162,7 @@ IP="192.168.122.${IP_ADRESS_SUFFIX}"
 NETDEV=eth0
 NETSCRIPT="/etc/sysconfig/network-scripts/ifcfg-${NETDEV}"
 GATEWAY=192.168.122.1
-DNS=192.168.122.1
+DNS=${DATAPLANE_DNS_SERVER}
 PREFIX=24
 
 cat <<EOF >${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}-firstboot.sh

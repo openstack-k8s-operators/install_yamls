@@ -133,7 +133,7 @@ patches:
         - ${EDPM_CHRONY_NTP_SERVER}
 
         ctlplane_dns_nameservers:
-        - 192.168.122.1
+        - ${EDPM_DNS_SERVER}
         dns_search_domains: []
         edpm_ovn_dbs:
         - ${EDPM_OVN_DBS}
