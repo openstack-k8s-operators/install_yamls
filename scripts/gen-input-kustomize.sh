@@ -81,6 +81,8 @@ secretGenerator:
   - ManilaDatabasePassword=${PASSWORD}
   - ManilaPassword=${PASSWORD}
   - MetadataSecret=${METADATA_SHARED_SECRET}
+  - HeatPassword=${PASSWORD}
+  - HeatDatabasePassword=${PASSWORD}
 generatorOptions:
   disableNameSuffixHash: true
   labels:
