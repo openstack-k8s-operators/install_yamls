@@ -35,9 +35,7 @@ if [ -z "$DEPLOY_DIR" ]; then
     echo "Please set DEPLOY_DIR"; exit 1
 fi
 
-if [ -z "$IMAGE" ]; then
-    echo "Please set IMAGE"; exit 1
-fi
+IMAGE=${IMAGE:-unused}
 IMAGE_PATH=${IMAGE_PATH:-containerImage}
 
 NAME=${KIND,,}
