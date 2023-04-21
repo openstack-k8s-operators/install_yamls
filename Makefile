@@ -348,7 +348,6 @@ openstack_cleanup: ## deletes the operator, but does not cleanup the service res
 
 .PHONY: openstack_deploy_prep
 openstack_deploy_prep: export KIND=OpenStackControlPlane
-openstack_deploy_prep: export IMAGE=unused
 openstack_deploy_prep: openstack_deploy_cleanup $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config)  ## prepares the CR to install the service based on the service sample file OPENSTACK
 	$(eval $(call vars,$@,openstack))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -602,7 +601,8 @@ glance_cleanup: ## deletes the operator, but does not cleanup the service resour
 
 .PHONY: glance_deploy_prep
 glance_deploy_prep: export KIND=Glance
-glance_deploy_prep: export IMAGE=${GLANCEAPI_DEPL_IMG}
+glance_deploy_prep: export IMAGE=${GLANCEAPI_DEPL_IMG},${GLANCEAPI_DEPL_IMG},${GLANCEAPI_DEPL_IMG}
+glance_deploy_prep: export IMAGE_PATH=containerImage,glanceAPIInternal/containerImage,glanceAPIExternal/containerImage
 glance_deploy_prep: glance_deploy_cleanup ## prepares the CR to install the service based on the service sample file GLANCE
 	$(eval $(call vars,$@,glance))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -642,7 +642,6 @@ ovn_cleanup: ## deletes the operator, but does not cleanup the service resources
 
 .PHONY: ovn_deploy_prep
 ovn_deploy_prep: export KIND=.*
-ovn_deploy_prep: export IMAGE=unused
 ovn_deploy_prep: ovn_deploy_cleanup ## prepares the CR to install the service based on the service sample file OVNAPI
 	$(eval $(call vars,$@,ovn))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -681,7 +680,6 @@ ovs_cleanup: ## deletes the operator, but does not cleanup the service resources
 
 .PHONY: ovs_deploy_prep
 ovs_deploy_prep: export KIND=.*
-ovs_deploy_prep: export IMAGE=unused
 ovs_deploy_prep: ovs_deploy_cleanup ## prepares the CR to install the service based on the service sample file OVS
 	$(eval $(call vars,$@,ovs))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -760,7 +758,6 @@ cinder_cleanup: ## deletes the operator, but does not cleanup the service resour
 
 .PHONY: cinder_deploy_prep
 cinder_deploy_prep: export KIND=Cinder
-cinder_deploy_prep: export IMAGE=unused
 cinder_deploy_prep: cinder_deploy_cleanup ## prepares the CR to install the service based on the service sample file CINDER
 	$(eval $(call vars,$@,cinder))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -884,7 +881,6 @@ octavia_cleanup: ## deletes the operator, but does not cleanup the service resou
 
 .PHONY: octavia_deploy_prep
 octavia_deploy_prep: export KIND=Octavia
-octavia_deploy_prep: export IMAGE=unused
 octavia_deploy_prep: octavia_deploy_cleanup ## prepares the CR to install the service based on the service sample file OCTAVIA
 	$(eval $(call vars,$@,octavia))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -932,7 +928,6 @@ nova_deploy_prep: export KIND=Nova
 # but for projects like Cinder and Nova where there are multiple services with
 # different images this customization does not make sense. Make this
 # customization optional in the tooling.
-nova_deploy_prep: export IMAGE=unused
 nova_deploy_prep: nova_deploy_cleanup ## prepares the CR to install the service based on the service sample file NOVA
 	$(eval $(call vars,$@,nova))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -1169,7 +1164,6 @@ heat_deploy_prep: heat_deploy_cleanup ## prepares the CR to install the service 
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: heat_deploy
-heat_deploy: export IMAGE=unused
 heat_deploy: input heat_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set HEAT_REPO and HEAT_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,heat))
 	bash scripts/operator-deploy-resources.sh
@@ -1364,7 +1358,6 @@ manila_cleanup: ## deletes the operator, but does not cleanup the service resour
 
 .PHONY: manila_deploy_prep
 manila_deploy_prep: export KIND=Manila
-manila_deploy_prep: export IMAGE=unused
 manila_deploy_prep: manila_deploy_cleanup ## prepares the CR to install the service based on the service sample file MANILA
 	$(eval $(call vars,$@,manila))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -1404,15 +1397,14 @@ telemetry_cleanup: ## deletes the operator, but does not cleanup the service res
 
 .PHONY: telemetry_deploy_prep
 telemetry_deploy_prep: export KIND=Telemetry
-telemetry_deploy_prep: export CENTRAL_IMAGE=${CEILOMETER_CENTRAL_DEPL_IMG}
-telemetry_deploy_prep: export NOTIFICATION_IMAGE=${CEILOMETER_NOTIFICATION_DEPL_IMG}
-telemetry_deploy_prep: export SG_CORE_IMAGE=${SG_CORE_DEPL_IMG}
+telemetry_deploy_prep: export IMAGE=${CEILOMETER_CENTRAL_DEPL_IMG},${CEILOMETER_NOTIFICATION_DEPL_IMG},${SG_CORE_IMAGE}
+telemetry_deploy_prep: export IMAGE_PATH=centralImage,notiifcationImage,sgCoreImage
 telemetry_deploy_prep: telemetry_deploy_cleanup ## prepares the CR to install the service based on the service sample file TELEMETRY
 	$(eval $(call vars,$@,telemetry))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${TELEMETRY_BRANCH} ${TELEMETRY_REPO} && popd
 	cp ${TELEMETRY_CR} ${DEPLOY_DIR}
-	bash scripts/gen-telemetry-kustomize.sh
+	bash scripts/gen-service-kustomize.sh
 
 .PHONY: telemetry_deploy
 telemetry_deploy: input telemetry_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set TELEMETRY_REPO and TELEMETRY_BRANCH to deploy from a custom repo.
