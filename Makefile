@@ -169,14 +169,15 @@ HORIZON_CR          ?= ${OPERATOR_BASE_DIR}/horizon-operator/${HORIZON}
 HORIZON_DEPL_IMG    ?= unused
 
 # Heat
-HEAT_IMG    ?= quay.io/openstack-k8s-operators/heat-operator-index:latest
-HEAT_REPO   ?= https://github.com/openstack-k8s-operators/heat-operator.git
-HEAT_BRANCH ?= main
-HEAT        ?= config/samples/heat_v1beta1_heat.yaml
-HEAT_CR     ?= ${OPERATOR_BASE_DIR}/heat-operator/${HEAT}
-# TODO: Image customizations for all Heat services
-HEAT_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/heat-operator/kuttl-test.yaml
-HEAT_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/heat-operator/tests/kuttl/tests
+HEAT_IMG            ?= quay.io/openstack-k8s-operators/heat-operator-index:latest
+HEAT_REPO           ?= https://github.com/openstack-k8s-operators/heat-operator.git
+HEAT_BRANCH         ?= main
+HEAT                ?= config/samples/heat_v1beta1_heat.yaml
+HEAT_CR             ?= ${OPERATOR_BASE_DIR}/heat-operator/${HEAT}
+HEATAPI_DEPL_IMG    ?= unused
+HEATENGINE_DEPL_IMG ?= unused
+HEAT_KUTTL_CONF     ?= ${OPERATOR_BASE_DIR}/heat-operator/kuttl-test.yaml
+HEAT_KUTTL_DIR      ?= ${OPERATOR_BASE_DIR}/heat-operator/tests/kuttl/tests
 
 # AnsibleEE
 ANSIBLEEE_IMG        ?= quay.io/openstack-k8s-operators/openstack-ansibleee-operator-index:latest
@@ -1156,6 +1157,8 @@ heat_cleanup: ## deletes the operator, but does not cleanup the service resource
 
 .PHONY: heat_deploy_prep
 heat_deploy_prep: export KIND=Heat
+heat_deploy_prep: export IMAGE=${HEATAPI_DEPL_IMG},${HEATENGINE_DEPL_IMG}
+heat_deploy_prep: export IMAGE_PATH=heatAPI/containerImage,heatEngine/containerImage
 heat_deploy_prep: heat_deploy_cleanup ## prepares the CR to install the service based on the service sample file HEAT
 	$(eval $(call vars,$@,heat))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
