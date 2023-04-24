@@ -63,7 +63,7 @@ patches:
         ctlplane_ip: ${EDPM_COMPUTE_IP}
         internal_api_ip: 172.17.0.100
         storage_ip: 172.18.0.100
-        tenant_ip: 172.10.0.100
+        tenant_ip: 172.19.0.100
         fqdn_internal_api: '{{ ansible_fqdn }}'
     - op: replace
       path: /spec/nodes/edpm-compute-0/node/ansibleSSHPrivateKeySecret
@@ -191,7 +191,7 @@ cat <<EOF >>kustomization.yaml
         ctlplane_ip: ${EDPM_COMPUTE_1_IP}
         internal_api_ip: 172.17.0.101
         storage_ip: 172.18.0.101
-        tenant_ip: 172.10.0.101
+        tenant_ip: 172.19.0.101
         fqdn_internal_api: '{{ ansible_fqdn }}'
     - op: replace
       path: /spec/nodes/edpm-compute-1/node/ansibleSSHPrivateKeySecret

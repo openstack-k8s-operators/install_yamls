@@ -52,7 +52,7 @@ spec:
                     ctlplane_ip: _COMPUTE_IP_
                     internal_api_ip: 172.17.0.100
                     storage_ip: 172.18.0.100
-                    tenant_ip: 172.10.0.100
+                    tenant_ip: 172.19.0.100
                     fqdn_internal_api: '{{ ansible_fqdn }}'
                 vars:
                   service_net_map:
