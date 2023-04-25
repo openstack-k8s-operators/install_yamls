@@ -16,25 +16,24 @@
 set -ex
 OUT=${OUT:-out}
 
-NAMESPACE=$1
-SECRET=$2
-PASSWORD=$3
-METADATA_SHARED_SECRET=$4
-
 if [ -z "$NAMESPACE" ]; then
-    echo "Please set NAMESPACE as ARG1"; exit 1
+    echo "Please set NAMESPACE"; exit 1
 fi
 
 if [ -z "$SECRET" ]; then
-    echo "Please set SECRET as ARG2"; exit 1
+    echo "Please set SECRET"; exit 1
 fi
 
 if [ -z "$PASSWORD" ]; then
-    echo "Please set PASSWORD as ARG3"; exit 1
+    echo "Please set PASSWORD"; exit 1
 fi
 
 if [ -z "$METADATA_SHARED_SECRET" ]; then
-    echo "Please set METADATA_SHARED_SECRET as ARG4"; exit 1
+    echo "Please set METADATA_SHARED_SECRET"; exit 1
+fi
+
+if [ -z "$HEAT_AUTH_ENCRYPTION_KEY" ]; then
+    echo "Please set HEAT_AUTH_ENCRYPTION_KEY"; exit 1
 fi
 
 DIR=${OUT}/${NAMESPACE}/input
@@ -81,6 +80,9 @@ secretGenerator:
   - ManilaDatabasePassword=${PASSWORD}
   - ManilaPassword=${PASSWORD}
   - MetadataSecret=${METADATA_SHARED_SECRET}
+  - HeatPassword=${PASSWORD}
+  - HeatDatabasePassword=${PASSWORD}
+  - HeatAuthEncryptionKey=${HEAT_AUTH_ENCRYPTION_KEY}
 generatorOptions:
   disableNameSuffixHash: true
   labels:
