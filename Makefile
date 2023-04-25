@@ -1,11 +1,12 @@
 # general
 SHELL := /bin/bash
-NAMESPACE              ?= openstack
-PASSWORD               ?= 12345678
-SECRET                 ?= osp-secret
-OUT                    ?= ${PWD}/out
-INSTALL_YAMLS          ?= ${PWD}  # used for kuttl tests
-METADATA_SHARED_SECRET ?= 1234567842
+NAMESPACE                ?= openstack
+PASSWORD                 ?= 12345678
+SECRET                   ?= osp-secret
+OUT                      ?= ${PWD}/out
+INSTALL_YAMLS            ?= ${PWD}  # used for kuttl tests
+METADATA_SHARED_SECRET   ?= 1234567842
+HEAT_AUTH_ENCRYPTION_KEY ?= 767c3ed056cbaa3b9dfedb8c6f825bf0
 
 # are we deploying to microshift
 MICROSHIFT ?= 0
@@ -239,6 +240,8 @@ define vars
 ${1}: export NAMESPACE=${NAMESPACE}
 ${1}: export SECRET=${SECRET}
 ${1}: export PASSWORD=${PASSWORD}
+${1}: export METADATA_SHARED_SECRET=${METADATA_SHARED_SECRET}
+${1}: export HEAT_AUTH_ENCRYPTION_KEY=${HEAT_AUTH_ENCRYPTION_KEY}
 ${1}: export STORAGE_CLASS=${STORAGE_CLASS}
 ${1}: export OUT=${OUT}
 ${1}: export OPERATOR_NAME=${2}
@@ -318,7 +321,7 @@ namespace_cleanup: ## deletes the namespace specified via NAMESPACE env var, als
 .PHONY: input
 input: namespace ## creates required secret/CM, used by the services as input
 	$(eval $(call vars,$@))
-	bash scripts/gen-input-kustomize.sh ${NAMESPACE} ${SECRET} ${PASSWORD} ${METADATA_SHARED_SECRET}
+	bash scripts/gen-input-kustomize.sh
 	oc get secret/${SECRET} || oc kustomize ${OUT}/${NAMESPACE}/input | oc apply -f -
 
 .PHONY: input_cleanup
