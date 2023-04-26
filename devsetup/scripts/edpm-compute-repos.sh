@@ -24,6 +24,7 @@ SSH_KEY=${SSH_KEY:-"${SCRIPTPATH}/../../out/edpm/ansibleee-ssh-key-id_rsa"}
 SSH_OPT="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $SSH_KEY"
 CMDS_FILE=${CMDS_FILE:-"/tmp/edpm_compute_repos"}
 REPO_SETUP_CMD=${REPO_SETUP_CMD:-"current-podified-dev"}
+CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD:-"rm -Rf"}
 
 if [[ ! -f $SSH_KEY ]]; then
     echo "$SSH_KEY is missing"
@@ -43,4 +44,4 @@ EOF
 
 scp $SSH_OPT $CMDS_FILE root@$IP:/tmp/repo-setup.sh
 ssh $SSH_OPT root@$IP "bash /tmp/repo-setup.sh; rm -f /tmp/repo-setup.sh"
-rm -f $CMDS_FILE
+${CLEANUP_DIR_CMD} $CMDS_FILE
