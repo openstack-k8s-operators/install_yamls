@@ -1045,12 +1045,14 @@ ironic_kuttl_run: ## runs kuttl tests for the ironic operator, assumes that ever
 	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${IRONIC_KUTTL_CONF} ${IRONIC_KUTTL_DIR}
 
 .PHONY: ironic_kuttl
-ironic_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy ironic ironic_deploy_prep ironic_deploy  ## runs kuttl tests for the ironic operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+ironic_kuttl: namespace input openstack_crds deploy_cleanup infra mariadb mariadb_deploy rabbitmq rabbitmq_deploy keystone keystone_deploy ironic ironic_deploy_prep ironic_deploy  ## runs kuttl tests for the ironic operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make ironic_kuttl_run
 	make deploy_cleanup
 	make ironic_cleanup
 	make keystone_cleanup
 	make mariadb_cleanup
+	make rabbitmq_cleanup
+	make infra_cleanup
 
 .PHONY: ironic_kuttl_crc
 ironic_kuttl_crc: crc_storage ironic_kuttl
