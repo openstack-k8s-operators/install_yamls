@@ -20,6 +20,9 @@ STORAGE_CLASS       ?= "local-storage"
 # network isolation
 NETWORK_ISOLATION   ?= true
 
+# options to pass in all targets that use git clone
+GIT_CLONE_OPTS      ?=
+
 # OpenStack Operator
 OPENSTACK_IMG                ?= quay.io/openstack-k8s-operators/openstack-operator-index:latest
 OPENSTACK_REPO               ?= https://github.com/openstack-k8s-operators/openstack-operator.git
@@ -354,7 +357,7 @@ openstack_deploy_prep: export KIND=OpenStackControlPlane
 openstack_deploy_prep: openstack_deploy_cleanup $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config)  ## prepares the CR to install the service based on the service sample file OPENSTACK
 	$(eval $(call vars,$@,openstack))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${OPENSTACK_BRANCH} ${OPENSTACK_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(OPENSTACK_BRANCH),-b ${OPENSTACK_BRANCH}) ${OPENSTACK_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${OPENSTACK_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -390,7 +393,7 @@ edpm_deploy_prep: export EDPM_NADS=$(shell oc get network-attachment-definitions
 edpm_deploy_prep: edpm_deploy_cleanup $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config) ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${DATAPLANE_BRANCH} ${DATAPLANE_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${DATAPLANE_CR} ${DEPLOY_DIR}
 	bash scripts/gen-edpm-kustomize.sh
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
@@ -443,7 +446,7 @@ memcached_deploy_prep: export IMAGE=${MEMCACHED_DEPL_IMG}
 memcached_deploy_prep: memcached_deploy_cleanup ## prepares the CR to install the service based on the service sample file MEMCACHED
 	$(eval $(call vars,$@,infra))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${INFRA_BRANCH} ${INFRA_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(INFRA_BRANCH),-b ${INFRA_BRANCH}) ${INFRA_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${MEMCACHED_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -482,7 +485,7 @@ keystone_deploy_prep: export IMAGE=${KEYSTONEAPI_DEPL_IMG}
 keystone_deploy_prep: keystone_deploy_cleanup ## prepares the CR to install the service based on the service sample file KEYSTONEAPI
 	$(eval $(call vars,$@,keystone))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${KEYSTONE_BRANCH} ${KEYSTONE_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(KEYSTONE_BRANCH),-b ${KEYSTONE_BRANCH}) ${KEYSTONE_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${KEYSTONEAPI_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -525,7 +528,7 @@ mariadb_deploy_prep: export IMAGE=${MARIADB_DEPL_IMG}
 mariadb_deploy_prep: mariadb_deploy_cleanup ## prepares the CRs files to install the service based on the service sample file MARIADB
 	$(eval $(call vars,$@,mariadb))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${MARIADB_BRANCH} ${MARIADB_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(MARIADB_BRANCH),-b ${MARIADB_BRANCH}) ${MARIADB_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${MARIADB_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -568,7 +571,7 @@ placement_deploy_prep: export IMAGE=${PLACEMENTAPI_DEPL_IMG}
 placement_deploy_prep: placement_deploy_cleanup ## prepares the CR to install the service based on the service sample file PLACEMENTAPI
 	$(eval $(call vars,$@,placement))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${PLACEMENT_BRANCH} ${PLACEMENT_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(PLACEMENT_BRANCH),-b ${PLACEMENT_BRANCH}) ${PLACEMENT_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${PLACEMENTAPI_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -609,7 +612,7 @@ glance_deploy_prep: export IMAGE_PATH=containerImage,glanceAPIInternal/container
 glance_deploy_prep: glance_deploy_cleanup ## prepares the CR to install the service based on the service sample file GLANCE
 	$(eval $(call vars,$@,glance))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${GLANCE_BRANCH} ${GLANCE_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(GLANCE_BRANCH),-b ${GLANCE_BRANCH}) ${GLANCE_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${GLANCE_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -648,7 +651,7 @@ ovn_deploy_prep: export KIND=.*
 ovn_deploy_prep: ovn_deploy_cleanup ## prepares the CR to install the service based on the service sample file OVNAPI
 	$(eval $(call vars,$@,ovn))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${OVN_BRANCH} ${OVN_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(OVN_BRANCH),-b ${OVN_BRANCH}) ${OVN_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${OVNDBS_CR} ${OVNNORTHD_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -686,7 +689,7 @@ ovs_deploy_prep: export KIND=.*
 ovs_deploy_prep: ovs_deploy_cleanup ## prepares the CR to install the service based on the service sample file OVS
 	$(eval $(call vars,$@,ovs))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${OVS_BRANCH} ${OVS_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(OVS_BRANCH),-b ${OVS_BRANCH}) ${OVS_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${OVS_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -725,7 +728,7 @@ neutron_deploy_prep: export IMAGE=${NEUTRONAPI_DEPL_IMG}
 neutron_deploy_prep: neutron_deploy_cleanup ## prepares the CR to install the service based on the service sample file NEUTRONAPI
 	$(eval $(call vars,$@,neutron))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${NEUTRON_BRANCH} ${NEUTRON_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(NEUTRON_BRANCH),-b ${NEUTRON_BRANCH}) ${NEUTRON_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${NEUTRONAPI_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -764,7 +767,7 @@ cinder_deploy_prep: export KIND=Cinder
 cinder_deploy_prep: cinder_deploy_cleanup ## prepares the CR to install the service based on the service sample file CINDER
 	$(eval $(call vars,$@,cinder))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${CINDER_BRANCH} ${CINDER_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(CINDER_BRANCH),-b ${CINDER_BRANCH}) ${CINDER_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${CINDER_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -807,7 +810,7 @@ rabbitmq_deploy_prep: export KIND=RabbitmqCluster
 rabbitmq_deploy_prep: rabbitmq_deploy_cleanup ## prepares the CR to install the service based on the service sample file RABBITMQ
 	$(eval $(call vars,$@,rabbitmq))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${RABBITMQ_BRANCH} ${RABBITMQ_REPO} rabbitmq-operator && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(RABBITMQ_BRANCH),-b ${RABBITMQ_BRANCH}) ${RABBITMQ_REPO} rabbitmq-operator "${OPERATOR_NAME}-operator" && popd
 	cp ${RABBITMQ_CR} ${DEPLOY_DIR}
 	#bash scripts/gen-service-kustomize.sh
 
@@ -847,7 +850,7 @@ ironic_deploy_prep: export IMAGE=${IRONIC_IMG}
 ironic_deploy_prep: ironic_deploy_cleanup ## prepares the CR to install the service based on the service sample file IRONIC
 	$(eval $(call vars,$@,ironic))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${IRONIC_BRANCH} ${IRONIC_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(IRONIC_BRANCH),-b ${IRONIC_BRANCH}) ${IRONIC_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${IRONIC_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -887,7 +890,7 @@ octavia_deploy_prep: export KIND=Octavia
 octavia_deploy_prep: octavia_deploy_cleanup ## prepares the CR to install the service based on the service sample file OCTAVIA
 	$(eval $(call vars,$@,octavia))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${OCTAVIA_BRANCH} ${OCTAVIA_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(OCTAVIA_BRANCH),-b ${OCTAVIA_BRANCH}) ${OCTAVIA_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${OCTAVIA_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -934,7 +937,7 @@ nova_deploy_prep: export KIND=Nova
 nova_deploy_prep: nova_deploy_cleanup ## prepares the CR to install the service based on the service sample file NOVA
 	$(eval $(call vars,$@,nova))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${NOVA_BRANCH} ${NOVA_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(NOVA_BRANCH),-b ${NOVA_BRANCH}) ${NOVA_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${NOVA_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1045,14 +1048,12 @@ ironic_kuttl_run: ## runs kuttl tests for the ironic operator, assumes that ever
 	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${IRONIC_KUTTL_CONF} ${IRONIC_KUTTL_DIR}
 
 .PHONY: ironic_kuttl
-ironic_kuttl: namespace input openstack_crds deploy_cleanup infra mariadb mariadb_deploy rabbitmq rabbitmq_deploy keystone keystone_deploy ironic ironic_deploy_prep ironic_deploy  ## runs kuttl tests for the ironic operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+ironic_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy ironic ironic_deploy_prep ironic_deploy  ## runs kuttl tests for the ironic operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make ironic_kuttl_run
 	make deploy_cleanup
 	make ironic_cleanup
 	make keystone_cleanup
 	make mariadb_cleanup
-	make rabbitmq_cleanup
-	make infra_cleanup
 
 .PHONY: ironic_kuttl_crc
 ironic_kuttl_crc: crc_storage ironic_kuttl
@@ -1085,7 +1086,7 @@ ansibleee_kuttl_cleanup:
 ansibleee_kuttl_prep: ansibleee_kuttl_cleanup
 	$(eval $(call vars,$@,openstack-ansibleee))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${ANSIBLEEE_BRANCH} ${ANSIBLEEE_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(ANSIBLEEE_BRANCH),-b ${ANSIBLEEE_BRANCH}) ${ANSIBLEEE_REPO} "${OPERATOR_NAME}-operator" && popd
 
 .PHONY: ansibleee_kuttl
 ansibleee_kuttl: namespace input openstack_crds ansibleee_kuttl_prep ansibleee ## runs kuttl tests for the openstack-ansibleee operator. Installs openstack crds and openstack-ansibleee operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
@@ -1126,7 +1127,7 @@ horizon_deploy_prep: export IMAGE=${HORIZON_DEPL_IMG}
 horizon_deploy_prep: horizon_deploy_cleanup ## prepares the CR to install the service based on the service sample file HORIZON
 	$(eval $(call vars,$@,horizon))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${HORIZON_BRANCH} ${HORIZON_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(HORIZON_BRANCH),-b ${HORIZON_BRANCH}) ${HORIZON_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${HORIZON_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1164,7 +1165,7 @@ heat_deploy_prep: export KIND=Heat
 heat_deploy_prep: heat_deploy_cleanup ## prepares the CR to install the service based on the service sample file HEAT
 	$(eval $(call vars,$@,heat))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${HEAT_BRANCH} ${HEAT_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(HEAT_BRANCH),-b ${HEAT_BRANCH}) ${HEAT_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${HEAT_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1366,7 +1367,7 @@ manila_deploy_prep: export KIND=Manila
 manila_deploy_prep: manila_deploy_cleanup ## prepares the CR to install the service based on the service sample file MANILA
 	$(eval $(call vars,$@,manila))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${MANILA_BRANCH} ${MANILA_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(MANILA_BRANCH),-b ${MANILA_BRANCH}) ${MANILA_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${MANILA_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1407,7 +1408,7 @@ telemetry_deploy_prep: export IMAGE_PATH=centralImage,notiifcationImage,sgCoreIm
 telemetry_deploy_prep: telemetry_deploy_cleanup ## prepares the CR to install the service based on the service sample file TELEMETRY
 	$(eval $(call vars,$@,telemetry))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${TELEMETRY_BRANCH} ${TELEMETRY_REPO} && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(TELEMETRY_BRANCH),-b ${TELEMETRY_BRANCH}) ${TELEMETRY_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${TELEMETRY_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
