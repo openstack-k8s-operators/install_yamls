@@ -32,6 +32,9 @@ if [ -z "$DEPLOY_DIR" ]; then
 fi
 
 NAME=${KIND,,}
+EDPM_NEUTRON_PUBLIC_INTERFACE_NAME=${EDPM_NEUTRON_PUBLIC_INTERFACE_NAME:-eth0}
+EDPM_CIDR=${EDPM_CIDR:-24}
+EDPM_CTLPLANE_GATEWAY_IP=${EDPM_CTLPLANE_GATEWAY_IP:-192.168.122.1}
 
 if [ ! -d ${DEPLOY_DIR} ]; then
     mkdir -p ${DEPLOY_DIR}
@@ -87,28 +90,28 @@ patches:
         # These vars are for the network config templates themselves and are
         # considered EDPM network defaults.
         neutron_physical_bridge_name: br-ex
-        neutron_public_interface_name: eth0
+        neutron_public_interface_name: ${EDPM_NEUTRON_PUBLIC_INTERFACE_NAME}
         ctlplane_mtu: 1500
-        ctlplane_subnet_cidr: 24
-        ctlplane_gateway_ip: 192.168.122.1
+        ctlplane_subnet_cidr: ${EDPM_CIDR}
+        ctlplane_gateway_ip: ${EDPM_CTLPLANE_GATEWAY_IP}
         ctlplane_host_routes:
         - ip_netmask: 0.0.0.0/0
-          next_hop: 192.168.122.1
+          next_hop: ${EDPM_CTLPLANE_GATEWAY_IP}
         external_mtu: 1500
         external_vlan_id: 44
-        external_cidr: '24'
+        external_cidr: ${EDPM_CIDR}
         external_host_routes: []
         internal_api_mtu: 1500
         internal_api_vlan_id: 20
-        internal_api_cidr: '24'
+        internal_api_cidr: ${EDPM_CIDR}
         internal_api_host_routes: []
         storage_mtu: 1500
         storage_vlan_id: 21
-        storage_cidr: '24'
+        storage_cidr: ${EDPM_CIDR}
         storage_host_routes: []
         tenant_mtu: 1500
         tenant_vlan_id: 22
-        tenant_cidr: '24'
+        tenant_cidr: ${EDPM_CIDR}
         tenant_host_routes: []
         role_networks:
         - InternalApi
