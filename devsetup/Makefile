@@ -9,6 +9,7 @@ EDPM_NETWORK_CONFIG_TEMPLATE ?= templates/single_nic_vlans/single_nic_vlans.j2
 EDPM_SSHD_ALLOWED_RANGES ?= ['192.168.122.0/24']
 EDPM_CHRONY_NTP_SERVER ?= pool.ntp.org
 EDPM_PLAY_CRD ?= edpm/edpm-play.yaml
+
 BMAAS_INSTANCE_NAME_PREFIX ?= crc-bmaas
 BMAAS_INSTANCE_MEMORY ?= 4096
 BMAAS_INSTANCE_VCPUS ?= 2
@@ -24,6 +25,12 @@ BMAAS_REDFISH_USERNAME ?= admin
 BMAAS_REDFISH_PASSWORD ?= password
 BMAAS_SUSHY_EMULATOR_NAMESPACE ?= sushy-emulator
 BMAAS_LIBVIRT_USER ?= sushyemu
+
+CLEANUP_DIR_CMD ?= rm -Rf
+
+define vars
+${1}: export CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD}
+endef
 
 ##@ General
 
@@ -58,7 +65,7 @@ crc: ## Deploys CRC using CRC_URL to download and install CRC, KUBEADMIN_PWD as 
 crc_cleanup: ## Destroys the CRC env, but does NOT clear ( --clear-cache ) the cache to save time on next setup.
 	crc delete --force
 	crc cleanup
-	sudo rm -f /etc/pki/ca-trust/source/anchors/crc-router-ca.pem
+	sudo ${CLEANUP_DIR_CMD} /etc/pki/ca-trust/source/anchors/crc-router-ca.pem
 	sudo update-ca-trust
 
 .PHONY: crc_attach_default_interface
@@ -80,15 +87,18 @@ crc_attach_default_interface_cleanup: ## Detach default libvirt network from CRC
 ##@ EDPM
 .PHONY: edpm_compute
 edpm_compute: ## Create EDPM compute VM
+	$(eval $(call vars))
 	scripts/gen-ansibleee-ssh-key.sh
 	scripts/gen-edpm-compute-node.sh ${EDPM_COMPUTE_SUFFIX}
 
 .PHONY: edpm_compute_repos
 edpm_compute_repos: ## Configure EDPM compute VM with repositories
+	$(eval $(call vars))
 	scripts/edpm-compute-repos.sh ${EDPM_COMPUTE_SUFFIX}
 
 .PHONY: edpm_compute_cleanup
 edpm_compute_cleanup: ## Delete EDPM compute VM
+	$(eval $(call vars))
 	scripts/edpm-compute-cleanup.sh ${EDPM_COMPUTE_SUFFIX}
 
 .PHONY: edpm_play
@@ -133,7 +143,7 @@ cifmw_prepare: ## Clone the ci-framework repository in the ci-framework director
 
 .PHONY: cifmw_cleanup
 cifmw_cleanup: ## Clean ci-framework git clone
-	rm -rf ci-framework
+	${CLEANUP_DIR_CMD} ci-framework
 
 ##@ BMaaS/Ironic
 .PHONY: bmaas_network

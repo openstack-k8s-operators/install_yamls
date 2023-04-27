@@ -20,7 +20,8 @@ EDPM_COMPUTE_SUFFIX=${1:-"0"}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
 CRC_POOL=${CRC_POOL:-"$HOME/.crc/machines/crc"}
 OUTPUT_BASEDIR=${OUTPUT_BASEDIR:-"../out/edpm/"}
+CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD:-"rm -Rf"}
 
 virsh destroy edpm-compute-${EDPM_COMPUTE_SUFFIX} || :
 virsh undefine --snapshots-metadata --remove-all-storage edpm-compute-${EDPM_COMPUTE_SUFFIX} || :
-rm -f "${CRC_POOL}/edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2"
+${CLEANUP_DIR_CMD} "${CRC_POOL}/edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2"

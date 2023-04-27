@@ -7,6 +7,7 @@ OUT                      ?= ${PWD}/out
 INSTALL_YAMLS            ?= ${PWD}  # used for kuttl tests
 METADATA_SHARED_SECRET   ?= 1234567842
 HEAT_AUTH_ENCRYPTION_KEY ?= 767c3ed056cbaa3b9dfedb8c6f825bf0
+CLEANUP_DIR_CMD					 ?= rm -Rf
 
 # are we deploying to microshift
 MICROSHIFT ?= 0
@@ -244,6 +245,7 @@ ${1}: export METADATA_SHARED_SECRET=${METADATA_SHARED_SECRET}
 ${1}: export HEAT_AUTH_ENCRYPTION_KEY=${HEAT_AUTH_ENCRYPTION_KEY}
 ${1}: export STORAGE_CLASS=${STORAGE_CLASS}
 ${1}: export OUT=${OUT}
+${1}: export CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD}
 ${1}: export OPERATOR_NAME=${2}
 ${1}: export OPERATOR_DIR=${OUT}/${NAMESPACE}/${2}/op
 ${1}: export DEPLOY_DIR=${OUT}/${NAMESPACE}/${2}/cr
@@ -291,8 +293,8 @@ crc_storage: ## initialize local storage PVs in CRC vm
 .PHONY: crc_storage_cleanup
 crc_storage_cleanup: ## cleanup local storage PVs in CRC vm
 	$(eval $(call vars,$@))
-	oc get pv | grep ${STORAGE_CLASS} | cut -f 1 -d ' ' | xargs oc delete pv
-	oc delete sc ${STORAGE_CLASS}
+	if oc get pv | grep ${STORAGE_CLASS}; then oc get pv | grep ${STORAGE_CLASS} | cut -f 1 -d ' ' | xargs oc delete pv; fi
+	if oc get sc ${STORAGE_CLASS}; then oc delete sc ${STORAGE_CLASS}; fi
 	bash scripts/delete-pv.sh
 
 ##@ NAMESPACE
@@ -315,7 +317,7 @@ namespace_cleanup: ## deletes the namespace specified via NAMESPACE env var, als
 	make keystone_cleanup
 	make mariadb_cleanup
 	oc delete project ${NAMESPACE}
-	rm -Rf ${OUT}/${NAMESPACE}
+	${CLEANUP_DIR_CMD} ${OUT}/${NAMESPACE}
 
 ##@ SERVICE INPUT
 .PHONY: input
@@ -327,7 +329,7 @@ input: namespace ## creates required secret/CM, used by the services as input
 .PHONY: input_cleanup
 input_cleanup: ## deletes the secret/CM, used by the services as input
 	oc kustomize ${OUT}/${NAMESPACE}/input | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OUT}/${NAMESPACE}/input
+	${CLEANUP_DIR_CMD} ${OUT}/${NAMESPACE}/input
 
 ##@ OPENSTACK
 .PHONY: openstack_prep
@@ -345,7 +347,7 @@ openstack: namespace openstack_prep ## installs the operator, also runs the prep
 openstack_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,openstack))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 	oc delete subscription openstack-storage-operators-alpha-openstack-operator-index-openstack --ignore-not-found=true
 	oc delete csv openstack-storage-operators.v0.0.1 --ignore-not-found=true
 
@@ -367,7 +369,7 @@ openstack_deploy: input openstack_deploy_prep ## installs the service instance u
 openstack_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,openstack))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/openstack-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/openstack-operator ${DEPLOY_DIR}
 
 .PHONY: edpm_deploy_prep
 edpm_deploy_prep: export KIND=OpenStackDataPlane
@@ -399,7 +401,7 @@ edpm_deploy_prep: edpm_deploy_cleanup $(if $(findstring true,$(NETWORK_ISOLATION
 edpm_deploy_cleanup: ## cleans up the edpm instance, Does not affect the operator.
 	$(eval $(call vars,$@,dataplane))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/dataplane-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/dataplane-operator ${DEPLOY_DIR}
 
 .PHONY: edpm_deploy
 edpm_deploy: input edpm_deploy_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
@@ -434,7 +436,7 @@ infra: namespace infra_prep ## installs the operator, also runs the prep step. S
 infra_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,infra))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 ##@ MEMCACHED
 .PHONY: memcached_deploy_prep
@@ -456,7 +458,7 @@ memcached_deploy: input memcached_deploy_prep ## installs the service instance u
 memcached_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,infra))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/infra-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/infra-operator ${DEPLOY_DIR}
 
 ##@ KEYSTONE
 .PHONY: keystone_prep
@@ -474,7 +476,7 @@ keystone: namespace keystone_prep ## installs the operator, also runs the prep s
 keystone_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,keystone))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: keystone_deploy_prep
 keystone_deploy_prep: export KIND=KeystoneAPI
@@ -499,7 +501,7 @@ keystone_deploy_validate: input namespace ## checks that keystone was properly d
 keystone_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,keystone))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/keystone-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/keystone-operator ${DEPLOY_DIR}
 	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database keystone;" || true
 
 ##@ MARIADB
@@ -517,7 +519,7 @@ mariadb: namespace mariadb_prep ## installs the operator, also runs the prep ste
 mariadb_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,mariadb))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: mariadb_deploy_prep
 mariadb_deploy_prep: export KIND=MariaDB
@@ -542,7 +544,7 @@ mariadb_deploy_validate: input namespace ## checks that mariadb was properly dep
 mariadb_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,mariadb))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/mariadb-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/mariadb-operator ${DEPLOY_DIR}
 
 ##@ PLACEMENT
 .PHONY: placement_prep
@@ -560,7 +562,7 @@ placement: namespace placement_prep ## installs the operator, also runs the prep
 placement_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,placement))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: placement_deploy_prep
 placement_deploy_prep: export KIND=PlacementAPI
@@ -581,7 +583,7 @@ placement_deploy: input placement_deploy_prep ## installs the service instance u
 placement_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,placement))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/placement-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/placement-operator ${DEPLOY_DIR}
 	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database placement;" || true
 
 ##@ GLANCE
@@ -600,7 +602,7 @@ glance: namespace glance_prep ## installs the operator, also runs the prep step.
 glance_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,glance))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: glance_deploy_prep
 glance_deploy_prep: export KIND=Glance
@@ -622,7 +624,7 @@ glance_deploy: input glance_deploy_prep ## installs the service instance using k
 glance_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,glance))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/glance-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/glance-operator ${DEPLOY_DIR}
 	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database glance;" || true
 
 ##@ OVN
@@ -641,7 +643,7 @@ ovn: namespace ovn_prep ## installs the operator, also runs the prep step. Set O
 ovn_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,ovn))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: ovn_deploy_prep
 ovn_deploy_prep: export KIND=.*
@@ -661,7 +663,7 @@ ovn_deploy: ovn_deploy_prep ## installs the service instance using kustomize. Ru
 ovn_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,ovn))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/ovn-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/ovn-operator ${DEPLOY_DIR}
 
 ##@ OVS
 .PHONY: ovs_prep
@@ -679,7 +681,7 @@ ovs: namespace ovs_prep ## installs the operator, also runs the prep step. Set O
 ovs_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,ovs))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: ovs_deploy_prep
 ovs_deploy_prep: export KIND=.*
@@ -699,7 +701,7 @@ ovs_deploy: ovs_deploy_prep ## installs the service instance using kustomize. Ru
 ovs_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,ovs))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/ovs-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/ovs-operator ${DEPLOY_DIR}
 
 ##@ NEUTRON
 .PHONY: neutron_prep
@@ -717,7 +719,7 @@ neutron: namespace neutron_prep ## installs the operator, also runs the prep ste
 neutron_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,neutron))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: neutron_deploy_prep
 neutron_deploy_prep: export KIND=NeutronAPI
@@ -738,7 +740,7 @@ neutron_deploy: input neutron_deploy_prep ## installs the service instance using
 neutron_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,neutron))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/neutron-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/neutron-operator ${DEPLOY_DIR}
 	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database neutron;" || true
 
 ##@ CINDER
@@ -757,7 +759,7 @@ cinder: namespace cinder_prep ## installs the operator, also runs the prep step.
 cinder_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,cinder))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: cinder_deploy_prep
 cinder_deploy_prep: export KIND=Cinder
@@ -781,7 +783,7 @@ cinder_deploy_validate: input namespace ## checks that cinder was properly deplo
 cinder_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,cinder))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/cinder-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/cinder-operator ${DEPLOY_DIR}
 	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database cinder;" || true
 
 ##@ RABBITMQ
@@ -800,7 +802,7 @@ rabbitmq: namespace rabbitmq_prep ## installs the operator, also runs the prep s
 rabbitmq_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,cluster))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: rabbitmq_deploy_prep
 rabbitmq_deploy_prep: export KIND=RabbitmqCluster
@@ -821,7 +823,7 @@ rabbitmq_deploy: input rabbitmq_deploy_prep ## installs the service instance usi
 rabbitmq_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,rabbitmq))
 	oc delete --ignore-not-found=true RabbitmqCluster rabbitmq
-	rm -Rf ${OPERATOR_BASE_DIR}/rabbitmq-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/rabbitmq-operator ${DEPLOY_DIR}
 
 ##@ IRONIC
 .PHONY: ironic_prep
@@ -839,7 +841,7 @@ ironic: namespace ironic_prep ## installs the operator, also runs the prep step.
 ironic_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,ironic))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: ironic_deploy_prep
 ironic_deploy_prep: export KIND=Ironic
@@ -860,7 +862,7 @@ ironic_deploy: input ironic_deploy_prep ## installs the service instance using k
 ironic_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,ironic))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/ironic-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/ironic-operator ${DEPLOY_DIR}
 	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database ironic;" || true
 	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database ironic_inspector;" || true
 
@@ -880,7 +882,7 @@ octavia: namespace octavia_prep ## installs the operator, also runs the prep ste
 octavia_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,octavia))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: octavia_deploy_prep
 octavia_deploy_prep: export KIND=Octavia
@@ -904,7 +906,7 @@ octavia_deploy_validate: input namespace ## checks that octavia was properly dep
 octavia_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,octavia))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/octavia-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/octavia-operator ${DEPLOY_DIR}
 	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database octavia;" || true
 
 ##@ NOVA
@@ -923,7 +925,7 @@ nova: namespace nova_prep ## installs the operator, also runs the prep step. Set
 nova_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,nova))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: nova_deploy_prep
 nova_deploy_prep: export KIND=Nova
@@ -947,7 +949,7 @@ nova_deploy: input nova_deploy_prep ## installs the service instance using kusto
 nova_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,nova))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/nova-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/nova-operator ${DEPLOY_DIR}
 	oc rsh mariadb-openstack mysql -u root --password=${PASSWORD} -ss -e "show databases like 'nova_%';" | xargs -I '{}' oc rsh mariadb-openstack mysql -u root --password=${PASSWORD} -ss -e "drop database {};"
 
 ##@ KUTTL tests
@@ -1045,12 +1047,14 @@ ironic_kuttl_run: ## runs kuttl tests for the ironic operator, assumes that ever
 	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${IRONIC_KUTTL_CONF} ${IRONIC_KUTTL_DIR}
 
 .PHONY: ironic_kuttl
-ironic_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy ironic ironic_deploy_prep ironic_deploy  ## runs kuttl tests for the ironic operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+ironic_kuttl: namespace input openstack_crds deploy_cleanup infra mariadb mariadb_deploy rabbitmq rabbitmq_deploy keystone keystone_deploy ironic ironic_deploy_prep ironic_deploy  ## runs kuttl tests for the ironic operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make ironic_kuttl_run
 	make deploy_cleanup
 	make ironic_cleanup
 	make keystone_cleanup
 	make mariadb_cleanup
+	make rabbitmq_cleanup
+	make infra_cleanup
 
 .PHONY: ironic_kuttl_crc
 ironic_kuttl_crc: crc_storage ironic_kuttl
@@ -1077,7 +1081,7 @@ ansibleee_kuttl_run: ## runs kuttl tests for the openstack-ansibleee operator, a
 .PHONY: ansibleee_kuttl_cleanup
 ansibleee_kuttl_cleanup:
 	$(eval $(call vars,$@,openstack-ansibleee))
-	rm -Rf ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator
 
 .PHONY: ansibleee_kuttl_prep
 ansibleee_kuttl_prep: ansibleee_kuttl_cleanup
@@ -1116,7 +1120,7 @@ horizon: namespace horizon_prep ## installs the operator, also runs the prep ste
 horizon_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,horizon))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: horizon_deploy_prep
 horizon_deploy_prep: export KIND=Horizon
@@ -1137,7 +1141,7 @@ horizon_deploy: input horizon_deploy_prep ## installs the service instance using
 horizon_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,horizon))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/horizon-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/horizon-operator ${DEPLOY_DIR}
 
 ##@ HEAT
 .PHONY: heat_prep
@@ -1155,7 +1159,7 @@ heat: namespace heat_prep ## installs the operator, also runs the prep step. Set
 heat_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,heat))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: heat_deploy_prep
 heat_deploy_prep: export KIND=Heat
@@ -1175,7 +1179,7 @@ heat_deploy: input heat_deploy_prep ## installs the service instance using kusto
 heat_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,heat))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/heat-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/heat-operator ${DEPLOY_DIR}
 
 ##@ ANSIBLEEE
 .PHONY: ansibleee_prep
@@ -1193,7 +1197,7 @@ ansibleee: namespace ansibleee_prep ## installs the operator, also runs the prep
 ansibleee_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,openstack-ansibleee))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 ##@ BAREMETAL
 .PHONY: baremetal_prep
@@ -1211,7 +1215,7 @@ baremetal: namespace baremetal_prep ## installs the operator, also runs the prep
 baremetal_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,openstack-baremetal))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 ##@ DATAPLANE
 .PHONY: dataplane_prep
@@ -1229,7 +1233,7 @@ dataplane: namespace dataplane_prep ## installs the operator, also runs the prep
 dataplane_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,dataplane))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 ##@ CEPH
 .PHONY: ceph_help
@@ -1253,7 +1257,7 @@ ceph: namespace ## deploy the Ceph Pod
 ceph_cleanup: ## deletes the ceph pod
 	$(eval $(call vars,$@,ceph))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${DEPLOY_DIR}
 
 ##@ NMSTATE
 .PHONY: nmstate
@@ -1290,7 +1294,7 @@ nncp_cleanup: ## unconfigured nncp configuration on worker node and deletes the 
 	oc apply -f ${DEPLOY_DIR}/
 	oc wait nncp -l osp/interface=${NNCP_INTERFACE} --for condition=available --timeout=120s
 	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/
-	rm -Rf ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${DEPLOY_DIR}
 
 .PHONY: netattach
 netattach: export INTERFACE=${NNCP_INTERFACE}
@@ -1303,7 +1307,7 @@ netattach: namespace ## Creates network-attachment-definitions for the networks 
 netattach_cleanup: ## Deletes the network-attachment-definitions
 	$(eval $(call vars,$@,netattach))
 	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/
-	rm -Rf ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${DEPLOY_DIR}
 
 ##@ METALLB
 .PHONY: metallb
@@ -1339,7 +1343,7 @@ metallb_config_cleanup: ## deletes the IPAddressPools and l2advertisement resour
 	$(eval $(call vars,$@,metallb))
 	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/ipaddresspools.yaml
 	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/l2advertisement.yaml
-	rm -f ${DEPLOY_DIR}/ipaddresspools.yaml ${DEPLOY_DIR}/l2advertisement.yaml
+	${CLEANUP_DIR_CMD} ${DEPLOY_DIR}/ipaddresspools.yaml ${DEPLOY_DIR}/l2advertisement.yaml
 
 ##@ MANILA
 .PHONY: manila_prep
@@ -1357,7 +1361,7 @@ manila: namespace manila_prep ## installs the operator, also runs the prep step.
 manila_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,manila))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: manila_deploy_prep
 manila_deploy_prep: export KIND=Manila
@@ -1377,7 +1381,7 @@ manila_deploy: input manila_deploy_prep ## installs the service instance using k
 manila_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,manila))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/manila-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/manila-operator ${DEPLOY_DIR}
 	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database manila;" || true
 
 ##@ TELEMETRY
@@ -1396,7 +1400,7 @@ telemetry: namespace telemetry_prep ## installs the operator, also runs the prep
 telemetry_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,telemetry))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: telemetry_deploy_prep
 telemetry_deploy_prep: export KIND=Telemetry
@@ -1418,4 +1422,4 @@ telemetry_deploy: input telemetry_deploy_prep ## installs the service instance u
 telemetry_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,telemetry))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/telemetry-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/telemetry-operator ${DEPLOY_DIR}
