@@ -4,7 +4,6 @@ NAMESPACE                ?= openstack
 PASSWORD                 ?= 12345678
 SECRET                   ?= osp-secret
 OUT                      ?= ${PWD}/out
-INSTALL_YAMLS            ?= ${PWD}  # used for kuttl tests
 METADATA_SHARED_SECRET   ?= 1234567842
 HEAT_AUTH_ENCRYPTION_KEY ?= 767c3ed056cbaa3b9dfedb8c6f825bf0
 CLEANUP_DIR_CMD					 ?= rm -Rf
@@ -962,7 +961,7 @@ nova_deploy_cleanup: ## cleans up the service instance, Does not affect the oper
 
 .PHONY: mariadb_kuttl_run
 mariadb_kuttl_run: ## runs kuttl tests for the mariadb operator, assumes that everything needed for running the test was deployed beforehand.
-	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${MARIADB_KUTTL_CONF} ${MARIADB_KUTTL_DIR}
+	kubectl-kuttl test --config ${MARIADB_KUTTL_CONF} ${MARIADB_KUTTL_DIR}
 
 .PHONY: mariadb_kuttl
 mariadb_kuttl: namespace input openstack_crds deploy_cleanup mariadb_deploy_prep mariadb  ## runs kuttl tests for the mariadb operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
@@ -972,7 +971,7 @@ mariadb_kuttl: namespace input openstack_crds deploy_cleanup mariadb_deploy_prep
 
 .PHONY: keystone_kuttl_run
 keystone_kuttl_run: ## runs kuttl tests for the keystone operator, assumes that everything needed for running the test was deployed beforehand.
-	INSTALL_YAMLS=${INSTALL_YAMLS} KEYSTONE_KUTTL_DIR=${KEYSTONE_KUTTL_DIR} kubectl-kuttl test --config ${KEYSTONE_KUTTL_CONF} ${KEYSTONE_KUTTL_DIR}
+	KEYSTONE_KUTTL_DIR=${KEYSTONE_KUTTL_DIR} kubectl-kuttl test --config ${KEYSTONE_KUTTL_CONF} ${KEYSTONE_KUTTL_DIR}
 
 .PHONY: keystone_kuttl
 keystone_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate keystone_deploy_prep keystone ## runs kuttl tests for the keystone operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
@@ -983,7 +982,7 @@ keystone_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_de
 
 .PHONY: cinder_kuttl_run
 cinder_kuttl_run: ## runs kuttl tests for the cinder operator, assumes that everything needed for running the test was deployed beforehand.
-	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${CINDER_KUTTL_CONF} ${CINDER_KUTTL_DIR}
+	kubectl-kuttl test --config ${CINDER_KUTTL_CONF} ${CINDER_KUTTL_DIR}
 
 .PHONY: cinder_kuttl
 cinder_kuttl: namespace input openstack_crds openstack_storage_crds deploy_cleanup mariadb mariadb_deploy rabbitmq rabbitmq_deploy keystone_deploy_prep keystone keystone_deploy cinder_deploy_prep cinder infra mariadb_deploy_validate ## runs kuttl tests for the cinder operator. Installs openstack crds and cinder operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
@@ -998,7 +997,7 @@ cinder_kuttl: namespace input openstack_crds openstack_storage_crds deploy_clean
 
 .PHONY: neutron_kuttl_run
 neutron_kuttl_run: ## runs kuttl tests for the neutron operator, assumes that everything needed for running the test was deployed beforehand.
-	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${NEUTRON_KUTTL_CONF} ${NEUTRON_KUTTL_DIR}
+	kubectl-kuttl test --config ${NEUTRON_KUTTL_CONF} ${NEUTRON_KUTTL_DIR}
 
 .PHONY: neutron_kuttl
 neutron_kuttl: namespace input openstack_crds deploy_cleanup mariadb neutron_deploy_prep neutron mariadb_deploy keystone rabbitmq keystone_deploy ovn rabbitmq_deploy infra ovn_deploy   mariadb_deploy_validate ## runs kuttl tests for the neutron operator. Installs openstack crds and mariadb, keystone, rabbitmq, ovn, infra and neutron operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
@@ -1015,7 +1014,7 @@ neutron_kuttl: namespace input openstack_crds deploy_cleanup mariadb neutron_dep
 
 .PHONY: octavia_kuttl_run
 octavia_kuttl_run: ## runs kuttl tests for the octavia operator, assumes that everything needed for running the test was deployed beforehand.
-	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${OCTAVIA_KUTTL_CONF} ${OCTAVIA_KUTTL_DIR}
+	kubectl-kuttl test --config ${OCTAVIA_KUTTL_CONF} ${OCTAVIA_KUTTL_DIR}
 
 .PHONY: octavia_kuttl
 octavia_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone ovn octavia_deploy_prep octavia ovn_deploy keystone_deploy mariadb_deploy_validate ## runs kuttl tests for the octavia operator. Installs openstack crds and mariadb, keystone, octavia, ovn operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
@@ -1029,7 +1028,7 @@ octavia_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_dep
 
 .PHONY: ovn_kuttl_run
 ovn_kuttl_run: ## runs kuttl tests for the ovn operator, assumes that everything needed for running the test was deployed beforehand.
-	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${OVN_KUTTL_CONF} ${OVN_KUTTL_DIR}
+	kubectl-kuttl test --config ${OVN_KUTTL_CONF} ${OVN_KUTTL_DIR}
 
 .PHONY: ovn_kuttl
 ovn_kuttl: namespace input openstack_crds deploy_cleanup ovn_deploy_prep ovn ## runs kuttl tests for the ovn operator. Installs openstack crds and ovn operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
@@ -1039,7 +1038,7 @@ ovn_kuttl: namespace input openstack_crds deploy_cleanup ovn_deploy_prep ovn ## 
 
 .PHONY: ovs_kuttl_run
 ovs_kuttl_run: ## runs kuttl tests for the ovs operator, assumes that everything needed for running the test was deployed beforehand.
-	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${OVS_KUTTL_CONF} ${OVS_KUTTL_DIR}
+	kubectl-kuttl test --config ${OVS_KUTTL_CONF} ${OVS_KUTTL_DIR}
 
 .PHONY: ovs_kuttl
 ovs_kuttl: namespace input openstack_crds deploy_cleanup ovn ovn_deploy ovs_deploy_prep ovs ## runs kuttl tests for the ovs operator. Installs openstack crds and ovn and ovs operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
@@ -1050,7 +1049,7 @@ ovs_kuttl: namespace input openstack_crds deploy_cleanup ovn ovn_deploy ovs_depl
 
 .PHONY: ironic_kuttl_run
 ironic_kuttl_run: ## runs kuttl tests for the ironic operator, assumes that everything needed for running the test was deployed beforehand.
-	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${IRONIC_KUTTL_CONF} ${IRONIC_KUTTL_DIR}
+	kubectl-kuttl test --config ${IRONIC_KUTTL_CONF} ${IRONIC_KUTTL_DIR}
 
 .PHONY: ironic_kuttl
 ironic_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy ironic ironic_deploy_prep ironic_deploy  ## runs kuttl tests for the ironic operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
@@ -1065,7 +1064,7 @@ ironic_kuttl_crc: crc_storage ironic_kuttl
 
 .PHONY: heat_kuttl_run
 heat_kuttl_run: ## runs kuttl tests for the heat operator, assumes that everything needed for running the test was deployed beforehand.
-	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${HEAT_KUTTL_CONF} ${HEAT_KUTTL_DIR}
+	kubectl-kuttl test --config ${HEAT_KUTTL_CONF} ${HEAT_KUTTL_DIR}
 
 .PHONY: heat_kuttl
 heat_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy heat heat_deploy_prep heat_deploy  ## runs kuttl tests for the heat operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
