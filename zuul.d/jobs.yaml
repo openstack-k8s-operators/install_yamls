@@ -1,44 +1,13 @@
 ---
-- job:
-    name: base-crc-openstack
-    parent: base-crc
-    abstract: true
-    timeout: 10800
-    required-projects: &required_projects
-      - openstack-k8s-operators/install_yamls
-      - opendev.org/zuul/zuul-jobs
-      - name: openstack-k8s-operators/ci-framework
-        override-checkout: main
-    roles:
-      - zuul: github.com/openstack-k8s-operators/ci-framework
-    vars:
-      crc_parameters: "--memory 20000 --disk-size 120 --cpus 6"
-      operators_namespace: openstack-operators
-      pre_pull_images:
-        - registry.redhat.io/rhosp-rhel9/openstack-rabbitmq:17.0
-        - quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:afa73a12a1ffd31f77b10a25c43a4d02b0fd62f927f6209c26983bd8aee021bf
-
 # Job to deploy podified control plane with network isolation
 - job:
-    name: centos-9-crc-singlenode-podified-deployment
-    parent: base-crc-openstack
-    nodeset: centos-9-crc-xxl
-    run: ci/playbooks/deploy_podified_openstack.yaml
-    post-run: ci/playbooks/collect_logs.yaml
+    name: install-yamls-crc-podified-deployment
+    parent: cifmw-crc-podified-edpm-deployment
     vars:
-      network_isolation: true
-      crc_attach_default_interface: true
+      deploy_edpm: false
+      podified_validation: true
 
 # Job for edpm deployment
 - job:
-    name: centos-9-crc-singlenode-podified-edpm-deployment
-    parent: base-crc-openstack
-    nodeset: centos-9-crc-3xl
-    run:
-      - ci/playbooks/deploy_podified_openstack.yaml
-      - ci/playbooks/deploy_edpm.yaml
-    post-run: ci/playbooks/collect_logs.yaml
-    vars:
-      network_isolation: true
-      crc_attach_default_interface: true
-      bmo_setup: false
+    name: install-yamls-crc-podified-edpm-deployment
+    parent: cifmw-crc-podified-edpm-deployment
