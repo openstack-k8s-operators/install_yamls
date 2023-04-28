@@ -3,5 +3,5 @@
     name: openstack-k8s-operators/install_yamls
     github-check:
       jobs:
-        - centos-9-crc-singlenode-podified-deployment
-        - centos-9-crc-singlenode-podified-edpm-deployment
+        - install-yamls-crc-podified-deployment
+        - install-yamls-crc-podified-edpm-deployment
