@@ -32,6 +32,7 @@ OPENSTACK_CTLPLANE           ?= $(if $(findstring true,$(NETWORK_ISOLATION)),con
 OPENSTACK_CR                 ?= ${OPERATOR_BASE_DIR}/openstack-operator/${OPENSTACK_CTLPLANE}
 OPENSTACK_BUNDLE_IMG         ?= quay.io/openstack-k8s-operators/openstack-operator-bundle:latest
 OPENSTACK_STORAGE_BUNDLE_IMG ?= quay.io/openstack-k8s-operators/openstack-operator-storage-bundle:latest
+OPENSTACK_CRDS_DIR           ?= openstack_crds
 
 # Infra Operator
 INFRA_IMG           ?= quay.io/openstack-k8s-operators/infra-operator-index:latest
@@ -414,13 +415,14 @@ edpm_deploy: input edpm_deploy_prep ## installs the dataplane instance using kus
 
 .PHONY: openstack_crds
 openstack_crds: ## installs all openstack CRDs. Useful for infrastructure dev
-	mkdir -p ${OUT}/openstack_crds
-	skopeo copy "docker://${OPENSTACK_BUNDLE_IMG}" dir:${OUT}/openstack_crds
-	for X in $$(file ${OUT}/openstack_crds/* | grep gzip | cut -f 1 -d ':'); do tar xvf $$X -C ${OUT}/openstack_crds/; done
-	for X in $$(grep -l CustomResourceDefinition ${OUT}/openstack_crds/manifests/*); do oc apply -f $$X; done
+	mkdir -p ${OUT}/${OPENSTACK_CRDS_DIR}
+	skopeo copy "docker://${OPENSTACK_BUNDLE_IMG}" dir:${OUT}/${OPENSTACK_CRDS_DIR}
+	for X in $$(file ${OUT}/${OPENSTACK_CRDS_DIR}/* | grep gzip | cut -f 1 -d ':'); do tar xvf $$X -C ${OUT}/${OPENSTACK_CRDS_DIR}/; done
+	for X in $$(grep -l CustomResourceDefinition ${OUT}/${OPENSTACK_CRDS_DIR}/manifests/*); do oc apply -f $$X; done
 
 .PHONY: openstack_storage_crds
 openstack_storage_crds: export OPENSTACK_BUNDLE_IMG=${OPENSTACK_STORAGE_BUNDLE_IMG}
+openstack_storage_crds: export OPENSTACK_CRDS_DIR=openstack_storage_crds
 openstack_storage_crds: ## installs storage openstack CRDs. Useful for infrastructure dev
 	make openstack_crds
 
