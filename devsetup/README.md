@@ -130,3 +130,125 @@ In case additional compute node VMs are deployed, run:
 ```
 make edpm_compute_cleanup EDPM_COMPUTE_SUFFIX=1
 ```
+
+### BMaaS LAB
+The BMaaS LAB will create additional VM's alongside the CRC instance as well
+as a virtual RedFish (sushy-emulator) service running in CRC. The VMs can be
+used as virtual baremetal nodes managed by Ironic deployed on CRC.
+
+The VM's are attached to a separate libvirt network `crc-bmaas`, this network
+is attached to the CRC instance and a linux-bridge, `crc-bmaas`, is
+configured on the CRC with a NetworkAttachmentDefinition `baremetal-net`.
+
+When deploying ironic, set up the `networkAttachments`, `provisionNetwork` and
+`inspectionNetwork` to use the `baremetal-net` NetworkAttachmentDefinition.
+
+Example:
+```yaml
+  ---
+  apiVersion: ironic.openstack.org/v1beta1
+  kind: Ironic
+  metadata:
+    name: ironic
+    namespace: openstack
+  spec:
+    < --- snip --->
+    ironicConductors:
+    - networkAttachments:
+      - baremetal-net
+      provisionNetwork: baremetal-net
+      dhcpRanges:
+      - name: netA
+        cidr: 172.20.1.0/24
+        start: 172.20.1.100
+        end: 172.20.1.150
+        gateway: 172.20.1.1
+    ironicInspector:
+      networkAttachments:
+      - baremetal-net
+      inspectionNetwork: baremetal-net
+      dhcpRanges:
+      - name: netA
+        cidr: 172.20.1.0/24
+        start: 172.20.1.70
+        end: 172.20.1.90
+        gateway: 172.20.1.1
+    < --- snip --->
+```
+
+The RedFish (sushy-emulator) is accessible via a route:
+http://sushy-emulator.apps-crc.testing
+
+```commandline
+curl -u admin:password http://sushy-emulator.apps-crc.testing/redfish/v1/Systems/
+```
+```json
+{
+    "@odata.type": "#ComputerSystemCollection.ComputerSystemCollection",
+    "Name": "Computer System Collection",
+    "Members@odata.count": 2,
+    "Members": [
+
+            {
+                "@odata.id": "/redfish/v1/Systems/e5b1b096-f585-4f39-9174-e03bffe46a95"
+            },
+
+            {
+                "@odata.id": "/redfish/v1/Systems/f91de773-c6a4-4a1b-b419-e0b3dbda3b84"
+            }
+
+    ],
+    "@odata.context": "/redfish/v1/$metadata#ComputerSystemCollection.ComputerSystemCollection",
+    "@odata.id": "/redfish/v1/Systems",
+    "@Redfish.Copyright": "Copyright 2014-2016 Distributed Management Task Force, Inc. (DMTF). For the full DMTF copyright policy, see http://www.dmtf.org/about/policies/copyright."
+```
+
+#### Pre-requisites
+Install CRC and the nmstate operator and the openstack namespace
+```commandline
+cd <install_yamls_root_path>/devsetup
+make crc
+cd <install_yamls_root_path>/
+make nmstate
+make namespace
+```
+
+#### Create the BMaaS LAB
+```commandline
+cd <install_yamls_root_path>/devsetup
+make bmaas BMAAS_NODE_COUNT=4  # Default node count is: 2
+```
+
+#### Cleanup
+```commandline
+cd <install_yamls_root_path>/devsetup
+make bmaas_cleanup
+```
+
+#### Enroll nodes using node inventory yaml
+
+**TIP** `make bmaas_generate_nodes_yaml | tail -n +2` will print nodes YAML
+
+Example:
+```yaml
+---
+nodes:
+- name: crc-bmaas-01
+  driver: redfish
+  driver_info:
+    redfish_address: http://sushy-emulator.apps-crc.testing
+    redfish_system_id: /redfish/v1/Systems/f91de773-c6a4-4a1b-b419-e0b3dbda3b84
+    redfish_username: admin
+    redfish_password: password
+  ports:
+  - address: 52:54:00:fa:a7:b1
+- name: crc-bmaas-02
+  driver: redfish
+  driver_info:
+    redfish_address: http://sushy-emulator.apps-crc.testing
+    redfish_system_id: /redfish/v1/Systems/e5b1b096-f585-4f39-9174-e03bffe46a95
+    redfish_username: admin
+    redfish_password: password
+  ports:
+  - address: 52:54:00:8a:ea:14
+```
