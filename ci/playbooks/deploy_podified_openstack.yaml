@@ -29,6 +29,7 @@
     - name: Disable the openshift-marketplace
       ansible.builtin.shell: |
         oc patch operatorhubs/cluster --type merge --patch '{"spec":{"sources":[{"disabled": true,"name": "redhat-marketplace"}]}}'
+      changed_when: true
 
       # Note(chandan): Use default crc storage class `crc-csi-hostpath-provisioner`
     - name: Deploy OpenStack
@@ -69,3 +70,4 @@
     - name: Restart nova-scheduler to pick up cell1
       ansible.builtin.shell: |
         oc delete pod -l service=nova-scheduler
+      changed_when: true
