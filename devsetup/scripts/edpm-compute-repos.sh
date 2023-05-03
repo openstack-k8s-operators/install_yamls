@@ -32,14 +32,17 @@ if [[ ! -f $SSH_KEY ]]; then
 fi
 
 cat <<EOF > $CMDS_FILE
-rpm -q git || sudo yum -y install git
-sudo yum -y install python-setuptools python-requests python3-pip
-git clone https://github.com/openstack-k8s-operators/repo-setup
-pushd repo-setup
-sudo pip install -r requirements.txt
-sudo python3 setup.py install
+#!/bin/bash
+set -ex
+# Install latest version of repo-setup without installing pip or git
+pushd /tmp
+curl -sL https://github.com/openstack-k8s-operators/repo-setup/archive/refs/heads/main.tar.gz | tar -xz
+pushd repo-setup-main
+python3 -m venv ./venv
+PBR_VERSION=0.0.0 ./venv/bin/pip install ./
+./venv/bin/repo-setup ${REPO_SETUP_CMD}
 popd
-sudo /usr/local/bin/repo-setup ${REPO_SETUP_CMD}
+popd
 EOF
 
 scp $SSH_OPT $CMDS_FILE root@$IP:/tmp/repo-setup.sh
