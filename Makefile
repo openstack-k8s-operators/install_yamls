@@ -45,14 +45,15 @@ MEMCACHED_CR        ?= ${OPERATOR_BASE_DIR}/infra-operator/${MEMCACHED}
 MEMCACHED_DEPL_IMG  ?= unused
 
 # Keystone
-KEYSTONE_IMG         ?= quay.io/openstack-k8s-operators/keystone-operator-index:latest
-KEYSTONE_REPO        ?= https://github.com/openstack-k8s-operators/keystone-operator.git
-KEYSTONE_BRANCH      ?= master
-KEYSTONEAPI          ?= config/samples/keystone_v1beta1_keystoneapi.yaml
-KEYSTONEAPI_CR       ?= ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
-KEYSTONEAPI_DEPL_IMG ?= unused
-KEYSTONE_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.yaml
-KEYSTONE_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
+KEYSTONE_IMG             ?= quay.io/openstack-k8s-operators/keystone-operator-index:latest
+KEYSTONE_REPO            ?= https://github.com/openstack-k8s-operators/keystone-operator.git
+KEYSTONE_BRANCH          ?= master
+KEYSTONEAPI              ?= config/samples/keystone_v1beta1_keystoneapi.yaml
+KEYSTONEAPI_CR           ?= ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
+KEYSTONEAPI_DEPL_IMG     ?= unused
+KEYSTONE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.yaml
+KEYSTONE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
+KEYSTONE_KUTTL_NAMESPACE ?= keystone-kuttl-tests
 
 # Mariadb
 MARIADB_IMG         ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
@@ -976,9 +977,12 @@ mariadb_kuttl: namespace input openstack_crds deploy_cleanup mariadb_deploy_prep
 
 .PHONY: keystone_kuttl_run
 keystone_kuttl_run: ## runs kuttl tests for the keystone operator, assumes that everything needed for running the test was deployed beforehand.
-	KEYSTONE_KUTTL_DIR=${KEYSTONE_KUTTL_DIR} kubectl-kuttl test --config ${KEYSTONE_KUTTL_CONF} ${KEYSTONE_KUTTL_DIR}
+	KEYSTONE_KUTTL_DIR=${KEYSTONE_KUTTL_DIR} kubectl-kuttl test --config ${KEYSTONE_KUTTL_CONF} ${KEYSTONE_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: keystone_kuttl
+keystone_kuttl: export NAMESPACE = ${KEYSTONE_KUTTL_NAMESPACE}
+# Set the value of $KEYSTONE_KUTTL_NAMESPACE if you want to run the keystone
+# kuttl tests in a namespace different than the default (keystone-kuttl-tests)
 keystone_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate keystone_deploy_prep keystone ## runs kuttl tests for the keystone operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make keystone_kuttl_run
 	make deploy_cleanup
