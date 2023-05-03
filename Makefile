@@ -139,7 +139,11 @@ IRONIC_REPO         ?= https://github.com/openstack-k8s-operators/ironic-operato
 IRONIC_BRANCH       ?= master
 IRONIC              ?= config/samples/ironic_v1beta1_ironic.yaml
 IRONIC_CR           ?= ${OPERATOR_BASE_DIR}/ironic-operator/${IRONIC}
-# TODO: Image customizations for all Ironic services
+IRONICAPI_DEPL_IMG  ?= unused
+IRONICCON_DEPL_IMG  ?= unused
+IRONICPXE_DEPL_IMG  ?= unused
+IRONICINS_DEPL_IMG  ?= unused
+IRONICNAG_DEPL_IMG  ?= unused
 IRONIC_KUTTL_CONF   ?= ${OPERATOR_BASE_DIR}/ironic-operator/kuttl-test.yaml
 IRONIC_KUTTL_DIR    ?= ${OPERATOR_BASE_DIR}/ironic-operator/tests/kuttl/tests
 
@@ -850,7 +854,8 @@ ironic_cleanup: ## deletes the operator, but does not cleanup the service resour
 
 .PHONY: ironic_deploy_prep
 ironic_deploy_prep: export KIND=Ironic
-ironic_deploy_prep: export IMAGE=${IRONIC_IMG}
+ironic_deploy_prep: export IMAGE=${IRONICAPI_DEPL_IMG},${IRONICCON_DEPL_IMG},${IRONICPXE_DEPL_IMG},${IRONICINS_DEPL_IMG},${IRONICPXE_DEPL_IMG},${IRONICNAG_DEPL_IMG}
+ironic_deploy_prep: export IMAGE_PATH=ironicAPI/containerImage,ironicConductors/0/containerImage,ironicConductors/0/pxeContainerImage,ironicInspector/containerImage,ironicInspector/pxeContainerImage,ironicNeutronAgent/containerImage
 ironic_deploy_prep: ironic_deploy_cleanup ## prepares the CR to install the service based on the service sample file IRONIC
 	$(eval $(call vars,$@,ironic))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
