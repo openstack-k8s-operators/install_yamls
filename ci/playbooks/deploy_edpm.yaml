@@ -1,11 +1,12 @@
 ---
-- hosts: controller
+- name: Deploy EDPM
+  hosts: controller
   vars:
     install_yamls_basedir: "{{ ansible_user_dir }}/src/github.com/openstack-k8s-operators/install_yamls"
   tasks:
     - name: Install libguestfs-tools-c package
       become: true
-      package:
+      ansible.builtin.package:
         name: libguestfs-tools-c
         state: present
 
@@ -43,6 +44,7 @@
         oc get openstackdataplanenode
         oc get pods | grep edpm
       ignore_errors: true
+      register: dataplane_info_retrieval_errors
 
     - name: Get nova-edpm-compute-0-deploy-nova pod name
       register: edpm_pod
@@ -56,7 +58,7 @@
     - name: Wait for nova-edpm-compute-0-deploy-nova pod to finish
       register: deploy_status
       ansible.builtin.shell:
-        cmd: "oc wait --timeout=0 --for=jsonpath='{.status.phase}'=Succeeded {{ edpm_pod.stdout |trim }}"
+        cmd: "oc wait --timeout=0 --for=jsonpath='{.status.phase}'=Succeeded {{ edpm_pod.stdout | trim }}"
       until: deploy_status.rc == 0
       retries: 100
       delay: 20
