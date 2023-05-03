@@ -9,6 +9,23 @@ EDPM_NETWORK_CONFIG_TEMPLATE ?= templates/single_nic_vlans/single_nic_vlans.j2
 EDPM_SSHD_ALLOWED_RANGES ?= ['192.168.122.0/24']
 EDPM_CHRONY_NTP_SERVER ?= pool.ntp.org
 EDPM_PLAY_CRD ?= edpm/edpm-play.yaml
+
+BMAAS_INSTANCE_NAME_PREFIX ?= crc-bmaas
+BMAAS_INSTANCE_MEMORY ?= 4096
+BMAAS_INSTANCE_VCPUS ?= 2
+BMAAS_INSTANCE_DISK_SIZE ?= 10
+BMAAS_INSTANCE_OS_VARIANT ?= centos-stream9
+BMAAS_INSTANCE_VIRT_TYPE ?= kvm
+BMAAS_INSTANCE_NET_MODEL ?= virtio
+BMAAS_NETWORK_NAME ?= crc-bmaas
+BMAAS_NETWORK_IPADDRESS ?= 172.20.1.1
+BMAAS_NETWORK_NETMASK ?= 255.255.255.0
+BMAAS_NODE_COUNT ?= 2
+BMAAS_REDFISH_USERNAME ?= admin
+BMAAS_REDFISH_PASSWORD ?= password
+BMAAS_SUSHY_EMULATOR_NAMESPACE ?= sushy-emulator
+BMAAS_LIBVIRT_USER ?= sushyemu
+
 CLEANUP_DIR_CMD ?= rm -Rf
 
 define vars
@@ -127,3 +144,117 @@ cifmw_prepare: ## Clone the ci-framework repository in the ci-framework director
 .PHONY: cifmw_cleanup
 cifmw_cleanup: ## Clean ci-framework git clone
 	${CLEANUP_DIR_CMD} ci-framework
+
+##@ BMaaS/Ironic
+.PHONY: bmaas_network
+bmaas_network: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
+bmaas_network: export NETWORK_IPADDRESS = ${BMAAS_NETWORK_IPADDRESS}
+bmaas_network: export NETWORK_NETMASK = ${BMAAS_NETWORK_NETMASK}
+bmaas_network: ## Create libvirt BMaaS network
+	scripts/network-setup.sh --create
+
+.PHONY: bmaas_network_cleanup
+bmaas_network_cleanup: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
+bmaas_network_cleanup: export NETWORK_IPADDRESS = ${BMAAS_NETWORK_IPADDRESS}
+bmaas_network_cleanup: export NETWORK_NETMASK = ${BMAAS_NETWORK_NETMASK}
+bmaas_network_cleanup: ## Delete libvirt BMaaS network
+	scripts/network-setup.sh --cleanup
+
+.PHONY: bmaas_crc_attach_network
+bmaas_crc_attach_network: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
+bmaas_crc_attach_network: ## Attach BMaaS network to CRC
+	scripts/bmaas/attach-network.sh --create
+
+.PHONY: bmaas_crc_attach_network_cleanup
+bmaas_crc_attach_network_cleanup: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
+bmaas_crc_attach_network_cleanup: ## Detach BMaaS network from CRC
+	scripts/bmaas/attach-network.sh --cleanup
+
+.PHONY: bmaas_crc_baremetal_bridge
+bmaas_crc_baremetal_bridge: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
+bmaas_crc_baremetal_bridge:
+	scripts/bmaas/baremetal-bridge.sh --create
+
+.PHONY: bmaas_crc_baremetal_bridge_cleanup
+bmaas_crc_baremetal_bridge_cleanup: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
+bmaas_crc_baremetal_bridge_cleanup:
+	scripts/bmaas/baremetal-bridge.sh --cleanup
+
+.PHONY: bmaas_baremetal_net_nad
+bmaas_baremetal_net_nad:
+	scripts/bmaas/network-attachement-definition.sh --create
+
+.PHONY: bmaas_baremetal_net_nad_cleanup
+bmaas_baremetal_net_nad_cleanup:
+	scripts/bmaas/network-attachement-definition.sh --cleanup
+
+.PHONY: bmaas_virtual_bms
+bmaas_virtual_bms: export NODE_COUNT = ${BMAAS_NODE_COUNT}
+bmaas_virtual_bms: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
+bmaas_virtual_bms: export NODE_NAME_PREFIX = ${BMAAS_INSTANCE_NAME_PREFIX}
+bmaas_virtual_bms: export MEMORY = ${BMAAS_INSTANCE_MEMORY}
+bmaas_virtual_bms: export VCPUS = ${BMAAS_INSTANCE_VCPUS}
+bmaas_virtual_bms: export DISK_SIZE = ${BMAAS_INSTANCE_DISK_SIZE}
+bmaas_virtual_bms: export OS_VARIANT = ${BMAAS_INSTANCE_OS_VARIANT}
+bmaas_virtual_bms: export VIRT_TYPE = ${BMAAS_INSTANCE_VIRT_TYPE}
+bmaas_virtual_bms: export NET_MODEL = ${BMAAS_INSTANCE_NET_MODEL}
+bmaas_virtual_bms: ## Create libvirt VM for BMaaS
+	scripts/bmaas/vbm-setup.sh --create
+
+.PHONY: bmaas_virtual_bms_cleanup
+bmaas_virtual_bms_cleanup: export NODE_COUNT = ${BMAAS_NODE_COUNT}
+bmaas_virtual_bms_cleanup: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
+bmaas_virtual_bms_cleanup: export NODE_NAME_PREFIX = ${BMAAS_NODE_NAME_PREFIX}
+bmaas_virtual_bms_cleanup: export MEMORY = ${BMAAS_INSTANCE_MEMORY}
+bmaas_virtual_bms_cleanup: export VCPUS = ${BMAAS_INSTANCE_VCPUS}
+bmaas_virtual_bms_cleanup: export DISK_SIZE = ${BMAAS_INSTANCE_DISK_SIZE}
+bmaas_virtual_bms_cleanup: export OS_VARIANT = ${BMAAS_INSTANCE_OS_VARIANT}
+bmaas_virtual_bms_cleanup: export VIRT_TYPE = ${BMAAS_INSTANCE_VIRT_TYPE}
+bmaas_virtual_bms_cleanup: export NET_MODEL = ${BMAAS_INSTANCE_NET_MODEL}
+bmaas_virtual_bms_cleanup: ## Cleanup libvirt VM for BMaaS
+	scripts/bmaas/vbm-setup.sh --cleanup
+
+.PHONY: bmaas_sushy_emulator
+bmaas_sushy_emulator: export NODE_NAME_PREFIX = ${BMAAS_NODE_NAME_PREFIX}
+bmaas_sushy_emulator: export LIBVIRT_USER = ${BMAAS_LIBVIRT_USER}
+bmaas_sushy_emulator: export SUSHY_EMULATOR_NAMESPACE = ${BMAAS_SUSHY_EMULATOR_NAMESPACE}
+bmaas_sushy_emulator: export REDFISH_USERNAME = ${BMAAS_REDFISH_USERNAME}
+bmaas_sushy_emulator: export REDFISH_PASSWORD = ${BMAAS_REDFISH_PASSWORD}
+bmaas_sushy_emulator: ## Create BMaaS sushy-emulator (Virtual RedFish)
+	scripts/bmaas/sushy-emulator.sh --create
+
+.PHONY: bmaas_sushy_emulator_cleanup
+bmaas_sushy_emulator_cleanup: export NODE_NAME_PREFIX = ${BMAAS_NODE_NAME_PREFIX}
+bmaas_sushy_emulator_cleanup: export LIBVIRT_USER = ${BMAAS_LIBVIRT_USER}
+bmaas_sushy_emulator_cleanup: export SUSHY_EMULATOR_NAMESPACE = ${BMAAS_SUSHY_EMULATOR_NAMESPACE}
+bmaas_sushy_emulator_cleanup: export REDFISH_USERNAME = ${BMAAS_REDFISH_USERNAME}
+bmaas_sushy_emulator_cleanup: export REDFISH_PASSWORD = ${BMAAS_REDFISH_PASSWORD}
+bmaas_sushy_emulator_cleanup: ## Cleanup BMaaS sushy-emulator (Virtual RedFish)
+	scripts/bmaas/sushy-emulator.sh --cleanup
+
+.PHONY: bmaas_generate_nodes_yaml
+bmaas_generate_nodes_yaml: export NODE_NAME_PREFIX = ${BMAAS_NODE_NAME_PREFIX}
+bmaas_generate_nodes_yaml: export REDFISH_USERNAME = ${BMAAS_REDFISH_USERNAME}
+bmaas_generate_nodes_yaml: export REDFISH_PASSWORD = ${BMAAS_REDFISH_PASSWORD}
+bmaas_generate_nodes_yaml: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
+bmaas_generate_nodes_yaml:
+	scripts/bmaas/generate-nodes-yaml.sh
+
+.PHONY: bmaas
+bmaas: bmaas_cleanup
+	make bmaas_network
+	make bmaas_crc_attach_network
+	make bmaas_crc_baremetal_bridge
+	make bmaas_baremetal_net_nad
+	make bmaas_virtual_bms
+	make bmaas_sushy_emulator
+	make bmaas_generate_nodes_yaml
+
+.PHONY: bmaas_cleanup
+bmaas_cleanup:
+	make bmaas_sushy_emulator_cleanup
+	make bmaas_virtual_bms_cleanup
+	make bmaas_baremetal_net_nad_cleanup
+	make bmaas_crc_baremetal_bridge_cleanup
+	make bmaas_crc_attach_network_cleanup
+	make bmaas_network_cleanup
