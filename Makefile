@@ -188,6 +188,18 @@ OCTAVIA_CR          ?= ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIA}
 OCTAVIA_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/octavia-operator/kuttl-test.yaml
 OCTAVIA_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/octavia-operator/tests/kuttl/tests
 
+# Designate
+# NOTE(dkehn): for testing will use dkehn rep0 and quay accts.
+# DESIGNATE_IMG        ?= quay.io/openstack-k8s-operators/designate-operator-index:latest
+# DESIGNATE_REPO       ?= https://github.com/openstack-k8s-operators/designate-operator.git
+DESIGNATE_IMG        ?= quay.io/dkehn/designate-operator-index:latest
+DESIGNATE_REPO       ?= https://github.com/dkehn/designate-operator.git
+DESIGNATE_BRANCH     ?= main
+DESIGNATE            ?= config/samples/designate_v1beta1_designate.yaml
+DESIGNATE_CR         ?= ${OPERATOR_BASE_DIR}/designate-operator/${DESIGNATE}
+DESIGNATE_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/designate-operator/kuttl-test.yaml
+DESIGNATE_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/designate-operator/tests/kuttl/tests
+
 # Nova
 NOVA_IMG            ?= quay.io/openstack-k8s-operators/nova-operator-index:latest
 NOVA_REPO           ?= https://github.com/openstack-k8s-operators/nova-operator.git
@@ -331,7 +343,8 @@ help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 .PHONY: cleanup
-cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup dataplane_cleanup ansibleee_cleanup rabbitmq_cleanup infra_cleanup ## Delete all operators
+
+cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup designate_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup dataplane_cleanup ansibleee_cleanup rabbitmq_cleanup infra_cleanup ## Delete all operators
 
 .PHONY: deploy_cleanup
 deploy_cleanup: heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
@@ -1002,6 +1015,49 @@ octavia_deploy_cleanup: namespace ## cleans up the service instance, Does not af
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/octavia-operator ${DEPLOY_DIR}
 	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database octavia;" || true
 
+##@ DESIGNATE
+.PHONY: designate_prep
+designate_prep: export IMAGE=${DESIGNATE_IMG}
+designate_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,designate))
+	bash scripts/gen-olm.sh
+
+.PHONY: designate
+designate: namespace designate_prep ## installs the operator, also runs the prep step. Set DESIGNATE_IMG for custom image.
+	$(eval $(call vars,$@,designate))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: designate_cleanup
+designate_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,designate))
+	bash scripts/operator-cleanup.sh
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
+
+.PHONY: designate_deploy_prep
+designate_deploy_prep: export KIND=Designate
+designate_deploy_prep: designate_deploy_cleanup ## prepares the CR to install the service based on the service sample file DESIGNATE
+	$(eval $(call vars,$@,designate))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone -b ${DESIGNATE_BRANCH} ${DESIGNATE_REPO} && popd
+	cp ${DESIGNATE_CR} ${DEPLOY_DIR}
+	bash scripts/gen-service-kustomize.sh
+
+.PHONY: designate_deploy
+designate_deploy: input designate_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set DESIGNATE_REPO and DESIGNATE_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,designate))
+	bash scripts/operator-deploy-resources.sh
+
+.PHONY: designate_deploy_validate
+designate_deploy_validate: input namespace ## checks that designate was properly deployed. Set DESIGNATE_KUTTL_DIR to use assert file from custom repo.
+	kubectl-kuttl assert -n ${NAMESPACE} ${DESIGNATE_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
+
+.PHONY: designate_deploy_cleanup
+designate_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,designate))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/designate-operator ${DEPLOY_DIR}
+	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database designate;" || true
+
 ##@ NOVA
 .PHONY: nova_prep
 nova_prep: export IMAGE=${NOVA_IMG}
@@ -1123,6 +1179,24 @@ octavia_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy keysto
 	make ovn_cleanup
 	make keystone_cleanup
 	make mariadb_cleanup
+
+.PHONY: octavia_kuttl_run
+octavia_kuttl_run: ## runs kuttl tests for the octavia operator, assumes that everything needed for running the test was deployed beforehand.
+	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${OCTAVIA_KUTTL_CONF} ${OCTAVIA_KUTTL_DIR}
+
+.PHONY: designate_kuttl
+designate_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone ovn designate_deploy_prep designate ovn_deploy keystone_deploy mariadb_deploy_validate ## runs kuttl tests for the designate operator. Installs openstack crds and mariadb, keystone, designate, ovn operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	make designate_kuttl_run
+	make ovn_deploy_cleanup
+	make deploy_cleanup
+	make designate_cleanup
+	make ovn_cleanup
+	make keystone_cleanup
+	make mariadb_cleanup
+
+.PHONY: designate_kuttl_run
+designate_kuttl_run: ## runs kuttl tests for the designate operator, assumes that everything needed for running the test was deployed beforehand.
+	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${DESIGNATE_KUTTL_CONF} ${DESIGNATE_KUTTL_DIR}
 
 .PHONY: ovn_kuttl_run
 ovn_kuttl_run: ## runs kuttl tests for the ovn operator, assumes that everything needed for running the test was deployed beforehand.
