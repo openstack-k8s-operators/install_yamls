@@ -50,6 +50,8 @@ secretGenerator:
   - CeilometerPassword=${PASSWORD}
   - DbRootPassword=${PASSWORD}
   - DatabasePassword=${PASSWORD}
+  - DesignatePassword=${PASSWORD}
+  - DesignateDatabasePassword=${PASSWORD}
   - KeystoneDatabasePassword=${PASSWORD}
   - PlacementPassword=${PASSWORD}
   - PlacementDatabasePassword=${PASSWORD}
