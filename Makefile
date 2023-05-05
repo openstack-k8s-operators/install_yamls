@@ -819,7 +819,7 @@ rabbitmq_deploy_prep: export KIND=RabbitmqCluster
 rabbitmq_deploy_prep: rabbitmq_deploy_cleanup ## prepares the CR to install the service based on the service sample file RABBITMQ
 	$(eval $(call vars,$@,rabbitmq))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(RABBITMQ_BRANCH),-b ${RABBITMQ_BRANCH}) ${RABBITMQ_REPO} rabbitmq-operator "${OPERATOR_NAME}-operator" && popd
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(RABBITMQ_BRANCH),-b ${RABBITMQ_BRANCH}) ${RABBITMQ_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${RABBITMQ_CR} ${DEPLOY_DIR}
 	#bash scripts/gen-service-kustomize.sh
 
