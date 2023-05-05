@@ -57,6 +57,24 @@
     force: true
     timeout: 30
 
+- name: Download and extract oc (named version)
+  ansible.builtin.unarchive:
+    src:
+      "https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/{{ oc_version|default('stable') }}/openshift-client-linux.tar.gz"
+    dest: "{{ lookup('env', 'HOME') }}/bin/"
+    remote_src: true
+  when: (oc_version is defined and (oc_version == 'stable' or oc_version == 'latest')) or oc_version is not defined
+  tags: oc
+
+- name: Download and extract oc (numbered version)
+  ansible.builtin.unarchive:
+    src:
+      "https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/{{ oc_version }}/openshift-client-linux-{{ oc_version }}.tar.gz"
+    dest: "{{ lookup('env', 'HOME') }}/bin/"
+    remote_src: true
+  when: (oc_version is defined and oc_version != 'stable' and oc_version != 'latest')
+  tags: oc
+
 - name: Download and extract kustomize
   ansible.builtin.unarchive:
     src:

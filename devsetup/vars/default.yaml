@@ -10,3 +10,6 @@ go_version: 1.19.7
 
 # kustomize version to use (must be specific version)
 kustomize_version: v4.5.7
+
+# oc version to use, can be latest/stable or specific
+oc_version: stable
