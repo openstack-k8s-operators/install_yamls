@@ -245,6 +245,13 @@ CEILOMETER_CENTRAL_DEPL_IMG      ?= unused
 CEILOMETER_NOTIFICATION_DEPL_IMG ?= unused
 SG_CORE_DEPL_IMG                 ?= unused
 
+# BMO
+BMO_REPO                         ?= https://github.com/metal3-io/baremetal-operator
+BMO_BRANCH                       ?= main
+CERTMANAGER_URL                  ?= https://github.com/jetstack/cert-manager/releases/download/v1.5.4/cert-manager.yaml
+PROVISIONING_INTERFACE           ?= enp2s0
+IRONIC_HOST                      ?= 192.168.130.11
+
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
 ${1}: export NAMESPACE=${NAMESPACE}
@@ -340,10 +347,37 @@ input_cleanup: ## deletes the secret/CM, used by the services as input
 	oc kustomize ${OUT}/${NAMESPACE}/input | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OUT}/${NAMESPACE}/input
 
+##@ CRC BMO SETUP
+.PHONY: crc_bmo_setup
+crc_bmo_setup: export IRONIC_HOST_IP=${IRONIC_HOST}
+crc_bmo_setup:
+	$(eval $(call vars,$@))
+	mkdir -p ${OPERATOR_BASE_DIR}
+	oc apply -f ${CERTMANAGER_URL}
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(BMO_BRANCH),-b ${BMO_BRANCH}) ${BMO_REPO} "baremetal-operator" && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/eth2/${PROVISIONING_INTERFACE}/g' ironic-deployment/default/ironic_bmo_configmap.env && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && make generate manifests && bash tools/deploy.sh -b -i && popd
+	## Hack to add required scc
+	oc adm policy add-scc-to-user privileged system:serviceaccount:baremetal-operator-system:baremetal-operator-controller-manager
+	oc adm policy add-scc-to-user privileged system:serviceaccount:baremetal-operator-system:default
+
+##@ CRC BMO CLEANUP
+.PHONY: crc_bmo_cleanup
+crc_bmo_cleanup:
+	oc kustomize ${OPERATOR_BASE_DIR}/baremetal-operator/ironic-deployment/default | oc delete --ignore-not-found=true -f -
+	oc kustomize ${OPERATOR_BASE_DIR}/baremetal-operator/config | oc delete --ignore-not-found=true -f -
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/baremetal-operator
+
+BMO_CRDS=$(shell oc get crds | grep metal3.io)
+ifeq (,$(findstring baremetalhosts.metal3.io, ${BMO_CRDS}))
+	BMO_SETUP=true
+endif
+
 ##@ OPENSTACK
 .PHONY: openstack_prep
 openstack_prep: export IMAGE=${OPENSTACK_IMG}
 openstack_prep: $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config) ## creates the files to install the operator using olm
+openstack_prep: $(if $(findstring true, $(BMO_SETUP)), crc_bmo_setup) ## Setup BMO
 	$(eval $(call vars,$@,openstack))
 	bash scripts/gen-olm.sh
 
