@@ -1110,9 +1110,12 @@ heat_kuttl_run: ## runs kuttl tests for the heat operator, assumes that everythi
 	kubectl-kuttl test --config ${HEAT_KUTTL_CONF} ${HEAT_KUTTL_DIR}
 
 .PHONY: heat_kuttl
-heat_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy heat heat_deploy_prep heat_deploy  ## runs kuttl tests for the heat operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+heat_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy rabbitmq rabbitmq_deploy infra heat heat_deploy_prep  ## runs kuttl tests for the heat operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make heat_kuttl_run
 	make deploy_cleanup
+	make rabbitmq_deploy_cleanup
+	make infra_cleanup
+	make rabbitmq_cleanup
 	make heat_cleanup
 	make keystone_cleanup
 	make mariadb_cleanup
