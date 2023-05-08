@@ -436,6 +436,7 @@ edpm_deploy_prep: edpm_deploy_cleanup $(if $(findstring true,$(NETWORK_ISOLATION
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
+	oc apply -f ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
 	cp ${DATAPLANE_CR} ${DEPLOY_DIR}
 	bash scripts/gen-edpm-kustomize.sh
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
