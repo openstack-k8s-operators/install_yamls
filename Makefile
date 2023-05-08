@@ -370,7 +370,7 @@ crc_bmo_cleanup:
 
 BMO_CRDS=$(shell oc get crds | grep metal3.io)
 ifeq (,$(findstring baremetalhosts.metal3.io, ${BMO_CRDS}))
-	BMO_SETUP=true
+	BMO_SETUP ?= true
 endif
 
 ##@ OPENSTACK
