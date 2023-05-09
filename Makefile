@@ -220,6 +220,9 @@ DATAPLANE_CHRONY_NTP_SERVER                      ?=pool.ntp.org
 DATAPLANE_DNS_SERVER                             ?=192.168.122.1
 DATAPLANE_OVN_METADATA_AGENT_BIND_HOST           ?=127.0.0.1
 DATAPLANE_SINGLE_NODE                            ?=true
+DATAPLANE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/dataplane-operator/kuttl-test.yaml
+DATAPLANE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/dataplane-operator/tests/kuttl
+DATAPLANE_KUTTL_NAMESPACE ?= dataplane-kuttl-tests
 
 # Manila
 MANILA_IMG          ?= quay.io/openstack-k8s-operators/manila-operator-index:latest
@@ -1143,6 +1146,26 @@ ansibleee_kuttl_prep: ansibleee_kuttl_cleanup
 ansibleee_kuttl: namespace input openstack_crds ansibleee_kuttl_prep ansibleee ## runs kuttl tests for the openstack-ansibleee operator. Installs openstack crds and openstack-ansibleee operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make ansibleee_kuttl_run
 	make ansibleee_cleanup
+
+.PHONY: dataplane_kuttl_run
+dataplane_kuttl_run: ## runs kuttl tests for the openstack-dataplane operator, assumes that everything needed for running the test was deployed beforehand.
+	kubectl-kuttl test --config ${DATAPLANE_KUTTL_CONF} ${DATAPLANE_KUTTL_DIR}
+
+.PHONY: dataplane_kuttl_cleanup
+dataplane_kuttl_cleanup:
+	$(eval $(call vars,$@,openstack-dataplane))
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/dataplane-operator
+
+.PHONY: dataplane_kuttl_prep
+dataplane_kuttl_prep: dataplane_kuttl_cleanup
+	$(eval $(call vars,$@,dataplane))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
+
+.PHONY: dataplane_kuttl
+dataplane_kuttl: namespace input openstack_crds dataplane_kuttl_prep dataplane ## runs kuttl tests for the openstack-dataplane operator. Installs openstack crds and openstack-dataplane operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	make dataplane_kuttl_run
+	make dataplane_cleanup
 
 .PHONY: glance_kuttl_run
 glance_kuttl_run: ## runs kuttl tests for the glance operator, assumes that everything needed for running the test was deployed beforehand.
