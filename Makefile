@@ -1456,7 +1456,7 @@ telemetry_cleanup: ## deletes the operator, but does not cleanup the service res
 .PHONY: telemetry_deploy_prep
 telemetry_deploy_prep: export KIND=Telemetry
 telemetry_deploy_prep: export IMAGE=${CEILOMETER_CENTRAL_DEPL_IMG},${CEILOMETER_NOTIFICATION_DEPL_IMG},${SG_CORE_DEPL_IMG}
-telemetry_deploy_prep: export IMAGE_PATH=centralImage,notiifcationImage,sgCoreImage
+telemetry_deploy_prep: export IMAGE_PATH=centralImage,notificationImage,sgCoreImage
 telemetry_deploy_prep: telemetry_deploy_cleanup ## prepares the CR to install the service based on the service sample file TELEMETRY
 	$(eval $(call vars,$@,telemetry))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
