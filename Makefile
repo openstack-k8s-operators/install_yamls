@@ -177,6 +177,8 @@ HORIZON_BRANCH      ?= main
 HORIZON             ?= config/samples/horizon_v1beta1_horizon.yaml
 HORIZON_CR          ?= ${OPERATOR_BASE_DIR}/horizon-operator/${HORIZON}
 HORIZON_DEPL_IMG    ?= unused
+HORIZON_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/horizon-operator/kuttl-test.yaml
+HORIZON_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/horizon-operator/tests/kuttl/tests
 
 # Heat
 HEAT_IMG            ?= quay.io/openstack-k8s-operators/heat-operator-index:latest
@@ -1154,6 +1156,17 @@ glance_kuttl: namespace input openstack_crds openstack_storage_crds deploy_clean
 	make glance_kuttl_run
 	make deploy_cleanup
 	make cleanup
+
+.PHONY: horizon_kuttl_run
+horizon_kuttl_run: ## runs kuttl tests for the horizon operator, assumes that everything needed for running the test was deployed beforehand.
+	kubectl-kuttl test --config ${HORIZON_KUTTL_CONF} ${HORIZON_KUTTL_DIR}
+
+.PHONY: horizon_kuttl
+horizon_kuttl: namespace input openstack_crds openstack_storage_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy infra horizon_deploy_prep horizon ## runs kuttl tests for the horizon operator. Installs openstack and openstack-storage crds, mariadb, keystone and horizon operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	make horizon_kuttl_run
+	make deploy_cleanup
+	make cleanup
+	make infra_cleanup
 
 ##@ HORIZON
 .PHONY: horizon_prep
