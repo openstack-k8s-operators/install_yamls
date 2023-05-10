@@ -1,11 +1,12 @@
 ---
-- hosts: controller
+- name: Deploy EDPM
+  hosts: controller
   vars:
     install_yamls_basedir: "{{ ansible_user_dir }}/src/github.com/openstack-k8s-operators/install_yamls"
   tasks:
     - name: Install libguestfs-tools-c package
       become: true
-      package:
+      ansible.builtin.package:
         name: libguestfs-tools-c
         state: present
 
@@ -20,6 +21,7 @@
     - name: Sleep for 60 secs to get compute node up
       ansible.builtin.shell: |
         sleep 60;
+      changed_when: false
 
     - name: Run make edpm_compute_repos
       community.general.make:
@@ -43,6 +45,8 @@
         oc get openstackdataplanenode
         oc get pods | grep edpm
       ignore_errors: true
+      register: dataplane_info_retrieval_errors
+      changed_when: false
 
     - name: Get nova-edpm-compute-0-deploy-nova pod name
       register: edpm_pod
@@ -52,18 +56,22 @@
       until: edpm_pod.rc == 0
       retries: 150
       delay: 50
+      changed_when: false
 
     - name: Wait for nova-edpm-compute-0-deploy-nova pod to finish
       register: deploy_status
       ansible.builtin.shell:
-        cmd: "oc wait --timeout=0 --for=jsonpath='{.status.phase}'=Succeeded {{ edpm_pod.stdout |trim }}"
+        cmd: "oc wait --timeout=0 --for=jsonpath='{.status.phase}'=Succeeded {{ edpm_pod.stdout | trim }}"
       until: deploy_status.rc == 0
       retries: 100
       delay: 20
+      changed_when: false
 
     - name: Get the logs of EDPM Play
-      ansible.builtin.shell:
+      ansible.builtin.shell: |
+        set -o pipefail
         for POD in $(oc get pods -o name | egrep "dataplane-deployment-|nova-edpm-compute"); do echo $POD; oc logs $POD; done
+      changed_when: false
 
     - name: Run validations on EDPM node
       community.general.make:
@@ -75,3 +83,4 @@
       ansible.builtin.copy:
         content: "{{ validation_log.stdout }}"
         dest: "{{ install_yamls_basedir }}/out/openstack/edpm_validation.log"
+        mode: '777'

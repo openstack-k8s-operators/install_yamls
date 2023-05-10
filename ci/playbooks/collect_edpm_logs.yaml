@@ -1,5 +1,6 @@
 ---
-- hosts: all,
+- name: Collect edpm logs
+  hosts: all
   vars:
     become: true
     ansible_user: root
@@ -7,7 +8,7 @@
   tasks:
     - name: Install ansible
       become: true
-      package:
+      ansible.builtin.package:
         name:
           - ansible-core
           - rsync
@@ -16,10 +17,16 @@
     - name: Install ansible.posix
       ansible.builtin.shell: |
         ansible-galaxy collection install ansible.posix
+      changed_when: true
+
+    - name: Create edpm_node directory
+      ansible.builtin.file:
+        state: directory
+        path: "{{ ansible_user_dir }}/edpm_node"
+        mode: '777'
 
     - name: Collect logs from EDPM node
       ansible.builtin.shell: |
-        mkdir edpm_node
         pushd edpm_node
         ip a > network.txt
         ip ro ls >> network.txt
@@ -33,6 +40,7 @@
         sudo chmod -R 777 {{ ansible_user_dir }}
       args:
         chdir: "{{ ansible_user_dir }}"
+      changed_when: true
 
     - name: Copy edpm logs on the controller node
       become: true
