@@ -59,6 +59,7 @@
     - name: Install ansible.posix
       ansible.builtin.shell: |
         ansible-galaxy collection install ansible.posix
+      changed_when: true
 
     - name: Collect logs from EDPM VM
       ansible.builtin.shell: |
@@ -67,6 +68,7 @@
         chdir: "{{ ansible_user_dir }}/src/github.com/openstack-k8s-operators/install_yamls/ci/playbooks"
       changed_when: true
       ignore_errors: true
+      register: ignored_vm_log_collection_errors
 
 - hosts: all
   name: Copy files from controller on node
