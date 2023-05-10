@@ -268,6 +268,17 @@ SWIFTPROXY_CR    ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFTPROXY}
 SWIFTSTORAGE     ?= config/samples/swift_v1beta1_swiftstorage.yaml
 SWIFTSTORAGE_CR  ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFTSTORAGE}
 
+# Barbican
+BARBICAN_IMG            ?= quay.io/openstack-k8s-operators/barbican-operator-index:latest
+BARBICAN_REPO           ?= https://github.com/openstack-k8s-operators/barbican-operator.git
+BARBICAN_BRANCH         ?= main
+BARBICAN                ?= config/samples/barbican_v1beta1_barbican.yaml
+BARBICAN_CR             ?= ${OPERATOR_BASE_DIR}/barbican-operator/${BARBICAN}
+BARBICANAPI_DEPL_IMG    ?= unused
+BARBICANENGINE_DEPL_IMG ?= unused
+BARBICAN_KUTTL_CONF     ?= ${OPERATOR_BASE_DIR}/barbican-operator/kuttl-test.yaml
+BARBICAN_KUTTL_DIR      ?= ${OPERATOR_BASE_DIR}/barbican-operator/tests/kuttl/tests
+
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
 ${1}: export NAMESPACE=${NAMESPACE}
@@ -1227,6 +1238,16 @@ horizon_kuttl: namespace input openstack_crds openstack_storage_crds deploy_clea
 	make cleanup
 	make infra_cleanup
 
+.PHONY: barbican_kuttl_run
+barbican_kuttl_run: ## runs kuttl tests for the barbican operator, assumes that everything needed for running the test was deployed beforehand.
+	kubectl-kuttl test --config ${BARBICAN_KUTTL_CONF} ${BARBICAN_KUTTL_DIR}
+
+.PHONY: barbican_kuttl
+barbican_kuttl: namespace input openstack_crds openstack_storage_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy barbican_deploy_prep barbican ## runs kuttl tests for the barbican operator. Installs openstack and openstack-storage crds, mariadb, keystone and barbican operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	make barbican_kuttl_run
+	make deploy_cleanup
+	make cleanup
+
 ##@ HORIZON
 .PHONY: horizon_prep
 horizon_prep: export IMAGE=${HORIZON_IMG}
@@ -1550,7 +1571,6 @@ telemetry_deploy_cleanup: ## cleans up the service instance, Does not affect the
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/telemetry-operator ${DEPLOY_DIR}
 	rm -Rf ${OPERATOR_BASE_DIR}/ceilometer-operator ${DEPLOY_DIR}
 
-
 ##@ SWIFT
 .PHONY: swift_prep
 swift_prep: export IMAGE=${SWIFT_IMG}
@@ -1591,3 +1611,42 @@ swift_deploy_cleanup: ## cleans up the service instance, Does not affect the ope
 	$(eval $(call vars,$@,swift))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/swift-operator ${DEPLOY_DIR}
+
+##@ BARBICAN
+.PHONY: BARBICAN_prep
+barbican_prep: export IMAGE=${BARBICAN_IMG}
+barbican_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,barbican))
+	bash scripts/gen-olm.sh
+
+.PHONY: barbican
+barbican: namespace barbican_prep ## installs the operator, also runs the prep step. Set BARBICAN_IMG for custom image.
+	$(eval $(call vars,$@,barbican))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: barbican_cleanup
+barbican_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,barbican))
+	bash scripts/operator-cleanup.sh
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
+
+.PHONY: barbican_deploy_prep
+barbican_deploy_prep: export KIND=Barbican
+barbican_deploy_prep: export IMAGE=${BARBICAN_DEPL_IMG}
+barbican_deploy_prep: barbican_deploy_cleanup ## prepares the CR to install the service based on the service sample file BARBICAN
+	$(eval $(call vars,$@,barbican))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(BARBICAN_BRANCH),-b ${BARBICAN_BRANCH}) ${BARBICAN_REPO} "${OPERATOR_NAME}-operator" && popd
+	cp ${BARBICAN_CR} ${DEPLOY_DIR}
+	bash scripts/gen-service-kustomize.sh
+
+.PHONY: barbican_deploy
+barbican_deploy: input barbican_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set BARBICAN_REPO and BARBICAN_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,barbican))
+	bash scripts/operator-deploy-resources.sh
+
+.PHONY: barbican_deploy_cleanup
+barbican_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,barbican))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/barbican-operator ${DEPLOY_DIR}
