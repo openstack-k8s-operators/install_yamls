@@ -52,6 +52,9 @@ patches:
       path: /spec/deployStrategy/deploy
       value: true
     - op: replace
+      path: /spec/roles/edpm-compute/preProvisioned
+      value: true
+    - op: replace
       path: /spec/nodes/edpm-compute-0/ansibleHost
       value: ${EDPM_COMPUTE_IP}
     - op: replace
