@@ -67,6 +67,21 @@
         oc rsh openstackclient openstack compute service list;
         oc rsh openstackclient openstack network agent list;
 
+    - name: Patch rabbitmq resources for lower resource consumption
+      changed_when: false
+      ansible.builtin.shell: |
+        crname=$(oc get openstackcontrolplane -o name)
+        oc patch ${crname} --type json \
+          -p='[{"op": "replace", "path": "/spec/rabbitmq/templates/rabbitmq/resources/requests/cpu", "value": 500m}]'
+        oc patch ${crname} --type json \
+          -p='[{"op": "replace", "path": "/spec/rabbitmq/templates/rabbitmq/resources/requests/memory", "value": 500Mi}]'
+        oc patch ${crname} --type json \
+          -p='[{"op": "replace", "path": "/spec/rabbitmq/templates/rabbitmq-cell1/resources/requests/cpu", "value": 500m}]'
+        oc patch ${crname} --type json \
+          -p='[{"op": "replace", "path": "/spec/rabbitmq/templates/rabbitmq-cell1/resources/requests/memory", "value": 500Mi}]'
+      tags:
+        - skip_ansible_lint
+
     - name: Restart nova-scheduler to pick up cell1
       ansible.builtin.shell: |
         oc delete pod -l service=nova-scheduler
