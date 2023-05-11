@@ -174,7 +174,7 @@ NOVA_CR             ?= ${OPERATOR_BASE_DIR}/nova-operator/${NOVA}
 HORIZON_IMG         ?= quay.io/openstack-k8s-operators/horizon-operator-index:latest
 HORIZON_REPO        ?= https://github.com/openstack-k8s-operators/horizon-operator.git
 HORIZON_BRANCH      ?= main
-HORIZON             ?= config/samples/horizon_v1alpha1_horizon.yaml
+HORIZON             ?= config/samples/horizon_v1beta1_horizon.yaml
 HORIZON_CR          ?= ${OPERATOR_BASE_DIR}/horizon-operator/${HORIZON}
 HORIZON_DEPL_IMG    ?= unused
 
