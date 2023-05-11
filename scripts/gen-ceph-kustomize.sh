@@ -39,6 +39,7 @@ TIMEOUT=${TIMEOUT:-30}
 HOSTNETWORK=${HOSTNETWORK:-true}
 POOLS=("volumes" "images" "backups" "cephfs.cephfs.meta" "cephfs.cephfs.data")
 DAEMONS="osd,mds"
+DATA_SIZE=${DATA_SIZE:-500Mi}
 
 function add_ceph_pod {
 cat <<EOF >ceph-pod.yaml
@@ -76,13 +77,13 @@ spec:
   volumes:
   - name: data
     emptyDir:
-      sizeLimit: 500Mi
+      sizeLimit: "$DATA_SIZE"
   - name: run
     emptyDir:
-      sizeLimit: 500Mi
+      sizeLimit: "$DATA_SIZE"
   - name: log
     emptyDir:
-      sizeLimit: 500Mi
+      sizeLimit: "$DATA_SIZE"
   securityContext:
     runAsUser: 0
     seccompProfile:
