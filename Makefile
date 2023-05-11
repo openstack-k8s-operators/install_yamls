@@ -252,6 +252,17 @@ CERTMANAGER_URL                  ?= https://github.com/jetstack/cert-manager/rel
 PROVISIONING_INTERFACE           ?= enp2s0
 IRONIC_HOST                      ?= 192.168.130.11
 
+# Swift
+SWIFT_IMG        ?= quay.io/openstack-k8s-operators/swift-operator-index:latest
+SWIFT_REPO       ?= https://github.com/openstack-k8s-operators/swift-operator.git
+SWIFT_BRANCH     ?= main
+SWIFTRING        ?= config/samples/swift_v1beta1_swiftring.yaml
+SWIFTRING_CR     ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFTRING}
+SWIFTPROXY       ?= config/samples/swift_v1beta1_swiftproxy.yaml
+SWIFTPROXY_CR    ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFTPROXY}
+SWIFTSTORAGE     ?= config/samples/swift_v1beta1_swiftstorage.yaml
+SWIFTSTORAGE_CR  ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFTSTORAGE}
+
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
 ${1}: export NAMESPACE=${NAMESPACE}
@@ -1476,3 +1487,46 @@ telemetry_deploy_cleanup: ## cleans up the service instance, Does not affect the
 	$(eval $(call vars,$@,telemetry))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/telemetry-operator ${DEPLOY_DIR}
+	rm -Rf ${OPERATOR_BASE_DIR}/ceilometer-operator ${DEPLOY_DIR}
+
+
+##@ SWIFT
+.PHONY: swift_prep
+swift_prep: export IMAGE=${SWIFT_IMG}
+swift_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,swift))
+	bash scripts/gen-olm.sh
+
+.PHONY: swift
+swift: namespace swift_prep ## installs the operator, also runs the prep step. Set SWIFT_IMG for custom image.
+	$(eval $(call vars,$@,swift))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: swift_cleanup
+swift_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,swift))
+	bash scripts/operator-cleanup.sh
+	rm -Rf ${OPERATOR_DIR}
+
+.PHONY: swift_deploy_prep
+swift_deploy_prep: export KIND=SwiftRing
+swift_deploy_prep: export IMAGE=unused
+swift_deploy_prep: swift_deploy_cleanup ## prepares the CR to install the service based on the service sample file SWIFTAPI
+	$(eval $(call vars,$@,swift))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone -b ${SWIFT_BRANCH} ${SWIFT_REPO} && popd
+	cp ${SWIFTRING_CR} ${DEPLOY_DIR}
+	cp ${SWIFTSTORAGE_CR} ${DEPLOY_DIR}
+	cp ${SWIFTPROXY_CR} ${DEPLOY_DIR}
+	bash scripts/gen-service-kustomize.sh
+
+.PHONY: swift_deploy
+swift_deploy: input swift_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set SWIFT_REPO and SWIFT_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,swift))
+	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+
+.PHONY: swift_deploy_cleanup
+swift_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,swift))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	rm -Rf ${OPERATOR_BASE_DIR}/swift-operator ${DEPLOY_DIR}
