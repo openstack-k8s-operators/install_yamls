@@ -1023,6 +1023,7 @@ keystone_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_de
 	make deploy_cleanup
 	make keystone_cleanup
 	make mariadb_cleanup
+	bash scripts/restore-namespace.sh
 
 .PHONY: cinder_kuttl_run
 cinder_kuttl_run: ## runs kuttl tests for the cinder operator, assumes that everything needed for running the test was deployed beforehand.
