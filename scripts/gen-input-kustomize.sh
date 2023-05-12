@@ -83,6 +83,7 @@ secretGenerator:
   - HeatPassword=${PASSWORD}
   - HeatDatabasePassword=${PASSWORD}
   - HeatAuthEncryptionKey=${HEAT_AUTH_ENCRYPTION_KEY}
+  - SwiftPassword=${PASSWORD}
 generatorOptions:
   disableNameSuffixHash: true
   labels:
