@@ -68,7 +68,7 @@ MARIADB_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
 # Placement
 PLACEMENT_IMG         ?= quay.io/openstack-k8s-operators/placement-operator-index:latest
 PLACEMENT_REPO        ?= https://github.com/openstack-k8s-operators/placement-operator.git
-PLACEMENT_BRANCH      ?= master
+PLACEMENT_BRANCH      ?= main
 PLACEMENTAPI          ?= config/samples/placement_v1beta1_placementapi.yaml
 PLACEMENTAPI_CR       ?= ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI}
 PLACEMENTAPI_DEPL_IMG ?= unused
