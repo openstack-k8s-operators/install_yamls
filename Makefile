@@ -202,7 +202,7 @@ ANSIBLEEE_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/tests/
 # Baremetal Operator
 BAREMETAL_IMG       ?= quay.io/openstack-k8s-operators/openstack-baremetal-operator-index:latest
 BAREMETAL_REPO      ?= https://github.com/openstack-k8s-operators/openstack-baremetal-operator.git
-BAREMETAL_BRANCH    ?= master
+BAREMETAL_BRANCH    ?= main
 
 # Dataplane Operator
 DATAPLANE_IMG                                    ?= quay.io/openstack-k8s-operators/dataplane-operator-index:latest
