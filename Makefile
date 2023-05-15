@@ -407,6 +407,7 @@ openstack_cleanup: ## deletes the operator, but does not cleanup the service res
 	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 	oc delete subscription openstack-storage-operators-alpha-openstack-operator-index-openstack --ignore-not-found=true
 	oc delete csv openstack-storage-operators.v0.0.1 --ignore-not-found=true
+	test -d ${OPERATOR_BASE_DIR}/baremetal-operator && make crc_bmo_cleanup || true
 
 .PHONY: openstack_deploy_prep
 openstack_deploy_prep: export KIND=OpenStackControlPlane
