@@ -38,9 +38,6 @@ make mariadb_deploy
 make keystone_deploy
 ```
 
-### Workflows
-- [EDPM](docs/edpm.md)
-
 ## Deploy dev env using CRC, edpm nodes with isolated networks
 * clone install_yamls
 ```bash
