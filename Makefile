@@ -108,7 +108,7 @@ OVS_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovs-operator/tests/kuttl/tests
 # Neutron
 NEUTRON_IMG         ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
 NEUTRON_REPO        ?= https://github.com/openstack-k8s-operators/neutron-operator.git
-NEUTRON_BRANCH      ?= master
+NEUTRON_BRANCH      ?= main
 NEUTRONAPI          ?= config/samples/neutron_v1beta1_neutronapi.yaml
 NEUTRONAPI_CR       ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
 NEUTRONAPI_DEPL_IMG ?= unused
