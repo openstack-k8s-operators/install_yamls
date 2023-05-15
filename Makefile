@@ -26,7 +26,7 @@ GIT_CLONE_OPTS      ?=
 # OpenStack Operator
 OPENSTACK_IMG                ?= quay.io/openstack-k8s-operators/openstack-operator-index:latest
 OPENSTACK_REPO               ?= https://github.com/openstack-k8s-operators/openstack-operator.git
-OPENSTACK_BRANCH             ?= master
+OPENSTACK_BRANCH             ?= main
 OPENSTACK_CTLPLANE           ?= $(if $(findstring true,$(NETWORK_ISOLATION)),config/samples/core_v1beta1_openstackcontrolplane_network_isolation.yaml,config/samples/core_v1beta1_openstackcontrolplane.yaml)
 OPENSTACK_CR                 ?= ${OPERATOR_BASE_DIR}/openstack-operator/${OPENSTACK_CTLPLANE}
 OPENSTACK_BUNDLE_IMG         ?= quay.io/openstack-k8s-operators/openstack-operator-bundle:latest
@@ -36,7 +36,7 @@ OPENSTACK_CRDS_DIR           ?= openstack_crds
 # Infra Operator
 INFRA_IMG           ?= quay.io/openstack-k8s-operators/infra-operator-index:latest
 INFRA_REPO          ?= https://github.com/openstack-k8s-operators/infra-operator.git
-INFRA_BRANCH        ?= master
+INFRA_BRANCH        ?= main
 
 # Memcached
 # MEMCACHED_IMG     ?= (tis is unused because this is part of infra operator)
@@ -47,7 +47,7 @@ MEMCACHED_DEPL_IMG  ?= unused
 # Keystone
 KEYSTONE_IMG             ?= quay.io/openstack-k8s-operators/keystone-operator-index:latest
 KEYSTONE_REPO            ?= https://github.com/openstack-k8s-operators/keystone-operator.git
-KEYSTONE_BRANCH          ?= master
+KEYSTONE_BRANCH          ?= main
 KEYSTONEAPI              ?= config/samples/keystone_v1beta1_keystoneapi.yaml
 KEYSTONEAPI_CR           ?= ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
 KEYSTONEAPI_DEPL_IMG     ?= unused
@@ -58,7 +58,7 @@ KEYSTONE_KUTTL_NAMESPACE ?= keystone-kuttl-tests
 # Mariadb
 MARIADB_IMG         ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
 MARIADB_REPO        ?= https://github.com/openstack-k8s-operators/mariadb-operator.git
-MARIADB_BRANCH      ?= master
+MARIADB_BRANCH      ?= main
 MARIADB             ?= config/samples/mariadb_v1beta1_mariadb.yaml
 MARIADB_CR          ?= ${OPERATOR_BASE_DIR}/mariadb-operator/${MARIADB}
 MARIADB_DEPL_IMG    ?= unused
@@ -68,7 +68,7 @@ MARIADB_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
 # Placement
 PLACEMENT_IMG         ?= quay.io/openstack-k8s-operators/placement-operator-index:latest
 PLACEMENT_REPO        ?= https://github.com/openstack-k8s-operators/placement-operator.git
-PLACEMENT_BRANCH      ?= master
+PLACEMENT_BRANCH      ?= main
 PLACEMENTAPI          ?= config/samples/placement_v1beta1_placementapi.yaml
 PLACEMENTAPI_CR       ?= ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI}
 PLACEMENTAPI_DEPL_IMG ?= unused
@@ -108,7 +108,7 @@ OVS_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovs-operator/tests/kuttl/tests
 # Neutron
 NEUTRON_IMG         ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
 NEUTRON_REPO        ?= https://github.com/openstack-k8s-operators/neutron-operator.git
-NEUTRON_BRANCH      ?= master
+NEUTRON_BRANCH      ?= main
 NEUTRONAPI          ?= config/samples/neutron_v1beta1_neutronapi.yaml
 NEUTRONAPI_CR       ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
 NEUTRONAPI_DEPL_IMG ?= unused
@@ -119,7 +119,7 @@ NEUTRON_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/neutron-operator/test/kuttl/tests
 # Cinder
 CINDER_IMG          ?= quay.io/openstack-k8s-operators/cinder-operator-index:latest
 CINDER_REPO         ?= https://github.com/openstack-k8s-operators/cinder-operator.git
-CINDER_BRANCH       ?= master
+CINDER_BRANCH       ?= main
 CINDER              ?= config/samples/cinder_v1beta1_cinder.yaml
 CINDER_CR           ?= ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
 # TODO: Image customizations for all Cinder services
@@ -137,7 +137,7 @@ RABBITMQ_CR         ?= ${OPERATOR_BASE_DIR}/rabbitmq-operator/${RABBITMQ}
 # Ironic
 IRONIC_IMG          ?= quay.io/openstack-k8s-operators/ironic-operator-index:latest
 IRONIC_REPO         ?= https://github.com/openstack-k8s-operators/ironic-operator.git
-IRONIC_BRANCH       ?= master
+IRONIC_BRANCH       ?= main
 IRONIC              ?= config/samples/ironic_v1beta1_ironic.yaml
 IRONIC_CR           ?= ${OPERATOR_BASE_DIR}/ironic-operator/${IRONIC}
 IRONICAPI_DEPL_IMG  ?= unused
@@ -202,7 +202,7 @@ ANSIBLEEE_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/tests/
 # Baremetal Operator
 BAREMETAL_IMG       ?= quay.io/openstack-k8s-operators/openstack-baremetal-operator-index:latest
 BAREMETAL_REPO      ?= https://github.com/openstack-k8s-operators/openstack-baremetal-operator.git
-BAREMETAL_BRANCH    ?= master
+BAREMETAL_BRANCH    ?= main
 
 # Dataplane Operator
 DATAPLANE_IMG                                    ?= quay.io/openstack-k8s-operators/dataplane-operator-index:latest

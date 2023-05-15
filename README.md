@@ -115,12 +115,12 @@ If `NETWORK_ISOLATION == true`, `config/samples/core_v1beta1_openstackcontrolpla
 make openstack_deploy
 ```
 
-(optional) To deploy with ceph as backend for glance and cinder, a sample config can be found at https://github.com/openstack-k8s-operators/openstack-operator/blob/master/config/samples/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml .
+(optional) To deploy with ceph as backend for glance and cinder, a sample config can be found at https://github.com/openstack-k8s-operators/openstack-operator/blob/main/config/samples/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml .
 
 **Note** Make sure to replace the `_FSID_` in the sample with the one from the ceph cluster. When deployed with `make ceph`
 
 ```bash
-curl -o /tmp/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml https://raw.githubusercontent.com/openstack-k8s-operators/openstack-operator/master/config/samples/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml
+curl -o /tmp/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml https://raw.githubusercontent.com/openstack-k8s-operators/openstack-operator/main/config/samples/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml
 FSID=$(oc get secret ceph-conf-files -o json | jq -r '.data."ceph.conf"' | base64 -d | grep fsid | sed -e 's/fsid = //') && echo $FSID
 sed -i "s/_FSID_/${FSID}/" /tmp/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml
 oc apply -f /tmp/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml
