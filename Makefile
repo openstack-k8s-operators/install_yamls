@@ -119,7 +119,7 @@ NEUTRON_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/neutron-operator/test/kuttl/tests
 # Cinder
 CINDER_IMG          ?= quay.io/openstack-k8s-operators/cinder-operator-index:latest
 CINDER_REPO         ?= https://github.com/openstack-k8s-operators/cinder-operator.git
-CINDER_BRANCH       ?= master
+CINDER_BRANCH       ?= main
 CINDER              ?= config/samples/cinder_v1beta1_cinder.yaml
 CINDER_CR           ?= ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
 # TODO: Image customizations for all Cinder services
