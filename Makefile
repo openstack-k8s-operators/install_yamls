@@ -161,7 +161,7 @@ OCTAVIA_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/octavia-operator/tests/kuttl/tests
 # Nova
 NOVA_IMG            ?= quay.io/openstack-k8s-operators/nova-operator-index:latest
 NOVA_REPO           ?= https://github.com/openstack-k8s-operators/nova-operator.git
-NOVA_BRANCH         ?= master
+NOVA_BRANCH         ?= main
 # NOTE(gibi): We intentionally not using the default nova sample here
 # as that would require two RabbitMQCluster to be deployed which a) is not what
 # the make rabbitmq_deploy target does ii) required extra resource in the dev
