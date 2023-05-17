@@ -91,6 +91,8 @@ OVNDBS              ?= config/samples/ovn_v1beta1_ovndbcluster.yaml
 OVNDBS_CR           ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNDBS}
 OVNNORTHD           ?= config/samples/ovn_v1beta1_ovnnorthd.yaml
 OVNNORTHD_CR        ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNNORTHD}
+OVNCONTROLLER       ?= config/samples/ovn_v1beta1_ovncontroller.yaml
+OVNCONTROLLER_CR    ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNCONTROLLER}
 # TODO: Image customizations for all OVN services
 OVN_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/ovn-operator/kuttl-test.yaml
 OVN_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovn-operator/tests/kuttl/tests
@@ -714,6 +716,7 @@ ovn_deploy_prep: ovn_deploy_cleanup ## prepares the CR to install the service ba
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(OVN_BRANCH),-b ${OVN_BRANCH}) ${OVN_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${OVNDBS_CR} ${OVNNORTHD_CR} ${DEPLOY_DIR}
+	test -f ${OVNCONTROLLER_CR} && cp ${OVNCONTROLLER_CR} ${DEPLOY_DIR} || true
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: ovn_deploy
