@@ -72,6 +72,11 @@ patches:
       path: /spec/nodes/edpm-compute-0/node/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
     - op: replace
+      path: /spec/roles/edpm-compute/services
+      value:
+      - repo-setup
+      - configure-network
+    - op: replace
       path: /spec/roles/edpm-compute/openStackAnsibleEERunnerImage
       value: ${OPENSTACK_RUNNER_IMG}
     - op: replace
@@ -180,6 +185,34 @@ cat <<EOF >>kustomization.yaml
     - op: remove
       path: /spec/nodes/edpm-compute-1
 EOF
+elif [ "$EDPM_TOTAL_NODES" -gt 2 ]; then
+    for INDEX in $(seq 1 $((${EDPM_TOTAL_NODES} -1))) ; do
+cat <<EOF >>kustomization.yaml
+    - op: copy
+      from: /spec/nodes/edpm-compute-0
+      path: /spec/nodes/edpm-compute-${INDEX}
+    - op: replace
+      path: /spec/nodes/edpm-compute-${INDEX}/ansibleHost
+      value: 192.168.122.$((100+${INDEX}))
+    - op: replace
+      path: /spec/nodes/edpm-compute-${INDEX}/hostName
+      value: edpm-compute-${INDEX}
+    - op: replace
+      path: /spec/nodes/edpm-compute-${INDEX}/openStackAnsibleEERunnerImage
+      value: ${OPENSTACK_RUNNER_IMG}
+    - op: replace
+      path: /spec/nodes/edpm-compute-${INDEX}/node/ansibleVars
+      value: |
+        ctlplane_ip: 192.168.122.$((100+${INDEX}))
+        internal_api_ip: 172.17.0.$((100+${INDEX}))
+        storage_ip: 172.18.0.$((100+${INDEX}))
+        tenant_ip: 172.19.0.$((100+${INDEX}))
+        fqdn_internal_api: '{{ ansible_fqdn }}'
+    - op: replace
+      path: /spec/nodes/edpm-compute-${INDEX}/node/ansibleSSHPrivateKeySecret
+      value: ${EDPM_ANSIBLE_SECRET}
+EOF
+    done
 else
 cat <<EOF >>kustomization.yaml
     - op: replace

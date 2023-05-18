@@ -1,0 +1,25 @@
+---
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  labels:
+    app.kubernetes.io/name: openstackdataplaneservice
+    app.kubernetes.io/instance: openstackdataplaneservice-sample
+    app.kubernetes.io/part-of: dataplane-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: dataplane-operator
+  name: repo-setup
+spec:
+  label: dataplane-deployment-repo-setup
+  play: |
+    - hosts: all
+      tasks:
+        - name: Enable podified-repos
+          shell: |
+            rpm -q git || sudo yum -y install git
+            sudo yum -y install python-setuptools python-requests python3-pip
+            git clone https://github.com/openstack-k8s-operators/repo-setup
+            pushd repo-setup
+            sudo python3 setup.py install
+            popd
+            sudo /usr/local/bin/repo-setup current-podified-dev
