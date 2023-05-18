@@ -1219,9 +1219,9 @@ horizon_kuttl_run: ## runs kuttl tests for the horizon operator, assumes that ev
 	kubectl-kuttl test --config ${HORIZON_KUTTL_CONF} ${HORIZON_KUTTL_DIR}
 
 .PHONY: horizon_kuttl
-horizon_kuttl: namespace input openstack_crds openstack_storage_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy infra horizon_deploy_prep horizon ## runs kuttl tests for the horizon operator. Installs openstack and openstack-storage crds, mariadb, keystone and horizon operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
-	$(eval $(call vars,$@,horizon))
-	make wait
+horizon_kuttl: namespace input openstack_crds openstack_storage_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy infra horizon_deploy_prep horizon horizon_deploy ## runs kuttl tests for the horizon operator. Installs openstack and openstack-storage crds, mariadb, keystone and horizon operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	timeout 120s bash -c 'until [ "$(oc get deployment -l openstack.org/operator-name=horizon -n ${NAMESPACE} -o name)" != "" ]; do sleep 1; done'
+	oc wait deployment -l openstack.org/operator-name=horizon -n ${NAMESPACE} --for condition=Available --timeout=120s
 	make horizon_kuttl_run
 	make deploy_cleanup
 	make cleanup
