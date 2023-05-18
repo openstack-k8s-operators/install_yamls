@@ -4,10 +4,6 @@
     parent: base-crc
     abstract: true
     timeout: 10800
-    nodeset:
-      nodes:
-        name: controller
-        label: centos-9-stream-crc-xxl
     required-projects: &required_projects
       - openstack-k8s-operators/install_yamls
       - opendev.org/zuul/zuul-jobs
@@ -16,6 +12,7 @@
     roles:
       - zuul: github.com/openstack-k8s-operators/ci-framework
     vars:
+      crc_parameters: "--memory 20000 --disk-size 120 --cpus 6"
       pre_pull_images:
         - registry.redhat.io/rhosp-rhel9/openstack-rabbitmq:17.0
         - quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:afa73a12a1ffd31f77b10a25c43a4d02b0fd62f927f6209c26983bd8aee021bf
@@ -24,10 +21,10 @@
 - job:
     name: centos-9-crc-singlenode-podified-deployment
     parent: base-crc-openstack
+    nodeset: centos-9-crc-xxl
     run: ci/playbooks/deploy_podified_openstack.yaml
     post-run: ci/playbooks/collect_logs.yaml
     vars:
-      crc_parameters: "--memory 18000 --disk-size 120 --cpus 6"
       network_isolation: true
       crc_attach_default_interface: true
 
@@ -35,12 +32,12 @@
 - job:
     name: centos-9-crc-singlenode-podified-edpm-deployment
     parent: base-crc-openstack
+    nodeset: centos-9-crc-3xl
     run:
       - ci/playbooks/deploy_podified_openstack.yaml
       - ci/playbooks/deploy_edpm.yaml
     post-run: ci/playbooks/collect_logs.yaml
     vars:
-      crc_parameters: "--memory 16000 --disk-size 120 --cpus 6"
       network_isolation: true
       crc_attach_default_interface: true
       bmo_setup: false
