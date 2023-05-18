@@ -8,6 +8,7 @@
       - skopeo
       - sqlite
       - httpd-tools
+      - virt-install
 
 - name: Set opm download url suffix
   ansible.builtin.set_fact:

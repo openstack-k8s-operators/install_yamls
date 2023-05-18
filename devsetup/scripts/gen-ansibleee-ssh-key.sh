@@ -32,13 +32,6 @@ fi
 
 pushd ${OUTPUT_DIR}
 
-if oc get secret dataplane-ansible-ssh-private-key-secret 2>&1 1>/dev/null; then
-    echo "Secret dataplane-ansible-ssh-private-key-secret already exists."
-    echo "Delete it first to recreate:"
-    echo "oc delete secret dataplane-ansible-ssh-private-key-secret"
-    exit 0
-fi
-
 if [ ! -f ${SSH_KEY_FILE} ]; then
     ssh-keygen -f ${SSH_KEY_FILE} -N "" -t ${SSH_ALGORITHM} -b ${SSH_KEY_SIZE}
 fi
@@ -53,21 +46,16 @@ metadata:
       security.openshift.io/scc.podSecurityLabelSync: "false"
 EOF
 
-cat <<EOF >dataplane-ansible-ssh-private-key-secret.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-    name: ${METADATA_NAME}
-    namespace: ${NAMESPACE}
-data:
-    ssh-publickey: |
-$(cat ${SSH_KEY_FILE}.pub | base64 | sed 's/^/        /')
-    ssh-privatekey: |
-$(cat ${SSH_KEY_FILE} | base64 | sed 's/^/        /')
-EOF
-
 oc apply -f namespace.yaml
-oc apply -f dataplane-ansible-ssh-private-key-secret.yaml
+
+oc create secret generic ${METADATA_NAME} \
+--save-config \
+--dry-run=client \
+--from-file=authorized_keys=${SSH_KEY_FILE}.pub \
+--from-file=ssh-privatekey=${SSH_KEY_FILE} \
+--from-file=ssh-publickey=${SSH_KEY_FILE}.pub \
+-o yaml | \
+oc apply -f -
 
 popd
 popd
