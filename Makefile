@@ -1176,9 +1176,12 @@ dataplane_kuttl_prep: dataplane_kuttl_cleanup
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
+	oc apply -f ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
+	# Kuttl tests require the SSH key secret to exist
+	devsetup/scripts/gen-ansibleee-ssh-key.sh
 
 .PHONY: dataplane_kuttl
-dataplane_kuttl: namespace input openstack_crds dataplane_kuttl_prep dataplane ## runs kuttl tests for the openstack-dataplane operator. Installs openstack crds and openstack-dataplane operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+dataplane_kuttl: namespace input openstack_crds dataplane_kuttl_prep dataplane ansibleee ## runs kuttl tests for the openstack-dataplane operator. Installs openstack crds and openstack-dataplane operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make dataplane_kuttl_run
 	make dataplane_cleanup
 
