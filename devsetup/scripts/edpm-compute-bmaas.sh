@@ -166,7 +166,10 @@ spec:
           service_net_map:
             nova_api_network: internal_api
             nova_libvirt_network: internal_api
-
+          edpm_chrony_ntp_servers:
+            - 0.pool.ntp.org
+            - 1.pool.ntp.org
+          growvols_args: '/var=100%'
           # edpm_network_config
           # Default nic config template for a EDPM compute node
           # These vars are edpm_network_config role vars
