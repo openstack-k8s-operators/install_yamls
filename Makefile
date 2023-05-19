@@ -105,16 +105,6 @@ OVNCONTROLLER_CR    ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNCONTROLLER}
 OVN_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/ovn-operator/kuttl-test.yaml
 OVN_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovn-operator/tests/kuttl/tests
 
-# Ovs
-OVS_IMG             ?= quay.io/openstack-k8s-operators/ovs-operator-index:latest
-OVS_REPO            ?= https://github.com/openstack-k8s-operators/ovs-operator.git
-OVS_BRANCH          ?= main
-OVS                 ?= config/samples/ovs_v1beta1_ovs.yaml
-OVS_CR              ?= ${OPERATOR_BASE_DIR}/ovs-operator/${OVS}
-# TODO: Image customizations for all OVS services
-OVS_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/ovs-operator/kuttl-test.yaml
-OVS_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovs-operator/tests/kuttl/tests
-
 # Neutron
 NEUTRON_IMG         ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
 NEUTRON_REPO        ?= https://github.com/openstack-k8s-operators/neutron-operator.git
@@ -317,7 +307,7 @@ help: ## Display this help.
 cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup dataplane_cleanup ansibleee_cleanup rabbitmq_cleanup infra_cleanup ## Delete all operators
 
 .PHONY: deploy_cleanup
-deploy_cleanup: heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ovs_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
+deploy_cleanup: heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
 
 .PHONY: wait
 wait: ## wait for an operator's controller-manager pod to be ready (requires OPERATOR_NAME to be explicitly passed!)
@@ -769,44 +759,6 @@ ovn_deploy_cleanup: ## cleans up the service instance, Does not affect the opera
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/ovn-operator ${DEPLOY_DIR}
 
-##@ OVS
-.PHONY: ovs_prep
-ovs_prep: export IMAGE=${OVS_IMG}
-ovs_prep: ## creates the files to install the operator using olm
-	$(eval $(call vars,$@,ovs))
-	bash scripts/gen-olm.sh
-
-.PHONY: ovs
-ovs: namespace ovs_prep ## installs the operator, also runs the prep step. Set OVS_IMG for custom image.
-	$(eval $(call vars,$@,ovs))
-	oc apply -f ${OPERATOR_DIR}
-
-.PHONY: ovs_cleanup
-ovs_cleanup: ## deletes the operator, but does not cleanup the service resources
-	$(eval $(call vars,$@,ovs))
-	bash scripts/operator-cleanup.sh
-	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
-
-.PHONY: ovs_deploy_prep
-ovs_deploy_prep: export KIND=.*
-ovs_deploy_prep: ovs_deploy_cleanup ## prepares the CR to install the service based on the service sample file OVS
-	$(eval $(call vars,$@,ovs))
-	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(OVS_BRANCH),-b ${OVS_BRANCH}) ${OVS_REPO} "${OPERATOR_NAME}-operator" && popd
-	cp ${OVS_CR} ${DEPLOY_DIR}
-	bash scripts/gen-service-kustomize.sh
-
-.PHONY: ovs_deploy
-ovs_deploy: ovs_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set OVS_REPO and OVS_BRANCH to deploy from a custom repo.
-	$(eval $(call vars,$@,ovs))
-	bash scripts/operator-deploy-resources.sh
-
-.PHONY: ovs_deploy_cleanup
-ovs_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
-	$(eval $(call vars,$@,ovs))
-	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/ovs-operator ${DEPLOY_DIR}
-
 ##@ NEUTRON
 .PHONY: neutron_prep
 neutron_prep: export IMAGE=${NEUTRON_IMG}
@@ -1147,19 +1099,6 @@ ovn_kuttl: namespace input openstack_crds deploy_cleanup ovn_deploy_prep ovn ## 
 	make ovn_kuttl_run
 	make deploy_cleanup
 	make ovn_cleanup
-
-.PHONY: ovs_kuttl_run
-ovs_kuttl_run: ## runs kuttl tests for the ovs operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${OVS_KUTTL_CONF} ${OVS_KUTTL_DIR}
-
-.PHONY: ovs_kuttl
-ovs_kuttl: namespace input openstack_crds deploy_cleanup ovn ovn_deploy ovs_deploy_prep ovs ## runs kuttl tests for the ovs operator. Installs openstack crds and ovn and ovs operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
-	$(eval $(call vars,$@,ovs))
-	make wait
-	make ovs_kuttl_run
-	make deploy_cleanup
-	make ovn_cleanup
-	make ovs_cleanup
 
 .PHONY: ironic_kuttl_run
 ironic_kuttl_run: ## runs kuttl tests for the ironic operator, assumes that everything needed for running the test was deployed beforehand.
