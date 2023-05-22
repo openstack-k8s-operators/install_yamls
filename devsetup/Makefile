@@ -90,15 +90,16 @@ crc_attach_default_interface_cleanup: ## Detach default libvirt network from CRC
 edpm_compute_baremetal: export PROVISIONING_INTERFACE=${BMAAS_NETWORK_NAME}
 edpm_compute_baremetal: export BMAAS_NETWORK_IPADDRESS=172.22.0.3
 edpm_compute_baremetal: export BMAAS_BRIDGE_IPADDRESS=172.22.0.2
-edpm_compute_baremetal: ## Deploy dataplane with BMAAS
+edpm_compute_baremetal: ## Deploy controlplane and dataplane with BMAAS
 	$(eval $(call vars))
-	pushd .. && make nmstate openstack NETWORK_ISOLATION=false && popd
+	pushd .. && make nmstate && popd
 	make bmaas
+	pushd .. && make openstack wait openstack_deploy && popd
 	scripts/gen-ansibleee-ssh-key.sh
 	scripts/edpm-compute-bmaas.sh
 
 .PHONY: edpm_compute_baremetal_cleanup
-edpm_compute_baremetal_cleanup:  ## Cleanup dataplane with BMAAS
+edpm_compute_baremetal_cleanup:  ## Cleanup dataplane with BMAAS and controlplane
 	$(eval $(call vars))
 	oc delete openstackdataplane/openstack-edpm --ignore-not-found=true
 	oc delete openstackdataplaneservice --all --ignore-not-found=true
@@ -106,7 +107,7 @@ edpm_compute_baremetal_cleanup:  ## Cleanup dataplane with BMAAS
 	oc delete --all bmh --ignore-not-found=true
 	oc delete openstackprovisionserver/openstackprovisionserver --ignore-not-found=true
 	make bmaas_cleanup
-	pushd .. && make openstack_cleanup && popd
+	pushd .. && make openstack_deploy_cleanup openstack_cleanup && popd
 	pushd .. && rm -Rf out || true && popd
 
 
