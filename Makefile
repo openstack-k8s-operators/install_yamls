@@ -38,8 +38,16 @@ INFRA_IMG           ?= quay.io/openstack-k8s-operators/infra-operator-index:late
 INFRA_REPO          ?= https://github.com/openstack-k8s-operators/infra-operator.git
 INFRA_BRANCH        ?= main
 
+# DNS
+# DNS_IMG     ?= (this is unused because this is part of infra operator)
+DNSMASQ       ?= config/samples/network_v1beta1_dnsmasq.yaml
+DNSDATA       ?= config/samples/network_v1beta1_dnsdata.yaml
+DNSMASQ_CR    ?= ${OPERATOR_BASE_DIR}/infra-operator/${DNSMASQ}
+DNSDATA_CR    ?= ${OPERATOR_BASE_DIR}/infra-operator/${DNSDATA}
+DNS_DEPL_IMG  ?= unused
+
 # Memcached
-# MEMCACHED_IMG     ?= (tis is unused because this is part of infra operator)
+# MEMCACHED_IMG     ?= (this is unused because this is part of infra operator)
 MEMCACHED           ?= config/samples/memcached_v1beta1_memcached.yaml
 MEMCACHED_CR        ?= ${OPERATOR_BASE_DIR}/infra-operator/${MEMCACHED}
 MEMCACHED_DEPL_IMG  ?= unused
@@ -220,7 +228,6 @@ DATAPLANE_RUNNER_IMG                             ?=quay.io/openstack-k8s-operato
 DATAPLANE_NETWORK_CONFIG_TEMPLATE                ?=templates/single_nic_vlans/single_nic_vlans.j2
 DATAPLANE_SSHD_ALLOWED_RANGES                    ?=['192.168.122.0/24']
 DATAPLANE_CHRONY_NTP_SERVER                      ?=pool.ntp.org
-DATAPLANE_DNS_SERVER                             ?=192.168.122.1
 DATAPLANE_OVN_METADATA_AGENT_BIND_HOST           ?=127.0.0.1
 DATAPLANE_SINGLE_NODE                            ?=true
 DATAPLANE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/dataplane-operator/kuttl-test.yaml
@@ -443,7 +450,7 @@ edpm_deploy_prep: export OPENSTACK_RUNNER_IMG=${DATAPLANE_RUNNER_IMG}
 edpm_deploy_prep: export EDPM_NETWORK_CONFIG_TEMPLATE=${DATAPLANE_NETWORK_CONFIG_TEMPLATE}
 edpm_deploy_prep: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALLOWED_RANGES}
 edpm_deploy_prep: export EDPM_CHRONY_NTP_SERVER=${DATAPLANE_CHRONY_NTP_SERVER}
-edpm_deploy_prep: export EDPM_DNS_SERVER=${DATAPLANE_DNS_SERVER}
+edpm_deploy_prep: export EDPM_DNS_SERVER=$(shell oc get svc -l service=dnsmasq -o json | jq -r '.items[0].status.loadBalancer.ingress[0].ip')
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST=$(shell oc get svc nova-metadata-internal -o json |jq -r '.status.loadBalancer.ingress[0].ip')
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET=${METADATA_SHARED_SECRET}
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_BIND_HOST=${DATAPLANE_OVN_METADATA_AGENT_BIND_HOST}
@@ -451,7 +458,7 @@ edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_TRANSPORT_URL=$(shell oc get se
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_SB_CONNECTION=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
 edpm_deploy_prep: export EDPM_OVN_DBS=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"[0]')
 edpm_deploy_prep: export EDPM_NADS=$(shell oc get network-attachment-definitions -o json | jq -r "[.items[].metadata.name]")
-edpm_deploy_prep: edpm_deploy_cleanup $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config) ## prepares the CR to install the data plane
+edpm_deploy_prep: edpm_deploy_cleanup $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config edpm_register_dns) ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
@@ -471,6 +478,11 @@ edpm_deploy_cleanup: ## cleans up the edpm instance, Does not affect the operato
 edpm_deploy: input edpm_deploy_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,dataplane))
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+
+.PHONY: edpm_register_dns
+edpm_register_dns: dns_deploy_prep ## register edpm nodes in dns as dnsdata
+	$(eval $(call vars,$@,infra))
+	oc apply -f ${DEPLOY_DIR}/network_v1beta1_dnsdata.yaml # TODO (mschuppert): register edpm nodes in DNS can be removed after full IPAM integration
 
 .PHONY: openstack_crds
 openstack_crds: ## installs all openstack CRDs. Useful for infrastructure dev
@@ -502,6 +514,28 @@ infra_cleanup: ## deletes the operator, but does not cleanup the service resourc
 	$(eval $(call vars,$@,infra))
 	bash scripts/operator-cleanup.sh
 	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
+
+##@ DNS
+.PHONY: dns_deploy_prep
+dns_deploy_prep: export KIND=DNSMasq
+dns_deploy_prep: export IMAGE=${DNS_DEPL_IMG}
+dns_deploy_prep: dns_deploy_cleanup ## prepares the CR to install the service based on the service sample file DNSMASQ and DNSDATA
+	$(eval $(call vars,$@,infra))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone -b ${INFRA_BRANCH} ${INFRA_REPO} && popd
+	cp ${DNSMASQ_CR} ${DNSDATA_CR} ${DEPLOY_DIR}
+	bash scripts/gen-service-kustomize.sh
+
+.PHONY: dns_deploy
+dns_deploy: input dns_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set INFRA_REPO and INFRA_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,infra))
+	bash scripts/operator-deploy-resources.sh
+
+.PHONY: dns_deploy_cleanup
+dns_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,infra))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	rm -Rf ${OPERATOR_BASE_DIR}/infra-operator ${DEPLOY_DIR}
 
 ##@ MEMCACHED
 .PHONY: memcached_deploy_prep
