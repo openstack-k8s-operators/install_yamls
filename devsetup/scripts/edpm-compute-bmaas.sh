@@ -68,12 +68,6 @@ spec:
 EOF
 done
 
-# Wait for CRDs
-timeout 300s bash -c 'until [ "$(oc get crd/openstackprovisionservers.baremetal.openstack.org -o name)" != "" ]; do sleep 10; done'
-timeout 300s bash -c 'until [ "$(oc get crd/openstackdataplanes.dataplane.openstack.org -o name)" != "" ]; do sleep 10; done'
-oc wait --for condition=established --timeout=60s crd/openstackprovisionservers.baremetal.openstack.org
-oc wait --for condition=established --timeout=60s crd/openstackdataplanes.dataplane.openstack.org
-
 # Create the dataplane services
 
 DATAPLANE_REPO=${DATAPLANE_REPO:-https://github.com/openstack-k8s-operators/dataplane-operator.git}
@@ -221,10 +215,6 @@ spec:
           edpm_ovn_metadata_agent_metadata_agent_default_nova_metadata_host: 127.0.0.1
           edpm_ovn_metadata_agent_metadata_agent_default_metadata_proxy_shared_secret: 12345678
           edpm_ovn_metadata_agent_default_bind_host: 127.0.0.1
-          edpm_chrony_ntp_servers:
-          - clock.redhat.com
-          - clock2.redhat.com
-
           ctlplane_dns_nameservers:
           - 172.22.0.3
           dns_search_domains: []

@@ -90,9 +90,9 @@ crc_attach_default_interface_cleanup: ## Detach default libvirt network from CRC
 edpm_compute_baremetal: export PROVISIONING_INTERFACE=${BMAAS_NETWORK_NAME}
 edpm_compute_baremetal: export BMAAS_NETWORK_IPADDRESS=172.22.0.3
 edpm_compute_baremetal: export BMAAS_BRIDGE_IPADDRESS=172.22.0.2
+edpm_compute_baremetal: export OPERATOR_NAME=openstack
 edpm_compute_baremetal: ## Deploy controlplane and dataplane with BMAAS
 	$(eval $(call vars))
-	pushd .. && make nmstate && popd
 	make bmaas
 	pushd .. && make openstack wait openstack_deploy && popd
 	scripts/gen-ansibleee-ssh-key.sh
@@ -268,6 +268,7 @@ bmaas_generate_nodes_yaml:
 
 .PHONY: bmaas
 bmaas: bmaas_cleanup
+	pushd .. && make input nmstate && popd
 	make bmaas_network
 	make bmaas_crc_attach_network
 	make bmaas_crc_baremetal_bridge
