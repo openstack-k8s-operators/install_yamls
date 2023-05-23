@@ -19,7 +19,8 @@
 
     - name: Make sure all Openstack operators are deployed
       ansible.builtin.shell: |
-        set -o pipefail && oc get csv -l operators.coreos.com/openstack-operator.openstack --no-headers=true | grep -i "succeeded"
+        set -o pipefail && \
+        oc get csv -l operators.coreos.com/openstack-operator.openstack-operators -n "openstack-operators" --no-headers=true | grep -i "succeeded"
       register: operator_status
       until: operator_status.rc == 0
       changed_when: false

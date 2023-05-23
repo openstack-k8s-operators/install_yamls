@@ -13,6 +13,7 @@
       - zuul: github.com/openstack-k8s-operators/ci-framework
     vars:
       crc_parameters: "--memory 20000 --disk-size 120 --cpus 6"
+      operators_namespace: openstack-operators
       pre_pull_images:
         - registry.redhat.io/rhosp-rhel9/openstack-rabbitmq:17.0
         - quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:afa73a12a1ffd31f77b10a25c43a4d02b0fd62f927f6209c26983bd8aee021bf

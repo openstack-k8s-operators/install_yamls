@@ -15,8 +15,8 @@
 # under the License.
 set -x
 
-if [ -z "$NAMESPACE" ]; then
-    echo "Please set NAMESPACE"; exit 1
+if [ -z "$OPERATOR_NAMESPACE" ]; then
+    echo "Please set OPERATOR_NAMESPACE"; exit 1
 fi
 
 if [ -z "$OPERATOR_NAME" ]; then
@@ -26,7 +26,7 @@ fi
 CSV=$(oc get csv --no-headers -o custom-columns=":metadata.name" --ignore-not-found=true | grep $OPERATOR_NAME)
 
 if [ -n "$CSV" ]; then
-    oc delete -n ${NAMESPACE} csv ${CSV} --ignore-not-found=true
+    oc delete -n ${OPERATOR_NAMESPACE} csv ${CSV} --ignore-not-found=true
 fi
-oc delete -n ${NAMESPACE} subscription ${OPERATOR_NAME}-operator --ignore-not-found=true
-oc delete -n ${NAMESPACE} catalogsource ${OPERATOR_NAME}-operator-index --ignore-not-found=true
+oc delete -n ${OPERATOR_NAMESPACE} subscription ${OPERATOR_NAME}-operator --ignore-not-found=true
+oc delete -n ${OPERATOR_NAMESPACE} catalogsource ${OPERATOR_NAME}-operator-index --ignore-not-found=true
