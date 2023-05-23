@@ -15,8 +15,8 @@
 # under the License.
 set -ex
 
-if [ -z "${NAMESPACE}" ]; then
-    echo "Please set NAMESPACE"; exit 1
+if [ -z "${OPERATOR_NAMESPACE}" ]; then
+    echo "Please set OPERATOR_NAMESPACE"; exit 1
 fi
 if [ -z "${OPERATOR_NAME}" ]; then
     echo "Please set OPERATOR_NAME"; exit 1
@@ -40,10 +40,7 @@ apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
   name: openstack
-  namespace: ${NAMESPACE}
-spec:
-  targetNamespaces:
-  - ${NAMESPACE}
+  namespace: ${OPERATOR_NAMESPACE}
 EOF_CAT
 
 cat > ${OPERATOR_DIR}/catalogsource.yaml <<EOF_CAT
@@ -51,7 +48,7 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: CatalogSource
 metadata:
   name: $OPERATOR_NAME-operator-index
-  namespace: ${NAMESPACE}
+  namespace: ${OPERATOR_NAMESPACE}
 spec:
   image: ${IMAGE}
   sourceType: grpc
@@ -62,14 +59,10 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   name: ${OPERATOR_NAME}-operator
-  namespace: ${NAMESPACE}
+  namespace: ${OPERATOR_NAMESPACE}
 spec:
   name: ${OPERATOR_NAME}-operator
   channel: alpha
-  config:
-    env:
-    - name: WATCH_NAMESPACE
-      value: ${NAMESPACE}
   source: ${OPERATOR_NAME}-operator-index
-  sourceNamespace: ${NAMESPACE}
+  sourceNamespace: ${OPERATOR_NAMESPACE}
 EOF_CAT

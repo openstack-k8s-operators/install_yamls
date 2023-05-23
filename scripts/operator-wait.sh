@@ -20,8 +20,8 @@
 
 set -x
 
-if [ -z "$NAMESPACE" ]; then
-    echo "Please set NAMESPACE"; exit 1
+if [ -z "${OPERATOR_NAMESPACE}" ]; then
+    echo "Please set OPERATOR_NAMESPACE"; exit 1
 fi
 
 if [ -z "$OPERATOR_NAME" ]; then
@@ -29,7 +29,7 @@ if [ -z "$OPERATOR_NAME" ]; then
 fi
 
 # wait for controller-manager deployment to appear
-timeout 300s bash -c 'until [ "$(oc get deployment -l openstack.org/operator-name=${OPERATOR_NAME} -n ${NAMESPACE} -o name)" != "" ]; do sleep 1; done'
+timeout 300s bash -c 'until [ "$(oc get deployment -l openstack.org/operator-name=${OPERATOR_NAME} -n ${OPERATOR_NAMESPACE} -o name)" != "" ]; do sleep 1; done'
 
 # wait for controller-manager deployment to reach available state
-oc wait deployment -l openstack.org/operator-name=${OPERATOR_NAME} -n ${NAMESPACE} --for condition=Available --timeout=300s
+oc wait deployment -l openstack.org/operator-name=${OPERATOR_NAME} -n ${OPERATOR_NAMESPACE} --for condition=Available --timeout=300s
