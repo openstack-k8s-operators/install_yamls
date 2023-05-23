@@ -165,10 +165,7 @@ patches:
         edpm_selinux_mode: enforcing
         edpm_hosts_entries_undercloud_hosts_entries: []
         # edpm_hosts_entries role
-        edpm_hosts_entries_extra_hosts_entries:
-        - 172.17.0.80 glance-internal.openstack.svc neutron-internal.openstack.svc cinder-internal.openstack.svc nova-internal.openstack.svc placement-internal.openstack.svc keystone-internal.openstack.svc
-        - 172.17.0.85 rabbitmq.openstack.svc
-        - 172.17.0.86 rabbitmq-cell1.openstack.svc
+        edpm_hosts_entries_extra_hosts_entries: []
         edpm_hosts_entries_vip_hosts_entries: []
         hosts_entries: []
         hosts_entry: []
