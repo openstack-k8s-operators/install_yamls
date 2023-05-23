@@ -3,6 +3,7 @@ KUBEADMIN_PWD ?= 12345678
 PULL_SECRET  ?= ${PWD}/pull-secret.txt
 CRC_DEFAULT_NETWORK_IP ?= 192.168.122.10
 EDPM_COMPUTE_SUFFIX ?= 0
+EDPM_TOTAL_NODES ?= 1
 EDPM_COMPUTE_IP ?= 192.168.122.100
 OPENSTACK_RUNNER_IMG ?= quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
 EDPM_NETWORK_CONFIG_TEMPLATE ?= templates/single_nic_vlans/single_nic_vlans.j2
@@ -115,7 +116,13 @@ edpm_compute_baremetal_cleanup:  ## Cleanup dataplane with BMAAS and controlplan
 edpm_compute: ## Create EDPM compute VM
 	$(eval $(call vars))
 	scripts/gen-ansibleee-ssh-key.sh
-	scripts/gen-edpm-compute-node.sh ${EDPM_COMPUTE_SUFFIX}
+	if [ ${EDPM_TOTAL_NODES} -eq 1 ]; then \
+		scripts/gen-edpm-compute-node.sh ${EDPM_COMPUTE_SUFFIX}; \
+	else \
+		for INDEX in $(shell seq 0 $$((${EDPM_TOTAL_NODES} -1))) ; do \
+			scripts/gen-edpm-compute-node.sh $$INDEX ; \
+		done \
+	fi
 
 .PHONY: edpm_compute_repos
 edpm_compute_repos: ## Configure EDPM compute VM with repositories
@@ -125,7 +132,13 @@ edpm_compute_repos: ## Configure EDPM compute VM with repositories
 .PHONY: edpm_compute_cleanup
 edpm_compute_cleanup: ## Delete EDPM compute VM
 	$(eval $(call vars))
-	scripts/edpm-compute-cleanup.sh ${EDPM_COMPUTE_SUFFIX}
+	if [ ${EDPM_TOTAL_NODES} -eq 1 ]; then \
+		scripts/edpm-compute-cleanup.sh ${EDPM_COMPUTE_SUFFIX}; \
+	else \
+		for INDEX in $(shell seq 0 $$((${EDPM_TOTAL_NODES} -1))) ; do \
+			scripts/edpm-compute-cleanup.sh $$INDEX ; \
+		done \
+	fi
 
 .PHONY: edpm_play
 edpm_play: export EDPM_OVN_METADATA_AGENT_TRANSPORT_URL=$(shell oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
