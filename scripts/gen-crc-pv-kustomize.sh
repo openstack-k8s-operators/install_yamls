@@ -71,3 +71,21 @@ spec:
           values: [${NODE_NAMES}]
 EOF_CAT
 done
+cat >> ${OUT}/crc/storage.yaml <<EOF_CAT
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ansible-ee-logs
+  annotations:
+    pv.kubernetes.io/provisioned-by: crc-devsetup
+spec:
+  resources:
+    requests:
+      storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+    - ReadWriteMany
+    - ReadOnlyMany
+  storageClassName: ${STORAGE_CLASS}
+EOF_CAT
