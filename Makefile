@@ -378,6 +378,7 @@ crc_bmo_setup:
 	$(eval $(call vars,$@))
 	mkdir -p ${OPERATOR_BASE_DIR}
 	oc apply -f ${CERTMANAGER_URL}
+	oc wait pod -n cert-manager --for condition=Ready -l app=webhook --timeout=300s
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(BMO_BRANCH),-b ${BMO_BRANCH}) ${BMO_REPO} "baremetal-operator" && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/eth2/${PROVISIONING_INTERFACE}/g' ironic-deployment/default/ironic_bmo_configmap.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && make generate manifests && bash tools/deploy.sh -b -i && popd
@@ -401,7 +402,7 @@ endif
 .PHONY: openstack_prep
 openstack_prep: export IMAGE=${OPENSTACK_IMG}
 openstack_prep: $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config) ## creates the files to install the operator using olm
-openstack_prep: $(if $(findstring true, $(BMO_SETUP)), crc_bmo_setup) ## Setup BMO
+openstack_prep: $(if $(findstring true,$(BMO_SETUP)), crc_bmo_setup) ## Setup BMO
 	$(eval $(call vars,$@,openstack))
 	bash scripts/gen-olm.sh
 
