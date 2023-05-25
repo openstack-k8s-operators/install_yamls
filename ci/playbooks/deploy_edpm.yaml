@@ -10,13 +10,6 @@
         name: libguestfs-tools-c
         state: present
 
-    - name: Run make crc_storage
-      community.general.make:
-        target: crc_storage
-        chdir: "{{ install_yamls_basedir }}"
-        params:
-          OUT: "{{ install_yamls_basedir }}/out"
-
     - name: Run make edpm_compute
       community.general.make:
         target: edpm_compute
