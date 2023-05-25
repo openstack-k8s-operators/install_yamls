@@ -80,17 +80,6 @@ patches:
       path: /spec/roles/edpm-compute/openStackAnsibleEERunnerImage
       value: ${OPENSTACK_RUNNER_IMG}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/extraMounts
-      value:
-        - extraVolType: Logs
-          volumes:
-          - name: ansible-logs
-            persistentVolumeClaim:
-              claimName: ansible-ee-logs
-          mounts:
-          - name: ansible-logs
-            mountPath: "/runner/artifacts"
-    - op: replace
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars
       value: |
         service_net_map:
@@ -188,6 +177,21 @@ patches:
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
 EOF
+if oc get pvc ansible-ee-logs 2>&1 1>/dev/null; then
+cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/extraMounts
+      value:
+        - extraVolType: Logs
+          volumes:
+          - name: ansible-logs
+            persistentVolumeClaim:
+              claimName: ansible-ee-logs
+          mounts:
+          - name: ansible-logs
+            mountPath: "/runner/artifacts"
+EOF
+fi
 if [ "$EDPM_SINGLE_NODE" == "true" ]; then
 cat <<EOF >>kustomization.yaml
     - op: remove
