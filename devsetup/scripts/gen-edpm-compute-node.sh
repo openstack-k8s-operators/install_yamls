@@ -181,6 +181,8 @@ sed -i s/dhcp/none/g $NETSCRIPT
 sed -i /PERSISTENT_DHCLIENT/d $NETSCRIPT
 EOF
 
+chmod +x ${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
+
 if [ ! -f ${DISK_FILEPATH} ]; then
     if [ ! -f ${CRC_POOL}/centos-9-stream-base.qcow2 ]; then
         pushd ${CRC_POOL}
@@ -195,7 +197,6 @@ if [ ! -f ${DISK_FILEPATH} ]; then
             sudo dnf -y install guestfs-tools
         fi
     fi
-    VIRT_HOST_KNOWN_HOSTS=$(ssh-keyscan 192.168.122.1)
     virt-customize -a ${DISK_FILEPATH} \
         --root-password password:12345678 \
         --hostname ${EDPM_COMPUTE_NAME} \
@@ -204,7 +205,6 @@ if [ ! -f ${DISK_FILEPATH} ]; then
         --run-command "echo 'PermitRootLogin yes' > /etc/ssh/sshd_config.d/99-root-login.conf" \
         --run-command "mkdir -p /root/.ssh; chmod 0700 /root/.ssh" \
         --run-command "ssh-keygen -f /root/.ssh/id_rsa -N ''" \
-        --run-command "echo \"${VIRT_HOST_KNOWN_HOSTS}\" >> /root/.ssh/known_hosts" \
         --ssh-inject root:string:"$(cat $SSH_PUBLIC_KEY)" \
         --selinux-relabel || rm -f ${DISK_FILEPATH}
     if [ ! -f ${DISK_FILEPATH} ]; then
