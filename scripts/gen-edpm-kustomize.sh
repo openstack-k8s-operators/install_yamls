@@ -71,11 +71,9 @@ patches:
     - op: replace
       path: /spec/nodes/edpm-compute-0/node/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
-    - op: replace
-      path: /spec/roles/edpm-compute/services
-      value:
-      - repo-setup
-      - configure-network
+    - op: add
+      path: /spec/roles/edpm-compute/services/0
+      value: repo-setup
     - op: replace
       path: /spec/roles/edpm-compute/openStackAnsibleEERunnerImage
       value: ${OPENSTACK_RUNNER_IMG}
