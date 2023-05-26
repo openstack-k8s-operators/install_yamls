@@ -113,7 +113,7 @@ spec:
           ctlplane_ip: 172.22.0.100
           internal_api_ip: 172.17.0.100
           storage_ip: 172.18.0.100
-          tenant_ip: 172.10.0.100
+          tenant_ip: 172.19.0.100
           fqdn_internal_api: edpm-compute-0.example.com
         ansibleSSHPrivateKeySecret: dataplane-ansible-ssh-private-key-secret
     edpm-compute-1:
@@ -125,7 +125,7 @@ spec:
           ctlplane_ip: 172.22.0.101
           internal_api_ip: 172.17.0.101
           storage_ip: 172.18.0.101
-          tenant_ip: 172.10.0.101
+          tenant_ip: 172.19.0.101
           fqdn_internal_api: edpm-compute-1.example.com
         ansibleSSHPrivateKeySecret: dataplane-ansible-ssh-private-key-secret
   roles:
