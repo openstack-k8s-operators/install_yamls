@@ -189,11 +189,7 @@ if [ ! -f ${DISK_FILEPATH} ]; then
     fi
     qemu-img create -o backing_file=${CRC_POOL}/centos-9-stream-base.qcow2,backing_fmt=qcow2 -f qcow2 "${DISK_FILEPATH}" "${EDPM_COMPUTE_DISK_SIZE}G"
     if [[ ! -e /usr/bin/virt-customize ]]; then
-        if [ $(rpm -E %{rhel}) -eq 8 ]; then
-            sudo dnf -y install hexedit libguestfs-tools-c
-        elif [ $(rpm -E %{rhel}) -eq 9 ]; then
-            sudo dnf -y install guestfs-tools
-        fi
+        sudo dnf -y install /usr/bin/virt-customize
     fi
     VIRT_HOST_KNOWN_HOSTS=$(ssh-keyscan 192.168.122.1)
     virt-customize -a ${DISK_FILEPATH} \
