@@ -412,6 +412,7 @@ openstack_cleanup: ## deletes the operator, but does not cleanup the service res
 	oc delete csv openstack-storage-operators.v0.0.1 --ignore-not-found=true
 	oc delete subscription cluster-operator-alpha-openstack-operator-index-openstack-operators --ignore-not-found=true
 	oc delete csv cluster-operator.v0.0.0 --ignore-not-found=true
+	oc delete operatorgroup.operators.coreos.com/openstack --ignore-not-found=true
 	test -d ${OPERATOR_BASE_DIR}/baremetal-operator && make crc_bmo_cleanup || true
 
 .PHONY: openstack_deploy_prep
