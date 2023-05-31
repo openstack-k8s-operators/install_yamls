@@ -15,9 +15,6 @@
 # under the License.
 set -ex
 RHEL_IMAGE_URL=${RHEL_IMAGE_URL:-"https://images.rdoproject.org/centos9/master/rdo_trunk/current-tripleo/overcloud-hardened-uefi-full.qcow2"}
-AGENT_IMAGE_URL=${AGENT_IMAGE_URL:-"quay.io/openstack-k8s-operators/openstack-baremetal-operator-agent:latest"}
-DOWNLOADER_IMAGE_URL=${DOWNLOADER_IMAGE_URL:-"quay.io/openstack-k8s-operators/openstack-baremetal-operator-downloader:latest"}
-APACHE_IMAGE_URL=${APACHE_IMAGE_URL:-"registry.redhat.io/rhel8/httpd-24:latest"}
 NETWORK_NAME=${NETWORK_NAME:-"crc-bmaas"}
 NODE_NAME_PREFIX=${NODE_NAME_PREFIX:-"crc-bmaas"}
 OPERATOR_DIR=${OPERATOR_DIR:-../out/operator}
@@ -78,22 +75,6 @@ rm -Rf ${OPERATOR_DIR}/dataplane-operator || true
 pushd ${OPERATOR_DIR} && git clone ${DATAPLANE_BRANCH} ${DATAPLANE_REPO} "dataplane-operator" && popd
 oc apply -f ${OPERATOR_DIR}/dataplane-operator/config/services
 
-cat <<EOF >${OUTPUT_DIR}/provisoner.yaml
----
-apiVersion: baremetal.openstack.org/v1beta1
-kind: OpenStackProvisionServer
-metadata:
-  name: openstackprovisionserver
-spec:
-  agentImageUrl: ${AGENT_IMAGE_URL}
-  apacheImageUrl: ${APACHE_IMAGE_URL}
-  downloaderImageUrl: ${DOWNLOADER_IMAGE_URL}
-  interface: ${PROVISIONING_INTERFACE}
-  port: 8080
-  rhelImageUrl: ${RHEL_IMAGE_URL}
-
-EOF
-
 cat <<EOF >${OUTPUT_DIR}/dataplane.yaml
 ---
 apiVersion: dataplane.openstack.org/v1beta1
@@ -140,9 +121,10 @@ spec:
         - name: ANSIBLE_VERBOSITY
           value: "2"
       baremetalSetTemplate:
+        rhelImageUrl: ${RHEL_IMAGE_URL}
+        provisioningInterface:  ${PROVISIONING_INTERFACE}
         deploymentSSHSecret: dataplane-ansible-ssh-private-key-secret
         ctlplaneInterface: enp1s0
-        provisionServerName: openstackprovisionserver
         bmhNamespace: openstack
         ctlplaneGateway: ${NETWORK_IPADDRESS}
         ctlplaneNetmask: 255.255.255.0
