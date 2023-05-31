@@ -1,5 +1,6 @@
 # general
 SHELL := /bin/bash
+OPERATOR_NAMESPACE      ?= openstack-operators
 NAMESPACE                ?= openstack
 PASSWORD                 ?= 12345678
 SECRET                   ?= osp-secret
@@ -271,6 +272,7 @@ SWIFTSTORAGE_CR  ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFTSTORAGE}
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
 ${1}: export NAMESPACE=${NAMESPACE}
+${1}: export OPERATOR_NAMESPACE=${OPERATOR_NAMESPACE}
 ${1}: export SECRET=${SECRET}
 ${1}: export PASSWORD=${PASSWORD}
 ${1}: export METADATA_SHARED_SECRET=${METADATA_SHARED_SECRET}
@@ -279,12 +281,12 @@ ${1}: export STORAGE_CLASS=${STORAGE_CLASS}
 ${1}: export OUT=${OUT}
 ${1}: export CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD}
 ${1}: export OPERATOR_NAME=${2}
-${1}: export OPERATOR_DIR=${OUT}/${NAMESPACE}/${2}/op
+${1}: export OPERATOR_DIR=${OUT}/${OPERATOR_NAMESPACE}/${2}/op
 ${1}: export DEPLOY_DIR=${OUT}/${NAMESPACE}/${2}/cr
 endef
 
 .PHONY: all
-all: namespace keystone mariadb placement neutron
+all: operator_namespace keystone mariadb placement neutron
 
 ##@ General
 
@@ -328,6 +330,21 @@ crc_storage_cleanup: ## cleanup local storage PVs in CRC vm
 	if oc get pv | grep ${STORAGE_CLASS}; then oc get pv | grep ${STORAGE_CLASS} | cut -f 1 -d ' ' | xargs oc delete pv; fi
 	if oc get sc ${STORAGE_CLASS}; then oc delete sc ${STORAGE_CLASS}; fi
 	bash scripts/delete-pv.sh
+
+##@ OPERATOR_NAMESPACE
+.PHONY: operator_namespace
+operator_namespace: export NAMESPACE=${OPERATOR_NAMESPACE}
+operator_namespace: ## creates the namespace specified via OPERATOR_NAMESPACE env var (defaults to openstack-operators)
+	$(eval $(call vars,$@))
+	bash scripts/gen-namespace.sh
+	oc apply -f ${OUT}/${OPERATOR_NAMESPACE}/namespace.yaml
+	sleep 2
+ifeq ($(MICROSHIFT) ,0)
+	oc project ${OPERATOR_NAMESPACE}
+else
+	oc config set-context --current --namespace=${OPERATOR_NAMESPACE}
+	oc adm policy add-scc-to-user privileged -z default --namespace ${OPERATOR_NAMESPACE}
+endif
 
 ##@ NAMESPACE
 .PHONY: namespace
@@ -399,7 +416,7 @@ openstack_prep: $(if $(findstring true,$(BMO_SETUP)), crc_bmo_setup) ## Setup BM
 	bash scripts/gen-olm.sh
 
 .PHONY: openstack
-openstack: namespace openstack_prep ## installs the operator, also runs the prep step. Set OPENSTACK_IMG for custom image.
+openstack: operator_namespace openstack_prep ## installs the operator, also runs the prep step. Set OPENSTACK_IMG for custom image.
 	$(eval $(call vars,$@,openstack))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -429,7 +446,7 @@ openstack_deploy: input openstack_deploy_prep ## installs the service instance u
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: openstack_deploy_cleanup
-openstack_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+openstack_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,openstack))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/openstack-operator ${DEPLOY_DIR}
@@ -465,7 +482,7 @@ edpm_deploy_prep: edpm_deploy_cleanup $(if $(findstring true,$(NETWORK_ISOLATION
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
 
 .PHONY: edpm_deploy_cleanup
-edpm_deploy_cleanup: ## cleans up the edpm instance, Does not affect the operator.
+edpm_deploy_cleanup: namespace ## cleans up the edpm instance, Does not affect the operator.
 	$(eval $(call vars,$@,dataplane))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/dataplane-operator ${DEPLOY_DIR}
@@ -481,7 +498,7 @@ edpm_register_dns: dns_deploy_prep ## register edpm nodes in dns as dnsdata
 	oc apply -f ${DEPLOY_DIR}/network_v1beta1_dnsdata.yaml # TODO (mschuppert): register edpm nodes in DNS can be removed after full IPAM integration
 
 .PHONY: openstack_crds
-openstack_crds: ## installs all openstack CRDs. Useful for infrastructure dev
+openstack_crds: namespace ## installs all openstack CRDs. Useful for infrastructure dev
 	mkdir -p ${OUT}/${OPENSTACK_CRDS_DIR}
 	skopeo copy "docker://${OPENSTACK_BUNDLE_IMG}" dir:${OUT}/${OPENSTACK_CRDS_DIR}
 	for X in $$(file ${OUT}/${OPENSTACK_CRDS_DIR}/* | grep gzip | cut -f 1 -d ':'); do tar xvf $$X -C ${OUT}/${OPENSTACK_CRDS_DIR}/; done
@@ -490,7 +507,7 @@ openstack_crds: ## installs all openstack CRDs. Useful for infrastructure dev
 .PHONY: openstack_storage_crds
 openstack_storage_crds: export OPENSTACK_BUNDLE_IMG=${OPENSTACK_STORAGE_BUNDLE_IMG}
 openstack_storage_crds: export OPENSTACK_CRDS_DIR=openstack_storage_crds
-openstack_storage_crds: ## installs storage openstack CRDs. Useful for infrastructure dev
+openstack_storage_crds: namespace ## installs storage openstack CRDs. Useful for infrastructure dev
 	make openstack_crds
 
 ##@ INFRA
@@ -501,7 +518,7 @@ infra_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: infra
-infra: namespace infra_prep ## installs the operator, also runs the prep step. Set INFRA_IMG for custom image.
+infra: operator_namespace infra_prep ## installs the operator, also runs the prep step. Set INFRA_IMG for custom image.
 	$(eval $(call vars,$@,infra))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -550,7 +567,7 @@ memcached_deploy: input memcached_deploy_prep ## installs the service instance u
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: memcached_deploy_cleanup
-memcached_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+memcached_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,infra))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/infra-operator ${DEPLOY_DIR}
@@ -563,7 +580,7 @@ keystone_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: keystone
-keystone: namespace keystone_prep ## installs the operator, also runs the prep step. Set KEYSTONE_IMG for custom image.
+keystone: operator_namespace keystone_prep ## installs the operator, also runs the prep step. Set KEYSTONE_IMG for custom image.
 	$(eval $(call vars,$@,keystone))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -589,11 +606,11 @@ keystone_deploy: input keystone_deploy_prep ## installs the service instance usi
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: keystone_deploy_validate
-keystone_deploy_validate: input namespace ## checks that keystone was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
+keystone_deploy_validate: input ## checks that keystone was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
 	kubectl-kuttl assert -n ${NAMESPACE} ${KEYSTONE_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
 
 .PHONY: keystone_deploy_cleanup
-keystone_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+keystone_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,keystone))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/keystone-operator ${DEPLOY_DIR}
@@ -606,7 +623,7 @@ mariadb_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: mariadb
-mariadb: namespace mariadb_prep ## installs the operator, also runs the prep step. Set MARIADB_IMG for custom image.
+mariadb: operator_namespace mariadb_prep ## installs the operator, also runs the prep step. Set MARIADB_IMG for custom image.
 	$(eval $(call vars,$@,mariadb))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -632,11 +649,11 @@ mariadb_deploy: input mariadb_deploy_prep ## installs the service instance using
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: mariadb_deploy_validate
-mariadb_deploy_validate: input namespace ## checks that mariadb was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
+mariadb_deploy_validate: input ## checks that mariadb was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
 	kubectl-kuttl assert -n ${NAMESPACE} ${MARIADB_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
 
 .PHONY: mariadb_deploy_cleanup
-mariadb_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+mariadb_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,mariadb))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/mariadb-operator ${DEPLOY_DIR}
@@ -649,7 +666,7 @@ placement_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: placement
-placement: namespace placement_prep ## installs the operator, also runs the prep step. Set PLACEMENT_IMG for custom image.
+placement: operator_namespace placement_prep ## installs the operator, also runs the prep step. Set PLACEMENT_IMG for custom image.
 	$(eval $(call vars,$@,placement))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -675,7 +692,7 @@ placement_deploy: input placement_deploy_prep ## installs the service instance u
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: placement_deploy_cleanup
-placement_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+placement_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,placement))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/placement-operator ${DEPLOY_DIR}
@@ -689,7 +706,7 @@ glance_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: glance
-glance: namespace glance_prep ## installs the operator, also runs the prep step. Set GLANCE_IMG for custom image.
+glance: operator_namespace glance_prep ## installs the operator, also runs the prep step. Set GLANCE_IMG for custom image.
 	$(eval $(call vars,$@,glance))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -716,7 +733,7 @@ glance_deploy: input glance_deploy_prep ## installs the service instance using k
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: glance_deploy_cleanup
-glance_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+glance_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,glance))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/glance-operator ${DEPLOY_DIR}
@@ -730,7 +747,7 @@ ovn_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: ovn
-ovn: namespace ovn_prep ## installs the operator, also runs the prep step. Set OVN_IMG for custom image.
+ovn: operator_namespace ovn_prep ## installs the operator, also runs the prep step. Set OVN_IMG for custom image.
 	$(eval $(call vars,$@,ovn))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -750,12 +767,12 @@ ovn_deploy_prep: ovn_deploy_cleanup ## prepares the CR to install the service ba
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: ovn_deploy
-ovn_deploy: ovn_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set OVN_REPO and OVN_BRANCH to deploy from a custom repo.
+ovn_deploy: ovn_deploy_prep namespace ## installs the service instance using kustomize. Runs prep step in advance. Set OVN_REPO and OVN_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,ovn))
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: ovn_deploy_cleanup
-ovn_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+ovn_deploy_cleanup:  namespace ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,ovn))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/ovn-operator ${DEPLOY_DIR}
@@ -768,7 +785,7 @@ neutron_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: neutron
-neutron: namespace neutron_prep ## installs the operator, also runs the prep step. Set NEUTRON_IMG for custom image.
+neutron: operator_namespace neutron_prep ## installs the operator, also runs the prep step. Set NEUTRON_IMG for custom image.
 	$(eval $(call vars,$@,neutron))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -794,7 +811,7 @@ neutron_deploy: input neutron_deploy_prep ## installs the service instance using
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: neutron_deploy_cleanup
-neutron_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+neutron_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,neutron))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/neutron-operator ${DEPLOY_DIR}
@@ -808,7 +825,7 @@ cinder_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: cinder
-cinder: namespace cinder_prep ## installs the operator, also runs the prep step. Set CINDER_IMG for custom image.
+cinder: operator_namespace cinder_prep ## installs the operator, also runs the prep step. Set CINDER_IMG for custom image.
 	$(eval $(call vars,$@,cinder))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -833,11 +850,11 @@ cinder_deploy: input cinder_deploy_prep ## installs the service instance using k
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: cinder_deploy_validate
-cinder_deploy_validate: input namespace ## checks that cinder was properly deployed. Set CINDER_KUTTL_DIR to use assert file from custom repo.
+cinder_deploy_validate: input ## checks that cinder was properly deployed. Set CINDER_KUTTL_DIR to use assert file from custom repo.
 	kubectl-kuttl assert -n ${NAMESPACE} ${CINDER_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
 
 .PHONY: cinder_deploy_cleanup
-cinder_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+cinder_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,cinder))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/cinder-operator ${DEPLOY_DIR}
@@ -851,7 +868,7 @@ rabbitmq_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: rabbitmq
-rabbitmq: namespace rabbitmq_prep ## installs the operator, also runs the prep step. Set RABBITMQ_IMG for custom image.
+rabbitmq: operator_namespace rabbitmq_prep ## installs the operator, also runs the prep step. Set RABBITMQ_IMG for custom image.
 	$(eval $(call vars,$@,cluster))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -877,7 +894,7 @@ rabbitmq_deploy: input rabbitmq_deploy_prep ## installs the service instance usi
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: rabbitmq_deploy_cleanup
-rabbitmq_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+rabbitmq_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,rabbitmq))
 	if oc get RabbitmqCluster; then oc delete --ignore-not-found=true RabbitmqCluster rabbitmq; fi
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/rabbitmq-operator ${DEPLOY_DIR}
@@ -890,7 +907,7 @@ ironic_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: ironic
-ironic: namespace ironic_prep ## installs the operator, also runs the prep step. Set IRONIC_IMG for custom image.
+ironic: operator_namespace ironic_prep ## installs the operator, also runs the prep step. Set IRONIC_IMG for custom image.
 	$(eval $(call vars,$@,ironic))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -917,7 +934,7 @@ ironic_deploy: input ironic_deploy_prep ## installs the service instance using k
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: ironic_deploy_cleanup
-ironic_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+ironic_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,ironic))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/ironic-operator ${DEPLOY_DIR}
@@ -932,7 +949,7 @@ octavia_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: octavia
-octavia: namespace octavia_prep ## installs the operator, also runs the prep step. Set OCTAVIA_IMG for custom image.
+octavia: operator_namespace octavia_prep ## installs the operator, also runs the prep step. Set OCTAVIA_IMG for custom image.
 	$(eval $(call vars,$@,octavia))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -957,11 +974,11 @@ octavia_deploy: input octavia_deploy_prep ## installs the service instance using
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: octavia_deploy_validate
-octavia_deploy_validate: input namespace ## checks that octavia was properly deployed. Set OCTAVIA_KUTTL_DIR to use assert file from custom repo.
+octavia_deploy_validate: input ## checks that octavia was properly deployed. Set OCTAVIA_KUTTL_DIR to use assert file from custom repo.
 	kubectl-kuttl assert -n ${NAMESPACE} ${OCTAVIA_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
 
 .PHONY: octavia_deploy_cleanup
-octavia_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+octavia_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,octavia))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/octavia-operator ${DEPLOY_DIR}
@@ -975,7 +992,7 @@ nova_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: nova
-nova: namespace nova_prep ## installs the operator, also runs the prep step. Set NOVA_IMG for custom image.
+nova: operator_namespace nova_prep ## installs the operator, also runs the prep step. Set NOVA_IMG for custom image.
 	$(eval $(call vars,$@,nova))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -1004,7 +1021,7 @@ nova_deploy: input nova_deploy_prep ## installs the service instance using kusto
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: nova_deploy_cleanup
-nova_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+nova_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,nova))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/nova-operator ${DEPLOY_DIR}
@@ -1017,7 +1034,7 @@ mariadb_kuttl_run: ## runs kuttl tests for the mariadb operator, assumes that ev
 	kubectl-kuttl test --config ${MARIADB_KUTTL_CONF} ${MARIADB_KUTTL_DIR}
 
 .PHONY: mariadb_kuttl
-mariadb_kuttl: namespace input openstack_crds deploy_cleanup mariadb_deploy_prep mariadb  ## runs kuttl tests for the mariadb operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+mariadb_kuttl: input openstack_crds deploy_cleanup mariadb_deploy_prep mariadb  ## runs kuttl tests for the mariadb operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	$(eval $(call vars,$@,mariadb))
 	make wait
 	make mariadb_kuttl_run
@@ -1032,7 +1049,7 @@ keystone_kuttl_run: ## runs kuttl tests for the keystone operator, assumes that 
 keystone_kuttl: export NAMESPACE = ${KEYSTONE_KUTTL_NAMESPACE}
 # Set the value of $KEYSTONE_KUTTL_NAMESPACE if you want to run the keystone
 # kuttl tests in a namespace different than the default (keystone-kuttl-tests)
-keystone_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate keystone_deploy_prep keystone ## runs kuttl tests for the keystone operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+keystone_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate keystone_deploy_prep keystone ## runs kuttl tests for the keystone operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make keystone_kuttl_run
 	make deploy_cleanup
 	make keystone_cleanup
@@ -1044,7 +1061,7 @@ cinder_kuttl_run: ## runs kuttl tests for the cinder operator, assumes that ever
 	kubectl-kuttl test --config ${CINDER_KUTTL_CONF} ${CINDER_KUTTL_DIR}
 
 .PHONY: cinder_kuttl
-cinder_kuttl: namespace input openstack_crds openstack_storage_crds deploy_cleanup mariadb mariadb_deploy rabbitmq rabbitmq_deploy keystone_deploy_prep keystone keystone_deploy cinder_deploy_prep cinder infra mariadb_deploy_validate ## runs kuttl tests for the cinder operator. Installs openstack crds and cinder operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+cinder_kuttl: input openstack_crds openstack_storage_crds deploy_cleanup mariadb mariadb_deploy rabbitmq rabbitmq_deploy keystone_deploy_prep keystone keystone_deploy cinder_deploy_prep cinder infra mariadb_deploy_validate ## runs kuttl tests for the cinder operator. Installs openstack crds and cinder operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make cinder_kuttl_run
 	make infra_cleanup
 	make rabbitmq_deploy_cleanup
@@ -1059,7 +1076,7 @@ neutron_kuttl_run: ## runs kuttl tests for the neutron operator, assumes that ev
 	kubectl-kuttl test --config ${NEUTRON_KUTTL_CONF} ${NEUTRON_KUTTL_DIR}
 
 .PHONY: neutron_kuttl
-neutron_kuttl: namespace input openstack_crds deploy_cleanup mariadb neutron_deploy_prep neutron mariadb_deploy keystone rabbitmq keystone_deploy ovn rabbitmq_deploy infra ovn_deploy   mariadb_deploy_validate ## runs kuttl tests for the neutron operator. Installs openstack crds and mariadb, keystone, rabbitmq, ovn, infra and neutron operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+neutron_kuttl: input openstack_crds deploy_cleanup mariadb neutron_deploy_prep neutron mariadb_deploy keystone rabbitmq keystone_deploy ovn rabbitmq_deploy infra ovn_deploy   mariadb_deploy_validate ## runs kuttl tests for the neutron operator. Installs openstack crds and mariadb, keystone, rabbitmq, ovn, infra and neutron operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	$(eval $(call vars,$@,neutron))
 	make wait
 	make neutron_kuttl_run
@@ -1078,7 +1095,7 @@ octavia_kuttl_run: ## runs kuttl tests for the octavia operator, assumes that ev
 	kubectl-kuttl test --config ${OCTAVIA_KUTTL_CONF} ${OCTAVIA_KUTTL_DIR}
 
 .PHONY: octavia_kuttl
-octavia_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone ovn octavia_deploy_prep octavia ovn_deploy keystone_deploy mariadb_deploy_validate ## runs kuttl tests for the octavia operator. Installs openstack crds and mariadb, keystone, octavia, ovn operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+octavia_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone ovn octavia_deploy_prep octavia ovn_deploy keystone_deploy mariadb_deploy_validate ## runs kuttl tests for the octavia operator. Installs openstack crds and mariadb, keystone, octavia, ovn operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	$(eval $(call vars,$@,octavia))
 	make wait
 	make octavia_kuttl_run
@@ -1094,7 +1111,7 @@ ovn_kuttl_run: ## runs kuttl tests for the ovn operator, assumes that everything
 	kubectl-kuttl test --config ${OVN_KUTTL_CONF} ${OVN_KUTTL_DIR}
 
 .PHONY: ovn_kuttl
-ovn_kuttl: namespace input openstack_crds deploy_cleanup ovn_deploy_prep ovn ## runs kuttl tests for the ovn operator. Installs openstack crds and ovn operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+ovn_kuttl: input openstack_crds deploy_cleanup ovn_deploy_prep ovn ## runs kuttl tests for the ovn operator. Installs openstack crds and ovn operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	$(eval $(call vars,$@,ovn))
 	make wait
 	make ovn_kuttl_run
@@ -1106,7 +1123,7 @@ ironic_kuttl_run: ## runs kuttl tests for the ironic operator, assumes that ever
 	kubectl-kuttl test --config ${IRONIC_KUTTL_CONF} ${IRONIC_KUTTL_DIR}
 
 .PHONY: ironic_kuttl
-ironic_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy ironic ironic_deploy_prep ironic_deploy  ## runs kuttl tests for the ironic operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+ironic_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy ironic ironic_deploy_prep ironic_deploy  ## runs kuttl tests for the ironic operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	$(eval $(call vars,$@,ironic))
 	make wait
 	make ironic_kuttl_run
@@ -1123,7 +1140,7 @@ heat_kuttl_run: ## runs kuttl tests for the heat operator, assumes that everythi
 	kubectl-kuttl test --config ${HEAT_KUTTL_CONF} ${HEAT_KUTTL_DIR}
 
 .PHONY: heat_kuttl
-heat_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy rabbitmq rabbitmq_deploy infra heat heat_deploy_prep  ## runs kuttl tests for the heat operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+heat_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy rabbitmq rabbitmq_deploy infra heat heat_deploy_prep  ## runs kuttl tests for the heat operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	$(eval $(call vars,$@,heat))
 	make wait
 	make heat_kuttl_run
@@ -1154,7 +1171,7 @@ ansibleee_kuttl_prep: ansibleee_kuttl_cleanup
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(ANSIBLEEE_BRANCH),-b ${ANSIBLEEE_BRANCH}) ${ANSIBLEEE_REPO} "${OPERATOR_NAME}-operator" && popd
 
 .PHONY: ansibleee_kuttl
-ansibleee_kuttl: namespace input openstack_crds ansibleee_kuttl_prep ansibleee ## runs kuttl tests for the openstack-ansibleee operator. Installs openstack crds and openstack-ansibleee operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+ansibleee_kuttl: input openstack_crds ansibleee_kuttl_prep ansibleee ## runs kuttl tests for the openstack-ansibleee operator. Installs openstack crds and openstack-ansibleee operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make ansibleee_kuttl_run
 	make ansibleee_cleanup
 
@@ -1177,7 +1194,7 @@ dataplane_kuttl_prep: dataplane_kuttl_cleanup
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
 
 .PHONY: dataplane_kuttl
-dataplane_kuttl: namespace input openstack_crds dataplane_kuttl_prep dataplane ansibleee ## runs kuttl tests for the openstack-dataplane operator. Installs openstack crds and openstack-dataplane operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+dataplane_kuttl: input openstack_crds dataplane_kuttl_prep dataplane ansibleee ## runs kuttl tests for the openstack-dataplane operator. Installs openstack crds and openstack-dataplane operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	$(eval $(call vars,$@,dataplane))
 	make wait
 	make dataplane_kuttl_run
@@ -1189,7 +1206,7 @@ glance_kuttl_run: ## runs kuttl tests for the glance operator, assumes that ever
 	kubectl-kuttl test --config ${GLANCE_KUTTL_CONF} ${GLANCE_KUTTL_DIR}
 
 .PHONY: glance_kuttl
-glance_kuttl: namespace input openstack_crds openstack_storage_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy glance_deploy_prep glance ## runs kuttl tests for the glance operator. Installs openstack and openstack-storage crds, mariadb, keystone and glance operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+glance_kuttl: input openstack_crds openstack_storage_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy glance_deploy_prep glance ## runs kuttl tests for the glance operator. Installs openstack and openstack-storage crds, mariadb, keystone and glance operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	$(eval $(call vars,$@,glance))
 	make wait
 	make glance_kuttl_run
@@ -1201,7 +1218,7 @@ horizon_kuttl_run: ## runs kuttl tests for the horizon operator, assumes that ev
 	kubectl-kuttl test --config ${HORIZON_KUTTL_CONF} ${HORIZON_KUTTL_DIR}
 
 .PHONY: horizon_kuttl
-horizon_kuttl: namespace input openstack_crds openstack_storage_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy infra horizon_deploy_prep horizon ## runs kuttl tests for the horizon operator. Installs openstack and openstack-storage crds, mariadb, keystone and horizon operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+horizon_kuttl: input openstack_crds openstack_storage_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy infra horizon_deploy_prep horizon ## runs kuttl tests for the horizon operator. Installs openstack and openstack-storage crds, mariadb, keystone and horizon operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	$(eval $(call vars,$@,horizon))
 	make wait
 	make horizon_kuttl_run
@@ -1217,7 +1234,7 @@ horizon_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: horizon
-horizon: namespace horizon_prep ## installs the operator, also runs the prep step. Set HORIZON_IMG for custom image.
+horizon: operator_namespace horizon_prep ## installs the operator, also runs the prep step. Set HORIZON_IMG for custom image.
 	$(eval $(call vars,$@,horizon))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -1256,7 +1273,7 @@ heat_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: heat
-heat: namespace heat_prep ## installs the operator, also runs the prep step. Set HEAT_IMG for custom image.
+heat: operator_namespace heat_prep ## installs the operator, also runs the prep step. Set HEAT_IMG for custom image.
 	$(eval $(call vars,$@,heat))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -1296,7 +1313,7 @@ ansibleee_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: ansibleee
-ansibleee: namespace ansibleee_prep ## installs the operator, also runs the prep step. Set ansibleee_IMG for custom image.
+ansibleee: operator_namespace ansibleee_prep ## installs the operator, also runs the prep step. Set ansibleee_IMG for custom image.
 	$(eval $(call vars,$@,openstack-ansibleee))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -1314,7 +1331,7 @@ baremetal_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: baremetal
-baremetal: namespace baremetal_prep ## installs the operator, also runs the prep step. Set BAREMETAL_IMG for custom image.
+baremetal: operator_namespace baremetal_prep ## installs the operator, also runs the prep step. Set BAREMETAL_IMG for custom image.
 	$(eval $(call vars,$@,openstack-baremetal))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -1332,7 +1349,7 @@ dataplane_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: dataplane
-dataplane: namespace dataplane_prep ## installs the operator, also runs the prep step. Set DATAPLANE_IMG for custom image.
+dataplane: operator_namespace dataplane_prep ## installs the operator, also runs the prep step. Set DATAPLANE_IMG for custom image.
 	$(eval $(call vars,$@,dataplane))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -1460,7 +1477,7 @@ manila_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: manila
-manila: namespace manila_prep ## installs the operator, also runs the prep step. Set MANILA_IMG for custom image.
+manila: operator_namespace manila_prep ## installs the operator, also runs the prep step. Set MANILA_IMG for custom image.
 	$(eval $(call vars,$@,manila))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -1499,7 +1516,7 @@ telemetry_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: telemetry
-telemetry: namespace telemetry_prep ## installs the operator, also runs the prep step. Set TELEMETRY_IMG for custom image.
+telemetry: operator_namespace telemetry_prep ## installs the operator, also runs the prep step. Set TELEMETRY_IMG for custom image.
 	$(eval $(call vars,$@,telemetry))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -1541,7 +1558,7 @@ swift_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: swift
-swift: namespace swift_prep ## installs the operator, also runs the prep step. Set SWIFT_IMG for custom image.
+swift: operator_namespace swift_prep ## installs the operator, also runs the prep step. Set SWIFT_IMG for custom image.
 	$(eval $(call vars,$@,swift))
 	oc apply -f ${OPERATOR_DIR}
 
