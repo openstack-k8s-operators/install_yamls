@@ -3,5 +3,6 @@
 - name: Download tools
   hosts: localhost
   vars_files: "vars/default.yaml"
+  gather_facts: false
   roles:
     - download_tools
