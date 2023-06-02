@@ -18,7 +18,7 @@ export LIBVIRT_DEFAULT_URI=qemu:///system
 # expect that the common.sh is in the same dir as the calling script
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 CRC_POOL=${CRC_POOL:-"$HOME/.crc/machines/crc"}
-OUTPUT_BASEDIR=${OUTPUT_BASEDIR:-"../out/edpm/"}
+OUTPUT_BASEDIR=${OUTPUT_BASEDIR:-"../out/edpm"}
 
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
@@ -166,7 +166,9 @@ DNS=${DATAPLANE_DNS_SERVER}
 PREFIX=24
 
 cat <<EOF >${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
-growpart /dev/vda 1
+PARTITION=\$(df / --output=source | grep -o "[[:digit:]]")
+FS_PATH=\$(df / --output=source | grep -v Filesystem | tr -d \$PARTITION)
+growpart \$FS_PATH \$PARTITION
 xfs_growfs /
 
 # Set network for current session
