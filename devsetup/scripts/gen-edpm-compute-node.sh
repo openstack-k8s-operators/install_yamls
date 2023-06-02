@@ -30,6 +30,7 @@ EDPM_COMPUTE_NETWORK_TYPE=${EDPM_COMPUTE_NETWORK_TYPE:-network}
 DATAPLANE_DNS_SERVER=${DATAPLANE_DNS_SERVER:-192.168.122.1}
 
 CENTOS_9_STREAM_URL=${CENTOS_9_STREAM_URL:-"https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-20230516.0.x86_64.qcow2"}
+BASE_DISK_FILENAME=${BASE_DISK_FILENAME:-"centos-9-stream-base.qcow2"}
 
 DISK_FILENAME=${DISK_FILENAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2"}
 DISK_FILEPATH=${DISK_FILEPATH:-"${CRC_POOL}/${DISK_FILENAME}"}
@@ -186,12 +187,12 @@ EOF
 chmod +x ${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
 
 if [ ! -f ${DISK_FILEPATH} ]; then
-    if [ ! -f ${CRC_POOL}/centos-9-stream-base.qcow2 ]; then
+    if [ ! -f ${CRC_POOL}/${BASE_DISK_FILENAME} ]; then
         pushd ${CRC_POOL}
-        curl -L -k ${CENTOS_9_STREAM_URL} -o centos-9-stream-base.qcow2
+        curl -L -k ${CENTOS_9_STREAM_URL} -o ${BASE_DISK_FILENAME}
         popd
     fi
-    qemu-img create -o backing_file=${CRC_POOL}/centos-9-stream-base.qcow2,backing_fmt=qcow2 -f qcow2 "${DISK_FILEPATH}" "${EDPM_COMPUTE_DISK_SIZE}G"
+    qemu-img create -o backing_file=${CRC_POOL}/${BASE_DISK_FILENAME},backing_fmt=qcow2 -f qcow2 "${DISK_FILEPATH}" "${EDPM_COMPUTE_DISK_SIZE}G"
     if [[ ! -e /usr/bin/virt-customize ]]; then
         sudo dnf -y install /usr/bin/virt-customize
     fi
