@@ -58,9 +58,6 @@ patches:
       path: /spec/nodes/edpm-compute-0/ansibleHost
       value: ${EDPM_COMPUTE_IP}
     - op: replace
-      path: /spec/nodes/edpm-compute-0/openStackAnsibleEERunnerImage
-      value: ${OPENSTACK_RUNNER_IMG}
-    - op: replace
       path: /spec/nodes/edpm-compute-0/node/ansibleVars
       value: |
         ctlplane_ip: ${EDPM_COMPUTE_IP}
@@ -74,9 +71,6 @@ patches:
     - op: add
       path: /spec/roles/edpm-compute/nodeTemplate/services/0
       value: repo-setup
-    - op: replace
-      path: /spec/roles/edpm-compute/openStackAnsibleEERunnerImage
-      value: ${OPENSTACK_RUNNER_IMG}
     - op: replace
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars
       value: |
@@ -175,7 +169,7 @@ patches:
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
 EOF
-if oc get pvc ansible-ee-logs 2>&1 1>/dev/null; then
+if oc get pvc ansible-ee-logs -n ${NAMESPACE} 2>&1 1>/dev/null; then
 cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/roles/edpm-compute/nodeTemplate/extraMounts
