@@ -1120,26 +1120,13 @@ ovn_kuttl: input openstack_crds deploy_cleanup ovn_deploy_prep ovn ## runs kuttl
 	make deploy_cleanup
 	make ovn_cleanup
 
-.PHONY: ovs_kuttl_run
-ovs_kuttl_run: ## runs kuttl tests for the ovs operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${OVS_KUTTL_CONF} ${OVS_KUTTL_DIR}
-
-.PHONY: ovs_kuttl
-ovs_kuttl: namespace input openstack_crds deploy_cleanup ovn ovn_deploy ovs_deploy_prep ovs ## runs kuttl tests for the ovs operator. Installs openstack crds and ovn and ovs operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
-	$(eval $(call vars,$@,ovs))
-	make wait
-	make ovs_kuttl_run
-	make deploy_cleanup
-	make ovn_cleanup
-	make ovs_cleanup
-
 .PHONY: infra_kuttl_run
 infra_kuttl_run: ## runs kuttl tests for the infra operator, assumes that everything needed for running the test was deployed beforehand.
-	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${INFRA_KUTTL_CONF} ${INFRA_KUTTL_DIR}
+	kubectl-kuttl test --config ${INFRA_KUTTL_CONF} ${INFRA_KUTTL_DIR}
 
 .PHONY: infra_kuttl
 infra_kuttl: namespace input openstack_crds deploy_cleanup mariadb keystone rabbitmq mariadb_deploy keystone_deploy rabbitmq_deploy infra ## runs kuttl tests for the infra operator. Installs openstack crds and mariadb, keystone, infra, ovn operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
-	infra_kuttl_run
+	make infra_kuttl_run
 	make deploy_cleanup
 	make infra_cleanup
 	make rabbitmq_cleanup
