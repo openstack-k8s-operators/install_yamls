@@ -18,7 +18,7 @@ export LIBVIRT_DEFAULT_URI=qemu:///system
 # expect that the common.sh is in the same dir as the calling script
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 CRC_POOL=${CRC_POOL:-"$HOME/.crc/machines/crc"}
-OUTPUT_BASEDIR=${OUTPUT_BASEDIR:-"../out/edpm/"}
+OUTPUT_BASEDIR=${OUTPUT_BASEDIR:-"../out/edpm"}
 
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
@@ -30,6 +30,7 @@ EDPM_COMPUTE_NETWORK_TYPE=${EDPM_COMPUTE_NETWORK_TYPE:-network}
 DATAPLANE_DNS_SERVER=${DATAPLANE_DNS_SERVER:-192.168.122.1}
 
 CENTOS_9_STREAM_URL=${CENTOS_9_STREAM_URL:-"https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-20230516.0.x86_64.qcow2"}
+BASE_DISK_FILENAME=${BASE_DISK_FILENAME:-"centos-9-stream-base.qcow2"}
 
 DISK_FILENAME=${DISK_FILENAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2"}
 DISK_FILEPATH=${DISK_FILEPATH:-"${CRC_POOL}/${DISK_FILENAME}"}
@@ -166,7 +167,9 @@ DNS=${DATAPLANE_DNS_SERVER}
 PREFIX=24
 
 cat <<EOF >${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
-growpart /dev/vda 1
+PARTITION=\$(df / --output=source | grep -o "[[:digit:]]")
+FS_PATH=\$(df / --output=source | grep -v Filesystem | tr -d \$PARTITION)
+growpart \$FS_PATH \$PARTITION
 xfs_growfs /
 
 # Set network for current session
@@ -184,12 +187,12 @@ EOF
 chmod +x ${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
 
 if [ ! -f ${DISK_FILEPATH} ]; then
-    if [ ! -f ${CRC_POOL}/centos-9-stream-base.qcow2 ]; then
+    if [ ! -f ${CRC_POOL}/${BASE_DISK_FILENAME} ]; then
         pushd ${CRC_POOL}
-        curl -L -k ${CENTOS_9_STREAM_URL} -o centos-9-stream-base.qcow2
+        curl -L -k ${CENTOS_9_STREAM_URL} -o ${BASE_DISK_FILENAME}
         popd
     fi
-    qemu-img create -o backing_file=${CRC_POOL}/centos-9-stream-base.qcow2,backing_fmt=qcow2 -f qcow2 "${DISK_FILEPATH}" "${EDPM_COMPUTE_DISK_SIZE}G"
+    qemu-img create -o backing_file=${CRC_POOL}/${BASE_DISK_FILENAME},backing_fmt=qcow2 -f qcow2 "${DISK_FILEPATH}" "${EDPM_COMPUTE_DISK_SIZE}G"
     if [[ ! -e /usr/bin/virt-customize ]]; then
         sudo dnf -y install /usr/bin/virt-customize
     fi
