@@ -32,6 +32,13 @@ fi
 
 pushd ${OUTPUT_DIR}
 
+if oc get secret dataplane-ansible-ssh-private-key-secret -n ${NAMESPACE} 2>&1 1>/dev/null; then
+    echo "Secret dataplane-ansible-ssh-private-key-secret already exists."
+    echo "Delete it first to recreate:"
+    echo "oc delete secret dataplane-ansible-ssh-private-key-secret"
+    exit 0
+fi
+
 if [ ! -f ${SSH_KEY_FILE} ]; then
     ssh-keygen -f ${SSH_KEY_FILE} -N "" -t ${SSH_ALGORITHM} -b ${SSH_KEY_SIZE}
 fi
@@ -54,6 +61,7 @@ oc create secret generic ${METADATA_NAME} \
 --from-file=authorized_keys=${SSH_KEY_FILE}.pub \
 --from-file=ssh-privatekey=${SSH_KEY_FILE} \
 --from-file=ssh-publickey=${SSH_KEY_FILE}.pub \
+-n ${NAMESPACE} \
 -o yaml | \
 oc apply -f -
 
