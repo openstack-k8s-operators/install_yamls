@@ -5,6 +5,12 @@ NAMESPACE                ?= openstack
 PASSWORD                 ?= 12345678
 SECRET                   ?= osp-secret
 OUT                      ?= ${PWD}/out
+DBSERVICE           ?= mariadb
+ifeq ($(DBSERVICE), galera)
+DBSERVICE_CONTAINER = openstack-mariadb-0
+else
+DBSERVICE_CONTAINER = mariadb-openstack
+endif
 METADATA_SHARED_SECRET   ?= 1234567842
 HEAT_AUTH_ENCRYPTION_KEY ?= 767c3ed056cbaa3b9dfedb8c6f825bf0
 CLEANUP_DIR_CMD					 ?= rm -Rf
@@ -24,11 +30,27 @@ NETWORK_ISOLATION   ?= true
 # options to pass in all targets that use git clone
 GIT_CLONE_OPTS      ?=
 
+# set to 3 to use a 3-node galera sample
+GALERA_REPLICAS         ?=
+
 # OpenStack Operator
 OPENSTACK_IMG                ?= quay.io/openstack-k8s-operators/openstack-operator-index:latest
 OPENSTACK_REPO               ?= https://github.com/openstack-k8s-operators/openstack-operator.git
 OPENSTACK_BRANCH             ?= main
-OPENSTACK_CTLPLANE           ?= $(if $(findstring true,$(NETWORK_ISOLATION)),config/samples/core_v1beta1_openstackcontrolplane_network_isolation.yaml,config/samples/core_v1beta1_openstackcontrolplane.yaml)
+ifeq ($(NETWORK_ISOLATION), true)
+ifeq ($(DBSERVICE), galera)
+OPENSTACK_CTLPLANE           ?= config/samples/core_v1beta1_openstackcontrolplane_galera_network_isolation.yaml
+else
+OPENSTACK_CTLPLANE           ?= config/samples/core_v1beta1_openstackcontrolplane_network_isolation.yaml
+endif
+else
+ifeq ($(DBSERVICE), galera)
+OPENSTACK_CTLPLANE           ?= $(if $(findstring 3,$(GALERA_REPLICAS)),config/samples/core_v1beta1_openstackcontrolplane_galera_3replicas.yaml,config/samples/core_v1beta1_openstackcontrolplane_galera.yaml)
+else
+OPENSTACK_CTLPLANE           ?= config/samples/core_v1beta1_openstackcontrolplane.yaml
+endif
+endif
+
 OPENSTACK_CR                 ?= ${OPERATOR_BASE_DIR}/openstack-operator/${OPENSTACK_CTLPLANE}
 OPENSTACK_BUNDLE_IMG         ?= quay.io/openstack-k8s-operators/openstack-operator-bundle:latest
 OPENSTACK_STORAGE_BUNDLE_IMG ?= quay.io/openstack-k8s-operators/openstack-operator-storage-bundle:latest
@@ -68,7 +90,11 @@ KEYSTONE_KUTTL_NAMESPACE ?= keystone-kuttl-tests
 MARIADB_IMG         ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
 MARIADB_REPO        ?= https://github.com/openstack-k8s-operators/mariadb-operator.git
 MARIADB_BRANCH      ?= main
+ifeq ($(DBSERVICE), galera)
+MARIADB             ?= config/samples/mariadb_v1beta1_galera.yaml
+else
 MARIADB             ?= config/samples/mariadb_v1beta1_mariadb.yaml
+endif
 MARIADB_CR          ?= ${OPERATOR_BASE_DIR}/mariadb-operator/${MARIADB}
 MARIADB_DEPL_IMG    ?= unused
 MARIADB_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
@@ -327,6 +353,9 @@ crc_storage: ## initialize local storage PVs in CRC vm
 .PHONY: crc_storage_cleanup
 crc_storage_cleanup: ## cleanup local storage PVs in CRC vm
 	$(eval $(call vars,$@))
+ifeq ($(DBSERVICE), galera)
+	oc get pvc | grep ${STORAGE_CLASS} | cut -f 1 -d ' ' | xargs --no-run-if-empty oc delete --ignore-not-found=true pvc
+endif
 	if oc get pv | grep ${STORAGE_CLASS}; then oc get pv | grep ${STORAGE_CLASS} | cut -f 1 -d ' ' | xargs oc delete pv; fi
 	if oc get sc ${STORAGE_CLASS}; then oc delete sc ${STORAGE_CLASS}; fi
 	bash scripts/delete-pv.sh
@@ -614,7 +643,7 @@ keystone_deploy_cleanup: namespace ## cleans up the service instance, Does not a
 	$(eval $(call vars,$@,keystone))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/keystone-operator ${DEPLOY_DIR}
-	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database keystone;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database keystone;" || true
 
 ##@ MARIADB
 mariadb_prep: export IMAGE=${MARIADB_IMG}
@@ -634,8 +663,8 @@ mariadb_cleanup: ## deletes the operator, but does not cleanup the service resou
 	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: mariadb_deploy_prep
-mariadb_deploy_prep: export KIND=MariaDB
-mariadb_deploy_prep: export IMAGE=${MARIADB_DEPL_IMG}
+mariadb_deploy_prep: export KIND=$(patsubst mariadb,MariaDB,$(patsubst galera,Galera,$(DBSERVICE)))
+mariadb_deploy_prep: export IMAGE="${MARIADB_DEPL_IMG}"
 mariadb_deploy_prep: mariadb_deploy_cleanup ## prepares the CRs files to install the service based on the service sample file MARIADB
 	$(eval $(call vars,$@,mariadb))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -696,7 +725,7 @@ placement_deploy_cleanup: namespace ## cleans up the service instance, Does not 
 	$(eval $(call vars,$@,placement))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/placement-operator ${DEPLOY_DIR}
-	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database placement;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database placement;" || true
 
 ##@ GLANCE
 .PHONY: glance_prep
@@ -737,7 +766,7 @@ glance_deploy_cleanup: namespace ## cleans up the service instance, Does not aff
 	$(eval $(call vars,$@,glance))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/glance-operator ${DEPLOY_DIR}
-	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database glance;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database glance;" || true
 
 ##@ OVN
 .PHONY: ovn_prep
@@ -815,7 +844,7 @@ neutron_deploy_cleanup: namespace ## cleans up the service instance, Does not af
 	$(eval $(call vars,$@,neutron))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/neutron-operator ${DEPLOY_DIR}
-	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database neutron;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database neutron;" || true
 
 ##@ CINDER
 .PHONY: cinder_prep
@@ -858,7 +887,7 @@ cinder_deploy_cleanup: namespace ## cleans up the service instance, Does not aff
 	$(eval $(call vars,$@,cinder))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/cinder-operator ${DEPLOY_DIR}
-	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database cinder;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database cinder;" || true
 
 ##@ RABBITMQ
 .PHONY: rabbitmq_prep
@@ -938,8 +967,8 @@ ironic_deploy_cleanup: namespace ## cleans up the service instance, Does not aff
 	$(eval $(call vars,$@,ironic))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/ironic-operator ${DEPLOY_DIR}
-	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database ironic;" || true
-	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database ironic_inspector;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database ironic;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database ironic_inspector;" || true
 
 ##@ OCTAVIA
 .PHONY: octavia_prep
@@ -982,7 +1011,7 @@ octavia_deploy_cleanup: namespace ## cleans up the service instance, Does not af
 	$(eval $(call vars,$@,octavia))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/octavia-operator ${DEPLOY_DIR}
-	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database octavia;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database octavia;" || true
 
 ##@ NOVA
 .PHONY: nova_prep
@@ -1025,7 +1054,7 @@ nova_deploy_cleanup: namespace ## cleans up the service instance, Does not affec
 	$(eval $(call vars,$@,nova))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/nova-operator ${DEPLOY_DIR}
-	oc rsh mariadb-openstack mysql -u root --password=${PASSWORD} -ss -e "show databases like 'nova_%';" | xargs -I '{}' oc rsh mariadb-openstack mysql -u root --password=${PASSWORD} -ss -e "drop database {};"
+	oc rsh $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -ss -e "show databases like 'nova_%';" | xargs -I '{}' oc rsh $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -ss -e "drop database {};"
 
 ##@ KUTTL tests
 
