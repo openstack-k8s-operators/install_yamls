@@ -55,6 +55,9 @@ OPENSTACK_CR                 ?= ${OPERATOR_BASE_DIR}/openstack-operator/${OPENST
 OPENSTACK_BUNDLE_IMG         ?= quay.io/openstack-k8s-operators/openstack-operator-bundle:latest
 OPENSTACK_STORAGE_BUNDLE_IMG ?= quay.io/openstack-k8s-operators/openstack-operator-storage-bundle:latest
 OPENSTACK_CRDS_DIR           ?= openstack_crds
+OPENSTACK_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/openstack-operator/kuttl-test.yaml
+OPENSTACK_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/openstack-operator/tests/kuttl/tests
+OPENSTACK_KUTTL_NAMESPACE ?= openstack-kuttl-tests
 
 # Infra Operator
 INFRA_IMG           ?= quay.io/openstack-k8s-operators/infra-operator-index:latest
@@ -1254,6 +1257,19 @@ horizon_kuttl: input openstack_crds openstack_storage_crds deploy_cleanup mariad
 	make deploy_cleanup
 	make cleanup
 	make infra_cleanup
+
+.PHONY: openstack_kuttl_run
+openstack_kuttl_run: ## runs kuttl tests for the openstack operator, assumes that everything needed for running the test was deployed beforehand.
+	kubectl-kuttl test --config ${OPENSTACK_KUTTL_CONF} ${OPENSTACK_KUTTL_DIR}
+
+.PHONY: openstack_kuttl
+openstack_kuttl: export NAMESPACE = ${OPENSTACK_KUTTL_NAMESPACE}
+openstack_kuttl: namespace input deploy_cleanup openstack ## runs kuttl tests for the openstack operator. Installs openstack crds and the openstack operator, cleans up previous deployments before running the tests and, cleans up after running the tests.
+	$(eval $(call vars,$@,openstack))
+	make wait
+	make openstack_kuttl_run
+	make openstack_deploy_cleanup
+	make openstack_cleanup
 
 ##@ HORIZON
 .PHONY: horizon_prep
