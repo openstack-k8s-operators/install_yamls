@@ -102,15 +102,14 @@ edpm_compute_baremetal: ## Deploy controlplane and dataplane with BMAAS
 .PHONY: edpm_compute_baremetal_cleanup
 edpm_compute_baremetal_cleanup:  ## Cleanup dataplane with BMAAS and controlplane
 	$(eval $(call vars))
-	oc delete openstackdataplane/openstack-edpm --ignore-not-found=true
-	oc delete openstackdataplaneservice --all --ignore-not-found=true
-	while oc get bmh | grep -q -e "deprovisioning" -e "provisioned"; do sleep 5; done
-	oc delete --all bmh --ignore-not-found=true
-	oc delete openstackprovisionserver/openstackprovisionserver --ignore-not-found=true
-	make bmaas_cleanup
-	pushd .. && make openstack_deploy_cleanup openstack_cleanup && popd
+	oc delete openstackdataplane/openstack-edpm --ignore-not-found=true || true
+	oc delete openstackdataplaneservice --all --ignore-not-found=true || true
+	while oc get bmh | grep -q -e "deprovisioning" -e "provisioned"; do sleep 5; done || true
+	oc delete --all bmh --ignore-not-found=true || true
+	oc delete openstackprovisionserver/openstackprovisionserver --ignore-not-found=true || true
+	pushd .. && make openstack_deploy_cleanup openstack_cleanup || true && popd
 	pushd .. && rm -Rf out || true && popd
-
+	make bmaas_cleanup || true
 
 .PHONY: edpm_compute
 edpm_compute: ## Create EDPM compute VM
