@@ -667,7 +667,7 @@ mariadb_cleanup: ## deletes the operator, but does not cleanup the service resou
 
 .PHONY: mariadb_deploy_prep
 mariadb_deploy_prep: export KIND=$(patsubst mariadb,MariaDB,$(patsubst galera,Galera,$(DBSERVICE)))
-mariadb_deploy_prep: export IMAGE="${MARIADB_DEPL_IMG}"
+mariadb_deploy_prep: export IMAGE=${MARIADB_DEPL_IMG}
 mariadb_deploy_prep: mariadb_deploy_cleanup ## prepares the CRs files to install the service based on the service sample file MARIADB
 	$(eval $(call vars,$@,mariadb))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
