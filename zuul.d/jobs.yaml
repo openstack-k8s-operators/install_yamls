@@ -11,3 +11,13 @@
 - job:
     name: install-yamls-crc-podified-edpm-deployment
     parent: cifmw-crc-podified-edpm-deployment
+
+# Bmaas deployment job with CRC and two bmaas compute nodes.
+- job:
+    name: install-yamls-crc-podified-edpm-baremetal
+    parent: cifmw-crc-podified-edpm-baremetal
+    files:
+      - ^devsetup/Makefile
+      - ^devsetup/scripts/bmaas/*
+      - ^devsetup/scripts/edpm-compute-bmaas.sh
+      - ^devsetup/scripts/gen-ansibleee-ssh-key.sh
