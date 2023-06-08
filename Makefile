@@ -291,12 +291,8 @@ IRONIC_HOST                      ?= 192.168.130.11
 SWIFT_IMG        ?= quay.io/openstack-k8s-operators/swift-operator-index:latest
 SWIFT_REPO       ?= https://github.com/openstack-k8s-operators/swift-operator.git
 SWIFT_BRANCH     ?= main
-SWIFTRING        ?= config/samples/swift_v1beta1_swiftring.yaml
-SWIFTRING_CR     ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFTRING}
-SWIFTPROXY       ?= config/samples/swift_v1beta1_swiftproxy.yaml
-SWIFTPROXY_CR    ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFTPROXY}
-SWIFTSTORAGE     ?= config/samples/swift_v1beta1_swiftstorage.yaml
-SWIFTSTORAGE_CR  ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFTSTORAGE}
+SWIFT            ?= config/samples/swift_v1beta1_swift.yaml
+SWIFT_CR         ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFT}
 
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
@@ -1620,9 +1616,8 @@ swift_deploy_prep: swift_deploy_cleanup ## prepares the CR to install the servic
 	$(eval $(call vars,$@,swift))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${SWIFT_BRANCH} ${SWIFT_REPO} && popd
-	cp ${SWIFTRING_CR} ${DEPLOY_DIR}
-	cp ${SWIFTSTORAGE_CR} ${DEPLOY_DIR}
-	cp ${SWIFTPROXY_CR} ${DEPLOY_DIR}
+	cp ${SWIFT_CR} ${DEPLOY_DIR}
+
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: swift_deploy
