@@ -16,9 +16,6 @@ Helper scripts to automate installing CRC and required tools with versions used 
 
 Similar commands should work in any OCP environment though.
 ```bash
-# set your CRC ENV variables and PATH for 'oc'
-eval $(crc oc-env)
-
 # one time operation to initialize PVs within the CRC VM
 make crc_storage
 

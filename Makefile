@@ -343,7 +343,7 @@ wait: ## wait for an operator's controller-manager pod to be ready (requires OPE
 
 ##@ CRC
 .PHONY: crc_storage
-crc_storage: ## initialize local storage PVs in CRC vm
+crc_storage: crc_env_vars ## initialize local storage PVs in CRC vm
 	$(eval $(call vars,$@))
 	bash scripts/create-pv.sh
 	bash scripts/gen-crc-pv-kustomize.sh
@@ -358,6 +358,10 @@ endif
 	if oc get pv | grep ${STORAGE_CLASS}; then oc get pv | grep ${STORAGE_CLASS} | cut -f 1 -d ' ' | xargs oc delete pv; fi
 	if oc get sc ${STORAGE_CLASS}; then oc delete sc ${STORAGE_CLASS}; fi
 	bash scripts/delete-pv.sh
+
+.PHONY: crc_env_vars
+crc_env_vars: ## set your CRC ENV variables and PATH for 'oc'
+	eval $(crc oc-env)
 
 ##@ OPERATOR_NAMESPACE
 .PHONY: operator_namespace
