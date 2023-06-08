@@ -67,8 +67,9 @@ cat <<EOF >${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}.xml
   <vcpu placement='static'>${EDPM_COMPUTE_VCPUS}</vcpu>
   <os>
     <type arch='x86_64' machine='q35'>hvm</type>
-    <boot dev='hd'/>
-    <bootmenu enable='no'/>
+    <loader readonly="yes" type="pflash" secure="no">/usr/share/edk2/ovmf/OVMF_CODE.fd</loader>
+    <nvram template="/usr/share/edk2/ovmf/OVMF_VARS.fd"/>
+    <boot dev="hd"/>
   </os>
   <features>
     <acpi/>
