@@ -37,13 +37,14 @@ cat <<EOF > $CMDS_FILE
 #!/bin/bash
 set -ex
 # Install latest version of repo-setup without installing pip or git
-pushd /tmp
+pushd /var/tmp
 curl -sL https://github.com/openstack-k8s-operators/repo-setup/archive/refs/heads/main.tar.gz | tar -xz
 pushd repo-setup-main
 python3 -m venv ./venv
 PBR_VERSION=0.0.0 ./venv/bin/pip install ./
 ./venv/bin/repo-setup ${REPO_SETUP_CMD}
 popd
+rm -rf repo-setup-main
 popd
 EOF
 fi

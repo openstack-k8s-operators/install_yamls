@@ -34,8 +34,8 @@ EDPM_COMPUTE_DISK_SIZE=${EDPM_COMPUTE_DISK_SIZE:-30}
 EDPM_COMPUTE_NETWORK=${EDPM_COMPUTE_NETWORK:-default}
 EDPM_COMPUTE_NETWORK_TYPE=${EDPM_COMPUTE_NETWORK_TYPE:-network}
 DATAPLANE_DNS_SERVER=${DATAPLANE_DNS_SERVER:-192.168.122.1}
-CENTOS_9_STREAM_URL=${CENTOS_9_STREAM_URL:-"https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-latest.x86_64.qcow2"}
-BASE_DISK_FILENAME=${BASE_DISK_FILENAME:-"centos-9-stream-base.qcow2"}
+EDPM_IMAGE=${EDPM_IMAGE:-"quay.io/podified-antelope-centos9/edpm-hardened-uefi:current-podified"}
+BASE_DISK_FILENAME=${BASE_DISK_FILENAME:-"edpm-base.qcow2"}
 
 DISK_FILENAME=${DISK_FILENAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2"}
 DISK_FILEPATH=${DISK_FILEPATH:-"${CRC_POOL}/${DISK_FILENAME}"}
@@ -172,29 +172,6 @@ DNS=${DATAPLANE_DNS_SERVER}
 PREFIX=24
 
 cat <<EOF >${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
-PARTITION=\$(df / --output=source | grep -o "[[:digit:]]")
-FS_PATH=\$(df / --output=source | grep -v Filesystem | tr -d \$PARTITION)
-growpart \$FS_PATH \$PARTITION
-xfs_growfs /
-
-# create cloud-admin user
-sudo useradd cloud-admin
-echo 'cloud-admin     	ALL = (ALL) NOPASSWD: ALL' | sudo tee /etc/sudoers.d/cloud-admin
-sudo chown root:root /etc/sudoers.d/cloud-admin
-sudo chmod 0660 /etc/sudoers.d/cloud-admin
-
-# don't kill processes after ssh logout
-sudo loginctl enable-linger cloud-admin
-
-# initialize authorized keys from root
-if [ ! -e /home/cloud-admin/.ssh/authorized_keys ]; then
-	sudo mkdir -p /home/cloud-admin/.ssh
-	sudo chmod 0700 /home/cloud-admin/.ssh
-	sudo cp /root/.ssh/authorized_keys /home/cloud-admin/.ssh/authorized_keys
-	sudo chown -R cloud-admin: /home/cloud-admin/.ssh
-	sudo chmod 0600 /home/cloud-admin/.ssh/authorized_keys
-fi
-
 # Set network for current session
 nmcli device set eth0 managed yes
 n=0
@@ -221,9 +198,10 @@ chmod +x ${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
 
 if [ ! -f ${DISK_FILEPATH} ]; then
     if [ ! -f ${CRC_POOL}/${BASE_DISK_FILENAME} ]; then
-        pushd ${CRC_POOL}
-        curl -L -k ${CENTOS_9_STREAM_URL} -o ${BASE_DISK_FILENAME}
-        popd
+        IMAGE_TMP_DIR="$(mktemp -d)"
+        trap 'rm -rf -- "$IMAGE_TMP_DIR"' EXIT
+        podman run --volume ${IMAGE_TMP_DIR}:/target:Z --rm ${EDPM_IMAGE}
+        mv ${IMAGE_TMP_DIR}/edpm-hardened-uefi.qcow2 ${CRC_POOL}/${BASE_DISK_FILENAME}
     fi
     qemu-img create -o backing_file=${CRC_POOL}/${BASE_DISK_FILENAME},backing_fmt=qcow2 -f qcow2 "${DISK_FILEPATH}" "${EDPM_COMPUTE_DISK_SIZE}G"
     if [[ ! -e /usr/bin/virt-customize ]]; then
