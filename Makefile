@@ -449,14 +449,12 @@ openstack: operator_namespace openstack_prep ## installs the operator, also runs
 	oc apply -f ${OPERATOR_DIR}
 
 .PHONY: openstack_cleanup
-openstack_cleanup: ## deletes the operator, but does not cleanup the service resources
+openstack_cleanup: operator_namespace## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,openstack))
-	bash scripts/operator-cleanup.sh
 	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
-	oc delete subscription openstack-storage-operators-alpha-openstack-operator-index-openstack --ignore-not-found=true
-	oc delete csv openstack-storage-operators.v0.0.1 --ignore-not-found=true
-	oc delete subscription cluster-operator-alpha-openstack-operator-index-openstack-operators --ignore-not-found=true
-	oc delete csv cluster-operator.v0.0.0 --ignore-not-found=true
+	oc delete subscription --all=true
+	oc delete csv --all=true
+	oc delete catalogsource --all=true
 	test -d ${OPERATOR_BASE_DIR}/baremetal-operator && make crc_bmo_cleanup || true
 
 .PHONY: openstack_deploy_prep
@@ -526,17 +524,8 @@ edpm_register_dns: dns_deploy_prep ## register edpm nodes in dns as dnsdata
 	oc apply -f ${DEPLOY_DIR}/network_v1beta1_dnsdata.yaml # TODO (mschuppert): register edpm nodes in DNS can be removed after full IPAM integration
 
 .PHONY: openstack_crds
-openstack_crds: namespace ## installs all openstack CRDs. Useful for infrastructure dev
-	mkdir -p ${OUT}/${OPENSTACK_CRDS_DIR}
-	skopeo copy "docker://${OPENSTACK_BUNDLE_IMG}" dir:${OUT}/${OPENSTACK_CRDS_DIR}
-	for X in $$(file ${OUT}/${OPENSTACK_CRDS_DIR}/* | grep gzip | cut -f 1 -d ':'); do tar xvf $$X -C ${OUT}/${OPENSTACK_CRDS_DIR}/; done
-	for X in $$(grep -l CustomResourceDefinition ${OUT}/${OPENSTACK_CRDS_DIR}/manifests/*); do oc apply -f $$X; done
-
-.PHONY: openstack_storage_crds
-openstack_storage_crds: export OPENSTACK_BUNDLE_IMG=${OPENSTACK_STORAGE_BUNDLE_IMG}
-openstack_storage_crds: export OPENSTACK_CRDS_DIR=openstack_storage_crds
-openstack_storage_crds: namespace ## installs storage openstack CRDs. Useful for infrastructure dev
-	make openstack_crds
+openstack_crds: namespace openstack_deploy_prep ## installs all openstack CRDs. Useful for infrastructure dev
+	OPENSTACK_BUNDLE_IMG=${OPENSTACK_BUNDLE_IMG} OUT=${OUT} OPENSTACK_CRDS_DIR=${OPENSTACK_CRDS_DIR} OPERATOR_BASE_DIR=${OPERATOR_BASE_DIR} bash scripts/openstack-crds.sh
 
 ##@ INFRA
 .PHONY: infra_prep
@@ -1089,7 +1078,7 @@ cinder_kuttl_run: ## runs kuttl tests for the cinder operator, assumes that ever
 	kubectl-kuttl test --config ${CINDER_KUTTL_CONF} ${CINDER_KUTTL_DIR}
 
 .PHONY: cinder_kuttl
-cinder_kuttl: input openstack_crds openstack_storage_crds deploy_cleanup mariadb mariadb_deploy rabbitmq rabbitmq_deploy keystone_deploy_prep keystone keystone_deploy cinder_deploy_prep cinder infra mariadb_deploy_validate ## runs kuttl tests for the cinder operator. Installs openstack crds and cinder operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+cinder_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy rabbitmq rabbitmq_deploy keystone_deploy_prep keystone keystone_deploy cinder_deploy_prep cinder infra mariadb_deploy_validate ## runs kuttl tests for the cinder operator. Installs openstack crds and cinder operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	make cinder_kuttl_run
 	make infra_cleanup
 	make rabbitmq_deploy_cleanup
@@ -1234,7 +1223,7 @@ glance_kuttl_run: ## runs kuttl tests for the glance operator, assumes that ever
 	kubectl-kuttl test --config ${GLANCE_KUTTL_CONF} ${GLANCE_KUTTL_DIR}
 
 .PHONY: glance_kuttl
-glance_kuttl: input openstack_crds openstack_storage_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy glance_deploy_prep glance ## runs kuttl tests for the glance operator. Installs openstack and openstack-storage crds, mariadb, keystone and glance operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+glance_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy glance_deploy_prep glance ## runs kuttl tests for the glance operator. Installs openstack and openstack-storage crds, mariadb, keystone and glance operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	$(eval $(call vars,$@,glance))
 	make wait
 	make glance_kuttl_run
@@ -1246,7 +1235,7 @@ horizon_kuttl_run: ## runs kuttl tests for the horizon operator, assumes that ev
 	kubectl-kuttl test --config ${HORIZON_KUTTL_CONF} ${HORIZON_KUTTL_DIR}
 
 .PHONY: horizon_kuttl
-horizon_kuttl: input openstack_crds openstack_storage_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy infra horizon_deploy_prep horizon ## runs kuttl tests for the horizon operator. Installs openstack and openstack-storage crds, mariadb, keystone and horizon operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+horizon_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy infra horizon_deploy_prep horizon ## runs kuttl tests for the horizon operator. Installs openstack and openstack-storage crds, mariadb, keystone and horizon operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	$(eval $(call vars,$@,horizon))
 	make wait
 	make horizon_kuttl_run
