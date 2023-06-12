@@ -13,6 +13,7 @@ spec:
   label: dataplane-deployment-repo-setup
   play: |
     - hosts: all
+      strategy: linear
       tasks:
         - name: Enable podified-repos
           ansible.builtin.shell: |
