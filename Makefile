@@ -1211,7 +1211,8 @@ dataplane_kuttl_prep: dataplane_kuttl_cleanup
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
 
 .PHONY: dataplane_kuttl
-dataplane_kuttl: input openstack_crds dataplane_kuttl_prep dataplane ansibleee ## runs kuttl tests for the openstack-dataplane operator. Installs openstack crds and openstack-dataplane operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+# dataplane must come before dataplane_kuttl_prep since dataplane creates the CRDs
+dataplane_kuttl: input openstack_crds dataplane dataplane_kuttl_prep ansibleee ## runs kuttl tests for the openstack-dataplane operator. Installs openstack crds and openstack-dataplane operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	$(eval $(call vars,$@,dataplane))
 	make wait
 	make dataplane_kuttl_run
