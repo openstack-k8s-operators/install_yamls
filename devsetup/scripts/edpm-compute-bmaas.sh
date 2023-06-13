@@ -20,6 +20,7 @@ NODE_NAME_PREFIX=${NODE_NAME_PREFIX:-"crc-bmaas"}
 OPERATOR_DIR=${OPERATOR_DIR:-../out/operator}
 OUTPUT_DIR=${OUTPUT_DIR:-"../out/edpm"}
 NODE_COUNT=${BMAAS_NODE_COUNT:-2}
+RUNNER_IMG=${OPENSTACK_RUNNER_IMG:-quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest}
 NETWORK_IPADDRESS=${BMAAS_NETWORK_IPADDRESS:-172.22.0.3}
 NODE_INDEX=0
 while IFS= read -r instance; do
@@ -111,8 +112,7 @@ spec:
         ansibleSSHPrivateKeySecret: dataplane-ansible-ssh-private-key-secret
   roles:
     edpm-compute:
-      services:
-        - configure-network
+      openStackAnsibleEERunnerImage: ${RUNNER_IMG}
       env:
         - name: ANSIBLE_FORCE_COLOR
           value: "True"

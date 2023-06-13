@@ -5,7 +5,7 @@ CRC_DEFAULT_NETWORK_IP ?= 192.168.122.10
 EDPM_COMPUTE_SUFFIX ?= 0
 EDPM_TOTAL_NODES ?= 1
 EDPM_COMPUTE_IP ?= 192.168.122.100
-OPENSTACK_RUNNER_IMG ?= quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
+DATAPLANE_RUNNER_IMG ?= quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
 EDPM_NETWORK_CONFIG_TEMPLATE ?= templates/single_nic_vlans/single_nic_vlans.j2
 EDPM_SSHD_ALLOWED_RANGES ?= ['192.168.122.0/24']
 EDPM_CHRONY_NTP_SERVER ?= pool.ntp.org
@@ -92,10 +92,11 @@ edpm_compute_baremetal: export PROVISIONING_INTERFACE=${BMAAS_NETWORK_NAME}
 edpm_compute_baremetal: export BMAAS_NETWORK_IPADDRESS=172.22.0.3
 edpm_compute_baremetal: export BMAAS_BRIDGE_IPADDRESS=172.22.0.2
 edpm_compute_baremetal: export OPERATOR_NAME=openstack
+edpm_compute_baremetal: export OPENSTACK_RUNNER_IMG=${DATAPLANE_RUNNER_IMG}
 edpm_compute_baremetal: ## Deploy controlplane and dataplane with BMAAS
 	$(eval $(call vars))
 	make bmaas
-	pushd .. && make openstack wait openstack_deploy && popd
+	pushd .. && NETWORK_ISOLATION=false make openstack wait openstack_deploy && popd
 	scripts/gen-ansibleee-ssh-key.sh
 	scripts/edpm-compute-bmaas.sh
 
@@ -151,7 +152,7 @@ edpm_play: export EDPM_NOVA_COMPUTE_TRANSPORT_URL=$(shell oc get secret rabbitmq
 edpm_play: ## Deploy EDPM node using openstackansibleee resource
 	scripts/gen-ansibleee-ssh-key.sh
 	sed -e "s|_COMPUTE_IP_|${EDPM_COMPUTE_IP}|g" \
-	    -e "s|_OPENSTACK_RUNNER_IMG_|${OPENSTACK_RUNNER_IMG}|g" \
+	    -e "s|_OPENSTACK_RUNNER_IMG_|${DATAPLANE_RUNNER_IMG}|g" \
 	    -e "s|_EDPM_NETWORK_CONFIG_TEMPLATE_|${EDPM_NETWORK_CONFIG_TEMPLATE}|g" \
 	    -e "s|_EDPM_SSHD_ALLOWED_RANGES_|${EDPM_SSHD_ALLOWED_RANGES}|g" \
 	    -e "s|_EDPM_CHRONY_NTP_SERVER_|${EDPM_CHRONY_NTP_SERVER}|g" \
