@@ -192,11 +192,11 @@ spec:
           edpm_nodes_validation_validate_controllers_icmp: false
           edpm_nodes_validation_validate_gateway_icmp: false
 
-          edpm_ovn_metadata_agent_default_transport_url: rabbit://default_user@rabbitmq.openstack.svc:5672
+          edpm_ovn_metadata_agent_DEFAULT_transport_url: rabbit://default_user@rabbitmq.openstack.svc:5672
           edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection: tcp:10.217.5.121:6642
-          edpm_ovn_metadata_agent_metadata_agent_default_nova_metadata_host: 127.0.0.1
-          edpm_ovn_metadata_agent_metadata_agent_default_metadata_proxy_shared_secret: 12345678
-          edpm_ovn_metadata_agent_default_bind_host: 127.0.0.1
+          edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host: 127.0.0.1
+          edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret: 12345678
+          edpm_ovn_metadata_agent_DEFAULT_bind_host: 127.0.0.1
           ctlplane_dns_nameservers:
           - 172.22.0.3
           dns_search_domains: []
