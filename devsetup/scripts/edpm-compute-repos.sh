@@ -31,6 +31,7 @@ if [[ ! -f $SSH_KEY ]]; then
     exit 1
 fi
 
+if [[ ! -f $CMDS_FILE ]]; then
 cat <<EOF > $CMDS_FILE
 rpm -q git || sudo yum -y install git
 sudo yum -y install python-setuptools python-requests python3-pip
@@ -41,6 +42,7 @@ sudo python3 setup.py install
 popd
 sudo /usr/local/bin/repo-setup ${REPO_SETUP_CMD}
 EOF
+fi
 
 scp $SSH_OPT $CMDS_FILE root@$IP:/tmp/repo-setup.sh
 ssh $SSH_OPT root@$IP "bash /tmp/repo-setup.sh; rm -f /tmp/repo-setup.sh"
