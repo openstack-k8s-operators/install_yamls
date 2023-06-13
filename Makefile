@@ -501,7 +501,8 @@ edpm_deploy_prep: edpm_deploy_cleanup $(if $(findstring true,$(NETWORK_ISOLATION
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
-	oc apply -f ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
+	DEPLOY_DIR=${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services KIND=OpenStackDataPlaneService bash scripts/gen-edpm-services-kustomize.sh
+	oc kustomize ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services | oc apply -f -
 	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
 	cp ${DATAPLANE_CR} ${DEPLOY_DIR}
 	bash scripts/gen-edpm-kustomize.sh

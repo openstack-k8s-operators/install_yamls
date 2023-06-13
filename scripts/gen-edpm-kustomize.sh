@@ -202,9 +202,6 @@ cat <<EOF >>kustomization.yaml
       path: /spec/nodes/edpm-compute-${INDEX}/hostName
       value: edpm-compute-${INDEX}
     - op: replace
-      path: /spec/nodes/edpm-compute-${INDEX}/openStackAnsibleEERunnerImage
-      value: ${OPENSTACK_RUNNER_IMG}
-    - op: replace
       path: /spec/nodes/edpm-compute-${INDEX}/node/ansibleVars
       value: |
         ctlplane_ip: 192.168.122.$((100+${INDEX}))
@@ -222,9 +219,6 @@ cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/nodes/edpm-compute-1/ansibleHost
       value: ${EDPM_COMPUTE_1_IP}
-    - op: replace
-      path: /spec/nodes/edpm-compute-1/openStackAnsibleEERunnerImage
-      value: ${OPENSTACK_RUNNER_IMG}
     - op: replace
       path: /spec/nodes/edpm-compute-1/node/ansibleVars
       value: |
