@@ -37,6 +37,7 @@ GALERA_REPLICAS         ?=
 OPENSTACK_IMG                ?= quay.io/openstack-k8s-operators/openstack-operator-index:latest
 OPENSTACK_REPO               ?= https://github.com/openstack-k8s-operators/openstack-operator.git
 OPENSTACK_BRANCH             ?= main
+
 ifeq ($(NETWORK_ISOLATION), true)
 ifeq ($(DBSERVICE), galera)
 OPENSTACK_CTLPLANE           ?= config/samples/core_v1beta1_openstackcontrolplane_galera_network_isolation.yaml
@@ -189,11 +190,8 @@ OCTAVIA_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/octavia-operator/kuttl-test.yaml
 OCTAVIA_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/octavia-operator/tests/kuttl/tests
 
 # Designate
-# NOTE(dkehn): for testing will use dkehn rep0 and quay accts.
-# DESIGNATE_IMG        ?= quay.io/openstack-k8s-operators/designate-operator-index:latest
-# DESIGNATE_REPO       ?= https://github.com/openstack-k8s-operators/designate-operator.git
-DESIGNATE_IMG        ?= quay.io/dkehn/designate-operator-index:latest
-DESIGNATE_REPO       ?= https://github.com/dkehn/designate-operator.git
+DESIGNATE_IMG        ?= quay.io/openstack-k8s-operators/designate-operator-index:latest
+DESIGNATE_REPO       ?= https://github.com/openstack-k8s-operators/designate-operator.git
 DESIGNATE_BRANCH     ?= main
 DESIGNATE            ?= config/samples/designate_v1beta1_designate.yaml
 DESIGNATE_CR         ?= ${OPERATOR_BASE_DIR}/designate-operator/${DESIGNATE}
