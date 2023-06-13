@@ -38,6 +38,7 @@ GALERA_REPLICAS         ?=
 OPENSTACK_IMG                ?= quay.io/openstack-k8s-operators/openstack-operator-index:latest
 OPENSTACK_REPO               ?= https://github.com/openstack-k8s-operators/openstack-operator.git
 OPENSTACK_BRANCH             ?= main
+
 ifeq ($(NETWORK_ISOLATION), true)
 ifeq ($(DBSERVICE), galera)
 OPENSTACK_CTLPLANE           ?= config/samples/core_v1beta1_openstackcontrolplane_galera_network_isolation.yaml
@@ -197,11 +198,8 @@ OCTAVIA_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/octavia-operator/tests/kuttl/tests
 OCTAVIA_KUTTL_TIMEOUT ?= 180
 
 # Designate
-# NOTE(dkehn): for testing will use dkehn rep0 and quay accts.
-# DESIGNATE_IMG        ?= quay.io/openstack-k8s-operators/designate-operator-index:latest
-# DESIGNATE_REPO       ?= https://github.com/openstack-k8s-operators/designate-operator.git
-DESIGNATE_IMG        ?= quay.io/dkehn/designate-operator-index:latest
-DESIGNATE_REPO       ?= https://github.com/dkehn/designate-operator.git
+DESIGNATE_IMG        ?= quay.io/openstack-k8s-operators/designate-operator-index:latest
+DESIGNATE_REPO       ?= https://github.com/openstack-k8s-operators/designate-operator.git
 DESIGNATE_BRANCH     ?= main
 DESIGNATE            ?= config/samples/designate_v1beta1_designate.yaml
 DESIGNATE_CR         ?= ${OPERATOR_BASE_DIR}/designate-operator/${DESIGNATE}
@@ -358,7 +356,7 @@ help: ## Display this help.
 cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup designate_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup dataplane_cleanup ansibleee_cleanup rabbitmq_cleanup infra_cleanup ## Delete all operators
 
 .PHONY: deploy_cleanup
-deploy_cleanup: heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
+deploy_cleanup: heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup designate_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
 
 .PHONY: wait
 wait: ## wait for an operator's controller-manager pod to be ready (requires OPERATOR_NAME to be explicitly passed!)
