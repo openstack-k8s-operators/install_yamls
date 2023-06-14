@@ -136,6 +136,7 @@ OVNCONTROLLER_CR    ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNCONTROLLER}
 # TODO: Image customizations for all OVN services
 OVN_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/ovn-operator/kuttl-test.yaml
 OVN_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovn-operator/tests/kuttl/tests
+OVN_KUTTL_NAMESPACE ?= ovn-kuttl-tests
 
 # Neutron
 NEUTRON_IMG         ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
@@ -1128,9 +1129,12 @@ octavia_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy keysto
 
 .PHONY: ovn_kuttl_run
 ovn_kuttl_run: ## runs kuttl tests for the ovn operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${OVN_KUTTL_CONF} ${OVN_KUTTL_DIR}
+	kubectl-kuttl test --config ${OVN_KUTTL_CONF} ${OVN_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: ovn_kuttl
+ovn_kuttl: export NAMESPACE = ${OVN_KUTTL_NAMESPACE}
+	# Set the value of $OVN_KUTTL_NAMESPACE if you want to run the ovn
+	# kuttl tests in a namespace different than the default (ovn-kuttl-tests)
 ovn_kuttl: input openstack_crds deploy_cleanup ovn_deploy_prep ovn ## runs kuttl tests for the ovn operator. Installs openstack crds and ovn operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	$(eval $(call vars,$@,ovn))
 	make wait
