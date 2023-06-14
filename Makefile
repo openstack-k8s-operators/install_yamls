@@ -63,6 +63,8 @@ OPENSTACK_KUTTL_NAMESPACE ?= openstack-kuttl-tests
 INFRA_IMG           ?= quay.io/openstack-k8s-operators/infra-operator-index:latest
 INFRA_REPO          ?= https://github.com/openstack-k8s-operators/infra-operator.git
 INFRA_BRANCH        ?= main
+INFRA_KUTTL_CONF    ?= ${OPERATOR_BASE_DIR}/infra-operator/kuttl-test.yaml
+INFRA_KUTTL_DIR     ?= ${OPERATOR_BASE_DIR}/infra-operator/tests/kuttl/tests
 
 # DNS
 # DNS_IMG     ?= (this is unused because this is part of infra operator)
@@ -1135,6 +1137,19 @@ ovn_kuttl: input openstack_crds deploy_cleanup ovn_deploy_prep ovn ## runs kuttl
 	make ovn_kuttl_run
 	make deploy_cleanup
 	make ovn_cleanup
+
+.PHONY: infra_kuttl_run
+infra_kuttl_run: ## runs kuttl tests for the infra operator, assumes that everything needed for running the test was deployed beforehand.
+	kubectl-kuttl test --config ${INFRA_KUTTL_CONF} ${INFRA_KUTTL_DIR}
+
+.PHONY: infra_kuttl
+infra_kuttl: namespace input openstack_crds deploy_cleanup mariadb keystone rabbitmq mariadb_deploy keystone_deploy rabbitmq_deploy infra ## runs kuttl tests for the infra operator. Installs openstack crds and mariadb, keystone, infra, ovn operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	make infra_kuttl_run
+	make deploy_cleanup
+	make infra_cleanup
+	make rabbitmq_cleanup
+	make keystone_cleanup
+	make mariadb_cleanup
 
 .PHONY: ironic_kuttl_run
 ironic_kuttl_run: ## runs kuttl tests for the ironic operator, assumes that everything needed for running the test was deployed beforehand.
