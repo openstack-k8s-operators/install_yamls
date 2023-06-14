@@ -222,6 +222,7 @@ HEATAPI_DEPL_IMG    ?= unused
 HEATENGINE_DEPL_IMG ?= unused
 HEAT_KUTTL_CONF     ?= ${OPERATOR_BASE_DIR}/heat-operator/kuttl-test.yaml
 HEAT_KUTTL_DIR      ?= ${OPERATOR_BASE_DIR}/heat-operator/tests/kuttl/tests
+HEAT_KUTTL_NAMESPACE ?= heat-kuttl-tests
 
 # AnsibleEE
 ANSIBLEEE_IMG        ?= quay.io/openstack-k8s-operators/openstack-ansibleee-operator-index:latest
@@ -1170,9 +1171,12 @@ ironic_kuttl_crc: crc_storage ironic_kuttl
 
 .PHONY: heat_kuttl_run
 heat_kuttl_run: ## runs kuttl tests for the heat operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${HEAT_KUTTL_CONF} ${HEAT_KUTTL_DIR}
+	kubectl-kuttl test --config ${HEAT_KUTTL_CONF} ${HEAT_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: heat_kuttl
+heat_kuttl: export NAMESPACE = ${HEAT_KUTTL_NAMESPACE}
+	# Set the value of $HEAT_KUTTL_NAMESPACE if you want to run the heat
+	# kuttl tests in a namespace different than the default (heat-kuttl-tests)
 heat_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy rabbitmq rabbitmq_deploy infra heat heat_deploy_prep  ## runs kuttl tests for the heat operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	$(eval $(call vars,$@,heat))
 	make wait
