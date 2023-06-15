@@ -5,6 +5,7 @@ NAMESPACE                ?= openstack
 PASSWORD                 ?= 12345678
 SECRET                   ?= osp-secret
 OUT                      ?= ${PWD}/out
+TIMEOUT                  ?= 300s
 DBSERVICE           ?= mariadb
 ifeq ($(DBSERVICE), galera)
 DBSERVICE_CONTAINER = openstack-mariadb-0
@@ -450,6 +451,11 @@ openstack: operator_namespace openstack_prep ## installs the operator, also runs
 	$(eval $(call vars,$@,openstack))
 	oc apply -f ${OPERATOR_DIR}
 
+.PHONY: openstack_wait
+openstack_wait: openstack ## waits openstack CSV to succeed.
+	$(eval $(call vars,$@,openstack))
+	timeout $(TIMEOUT) bash -c 'until $$(oc get csv -l operators.coreos.com/openstack-operator.openstack-operators -n ${OPERATOR_NAMESPACE} | grep -q Succeeded); do sleep 1; done'
+
 .PHONY: openstack_cleanup
 openstack_cleanup: operator_namespace## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,openstack))
@@ -472,6 +478,11 @@ openstack_deploy_prep: openstack_deploy_cleanup ## prepares the CR to install th
 openstack_deploy: input openstack_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,openstack))
 	bash scripts/operator-deploy-resources.sh
+
+.PHONY: openstack_wait_deploy
+openstack_wait_deploy: openstack_deploy ## waits for ctlplane readiness. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,openstack))
+	oc kustomize ${DEPLOY_DIR} | oc wait --for condition=Ready --timeout=$(TIMEOUT) -f -
 
 .PHONY: openstack_deploy_cleanup
 openstack_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
@@ -520,6 +531,11 @@ edpm_deploy_cleanup: namespace ## cleans up the edpm instance, Does not affect t
 edpm_deploy: input edpm_deploy_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,dataplane))
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+
+.PHONY: edpm_wait_deploy
+edpm_wait_deploy: edpm_deploy ## waits for dataplane readiness. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,dataplane))
+	oc kustomize ${DEPLOY_DIR} | oc wait --for condition=Ready --timeout=$(TIMEOUT) -f -
 
 .PHONY: edpm_register_dns
 edpm_register_dns: dns_deploy_prep ## register edpm nodes in dns as dnsdata
