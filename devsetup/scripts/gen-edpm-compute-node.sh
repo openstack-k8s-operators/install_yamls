@@ -173,8 +173,18 @@ growpart \$FS_PATH \$PARTITION
 xfs_growfs /
 
 # Set network for current session
-nmcli device modify $NETDEV ipv4.addresses $IP/$PREFIX ipv4.gateway $GATEWAY ipv4.dns $DNS ipv4.method manual
-
+nmcli device set eth0 managed yes
+n=0
+retries=6
+while true; do
+  nmcli device modify $NETDEV ipv4.addresses $IP/$PREFIX ipv4.gateway $GATEWAY ipv4.dns $DNS ipv4.method manual && break
+  n="\$((n+1))"
+  if (( n >= retries )); then
+    echo "Failed to configure ipv4 address in $NETDEV."
+    break
+  fi
+  sleep 5
+done
 # Set network to survive reboots
 echo IPADDR=$IP >> $NETSCRIPT
 echo PREFIX=$PREFIX >> $NETSCRIPT
