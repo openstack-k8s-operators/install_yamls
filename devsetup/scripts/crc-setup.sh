@@ -71,3 +71,14 @@ sudo update-ca-trust
 if [ $export_path == 1 ]; then
     echo "WARNING: you must add ~/bin in your PATH in order to access to crc binary"
 fi
+
+# apply post-config tweaks
+oc patch etcd cluster -p='{"spec": {"unsupportedConfigOverrides": {"useUnsupportedUnsafeNonHANonProductionUnstableEtcd": true}}}' --type=merge
+oc patch authentications.operator.openshift.io cluster -p='{"spec": {"unsupportedConfigOverrides": {"useUnsupportedUnsafeNonHANonProductionUnstableOAuthServer": true}}}' --type=merge
+oc scale --replicas=1 ingresscontroller/default -n openshift-ingress-operator
+oc scale --replicas=0 deployment.apps/console -n openshift-console
+oc scale --replicas=1 deployment.apps/downloads -n openshift-console
+oc scale --replicas=1 deployment.apps/oauth-openshift -n openshift-authentication
+oc scale --replicas=1 deployment.apps/packageserver -n openshift-operator-lifecycle-manager
+oc scale --replicas=0 deployment.apps/cluster-monitoring-operator -n openshift-monitoring
+oc delete project openshift-monitoring
