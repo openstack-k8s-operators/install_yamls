@@ -31,6 +31,30 @@ if [ -z "$DEPLOY_DIR" ]; then
     echo "Please set DEPLOY_DIR"; exit 1
 fi
 
+if [ -z "$EDPM_DNS_SERVER" ]; then
+    echo "Please set EDPM_DNS_SERVER"; exit 1
+fi
+
+if [ -z "$EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST" ]; then
+    echo "Please set EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST"; exit 1
+fi
+
+if [ -z "$EDPM_OVN_METADATA_AGENT_TRANSPORT_URL" ]; then
+    echo "Please set EDPM_OVN_METADATA_AGENT_TRANSPORT_URL"; exit 1
+fi
+
+if [ -z "$EDPM_OVN_METADATA_AGENT_SB_CONNECTION" ]; then
+    echo "Please set EDPM_OVN_METADATA_AGENT_SB_CONNECTION"; exit 1
+fi
+
+if [ -z "$EDPM_OVN_DBS" ]; then
+    echo "Please set EDPM_OVN_DBS"; exit 1
+fi
+
+if [ -z "$EDPM_NADS" ]; then
+    echo "Please set EDPM_NADS"; exit 1
+fi
+
 NAME=${KIND,,}
 
 if [ ! -d ${DEPLOY_DIR} ]; then
