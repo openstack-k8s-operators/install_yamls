@@ -72,8 +72,19 @@ DATAPLNE_BRANCH=${DATAPLANE_BRANCH:-main}
 
 mkdir -p ${OPERATOR_DIR}
 rm -Rf ${OPERATOR_DIR}/dataplane-operator || true
-pushd ${OPERATOR_DIR} && git clone ${DATAPLANE_BRANCH} ${DATAPLANE_REPO} "dataplane-operator" && popd
+pushd ${OPERATOR_DIR} && git clone $(if [ ${DATAPLANE_BRANCH} ]; then echo -b ${DATAPLANE_BRANCH}; fi) \
+    ${DATAPLANE_REPO} "dataplane-operator" && popd
 oc apply -f ${OPERATOR_DIR}/dataplane-operator/config/services
+
+# Create the default NetConfig from samples
+INFRA_REPO=${INFRA_REPO:-https://github.com/openstack-k8s-operators/infra-operator.git}
+INFRA_BRANCH=${INFRA_BRANCH:-main}
+
+rm -Rf ${OPERATOR_DIR}/infra-operator || true
+pushd ${OPERATOR_DIR} && git clone  $(if [ ${INFRA_BRANCH} ]; then echo -b ${INFRA_BRANCH}; fi) \
+    ${INFRA_REPO} "infra-operator" && popd
+oc apply -f ${OPERATOR_DIR}/infra-operator/config/samples/network_v1beta1_netconfig.yaml
+
 
 cat <<EOF >${OUTPUT_DIR}/dataplane.yaml
 ---
