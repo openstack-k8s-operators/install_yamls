@@ -122,8 +122,6 @@ spec:
         ansibleSSHPrivateKeySecret: dataplane-ansible-ssh-private-key-secret
   roles:
     edpm-compute:
-      services:
-        - configure-network
       env:
         - name: ANSIBLE_FORCE_COLOR
           value: "True"
