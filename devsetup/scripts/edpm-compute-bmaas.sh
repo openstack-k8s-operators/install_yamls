@@ -97,6 +97,8 @@ spec:
           tenant_ip: 172.19.0.100
           fqdn_internal_api: edpm-compute-0.example.com
         ansibleSSHPrivateKeySecret: dataplane-ansible-ssh-private-key-secret
+$(if [[ $NODE_COUNT -eq 2 ]]; then
+  cat <<SECOND_NODE_EOF
     edpm-compute-1:
       role: edpm-compute
       hostName: edpm-compute-1
@@ -109,6 +111,8 @@ spec:
           tenant_ip: 172.19.0.101
           fqdn_internal_api: edpm-compute-1.example.com
         ansibleSSHPrivateKeySecret: dataplane-ansible-ssh-private-key-secret
+SECOND_NODE_EOF
+fi)
   roles:
     edpm-compute:
       services:
