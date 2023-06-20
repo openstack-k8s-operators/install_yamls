@@ -1132,12 +1132,24 @@ mariadb_kuttl_run: ## runs kuttl tests for the mariadb operator, assumes that ev
 	kubectl-kuttl test --config ${MARIADB_KUTTL_CONF} ${MARIADB_KUTTL_DIR}
 
 .PHONY: mariadb_kuttl
-mariadb_kuttl: input openstack_crds deploy_cleanup mariadb_deploy_prep mariadb  ## runs kuttl tests for the mariadb operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+mariadb_kuttl: input deploy_cleanup mariadb mariadb_deploy_prep ## runs kuttl tests for the mariadb operator. Installs mariadb operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,mariadb))
 	make wait
 	make mariadb_kuttl_run
 	make deploy_cleanup
 	make mariadb_cleanup
+
+.PHONY: kuttl_db_prep
+kuttl_db_prep: input deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate infra memcached_deploy ## installs common DB service(MariaDB and Memcached)
+
+.PHONY: kuttl_db_cleanup
+kuttl_db_cleanup: memcached_deploy_cleanup infra_cleanup mariadb_deploy_cleanup mariadb_cleanup input_cleanup
+
+.PHONY: kuttl_common_prep
+kuttl_common_prep: kuttl_db_prep rabbitmq rabbitmq_deploy keystone keystone_deploy ## installs common middleware services and Keystone
+
+.PHONY: kuttl_common_cleanup
+kuttl_common_cleanup: keystone_cleanup rabbitmq_cleanup kuttl_db_cleanup
 
 .PHONY: keystone_kuttl_run
 keystone_kuttl_run: ## runs kuttl tests for the keystone operator, assumes that everything needed for running the test was deployed beforehand.
@@ -1147,11 +1159,13 @@ keystone_kuttl_run: ## runs kuttl tests for the keystone operator, assumes that 
 keystone_kuttl: export NAMESPACE = ${KEYSTONE_KUTTL_NAMESPACE}
 # Set the value of $KEYSTONE_KUTTL_NAMESPACE if you want to run the keystone
 # kuttl tests in a namespace different than the default (keystone-kuttl-tests)
-keystone_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate keystone_deploy_prep keystone ## runs kuttl tests for the keystone operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+keystone_kuttl: kuttl_db_prep keystone keystone_deploy_prep ## runs kuttl tests for the keystone operator. Installs keystone operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+	$(eval $(call vars,$@,keystone))
+	make wait
 	make keystone_kuttl_run
 	make deploy_cleanup
 	make keystone_cleanup
-	make mariadb_cleanup
+	make kuttl_db_cleanup
 	bash scripts/restore-namespace.sh
 
 .PHONY: cinder_kuttl_run
@@ -1159,60 +1173,51 @@ cinder_kuttl_run: ## runs kuttl tests for the cinder operator, assumes that ever
 	kubectl-kuttl test --config ${CINDER_KUTTL_CONF} ${CINDER_KUTTL_DIR}
 
 .PHONY: cinder_kuttl
-cinder_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy rabbitmq rabbitmq_deploy keystone_deploy_prep keystone keystone_deploy cinder_deploy_prep cinder infra mariadb_deploy_validate ## runs kuttl tests for the cinder operator. Installs openstack crds and cinder operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+cinder_kuttl: kuttl_common_prep cinder cinder_deploy_prep ## runs kuttl tests for the cinder operator. Installs cinder operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+	$(eval $(call vars,$@,cinder))
+	make wait
 	make cinder_kuttl_run
-	make infra_cleanup
-	make rabbitmq_deploy_cleanup
-	make rabbitmq_cleanup
 	make deploy_cleanup
 	make cinder_cleanup
-	make keystone_cleanup
-	make mariadb_cleanup
+	make kuttl_common_cleanup
 
 .PHONY: neutron_kuttl_run
 neutron_kuttl_run: ## runs kuttl tests for the neutron operator, assumes that everything needed for running the test was deployed beforehand.
 	kubectl-kuttl test --config ${NEUTRON_KUTTL_CONF} ${NEUTRON_KUTTL_DIR}
 
 .PHONY: neutron_kuttl
-neutron_kuttl: input openstack_crds deploy_cleanup mariadb neutron_deploy_prep neutron mariadb_deploy keystone rabbitmq keystone_deploy ovn rabbitmq_deploy infra ovn_deploy   mariadb_deploy_validate ## runs kuttl tests for the neutron operator. Installs openstack crds and mariadb, keystone, rabbitmq, ovn, infra and neutron operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+neutron_kuttl: kuttl_common_prep ovn ovn_deploy neutron neutron_deploy_prep ## runs kuttl tests for the neutron operator. Installs neutron operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,neutron))
 	make wait
 	make neutron_kuttl_run
-	make rabbitmq_deploy_cleanup
-	make ovn_deploy_cleanup
 	make deploy_cleanup
 	make neutron_cleanup
 	make ovn_cleanup
-	make infra_cleanup
-	make rabbitmq_cleanup
-	make keystone_cleanup
-	make mariadb_cleanup
+	make kuttl_common_cleanup
 
 .PHONY: octavia_kuttl_run
 octavia_kuttl_run: ## runs kuttl tests for the octavia operator, assumes that everything needed for running the test was deployed beforehand.
 	kubectl-kuttl test --config ${OCTAVIA_KUTTL_CONF} ${OCTAVIA_KUTTL_DIR}
 
 .PHONY: octavia_kuttl
-octavia_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone ovn octavia_deploy_prep octavia ovn_deploy keystone_deploy mariadb_deploy_validate ## runs kuttl tests for the octavia operator. Installs openstack crds and mariadb, keystone, octavia, ovn operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+octavia_kuttl: kuttl_common_prep ovn ovn_deploy octavia octavia_deploy_prep ## runs kuttl tests for the octavia operator. Installs octavia operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,octavia))
 	make wait
 	make octavia_kuttl_run
-	make ovn_deploy_cleanup
 	make deploy_cleanup
 	make octavia_cleanup
 	make ovn_cleanup
-	make keystone_cleanup
-	make mariadb_cleanup
+	make kuttl_common_cleanup
 
 .PHONY: designate_kuttl
-designate_kuttl: namespace input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone ovn designate_deploy_prep designate ovn_deploy keystone_deploy mariadb_deploy_validate ## runs kuttl tests for the designate operator. Installs openstack crds and mariadb, keystone, designate, ovn operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+designate_kuttl: kuttl_common_prep ovn ovn_deploy designate designate_deploy_prep ## runs kuttl tests for the designate operator. Installs designate operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+	$(eval $(call vars,$@,designate))
+	make wait
 	make designate_kuttl_run
-	make ovn_deploy_cleanup
 	make deploy_cleanup
 	make designate_cleanup
 	make ovn_cleanup
-	make keystone_cleanup
-	make mariadb_cleanup
+	make kuttl_common_cleanup
 
 .PHONY: designate_kuttl_run
 designate_kuttl_run: ## runs kuttl tests for the designate operator, assumes that everything needed for running the test was deployed beforehand.
@@ -1224,9 +1229,9 @@ ovn_kuttl_run: ## runs kuttl tests for the ovn operator, assumes that everything
 
 .PHONY: ovn_kuttl
 ovn_kuttl: export NAMESPACE = ${OVN_KUTTL_NAMESPACE}
-	# Set the value of $OVN_KUTTL_NAMESPACE if you want to run the ovn
-	# kuttl tests in a namespace different than the default (ovn-kuttl-tests)
-ovn_kuttl: input openstack_crds deploy_cleanup ovn_deploy_prep ovn ## runs kuttl tests for the ovn operator. Installs openstack crds and ovn operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+# Set the value of $OVN_KUTTL_NAMESPACE if you want to run the ovn
+# kuttl tests in a namespace different than the default (ovn-kuttl-tests)
+ovn_kuttl: input deploy_cleanup ovn_deploy_prep ## runs kuttl tests for the ovn operator. Installs ovn operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,ovn))
 	make wait
 	make ovn_kuttl_run
@@ -1238,7 +1243,9 @@ infra_kuttl_run: ## runs kuttl tests for the infra operator, assumes that everyt
 	kubectl-kuttl test --config ${INFRA_KUTTL_CONF} ${INFRA_KUTTL_DIR}
 
 .PHONY: infra_kuttl
-infra_kuttl: namespace input openstack_crds deploy_cleanup mariadb keystone rabbitmq mariadb_deploy keystone_deploy rabbitmq_deploy infra ## runs kuttl tests for the infra operator. Installs openstack crds and mariadb, keystone, infra, ovn operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+infra_kuttl: input deploy_cleanup mariadb keystone rabbitmq mariadb_deploy keystone_deploy rabbitmq_deploy infra ## runs kuttl tests for the infra operator. Installs infra operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+	$(eval $(call vars,$@,infra))
+	make wait
 	make infra_kuttl_run
 	make deploy_cleanup
 	make infra_cleanup
@@ -1251,14 +1258,13 @@ ironic_kuttl_run: ## runs kuttl tests for the ironic operator, assumes that ever
 	kubectl-kuttl test --config ${IRONIC_KUTTL_CONF} ${IRONIC_KUTTL_DIR}
 
 .PHONY: ironic_kuttl
-ironic_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy ironic ironic_deploy_prep ironic_deploy  ## runs kuttl tests for the ironic operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+ironic_kuttl: kuttl_common_prep ironic ironic_deploy_prep  ## runs kuttl tests for the ironic operator. Installs ironic operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,ironic))
 	make wait
 	make ironic_kuttl_run
 	make deploy_cleanup
 	make ironic_cleanup
-	make keystone_cleanup
-	make mariadb_cleanup
+	make kuttl_common_cleanup
 
 .PHONY: ironic_kuttl_crc
 ironic_kuttl_crc: crc_storage ironic_kuttl
@@ -1269,19 +1275,15 @@ heat_kuttl_run: ## runs kuttl tests for the heat operator, assumes that everythi
 
 .PHONY: heat_kuttl
 heat_kuttl: export NAMESPACE = ${HEAT_KUTTL_NAMESPACE}
-	# Set the value of $HEAT_KUTTL_NAMESPACE if you want to run the heat
-	# kuttl tests in a namespace different than the default (heat-kuttl-tests)
-heat_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy rabbitmq rabbitmq_deploy infra heat heat_deploy_prep  ## runs kuttl tests for the heat operator. Installs openstack crds and keystone operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+# Set the value of $HEAT_KUTTL_NAMESPACE if you want to run the heat
+# kuttl tests in a namespace different than the default (heat-kuttl-tests)
+heat_kuttl: kuttl_common_prep heat heat_deploy_prep  ## runs kuttl tests for the heat operator. Installs heat operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,heat))
 	make wait
 	make heat_kuttl_run
 	make deploy_cleanup
-	make rabbitmq_deploy_cleanup
-	make infra_cleanup
-	make rabbitmq_cleanup
 	make heat_cleanup
-	make keystone_cleanup
-	make mariadb_cleanup
+	make kuttl_common_cleanup
 
 .PHONY: heat_kuttl_crc
 heat_kuttl_crc: crc_storage heat_kuttl
@@ -1302,7 +1304,7 @@ ansibleee_kuttl_prep: ansibleee_kuttl_cleanup
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(ANSIBLEEE_BRANCH),-b ${ANSIBLEEE_BRANCH}) ${ANSIBLEEE_REPO} "${OPERATOR_NAME}-operator" && popd
 
 .PHONY: ansibleee_kuttl
-ansibleee_kuttl: input openstack_crds ansibleee_kuttl_prep ansibleee ## runs kuttl tests for the openstack-ansibleee operator. Installs openstack crds and openstack-ansibleee operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+ansibleee_kuttl: input ansibleee_kuttl_prep ansibleee ## runs kuttl tests for the openstack-ansibleee operator. Installs openstack-ansibleee operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	make ansibleee_kuttl_run
 	make ansibleee_cleanup
 
@@ -1326,7 +1328,7 @@ dataplane_kuttl_prep: dataplane_kuttl_cleanup
 
 .PHONY: dataplane_kuttl
 # dataplane must come before dataplane_kuttl_prep since dataplane creates the CRDs
-dataplane_kuttl: input openstack_crds dataplane ansibleee namespace dataplane_kuttl_prep operator_namespace ## runs kuttl tests for the openstack-dataplane operator. Installs openstack crds and openstack-dataplane operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+dataplane_kuttl: input dataplane ansibleee namespace dataplane_kuttl_prep operator_namespace ## runs kuttl tests for the openstack-dataplane operator. Installs openstack-dataplane operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,dataplane))
 	make wait
 	make dataplane_kuttl_run
@@ -1338,25 +1340,26 @@ glance_kuttl_run: ## runs kuttl tests for the glance operator, assumes that ever
 	kubectl-kuttl test --config ${GLANCE_KUTTL_CONF} ${GLANCE_KUTTL_DIR}
 
 .PHONY: glance_kuttl
-glance_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy glance_deploy_prep glance ## runs kuttl tests for the glance operator. Installs openstack and openstack-storage crds, mariadb, keystone and glance operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+glance_kuttl: kuttl_common_prep glance glance_deploy_prep ## runs kuttl tests for the glance operator. Installs glance operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,glance))
 	make wait
 	make glance_kuttl_run
 	make deploy_cleanup
-	make cleanup
+	make glance_cleanup
+	make kuttl_common_cleanup
 
 .PHONY: horizon_kuttl_run
 horizon_kuttl_run: ## runs kuttl tests for the horizon operator, assumes that everything needed for running the test was deployed beforehand.
 	kubectl-kuttl test --config ${HORIZON_KUTTL_CONF} ${HORIZON_KUTTL_DIR}
 
 .PHONY: horizon_kuttl
-horizon_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy keystone keystone_deploy infra horizon_deploy_prep horizon ## runs kuttl tests for the horizon operator. Installs openstack and openstack-storage crds, mariadb, keystone and horizon operators and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+horizon_kuttl: kuttl_common_prep horizon horizon_deploy_prep ## runs kuttl tests for the horizon operator. Installs horizon operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,horizon))
 	make wait
 	make horizon_kuttl_run
 	make deploy_cleanup
-	make cleanup
-	make infra_cleanup
+	make horizon_cleanup
+	make kuttl_common_cleanup
 
 .PHONY: openstack_kuttl_run
 openstack_kuttl_run: ## runs kuttl tests for the openstack operator, assumes that everything needed for running the test was deployed beforehand.
@@ -1364,7 +1367,7 @@ openstack_kuttl_run: ## runs kuttl tests for the openstack operator, assumes tha
 
 .PHONY: openstack_kuttl
 openstack_kuttl: export NAMESPACE = ${OPENSTACK_KUTTL_NAMESPACE}
-openstack_kuttl: namespace input deploy_cleanup openstack ## runs kuttl tests for the openstack operator. Installs openstack crds and the openstack operator, cleans up previous deployments before running the tests and, cleans up after running the tests.
+openstack_kuttl: input openstack_crds deploy_cleanup openstack ## runs kuttl tests for the openstack operator. Installs openstack operato and cleans up previous deployments before running the tests, cleans up after running the tests.
 	$(eval $(call vars,$@,openstack))
 	make wait
 	make openstack_kuttl_run
