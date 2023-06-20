@@ -10,6 +10,7 @@ EDPM_NETWORK_CONFIG_TEMPLATE ?= templates/single_nic_vlans/single_nic_vlans.j2
 EDPM_SSHD_ALLOWED_RANGES ?= ['192.168.122.0/24']
 EDPM_CHRONY_NTP_SERVER ?= pool.ntp.org
 EDPM_PLAY_CRD ?= edpm/edpm-play.yaml
+NAMESPACE ?= openstack
 
 BMAAS_INSTANCE_NAME_PREFIX ?= crc-bmaas
 BMAAS_INSTANCE_MEMORY ?= 4096
@@ -100,7 +101,7 @@ edpm_compute_baremetal: ## Deploy controlplane and dataplane with BMAAS
 	scripts/edpm-compute-bmaas.sh
 
 .PHONY: edpm_compute_baremetal_cleanup
-edpm_compute_baremetal_cleanup:  ## Cleanup dataplane with BMAAS and controlplane
+edpm_compute_baremetal_cleanup: ansibleee_key_cleanup ## Cleanup dataplane with BMAAS and controlplane
 	$(eval $(call vars))
 	oc delete openstackdataplane/openstack-edpm --ignore-not-found=true || true
 	oc delete openstackdataplaneservice --all --ignore-not-found=true || true
@@ -129,7 +130,7 @@ edpm_compute_repos: ## Configure EDPM compute VM with repositories
 	scripts/edpm-compute-repos.sh ${EDPM_COMPUTE_SUFFIX}
 
 .PHONY: edpm_compute_cleanup
-edpm_compute_cleanup: ## Delete EDPM compute VM
+edpm_compute_cleanup: ansibleee_key_cleanup ## Delete EDPM compute VM
 	$(eval $(call vars))
 	if [ ${EDPM_TOTAL_NODES} -eq 1 ]; then \
 		scripts/edpm-compute-cleanup.sh ${EDPM_COMPUTE_SUFFIX}; \
@@ -171,7 +172,7 @@ edpm_deploy_instance: ## Spin a instance on edpm node
 	-oc rsh openstackclient bash /tmp/edpm-deploy-instance.sh
 
 .PHONY: edpm_play_cleanup
-edpm_play_cleanup: ## Cleanup EDPM openstackansibleee resource
+edpm_play_cleanup: ansibleee_key_cleanup ## Cleanup EDPM openstackansibleee resource
 	-oc delete openstackansibleee deploy-external-dataplane-compute
 
 .PHONY: cifmw_prepare
@@ -181,6 +182,10 @@ cifmw_prepare: ## Clone the ci-framework repository in the ci-framework director
 .PHONY: cifmw_cleanup
 cifmw_cleanup: ## Clean ci-framework git clone
 	${CLEANUP_DIR_CMD} ci-framework
+
+.PHONY: ansibleee_key_cleanup
+ansibleee_key_cleanup: ## Remove ansibleee private key secret
+	oc delete secret/dataplane-ansible-ssh-private-key-secret -n ${NAMESPACE}
 
 ##@ BMaaS/Ironic
 .PHONY: bmaas_network
