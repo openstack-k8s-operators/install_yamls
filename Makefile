@@ -413,6 +413,7 @@ input_cleanup: ## deletes the secret/CM, used by the services as input
 
 ##@ CRC BMO SETUP
 .PHONY: crc_bmo_setup
+crc_bmo_setup: crc_bmo_cleanup
 crc_bmo_setup: export IRONIC_HOST_IP=${IRONIC_HOST}
 crc_bmo_setup:
 	$(eval $(call vars,$@))
