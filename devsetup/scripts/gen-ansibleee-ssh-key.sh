@@ -32,14 +32,13 @@ fi
 
 pushd ${OUTPUT_DIR}
 
-if oc get secret dataplane-ansible-ssh-private-key-secret -n ${NAMESPACE} 2>&1 1>/dev/null; then
-    echo "Secret dataplane-ansible-ssh-private-key-secret already exists."
-    echo "Delete it first to recreate:"
-    echo "oc delete secret dataplane-ansible-ssh-private-key-secret"
-    exit 0
-fi
-
 if [ ! -f ${SSH_KEY_FILE} ]; then
+    if oc get secret dataplane-ansible-ssh-private-key-secret -n ${NAMESPACE} 2>&1 1>/dev/null; then
+        echo "Secret dataplane-ansible-ssh-private-key-secret already exists."
+        echo "Delete it first to recreate:"
+        echo "oc delete secret dataplane-ansible-ssh-private-key-secret -n ${NAMESPACE}"
+        exit 0
+    fi
     ssh-keygen -f ${SSH_KEY_FILE} -N "" -t ${SSH_ALGORITHM} -b ${SSH_KEY_SIZE}
 fi
 
