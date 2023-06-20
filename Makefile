@@ -6,7 +6,7 @@ PASSWORD                 ?= 12345678
 SECRET                   ?= osp-secret
 OUT                      ?= ${PWD}/out
 TIMEOUT                  ?= 300s
-DBSERVICE           ?= mariadb
+DBSERVICE           ?= galera
 ifeq ($(DBSERVICE), galera)
 DBSERVICE_CONTAINER = openstack-galera-0
 else
