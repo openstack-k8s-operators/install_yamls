@@ -17,11 +17,16 @@ set -ex
 export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
-EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
+EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-"}
 CRC_POOL=${CRC_POOL:-"$HOME/.crc/machines/crc"}
 OUTPUT_BASEDIR=${OUTPUT_BASEDIR:-"../out/edpm/"}
 CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD:-"rm -Rf"}
 
-virsh destroy ${EDPM_COMPUTE_NAME} || :
-virsh undefine --snapshots-metadata --remove-all-storage ${EDPM_COMPUTE_NAME} || :
-${CLEANUP_DIR_CMD} "${CRC_POOL}/${EDPM_COMPUTE_NAME}.qcow2"
+COMPUTE_NODES="$(virsh list --all | awk -v EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME} '{ if ($2~EDPM_COMPUTE_NAME) {print $2; }}')"
+
+for compute_node in $COMPUTE_NODES; do
+    virsh destroy $compute_node || :
+    virsh undefine --snapshots-metadata --remove-all-storage $compute_node || :
+    ${CLEANUP_DIR_CMD} "${CRC_POOL}/$compute_node.qcow2"
+done
+

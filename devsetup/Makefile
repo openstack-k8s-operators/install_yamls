@@ -130,15 +130,9 @@ edpm_compute_repos: ## Configure EDPM compute VM with repositories
 	scripts/edpm-compute-repos.sh ${EDPM_COMPUTE_SUFFIX}
 
 .PHONY: edpm_compute_cleanup
-edpm_compute_cleanup: ## Delete EDPM compute VM
+edpm_compute_cleanup: ## Delete EDPM all compute VMs
 	$(eval $(call vars))
-	if [ ${EDPM_TOTAL_NODES} -eq 1 ]; then \
-		scripts/edpm-compute-cleanup.sh ${EDPM_COMPUTE_SUFFIX}; \
-	else \
-		for INDEX in $(shell seq 0 $$((${EDPM_TOTAL_NODES} -1))) ; do \
-			scripts/edpm-compute-cleanup.sh $$INDEX ; \
-		done \
-	fi
+	scripts/edpm-compute-cleanup.sh
 
 .PHONY: edpm_play
 edpm_play: export EDPM_OVN_METADATA_AGENT_TRANSPORT_URL=$(shell oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
