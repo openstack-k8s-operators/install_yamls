@@ -272,6 +272,8 @@ CEPH_IMG            ?= quay.io/ceph/demo:latest
 
 # NNCP
 NNCP_INTERFACE      ?= enp6s0
+NNCP_TIMEOUT		?= 240s
+NNCP_CLEANUP_TIMEOUT	?= 120s
 
 # Telemetry
 TELEMETRY_IMG                    ?= quay.io/openstack-k8s-operators/telemetry-operator-index:latest
@@ -418,7 +420,7 @@ crc_bmo_setup:
 	$(eval $(call vars,$@))
 	mkdir -p ${OPERATOR_BASE_DIR}
 	oc apply -f ${CERTMANAGER_URL}
-	oc wait pod -n cert-manager --for condition=Ready -l app=webhook --timeout=300s
+	oc wait pod -n cert-manager --for condition=Ready -l app=webhook --timeout=$(TIMEOUT)
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(BMO_BRANCH),-b ${BMO_BRANCH}) ${BMO_REPO} "baremetal-operator" && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/eth2/${PROVISIONING_INTERFACE}/g' ironic-deployment/default/ironic_bmo_configmap.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && make generate manifests && bash tools/deploy.sh -b -i && popd
@@ -1457,12 +1459,12 @@ nmstate: ## installs nmstate operator in the openshift-nmstate namespace
 	bash scripts/gen-olm-nmstate.sh
 	oc apply -f ${OPERATOR_DIR}
 	while ! (oc get pod --no-headers=true -l app=kubernetes-nmstate-operator -n ${NAMESPACE}| grep "nmstate-operator"); do sleep 10; done
-	oc wait pod -n ${NAMESPACE} --for condition=Ready -l app=kubernetes-nmstate-operator --timeout=300s
+	oc wait pod -n ${NAMESPACE} --for condition=Ready -l app=kubernetes-nmstate-operator --timeout=$(TIMEOUT)
 	oc apply -f ${DEPLOY_DIR}
 	while ! (oc get pod --no-headers=true -l component=kubernetes-nmstate-handler -n ${NAMESPACE}| grep "nmstate-handler"); do sleep 10; done
-	oc wait pod -n ${NAMESPACE} -l component=kubernetes-nmstate-handler --for condition=Ready --timeout=300s
+	oc wait pod -n ${NAMESPACE} -l component=kubernetes-nmstate-handler --for condition=Ready --timeout=$(TIMEOUT)
 	while ! (oc get pod --no-headers=true -l component=kubernetes-nmstate-webhook -n ${NAMESPACE}| grep "nmstate-webhook"); do sleep 10; done
-	oc wait pod -n ${NAMESPACE} -l component=kubernetes-nmstate-webhook --for condition=Ready --timeout=300s
+	oc wait pod -n ${NAMESPACE} -l component=kubernetes-nmstate-webhook --for condition=Ready --timeout=$(TIMEOUT)
 
 .PHONY: nncp
 nncp: export INTERFACE=${NNCP_INTERFACE}
@@ -1471,7 +1473,7 @@ nncp: ## installs the nncp resources to configure the interface connected to the
 	WORKERS='$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}")' \
 	bash scripts/gen-nncp.sh
 	oc apply -f ${DEPLOY_DIR}/
-	oc wait nncp -l osp/interface=${NNCP_INTERFACE} --for condition=available --timeout=240s
+	oc wait nncp -l osp/interface=${NNCP_INTERFACE} --for condition=available --timeout=$(NNCP_TIMEOUT)
 
 .PHONY: nncp_cleanup
 nncp_cleanup: export INTERFACE=${NNCP_INTERFACE}
@@ -1479,7 +1481,7 @@ nncp_cleanup: ## unconfigured nncp configuration on worker node and deletes the 
 	$(eval $(call vars,$@,nncp))
 	sed -i 's/state: up/state: absent/' ${DEPLOY_DIR}/*_nncp.yaml
 	oc apply -f ${DEPLOY_DIR}/
-	oc wait nncp -l osp/interface=${NNCP_INTERFACE} --for condition=available --timeout=120s
+	oc wait nncp -l osp/interface=${NNCP_INTERFACE} --for condition=available --timeout=$(NNCP_CLEANUP_TIMEOUT)
 	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/
 	${CLEANUP_DIR_CMD} ${DEPLOY_DIR}
 
@@ -1508,12 +1510,12 @@ metallb: ## installs metallb operator in the metallb-system namespace
 	bash scripts/gen-olm-metallb.sh
 	oc apply -f ${OPERATOR_DIR}
 	while ! (oc get pod --no-headers=true -l control-plane=controller-manager -n ${NAMESPACE}| grep "metallb-operator-controller"); do sleep 10; done
-	oc wait pod -n ${NAMESPACE} --for condition=Ready -l control-plane=controller-manager --timeout=300s
+	oc wait pod -n ${NAMESPACE} --for condition=Ready -l control-plane=controller-manager --timeout=$(TIMEOUT)
 	while ! (oc get pod --no-headers=true -l component=webhook-server -n ${NAMESPACE}| grep "metallb-operator-webhook"); do sleep 10; done
-	oc wait pod -n ${NAMESPACE} --for condition=Ready -l component=webhook-server --timeout=300s
+	oc wait pod -n ${NAMESPACE} --for condition=Ready -l component=webhook-server --timeout=$(TIMEOUT)
 	oc apply -f ${DEPLOY_DIR}/deploy_operator.yaml
 	while ! (oc get pod --no-headers=true -l component=speaker -n ${NAMESPACE} | grep "speaker"); do sleep 10; done
-	oc wait pod -n ${NAMESPACE} -l component=speaker --for condition=Ready --timeout=300s
+	oc wait pod -n ${NAMESPACE} -l component=speaker --for condition=Ready --timeout=$(TIMEOUT)
 
 .PHONY: metallb_config
 metallb_config: export NAMESPACE=metallb-system
