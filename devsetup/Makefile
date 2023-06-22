@@ -313,7 +313,7 @@ bmaas_cleanup:
 
 .PHONY: ansibleee_cleanup
 ansibleee_cleanup: edpm_play_cleanup
-    oc get openstackansibleees.ansibleee.openstack.org -o name | xargs oc delete
+	oc get openstackansibleees.ansibleee.openstack.org -o name | xargs oc delete
 
 .PHONY: teardown ## Remove entirety of the development environment
 teardown: ansibleee_cleanup edpm_compute_cleanup crc_attach_default_interface_cleanup crc_cleanup
