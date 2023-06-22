@@ -311,5 +311,9 @@ bmaas_cleanup:
 	make bmaas_crc_attach_network_cleanup
 	make bmaas_network_cleanup
 
+.PHONY: ansibleee_cleanup
+ansibleee_cleanup:
+    oc get openstackansibleees.ansibleee.openstack.org -o name | xargs oc delete
+
 .PHONY: teardown ## Remove entirety of the development environment
-teardown:edpm_compute_cleanup crc_attach_default_interface_cleanup crc_cleanup
+teardown: ansibleee_cleanup edpm_compute_cleanup crc_attach_default_interface_cleanup crc_cleanup
