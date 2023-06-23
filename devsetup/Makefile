@@ -315,5 +315,9 @@ bmaas_cleanup:
 ansibleee_cleanup: edpm_play_cleanup
 	oc get openstackansibleees.ansibleee.openstack.org -o name | xargs oc delete
 
+.PHONY: operator_cleanup
+operator_cleanup:
+	scripts/opentack-operator-cleanup.sh
+
 .PHONY: teardown ## Remove entirety of the development environment
-teardown: ansibleee_cleanup edpm_compute_cleanup crc_attach_default_interface_cleanup crc_cleanup
+teardown: ansibleee_cleanup edpm_compute_cleanup crc_attach_default_interface_cleanup operator_cleanup crc_cleanup
