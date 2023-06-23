@@ -10,3 +10,7 @@ rules:
       - 'true'
       - 'false'
     check-keys: true
+
+ignore: |
+  devsetup/standalone/deployed_network.yaml
+  devsetup/standalone/network_data.yaml

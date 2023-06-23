@@ -174,6 +174,25 @@ edpm_deploy_instance: ## Spin a instance on edpm node
 edpm_play_cleanup: ## Cleanup EDPM openstackansibleee resource
 	-oc delete openstackansibleee deploy-external-dataplane-compute
 
+.PHONY: standalone
+standalone: export EDPM_COMPUTE_VCPUS=8
+standalone: export EDPM_COMPUTE_RAM=20
+standalone: export EDPM_COMPUTE_DISK_SIZE=70
+standalone: edpm_compute ## Create standalone VM
+	$(eval $(call vars))
+	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX}
+
+.PHONY: standalone_snapshot
+standalone_snapshot: ## Create standalone snapshot
+	$(eval $(call vars))
+	virsh --connect=qemu:///system detach-device-alias edpm-compute-${EDPM_COMPUTE_SUFFIX} fs0 --live
+	virsh --connect=qemu:///system snapshot-create-as --atomic --domain edpm-compute-${EDPM_COMPUTE_SUFFIX} --name clean
+
+.PHONY: standalone_revert
+standalone_revert: ## Revert standalone snapshot
+	$(eval $(call vars))
+	virsh --connect=qemu:///system snapshot-revert --domain edpm-compute-${EDPM_COMPUTE_SUFFIX} --snapshotname clean
+
 .PHONY: cifmw_prepare
 cifmw_prepare: ## Clone the ci-framework repository in the ci-framework directory. That location is ignored from git.
 	git clone https://github.com/openstack-k8s-operators/ci-framework ci-framework
