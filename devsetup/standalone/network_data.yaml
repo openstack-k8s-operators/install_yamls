@@ -1,0 +1,60 @@
+- name: Storage
+  mtu: 1500
+  vip: true
+  vlan: 21
+  name_lower: storage
+  dns_domain: storage.mydomain.tld.
+  service_net_map_replace: storage
+  subnets:
+    storage_subnet:
+      ip_subnet: '172.18.0.0/24'
+      allocation_pools: [{'start': '172.18.0.4', 'end': '172.18.0.250'}]
+
+- name: StorageMgmt
+  mtu: 1500
+  vip: true
+  vlan: 23
+  name_lower: storage_mgmt
+  dns_domain: storagemgmt.mydomain.tld.
+  service_net_map_replace: storage_mgmt
+  subnets:
+    storage_mgmt_subnet:
+      ip_subnet: '172.20.0.0/24'
+      allocation_pools: [{'start': '172.20.0.4', 'end': '172.20.0.250'}]
+
+- name: InternalApi
+  mtu: 1500
+  vip: true
+  vlan: 20
+  name_lower: internal_api
+  dns_domain: internal.mydomain.tld.
+  service_net_map_replace: internal
+  subnets:
+    internal_api_subnet:
+      ip_subnet: '172.17.0.0/24'
+      allocation_pools: [{'start': '172.17.0.4', 'end': '172.17.0.250'}]
+
+- name: Tenant
+  mtu: 1500
+  vip: false  # Tenant network does not use VIPs
+  vlan: 22
+  name_lower: tenant
+  dns_domain: tenant.mydomain.tld.
+  service_net_map_replace: tenant
+  subnets:
+    tenant_subnet:
+      ip_subnet: '172.19.0.0/24'
+      allocation_pools: [{'start': '172.19.0.4', 'end': '172.19.0.250'}]
+
+- name: External
+  mtu: 1500
+  vip: true
+  vlan: 44
+  gateway_ip: '172.21.0.1'
+  name_lower: external
+  dns_domain: external.mydomain.tld.
+  service_net_map_replace: external
+  subnets:
+    external_subnet:
+      ip_subnet: '172.21.0.0/24'
+      allocation_pools: [{'start': '172.21.0.4', 'end': '172.21.0.250'}]
