@@ -31,7 +31,7 @@ if [ -z "$OPERATOR_NAME" ]; then
 fi
 
 # wait for controller-manager deployment to appear
-timeout 300s bash -c 'until [ "$(oc get deployment -l openstack.org/operator-name=${OPERATOR_NAME} -n ${OPERATOR_NAMESPACE} -o name)" != "" ]; do sleep 1; done'
+timeout ${TIMEOUT} bash -c 'until [ "$(oc get deployment -l openstack.org/operator-name=${OPERATOR_NAME} -n ${OPERATOR_NAMESPACE} -o name)" != "" ]; do sleep 1; done'
 
 # wait for controller-manager deployment to reach available state
 oc wait deployment -l openstack.org/operator-name=${OPERATOR_NAME} -n ${OPERATOR_NAMESPACE} --for condition=Available --timeout=${TIMEOUT}

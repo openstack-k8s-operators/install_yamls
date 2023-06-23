@@ -91,6 +91,7 @@ KEYSTONEAPI_DEPL_IMG     ?= unused
 KEYSTONE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.yaml
 KEYSTONE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
 KEYSTONE_KUTTL_NAMESPACE ?= keystone-kuttl-tests
+KEYSTONE_KUTTL_TIMEOUT 	 ?= 180
 
 # Mariadb
 MARIADB_IMG         ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
@@ -105,6 +106,7 @@ MARIADB_CR          ?= ${OPERATOR_BASE_DIR}/mariadb-operator/${MARIADB}
 MARIADB_DEPL_IMG    ?= unused
 MARIADB_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
 MARIADB_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
+MARIADB_KUTTL_TIMEOUT ?= 180
 
 # Placement
 PLACEMENT_IMG         ?= quay.io/openstack-k8s-operators/placement-operator-index:latest
@@ -158,6 +160,7 @@ CINDER_CR           ?= ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
 # TODO: Image customizations for all Cinder services
 CINDER_KUTTL_CONF   ?= ${OPERATOR_BASE_DIR}/cinder-operator/kuttl-test.yaml
 CINDER_KUTTL_DIR    ?= ${OPERATOR_BASE_DIR}/cinder-operator/tests/kuttl/tests
+CINDER_KUTTL_TIMEOUT ?= 180
 
 # RabbitMQ
 RABBITMQ_IMG        ?= quay.io/openstack-k8s-operators/rabbitmq-cluster-operator-index:latest
@@ -190,6 +193,7 @@ OCTAVIA_CR          ?= ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIA}
 # TODO: Image customizations for all Octavia services
 OCTAVIA_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/octavia-operator/kuttl-test.yaml
 OCTAVIA_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/octavia-operator/tests/kuttl/tests
+OCTAVIA_KUTTL_TIMEOUT ?= 180
 
 # Nova
 NOVA_IMG            ?= quay.io/openstack-k8s-operators/nova-operator-index:latest
@@ -645,7 +649,7 @@ keystone_deploy: input keystone_deploy_prep ## installs the service instance usi
 
 .PHONY: keystone_deploy_validate
 keystone_deploy_validate: input ## checks that keystone was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
-	kubectl-kuttl assert -n ${NAMESPACE} ${KEYSTONE_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
+	kubectl-kuttl assert -n ${NAMESPACE} ${KEYSTONE_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout ${KEYSTONE_KUTTL_TIMEOUT}
 
 .PHONY: keystone_deploy_cleanup
 keystone_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
@@ -688,7 +692,7 @@ mariadb_deploy: input mariadb_deploy_prep ## installs the service instance using
 
 .PHONY: mariadb_deploy_validate
 mariadb_deploy_validate: input ## checks that mariadb was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
-	kubectl-kuttl assert -n ${NAMESPACE} ${MARIADB_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
+	kubectl-kuttl assert -n ${NAMESPACE} ${MARIADB_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout ${MARIADB_KUTTL_TIMEOUT}
 
 .PHONY: mariadb_deploy_cleanup
 mariadb_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
@@ -889,7 +893,7 @@ cinder_deploy: input cinder_deploy_prep ## installs the service instance using k
 
 .PHONY: cinder_deploy_validate
 cinder_deploy_validate: input ## checks that cinder was properly deployed. Set CINDER_KUTTL_DIR to use assert file from custom repo.
-	kubectl-kuttl assert -n ${NAMESPACE} ${CINDER_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
+	kubectl-kuttl assert -n ${NAMESPACE} ${CINDER_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout ${CINDER_KUTTL_TIMEOUT}
 
 .PHONY: cinder_deploy_cleanup
 cinder_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
@@ -1013,7 +1017,7 @@ octavia_deploy: input octavia_deploy_prep ## installs the service instance using
 
 .PHONY: octavia_deploy_validate
 octavia_deploy_validate: input ## checks that octavia was properly deployed. Set OCTAVIA_KUTTL_DIR to use assert file from custom repo.
-	kubectl-kuttl assert -n ${NAMESPACE} ${OCTAVIA_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
+	kubectl-kuttl assert -n ${NAMESPACE} ${OCTAVIA_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout ${OCTAVIA_KUTTL_TIMEOUT}
 
 .PHONY: octavia_deploy_cleanup
 octavia_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
