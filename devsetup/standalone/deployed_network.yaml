@@ -1,0 +1,175 @@
+resource_registry:
+  OS::TripleO::Network::Ports::ControlPlaneVipPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_vip_ctlplane.yaml
+  OS::TripleO::Network::Ports::StorageVipPort: network/ports/deployed_vip_storage.yaml
+
+  OS::TripleO::Network::Ports::StorageMgmtVipPort: network/ports/deployed_vip_storage_mgmt.yaml
+  OS::TripleO::Network::Ports::InternalApiVipPort: network/ports/deployed_vip_internal_api.yaml
+  # Tenant network does not use VIPs
+  OS::TripleO::Network::Ports::ExternalVipPort: network/ports/deployed_vip_external.yaml
+  OS::TripleO::Network: /usr/share/openstack-tripleo-heat-templates/network/deployed_networks.yaml
+parameter_defaults:
+  NodePortMap:
+    standalone:
+      ctlplane:
+        ip_address: 192.168.122.100
+        ip_subnet: 192.168.122.1/24
+        ip_address_uri: 192.168.122.100
+      storage:
+        ip_address: 172.18.0.100
+        ip_subnet: 172.18.0.1/24
+        ip_address_uri: 172.18.0.100
+      storage_mgmt:
+        ip_address: 172.20.0.100
+        ip_subnet: 172.20.0.1/24
+        ip_address_uri: 172.20.0.100
+      internal_api:
+        ip_address: 172.17.0.100
+        ip_subnet: 172.17.0.1/24
+        ip_address_uri: 172.17.0.100
+      tenant:
+        ip_address: 172.19.0.100
+        ip_subnet: 172.19.0.1/24
+        ip_address_uri: 172.19.0.100
+      external:
+        ip_address: 172.21.0.100
+        ip_subnet: 172.21.0.1/24
+        ip_address_uri: 172.21.0.100
+  ControlPlaneVipData:
+    fixed_ips:
+    - ip_address: 192.168.122.99
+    name: control_virtual_ip
+    network:
+      tags:
+      - 192.168.122.0/24
+    subnets:
+    - ip_version: 4
+  VipPortMap:
+    storage:
+      ip_address: 172.18.0.2
+      ip_address_uri: 172.18.0.2
+      ip_subnet: 172.18.0.2/24
+    storage_mgmt:
+      ip_address: 172.20.0.2
+      ip_address_uri: 172.20.0.2
+      ip_subnet: 172.20.0.2/24
+    internal_api:
+      ip_address: 172.17.0.2
+      ip_address_uri: 172.17.0.2
+      ip_subnet: 172.17.0.2/24
+    # tenant:
+    #   ip_address: 172.19.0.2
+    #   ip_address_uri: 172.19.0.2
+    #   ip_subnet: 172.19.0.2/24
+    external:
+      ip_address: 172.21.0.2
+      ip_address_uri: 172.21.0.2
+      ip_subnet: 172.21.0.2/24
+  DeployedNetworkEnvironment:
+    net_cidr_map:
+      storage:
+      - 172.18.0.0/24
+      storage_mgmt:
+      - 172.20.0.0/24
+      internal_api:
+      - 172.17.0.0/24
+      tenant:
+      - 172.19.0.0/24
+      external:
+      - 172.21.0.0/24
+    net_ip_version_map:
+      storage: 4
+      storage_mgmt: 4
+      internal_api: 4
+      tenant: 4
+      external: 4
+    net_attributes_map:
+      storage:
+        network:
+          dns_domain: storage.mydomain.tld.
+          mtu: 1500
+          name: storage
+          tags:
+          - tripleo_network_name=Storage
+          - tripleo_net_idx=0
+          - tripleo_service_net_map_replace=storage
+          - tripleo_vip=true
+        subnets:
+          storage_subnet:
+            cidr: 172.18.0.0/24
+            dns_nameservers: []
+            gateway_ip: null
+            host_routes: []
+            ip_version: 4
+            name: storage_subnet
+      storage_mgmt:
+        network:
+          dns_domain: storagemgmt.mydomain.tld.
+          mtu: 1500
+          name: storage_mgmt
+          tags:
+          - tripleo_network_name=StorageMgmt
+          - tripleo_net_idx=0
+          - tripleo_service_net_map_replace=storage_mgmt
+          - tripleo_vip=true
+        subnets:
+          storage_mgmt_subnet:
+            cidr: 172.20.0.0/24
+            dns_nameservers: []
+            gateway_ip: null
+            host_routes: []
+            ip_version: 4
+            name: storage_mgmt_subnet
+      internal_api:
+        network:
+          dns_domain: internal.mydomain.tld.
+          mtu: 1500
+          name: internal_api
+          tags:
+          - tripleo_network_name=InternalApi
+          - tripleo_net_idx=0
+          - tripleo_service_net_map_replace=internal
+          - tripleo_vip=true
+        subnets:
+          internal_api_subnet:
+            cidr: 172.17.0.0/24
+            dns_nameservers: []
+            gateway_ip: null
+            host_routes: []
+            ip_version: 4
+            name: internal_api_subnet
+      tenant:
+        network:
+          dns_domain: tenant.mydomain.tld.
+          mtu: 1500
+          name: tenant
+          tags:
+          - tripleo_network_name=Tenant
+          - tripleo_net_idx=0
+          - tripleo_service_net_map_replace=tenant
+          - tripleo_vip=false
+        subnets:
+          tenant_subnet:
+            cidr: 172.19.0.0/24
+            dns_nameservers: []
+            gateway_ip: null
+            host_routes: []
+            ip_version: 4
+            name: tenant_subnet
+      external:
+        network:
+          dns_domain: external.mydomain.tld.
+          mtu: 1500
+          name: external
+          tags:
+          - tripleo_network_name=External
+          - tripleo_net_idx=0
+          - tripleo_service_net_map_replace=external
+          - tripleo_vip=true
+        subnets:
+          external_subnet:
+            cidr: 172.21.0.0/24
+            dns_nameservers: []
+            gateway_ip: null
+            host_routes: []
+            ip_version: 4
+            name: external_subnet
