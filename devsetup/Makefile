@@ -24,6 +24,8 @@ BMAAS_REDFISH_PASSWORD ?= password
 BMAAS_SUSHY_EMULATOR_NAMESPACE ?= sushy-emulator
 BMAAS_LIBVIRT_USER ?= sushyemu
 
+EDPM_REGISTRY_URL ?= quay.io/podified-antelope-centos9
+EDPM_CONTAINER_TAG ?= current-podified
 
 BM_PROVISIONING_INTERFACE  ?=enp6s0
 BM_NETWORK_NAME            ?=default
@@ -98,6 +100,8 @@ edpm_baremetal: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
 edpm_baremetal: export BMAAS_NETWORK_IPADDRESS=${BM_NETWORK_IPADDRESS}
 edpm_baremetal: export BMAAS_INSTANCE_NAME_PREFIX=${BM_INSTANCE_NAME_PREFIX}
 edpm_baremetal: export NODE_COUNT=${BM_NODE_COUNT}
+edpm_baremetal: export REGISTRY_URL=${EDPM_REGISTRY_URL}
+edpm_baremetal: export CONTAINER_TAG=${EDPM_CONTAINER_TAG}
 edpm_baremetal: ## Deploy only dataplane with BMAAS
 	$(eval $(call vars))
 	make bmaas_virtual_bms

@@ -154,15 +154,14 @@ patches:
         edpm_ovn_dbs:
         - ${EDPM_OVN_DBS}
 
-        registry_name: quay.io
-        registry_namespace: podified-antelope-centos9
-        image_tag: current-podified
-        edpm_ovn_controller_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ovn-controller:{{ image_tag }}"
-        edpm_iscsid_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-iscsid:{{ image_tag }}"
-        edpm_logrotate_crond_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-cron:{{ image_tag }}"
-        edpm_nova_compute_container_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-nova-compute:{{ image_tag }}"
-        edpm_nova_libvirt_container_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-nova-libvirt:{{ image_tag }}"
-        edpm_ovn_metadata_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
+        registry_url: ${EDPM_REGISTRY_URL}
+        image_tag: ${EDPM_CONTAINER_TAG}
+        edpm_ovn_controller_agent_image: "{{ registry_url }}/openstack-ovn-controller:{{ image_tag }}"
+        edpm_iscsid_image: "{{ registry_url }}/openstack-iscsid:{{ image_tag }}"
+        edpm_logrotate_crond_image: "{{ registry_url }}/openstack-cron:{{ image_tag }}"
+        edpm_nova_compute_container_image: "{{ registry_url }}/openstack-nova-compute:{{ image_tag }}"
+        edpm_nova_libvirt_container_image: "{{ registry_url }}/openstack-nova-libvirt:{{ image_tag }}"
+        edpm_ovn_metadata_agent_image: "{{ registry_url }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
 
         gather_facts: false
         enable_debug: false
