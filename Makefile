@@ -1638,7 +1638,7 @@ swift_cleanup: ## deletes the operator, but does not cleanup the service resourc
 	rm -Rf ${OPERATOR_DIR}
 
 .PHONY: swift_deploy_prep
-swift_deploy_prep: export KIND=SwiftRing
+swift_deploy_prep: export KIND=Swift
 swift_deploy_prep: export IMAGE=unused
 swift_deploy_prep: swift_deploy_cleanup ## prepares the CR to install the service based on the service sample file SWIFTAPI
 	$(eval $(call vars,$@,swift))
