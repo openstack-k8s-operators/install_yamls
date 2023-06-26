@@ -29,4 +29,3 @@ for compute_node in $COMPUTE_NODES; do
     virsh undefine --snapshots-metadata --remove-all-storage $compute_node || :
     ${CLEANUP_DIR_CMD} "${CRC_POOL}/$compute_node.qcow2"
 done
-
