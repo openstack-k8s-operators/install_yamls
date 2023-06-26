@@ -22,7 +22,7 @@ BMAAS_NETWORK_NAME ?= crc-bmaas
 BMAAS_BRIDGE_IPADDRESS ?= 172.20.1.2
 BMAAS_NETWORK_IPADDRESS ?= 172.20.1.1
 BMAAS_NETWORK_NETMASK ?= 255.255.255.0
-BMAAS_NODE_COUNT ?= 2
+BMAAS_NODE_COUNT ?= 1
 BMAAS_REDFISH_USERNAME ?= admin
 BMAAS_REDFISH_PASSWORD ?= password
 BMAAS_SUSHY_EMULATOR_NAMESPACE ?= sushy-emulator
@@ -92,10 +92,11 @@ edpm_compute_baremetal: export PROVISIONING_INTERFACE=${BMAAS_NETWORK_NAME}
 edpm_compute_baremetal: export BMAAS_NETWORK_IPADDRESS=172.22.0.3
 edpm_compute_baremetal: export BMAAS_BRIDGE_IPADDRESS=172.22.0.2
 edpm_compute_baremetal: export OPERATOR_NAME=openstack
+edpm_compute_baremetal: export NODE_COUNT=${BMAAS_NODE_COUNT}
 edpm_compute_baremetal: ## Deploy controlplane and dataplane with BMAAS
 	$(eval $(call vars))
 	make bmaas
-	pushd .. && make openstack wait openstack_deploy && popd
+	pushd .. && NETWORK_ISOLATION=false make openstack wait openstack_deploy && popd
 	scripts/gen-ansibleee-ssh-key.sh
 	scripts/edpm-compute-bmaas.sh
 
