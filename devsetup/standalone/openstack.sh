@@ -63,7 +63,7 @@ sudo openstack tripleo deploy \
     -e /usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml \
     -e ~/containers-prepare-parameters.yaml \
     -e standalone_parameters.yaml \
-    -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm.yaml \
+    -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml \
     -e ~/deployed_ceph.yaml \
     -e /usr/share/openstack-tripleo-heat-templates/environments/deployed-network-environment.yaml \
     -e /tmp/deployed_network.yaml \
