@@ -20,4 +20,5 @@
       - ^devsetup/Makefile
       - ^devsetup/scripts/bmaas/*
       - ^devsetup/scripts/edpm-compute-bmaas.sh
+      - ^devsetup/scripts/gen-edpm-bmaas-kustomize.sh
       - ^devsetup/scripts/gen-ansibleee-ssh-key.sh
