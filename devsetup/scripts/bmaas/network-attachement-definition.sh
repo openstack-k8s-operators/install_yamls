@@ -54,9 +54,7 @@ EOF
 }
 
 function cleanup {
-    if oc -n openstack get network-attachment-definitions.k8s.cni.cncf.io/baremetal-net; then
-        oc delete network-attachment-definitions.k8s.cni.cncf.io/baremetal-net --wait=true
-    fi
+    oc delete -n openstack network-attachment-definitions.k8s.cni.cncf.io/baremetal-net --wait=true --ignore-not-found
 }
 
 case "$1" in
