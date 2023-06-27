@@ -136,7 +136,7 @@ fi)
           edpm_chrony_ntp_servers:
             - 0.pool.ntp.org
             - 1.pool.ntp.org
-          growvols_args: '/var=100%'
+          growvols_args: '/var=80%'
           # edpm_network_config
           # Default nic config template for a EDPM compute node
           # These vars are edpm_network_config role vars
