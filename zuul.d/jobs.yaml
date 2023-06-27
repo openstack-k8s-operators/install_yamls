@@ -7,15 +7,30 @@
       deploy_edpm: false
       podified_validation: true
 
+# Job to deploy podified control plane with galera
+- job:
+    name: install-yamls-crc-podified-galera-deployment
+    parent: cifmw-crc-podified-edpm-deployment
+    vars:
+      make_openstack_deploy_params:
+        DBSERVICE: galera
+
 # Job for edpm deployment
 - job:
     name: install-yamls-crc-podified-edpm-deployment
     parent: cifmw-crc-podified-edpm-deployment
+    vars:
+      make_openstack_deploy_params:
+        DBSERVICE: galera
+
 
 # Bmaas deployment job with CRC and two bmaas compute nodes.
 - job:
     name: install-yamls-crc-podified-edpm-baremetal
     parent: cifmw-crc-podified-edpm-baremetal
+    vars:
+      make_edpm_compute_baremetal_params:
+        DBSERVICE: galera
     files:
       - ^devsetup/Makefile
       - ^devsetup/scripts/bmaas/*

@@ -5,4 +5,5 @@
       jobs:
         - install-yamls-crc-podified-edpm-baremetal
         - install-yamls-crc-podified-deployment
+        - install-yamls-crc-podified-galera-deployment
         - install-yamls-crc-podified-edpm-deployment
