@@ -8,7 +8,7 @@ OUT                      ?= ${PWD}/out
 TIMEOUT                  ?= 300s
 DBSERVICE           ?= mariadb
 ifeq ($(DBSERVICE), galera)
-DBSERVICE_CONTAINER = openstack-mariadb-0
+DBSERVICE_CONTAINER = openstack-galera-0
 else
 DBSERVICE_CONTAINER = mariadb-openstack
 endif
