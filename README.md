@@ -128,7 +128,9 @@ Wait for the ctlplane to be up.
 At this point the ctlplane is deployed with the services using isolated networks as specified in the CR sample.
 
 * need to restart nova-scheduler to pick up cell1, this is a known issue
+```bash
 oc delete pod -l service=nova-scheduler
+```
 
 * deploy edpm compute
 ```bash
