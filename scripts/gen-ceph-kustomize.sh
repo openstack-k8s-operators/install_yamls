@@ -40,6 +40,7 @@ HOSTNETWORK=${HOSTNETWORK:-true}
 POOLS=("volumes" "images" "backups" "cephfs.cephfs.meta" "cephfs.cephfs.data")
 DAEMONS="osd,mds"
 DATA_SIZE=${DATA_SIZE:-500Mi}
+WORKER=${WORKER:-""}
 
 function add_ceph_pod {
 cat <<EOF >ceph-pod.yaml
@@ -88,6 +89,8 @@ spec:
     runAsUser: 0
     seccompProfile:
       type: Unconfined
+  nodeSelector:
+    kubernetes.io/hostname: "$WORKER"
 EOF
 }
 
@@ -119,7 +122,12 @@ function get_pod_ip {
         echo "HOSTNETWORK must be set to true!"
         exit 1
     fi
-    MON_IP=$(oc get nodes -o 'jsonpath={.items[*].status.addresses[?(.type=="InternalIP")].address}')
+    NODES=$(oc get nodes --selector='node-role.kubernetes.io/worker=' -o 'jsonpath={.items[*].status.addresses[*].address}')
+    read -ra values <<< "$NODES"
+    MON_IP="${values[0]}"
+    if [ -z "$WORKER" ]; then
+        WORKER="${values[1]}"
+    fi
 }
 
 function ceph_is_ready {
