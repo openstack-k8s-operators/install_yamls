@@ -4,12 +4,6 @@ PULL_SECRET  ?= ${PWD}/pull-secret.txt
 CRC_DEFAULT_NETWORK_IP ?= 192.168.122.10
 EDPM_COMPUTE_SUFFIX ?= 0
 EDPM_TOTAL_NODES ?= 1
-EDPM_COMPUTE_IP ?= 192.168.122.100
-OPENSTACK_RUNNER_IMG ?= quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
-EDPM_NETWORK_CONFIG_TEMPLATE ?= templates/single_nic_vlans/single_nic_vlans.j2
-EDPM_SSHD_ALLOWED_RANGES ?= ['192.168.122.0/24']
-EDPM_CHRONY_NTP_SERVER ?= pool.ntp.org
-EDPM_PLAY_CRD ?= edpm/edpm-play.yaml
 
 BMAAS_INSTANCE_NAME_PREFIX ?= crc-bmaas
 BMAAS_INSTANCE_MEMORY ?= 4096
@@ -164,40 +158,10 @@ edpm_compute_cleanup: ## Delete EDPM compute VM
 		done \
 	fi
 
-.PHONY: edpm_play
-edpm_play: export EDPM_OVN_METADATA_AGENT_TRANSPORT_URL=$(shell oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
-edpm_play: export EDPM_OVN_METADATA_AGENT_SB_CONNECTION=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
-edpm_play: export EDPM_OVN_DBS=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"[0]')
-edpm_play: export EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST=127.0.0.1
-edpm_play: export EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET=12345678
-edpm_play: export EDPM_OVN_METADATA_AGENT_BIND_HOST=127.0.0.1
-edpm_play: export EDPM_NOVA_NOTIFICATIONS_TRANSPORT_URL=$(shell oc get secret rabbitmq-transport-url-nova-api-transport -o json | jq -r .data.transport_url | base64 -d)
-edpm_play: export EDPM_NOVA_COMPUTE_TRANSPORT_URL=$(shell oc get secret rabbitmq-transport-url-cell1-transport -o json | jq -r .data.transport_url | base64 -d)
-edpm_play: ## Deploy EDPM node using openstackansibleee resource
-	scripts/gen-ansibleee-ssh-key.sh
-	sed -e "s|_COMPUTE_IP_|${EDPM_COMPUTE_IP}|g" \
-	    -e "s|_OPENSTACK_RUNNER_IMG_|${OPENSTACK_RUNNER_IMG}|g" \
-	    -e "s|_EDPM_NETWORK_CONFIG_TEMPLATE_|${EDPM_NETWORK_CONFIG_TEMPLATE}|g" \
-	    -e "s|_EDPM_SSHD_ALLOWED_RANGES_|${EDPM_SSHD_ALLOWED_RANGES}|g" \
-	    -e "s|_EDPM_CHRONY_NTP_SERVER_|${EDPM_CHRONY_NTP_SERVER}|g" \
-	    -e "s|_EDPM_OVN_METADATA_AGENT_TRANSPORT_URL_|${EDPM_OVN_METADATA_AGENT_TRANSPORT_URL}|g" \
-	    -e "s|_EDPM_OVN_METADATA_AGENT_SB_CONNECTION_|${EDPM_OVN_METADATA_AGENT_SB_CONNECTION}|g" \
-	    -e "s|_EDPM_OVN_DBS_|${EDPM_OVN_DBS}|g" \
-	    -e "s|_EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST_|${EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST}|g" \
-	    -e "s|_EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET_|${EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET}|g" \
-	    -e "s|_EDPM_OVN_METADATA_AGENT_BIND_HOST_|${EDPM_OVN_METADATA_AGENT_BIND_HOST}|g" \
-	    -e "s|_EDPM_NOVA_COMPUTE_TRANSPORT_URL_|${EDPM_NOVA_COMPUTE_TRANSPORT_URL}|g" \
-	    -e "s|_EDPM_NOVA_NOTIFICATIONS_TRANSPORT_URL_|${EDPM_NOVA_NOTIFICATIONS_TRANSPORT_URL}|g" \
-	    ${EDPM_PLAY_CRD} | oc create -f -
-
 .PHONY: edpm_deploy_instance
 edpm_deploy_instance: ## Spin a instance on edpm node
 	-oc cp scripts/edpm-deploy-instance.sh openstackclient:/tmp/
 	-oc rsh openstackclient bash /tmp/edpm-deploy-instance.sh
-
-.PHONY: edpm_play_cleanup
-edpm_play_cleanup: ## Cleanup EDPM openstackansibleee resource
-	-oc delete openstackansibleee deploy-external-dataplane-compute
 
 .PHONY: standalone
 standalone: export EDPM_COMPUTE_VCPUS=8
