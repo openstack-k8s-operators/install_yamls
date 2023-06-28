@@ -919,17 +919,17 @@ cinder_deploy_cleanup: namespace ## cleans up the service instance, Does not aff
 .PHONY: rabbitmq_prep
 rabbitmq_prep: export IMAGE=${RABBITMQ_IMG}
 rabbitmq_prep: ## creates the files to install the operator using olm
-	$(eval $(call vars,$@,cluster))
+	$(eval $(call vars,$@,rabbitmq-cluster))
 	bash scripts/gen-olm.sh
 
 .PHONY: rabbitmq
 rabbitmq: operator_namespace rabbitmq_prep ## installs the operator, also runs the prep step. Set RABBITMQ_IMG for custom image.
-	$(eval $(call vars,$@,cluster))
+	$(eval $(call vars,$@,rabbitmq-cluster))
 	oc apply -f ${OPERATOR_DIR}
 
 .PHONY: rabbitmq_cleanup
 rabbitmq_cleanup: ## deletes the operator, but does not cleanup the service resources
-	$(eval $(call vars,$@,cluster))
+	$(eval $(call vars,$@,rabbitmq-cluster))
 	bash scripts/operator-cleanup.sh
 	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
