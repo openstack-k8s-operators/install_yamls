@@ -19,7 +19,7 @@ NAMESPACE=${NAMESPACE:-"openstack"}
 DEPLOY_DIR=${DEPLOY_DIR:-"../out/edpm"}
 NODE_COUNT=${NODE_COUNT:-2}
 NETWORK_IPADDRESS=${BMAAS_NETWORK_IPADDRESS:-172.22.0.3}
-DATAPLANE_CR_URL=${DATAPLANE_CR_URL:-https://raw.githubusercontent.com/openstack-k8s-operators/dataplane-operator/main/config/samples/dataplane_v1beta1_openstackdataplane_baremetal.yaml}
+DATAPLANE_CR_URL=${DATAPLANE_CR_URL:-https://raw.githubusercontent.com/openstack-k8s-operators/dataplane-operator/main/config/samples/dataplane_v1beta1_openstackdataplane_baremetal_with_ipam.yaml}
 DATAPLANE_CR_FILE=${DATAPLANE_CR_FILE:-dataplane.yaml}
 NETCONFIG_CR_URL=${NETCONFIG_CR_URL:-https://raw.githubusercontent.com/openstack-k8s-operators/infra-operator/main/config/samples/network_v1beta1_netconfig.yaml}
 NETCONFIG_CR_FILE=${NETCONFIG_CR_FILE:-netconfig.yaml}
@@ -51,9 +51,8 @@ patches:
       path: /spec/externalEndpoints/0/loadBalancerIPs/0
       value: 172.22.0.80
     - op: replace
-      path: /spec/options/0/values/0/
+      path: /spec/options/0/values/0
       value: ${NETWORK_IPADDRESS}
-patches:
 - target:
     kind: NetConfig
   patch: |-
@@ -75,49 +74,20 @@ patches:
     - op: replace
       path: /spec/networks/0/subnets/0/allocationRanges/1/end
       value: 172.22.0.200
-patches:
+    - op: add
+      path: /spec/networks/0/subnets/0/routes
+      value:
+        - destination: 0.0.0.0/0
+          nexthop: ${NETWORK_IPADDRESS}
 - target:
     kind: OpenStackDataPlane
   patch: |-
-    - op: replace
-      path: /spec/nodes/edpm-compute-0/ansibleHost
-      value: 172.22.0.100
-    - op: replace
-      path: /spec/nodes/edpm-compute-0/node/ansibleVars
-      value: |
-          ctlplane_ip: 172.22.0.100
-          internal_api_ip: 172.17.0.100
-          storage_ip: 172.18.0.100
-          tenant_ip: 172.19.0.100
-          fqdn_internal_api: edpm-compute-0.example.com
-
-$(if [[ $NODE_COUNT -eq 2 ]]; then
-cat <<SECOND_NODE_EOF
-    - op: replace
-      path: /spec/nodes/edpm-compute-0/ansibleHost
-      value: 172.22.0.101
-    - op: replace
-      path: /spec/nodes/edpm-compute-1/node/ansibleVars
-      value: |
-          ctlplane_ip: 172.22.0.101
-          internal_api_ip: 172.17.0.101
-          storage_ip: 172.18.0.101
-          tenant_ip: 172.19.0.101
-          fqdn_internal_api: edpm-compute-1.example.com
-SECOND_NODE_EOF
-else
+$(if [[ $NODE_COUNT -eq 1 ]]; then
 cat <<SECOND_NODE_EOF
     - op: remove
       path: /spec/nodes/edpm-compute-1
 SECOND_NODE_EOF
 fi)
-    - op: replace
-      path: /spec/roles/edpm-compute/baremetalSetTemplate/ctlplaneGateway
-      value: ${NETWORK_IPADDRESS}
-    - op: replace
-      path: /spec/roles/edpm-compute/baremetalSetTemplate/bootstrapDns
-      value:
-        - ${NETWORK_IPADDRESS}
     - op: replace
       path: /spec/roles/edpm-compute/baremetalSetTemplate/bmhNamespace
       value: ${NAMESPACE}
@@ -127,6 +97,12 @@ fi)
     - op: add
       path: /spec/roles/edpm-compute/baremetalSetTemplate/provisioningInterface
       value: ${PROVISIONING_INTERFACE}
+    - op: add
+      path: /spec/roles/edpm-compute/baremetalSetTemplate/dnsSearchDomains/0
+      value: ctlplane.example.com
+    - op: add
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleSSHPrivateKeySecret
+      value: dataplane-ansible-ssh-private-key-secret
     - op: replace
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars
       value: |
@@ -144,28 +120,6 @@ fi)
           edpm_network_config_hide_sensitive_logs: false
           neutron_physical_bridge_name: br-ex
           neutron_public_interface_name: eth0
-          ctlplane_mtu: 1500
-          ctlplane_subnet_cidr: 24
-          ctlplane_gateway_ip: ${NETWORK_IPADDRESS}
-          ctlplane_host_routes:
-          - ip_netmask: 0.0.0.0/0
-            next_hop: ${NETWORK_IPADDRESS}
-          external_mtu: 1500
-          external_vlan_id: 44
-          external_cidr: '24'
-          external_host_routes: []
-          internal_api_mtu: 1500
-          internal_api_vlan_id: 20
-          internal_api_cidr: '24'
-          internal_api_host_routes: []
-          storage_mtu: 1500
-          storage_vlan_id: 21
-          storage_cidr: '24'
-          storage_host_routes: []
-          tenant_mtu: 1500
-          tenant_vlan_id: 22
-          tenant_cidr: '24'
-          tenant_host_routes: []
           role_networks:
           - InternalApi
           - Storage
@@ -185,8 +139,6 @@ fi)
           edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host: 127.0.0.1
           edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret: 12345678
           edpm_ovn_metadata_agent_DEFAULT_bind_host: 127.0.0.1
-          ctlplane_dns_nameservers:
-          - 172.22.0.3
           dns_search_domains: []
           edpm_ovn_dbs:
           - 172.22.0.3

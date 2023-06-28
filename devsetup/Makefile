@@ -84,14 +84,16 @@ crc_attach_default_interface_cleanup: ## Detach default libvirt network from CRC
 
 .PHONY: edpm_compute_baremetal
 edpm_compute_baremetal: export PROVISIONING_INTERFACE=${BMAAS_NETWORK_NAME}
+edpm_compute_baremetal: export NNCP_INTERFACE=${BMAAS_NETWORK_NAME}
 edpm_compute_baremetal: export BMAAS_NETWORK_IPADDRESS=172.22.0.3
 edpm_compute_baremetal: export BMAAS_BRIDGE_IPADDRESS=172.22.0.2
 edpm_compute_baremetal: export OPERATOR_NAME=openstack
 edpm_compute_baremetal: export NODE_COUNT=${BMAAS_NODE_COUNT}
+edpm_compute_baremetal: export CTLPLANE_METALLB_POOL=172.22.0.80-172.22.0.90
 edpm_compute_baremetal: ## Deploy controlplane and dataplane with BMAAS
 	$(eval $(call vars))
 	make bmaas
-	pushd .. && NETWORK_ISOLATION=false make openstack wait openstack_deploy && popd
+	pushd .. && NETWORK_ISOLATION=false make metallb metallb_config openstack wait openstack_deploy && popd
 	scripts/gen-ansibleee-ssh-key.sh
 	scripts/edpm-compute-bmaas.sh
 
@@ -104,7 +106,7 @@ edpm_compute_baremetal_cleanup:  ## Cleanup dataplane with BMAAS and controlplan
 	oc delete --all bmh --ignore-not-found=true || true
 	oc delete openstackprovisionserver/openstackprovisionserver --ignore-not-found=true || true
 	pushd .. && make openstack_deploy_cleanup openstack_cleanup || true && popd
-	pushd .. && rm -Rf out || true && popd
+	pushd .. && rm -Rf out/edpm || true && popd
 	make bmaas_cleanup || true
 
 .PHONY: edpm_baremetal
@@ -127,7 +129,7 @@ edpm_baremetal_cleanup:  ## Cleanup dataplane with BMAAS
 	while oc get bmh | grep -q -e "deprovisioning" -e "provisioned"; do sleep 5; done || true
 	oc delete --all bmh --ignore-not-found=true || true
 	oc delete openstackprovisionserver/openstackprovisionserver --ignore-not-found=true || true
-	pushd .. && rm -Rf out || true && popd
+	pushd .. && rm -Rf out/edpm || true && popd
 	make bmaas_cleanup || true
 
 .PHONY: edpm_compute
