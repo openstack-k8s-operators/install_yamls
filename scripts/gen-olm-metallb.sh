@@ -81,7 +81,7 @@ metadata:
   name: ctlplane
 spec:
   addresses:
-  - 192.168.122.80-192.168.122.90
+  - ${CTLPLANE_METALLB_POOL}
 ---
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
