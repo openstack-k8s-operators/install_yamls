@@ -192,11 +192,18 @@ standalone_snapshot: ## Create standalone snapshot
 	virsh --connect=qemu:///system detach-device-alias edpm-compute-${EDPM_COMPUTE_SUFFIX} fs0 --live || true
 	sleep 3
 	virsh --connect=qemu:///system snapshot-create-as --atomic --domain edpm-compute-${EDPM_COMPUTE_SUFFIX} --name clean
+	if [ $? -ne 0 ] ; then
+		virsh --connect=qemu:///system suspend edpm-compute-${EDPM_COMPUTE_SUFFIX}
+		virsh --connect=qemu:///system destroy edpm-compute-${EDPM_COMPUTE_SUFFIX}
+		virsh --connect=qemu:///system snapshot-create-as --atomic --domain edpm-compute-${EDPM_COMPUTE_SUFFIX} --name clean
+	fi
 
 .PHONY: standalone_revert
 standalone_revert: ## Revert standalone snapshot
 	$(eval $(call vars))
 	virsh --connect=qemu:///system snapshot-revert --domain edpm-compute-${EDPM_COMPUTE_SUFFIX} --snapshotname clean
+	virsh --connect=qemu:///system resume --domain edpm-compute-${EDPM_COMPUTE_SUFFIX} ||:
+	$(warning Make sure the system time is synchronized for the reverted VM!)
 
 .PHONY: cifmw_prepare
 cifmw_prepare: ## Clone the ci-framework repository in the ci-framework directory. That location is ignored from git.
