@@ -27,7 +27,8 @@ network_config:
   domain: {{ dns_search_domains }}
   members:
     - type: interface
-      name: {{ neutron_public_interface_name }}
+      {# TODO(jpodivin) Remove neutron_public_interface_name and default filter when the transition is complete #}
+      name: {{ edpm_network_config_interface_name | default(neutron_public_interface_name) }}
       primary: true
       mtu: {{ local_mtu }}
     - type: vlan
