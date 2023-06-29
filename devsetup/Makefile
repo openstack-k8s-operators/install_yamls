@@ -29,6 +29,7 @@ EDPM_COMPUTE_SUFFIX ?= 0
 #   EDPM_COMPUTE_ADDITIONAL_NETWORKS=$(jq -c addtional_nets.json)
 EDPM_COMPUTE_ADDITIONAL_NETWORKS ?= '[]'
 EDPM_TOTAL_NODES ?= 1
+EDPM_COMPUTE_CEPH_ENABLED ?= true
 NETWORK_MTU	?= 1500
 
 BMAAS_INSTANCE_NAME_PREFIX ?= crc-bmaas
@@ -193,6 +194,7 @@ edpm_deploy_instance: ## Spin a instance on edpm node
 	-oc rsh openstackclient bash /tmp/edpm-deploy-instance.sh
 
 .PHONY: standalone
+standalone: export COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED}
 standalone: export STANDALONE=true
 standalone: export INTERFACE_MTU=${NETWORK_MTU}
 standalone: edpm_compute ## Create standalone VM
