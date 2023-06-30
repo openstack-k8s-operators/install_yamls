@@ -1,4 +1,24 @@
 ---
+# Content Provider
+- job:
+    name: install-yamls-content-provider
+    parent: content-provider-base
+    vars:
+      cifmw_operator_build_org: openstack-k8s-operators
+      cifmw_operator_build_operators:
+        - name: "openstack-operator"
+          src: "~/src/github.com/{{ cifmw_operator_build_org }}/openstack-operator"
+          image_base: install
+    irrelevant-files: &openstack_if
+      - .ci-operator.yaml
+      - .ansible-lint
+      - .gitignore
+      - .yamllint
+      - .pre-commit-config.yaml
+      - LICENSE
+      - OWNERS
+      - .*/*.md
+
 # Job to deploy podified control plane with network isolation
 - job:
     name: install-yamls-crc-podified-deployment
@@ -6,16 +26,19 @@
     vars:
       deploy_edpm: false
       podified_validation: true
+    irrelevant-files: *openstack_if
 
 # Job for edpm deployment
 - job:
     name: install-yamls-crc-podified-edpm-deployment
     parent: cifmw-crc-podified-edpm-deployment
+    irrelevant-files: *openstack_if
 
 # Bmaas deployment job with CRC and two bmaas compute nodes.
 - job:
     name: install-yamls-crc-podified-edpm-baremetal
     parent: cifmw-crc-podified-edpm-baremetal
+    irrelevant-files: *openstack_if
     files:
       - ^devsetup/Makefile
       - ^devsetup/scripts/bmaas/*
