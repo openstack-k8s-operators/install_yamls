@@ -20,7 +20,7 @@ ACTION=""
 # Virtual Machine spec
 MEMORY=${MEMORY:-4096}
 VCPUS=${VCPUS:-2}
-DISK_SIZE=${DISK_SIZE:-10}
+DISK_SIZE=${DISK_SIZE:-20}
 OS_VARIANT=${OS_VARIANT:-"centos-stream9"}
 VIRT_TYPE=${VIRT_TYPE:-"kvm"}
 NET_MODEL=${NET_MODEL:-"virtio"}
