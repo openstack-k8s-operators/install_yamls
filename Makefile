@@ -15,7 +15,7 @@ endif
 METADATA_SHARED_SECRET   ?= 1234567842
 HEAT_AUTH_ENCRYPTION_KEY ?= 767c3ed056cbaa3b9dfedb8c6f825bf0
 CLEANUP_DIR_CMD					 ?= rm -Rf
-
+METALLB_POOL			 ?=192.168.122.80-192.168.122.90
 # are we deploying to microshift
 MICROSHIFT ?= 0
 
@@ -1602,6 +1602,7 @@ metallb: ## installs metallb operator in the metallb-system namespace
 
 .PHONY: metallb_config
 metallb_config: export NAMESPACE=metallb-system
+metallb_config: export CTLPLANE_METALLB_POOL=${METALLB_POOL}
 metallb_config: export INTERFACE=${NNCP_INTERFACE}
 metallb_config: ## creates the IPAddressPools and l2advertisement resources
 	$(eval $(call vars,$@,metallb))
