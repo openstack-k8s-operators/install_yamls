@@ -106,13 +106,13 @@ fi)
     - op: replace
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars
       value: |
+          growvols_args: '/=8GB /tmp=1GB /home=1GB /var=80%'
           service_net_map:
             nova_api_network: internal_api
             nova_libvirt_network: internal_api
           edpm_chrony_ntp_servers:
             - 0.pool.ntp.org
             - 1.pool.ntp.org
-          growvols_args: '/var=80%'
           # edpm_network_config
           # Default nic config template for a EDPM compute node
           # These vars are edpm_network_config role vars
@@ -141,7 +141,8 @@ fi)
           edpm_ovn_metadata_agent_DEFAULT_bind_host: 127.0.0.1
           dns_search_domains: []
           edpm_ovn_dbs:
-          - 172.22.0.3
+          - ${NETWORK_IPADDRESS}
+
           edpm_ovn_controller_agent_image: quay.io/podified-antelope-centos9/openstack-ovn-controller:current-podified
           edpm_iscsid_image: quay.io/podified-antelope-centos9/openstack-iscsid:current-podified
           edpm_logrotate_crond_image: quay.io/podified-antelope-centos9/openstack-cron:current-podified
@@ -156,12 +157,12 @@ fi)
           edpm_sshd_allowed_ranges: ['172.22.0.0/24']
           # SELinux module
           edpm_selinux_mode: enforcing
+
+          # Remove these after edpm.edpm_hosts_entries role has been dropped
           edpm_hosts_entries_undercloud_hosts_entries: []
-          # edpm_hosts_entries role
-          edpm_hosts_entries_extra_hosts_entries:
-          - 172.17.0.80 glance-internal.openstack.svc neutron-internal.openstack.svc cinder-internal.openstack.svc nova-internal.openstack.svc placement-internal.openstack.svc keystone-internal.openstack.svc
-          - 172.17.0.85 rabbitmq.openstack.svc
-          - 172.17.0.86 rabbitmq-cell1.openstack.svc
+          edpm_hosts_entries_extra_hosts_entries: []
           edpm_hosts_entries_vip_hosts_entries: []
+
+
 EOF
 popd

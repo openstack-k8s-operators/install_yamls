@@ -306,7 +306,7 @@ BMO_REPO                         ?= https://github.com/metal3-io/baremetal-opera
 BMO_BRANCH                       ?= main
 CERTMANAGER_URL                  ?= https://github.com/jetstack/cert-manager/releases/download/v1.5.4/cert-manager.yaml
 PROVISIONING_INTERFACE           ?= enp2s0
-IRONIC_HOST                      ?= 192.168.130.11
+BMO_IRONIC_HOST                  ?= 172.22.0.2
 
 # Swift
 SWIFT_IMG        ?= quay.io/openstack-k8s-operators/swift-operator-index:latest
@@ -432,7 +432,7 @@ input_cleanup: ## deletes the secret/CM, used by the services as input
 
 ##@ CRC BMO SETUP
 .PHONY: crc_bmo_setup
-crc_bmo_setup: export IRONIC_HOST_IP=${IRONIC_HOST}
+crc_bmo_setup: export IRONIC_HOST_IP=${BMO_IRONIC_HOST}
 crc_bmo_setup:
 	$(eval $(call vars,$@))
 	mkdir -p ${OPERATOR_BASE_DIR}
@@ -440,7 +440,10 @@ crc_bmo_setup:
 	oc wait pod -n cert-manager --for condition=Ready -l app=webhook --timeout=$(TIMEOUT)
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(BMO_BRANCH),-b ${BMO_BRANCH}) ${BMO_REPO} "baremetal-operator" && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/eth2/${PROVISIONING_INTERFACE}/g' ironic-deployment/default/ironic_bmo_configmap.env && popd
-	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && make generate manifests && bash tools/deploy.sh -b -i && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/eth2/${PROVISIONING_INTERFACE}/g' config/default/ironic.env
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/ENDPOINT\=http/ENDPOINT\=https/g' ironic-deployment/default/ironic_bmo_configmap.env && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/ENDPOINT\=http/ENDPOINT\=https/g' config/default/ironic.env
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && make generate manifests && bash tools/deploy.sh -bitm && popd
 	## Hack to add required scc
 	oc adm policy add-scc-to-user privileged system:serviceaccount:baremetal-operator-system:baremetal-operator-controller-manager
 	oc adm policy add-scc-to-user privileged system:serviceaccount:baremetal-operator-system:default
