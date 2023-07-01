@@ -23,16 +23,6 @@ NODE_NAME_PREFIX=${NODE_NAME_PREFIX:-"crc-bmaas"}
 NETWORK_NAME=${NETWORK_NAME:-"crc-bmaas"}
 BMH_CR_FILE=${BMH_CR_FILE:-bmh_deploy.yaml}
 
-# Remove service creation after dataplane-operator has been bumped
-DATAPLANE_REPO=${DATAPLANE_REPO:-https://github.com/openstack-k8s-operators/dataplane-operator.git}
-DATAPLNE_BRANCH=${DATAPLANE_BRANCH:-main}
-
-mkdir -p ${OPERATOR_DIR}
-rm -Rf ${OPERATOR_DIR}/dataplane-operator || true
-pushd ${OPERATOR_DIR} && git clone $(if [ ${DATAPLANE_BRANCH} ]; then echo -b ${DATAPLANE_BRANCH}; fi) \
-    ${DATAPLANE_REPO} "dataplane-operator" && popd
-oc apply -f ${OPERATOR_DIR}/dataplane-operator/config/services
-
 mkdir -p ${DEPLOY_DIR}
 NODE_INDEX=0
 while IFS= read -r instance; do
