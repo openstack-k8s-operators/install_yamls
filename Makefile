@@ -1132,7 +1132,7 @@ mariadb_kuttl_run: ## runs kuttl tests for the mariadb operator, assumes that ev
 	kubectl-kuttl test --config ${MARIADB_KUTTL_CONF} ${MARIADB_KUTTL_DIR}
 
 .PHONY: mariadb_kuttl
-mariadb_kuttl: input deploy_cleanup mariadb mariadb_deploy_prep ## runs kuttl tests for the mariadb operator. Installs mariadb operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+mariadb_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy_prep ## runs kuttl tests for the mariadb operator. Installs mariadb operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,mariadb))
 	make wait
 	make mariadb_kuttl_run
@@ -1140,7 +1140,7 @@ mariadb_kuttl: input deploy_cleanup mariadb mariadb_deploy_prep ## runs kuttl te
 	make mariadb_cleanup
 
 .PHONY: kuttl_db_prep
-kuttl_db_prep: input deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate infra memcached_deploy ## installs common DB service(MariaDB and Memcached)
+kuttl_db_prep: input openstack_crds deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate infra memcached_deploy ## installs common DB service(MariaDB and Memcached)
 
 .PHONY: kuttl_db_cleanup
 kuttl_db_cleanup: memcached_deploy_cleanup infra_cleanup mariadb_deploy_cleanup mariadb_cleanup input_cleanup
@@ -1231,7 +1231,7 @@ ovn_kuttl_run: ## runs kuttl tests for the ovn operator, assumes that everything
 ovn_kuttl: export NAMESPACE = ${OVN_KUTTL_NAMESPACE}
 # Set the value of $OVN_KUTTL_NAMESPACE if you want to run the ovn
 # kuttl tests in a namespace different than the default (ovn-kuttl-tests)
-ovn_kuttl: input deploy_cleanup ovn_deploy_prep ## runs kuttl tests for the ovn operator. Installs ovn operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+ovn_kuttl: input openstack_crds deploy_cleanup ovn_deploy_prep ## runs kuttl tests for the ovn operator. Installs ovn operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,ovn))
 	make wait
 	make ovn_kuttl_run
@@ -1243,7 +1243,7 @@ infra_kuttl_run: ## runs kuttl tests for the infra operator, assumes that everyt
 	kubectl-kuttl test --config ${INFRA_KUTTL_CONF} ${INFRA_KUTTL_DIR}
 
 .PHONY: infra_kuttl
-infra_kuttl: input deploy_cleanup mariadb keystone rabbitmq mariadb_deploy keystone_deploy rabbitmq_deploy infra ## runs kuttl tests for the infra operator. Installs infra operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+infra_kuttl: input openstack_crds deploy_cleanup mariadb keystone rabbitmq mariadb_deploy keystone_deploy rabbitmq_deploy infra ## runs kuttl tests for the infra operator. Installs infra operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,infra))
 	make wait
 	make infra_kuttl_run
@@ -1304,7 +1304,7 @@ ansibleee_kuttl_prep: ansibleee_kuttl_cleanup
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(ANSIBLEEE_BRANCH),-b ${ANSIBLEEE_BRANCH}) ${ANSIBLEEE_REPO} "${OPERATOR_NAME}-operator" && popd
 
 .PHONY: ansibleee_kuttl
-ansibleee_kuttl: input ansibleee_kuttl_prep ansibleee ## runs kuttl tests for the openstack-ansibleee operator. Installs openstack-ansibleee operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+ansibleee_kuttl: input openstack_crds ansibleee_kuttl_prep ansibleee ## runs kuttl tests for the openstack-ansibleee operator. Installs openstack-ansibleee operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	make ansibleee_kuttl_run
 	make ansibleee_cleanup
 
@@ -1328,7 +1328,7 @@ dataplane_kuttl_prep: dataplane_kuttl_cleanup
 
 .PHONY: dataplane_kuttl
 # dataplane must come before dataplane_kuttl_prep since dataplane creates the CRDs
-dataplane_kuttl: input dataplane ansibleee namespace dataplane_kuttl_prep operator_namespace ## runs kuttl tests for the openstack-dataplane operator. Installs openstack-dataplane operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+dataplane_kuttl: input openstack_crds dataplane ansibleee namespace dataplane_kuttl_prep operator_namespace ## runs kuttl tests for the openstack-dataplane operator. Installs openstack-dataplane operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,dataplane))
 	make wait
 	make dataplane_kuttl_run
