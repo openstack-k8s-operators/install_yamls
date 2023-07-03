@@ -442,6 +442,7 @@ crc_bmo_setup:
 	$(eval $(call vars,$@))
 	mkdir -p ${OPERATOR_BASE_DIR}
 	oc apply -f ${CERTMANAGER_URL}
+	timeout ${TIMEOUT} bash -c 'until [ "$$(oc get pod -l app=webhook -n cert-manager -o name)" != "" ]; do sleep 1; done'
 	oc wait pod -n cert-manager --for condition=Ready -l app=webhook --timeout=$(TIMEOUT)
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(BMO_BRANCH),-b ${BMO_BRANCH}) ${BMO_REPO} "baremetal-operator" && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/eth2/${PROVISIONING_INTERFACE}/g' ironic-deployment/default/ironic_bmo_configmap.env && popd
