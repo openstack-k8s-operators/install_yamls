@@ -108,6 +108,11 @@ MARIADB_DEPL_IMG    ?= unused
 MARIADB_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
 MARIADB_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
 MARIADB_KUTTL_TIMEOUT ?= 180
+ifeq ($(DBSERVICE), galera)
+MARIADB_ASSERT      ?= ${MARIADB_KUTTL_DIR}/galera_deploy/01-assert.yaml
+else
+MARIADB_ASSERT      ?= ${MARIADB_KUTTL_DIR}/mariadb_deploy/01-assert.yaml
+endif
 
 # Placement
 PLACEMENT_IMG         ?= quay.io/openstack-k8s-operators/placement-operator-index:latest
@@ -705,7 +710,7 @@ mariadb_deploy: input mariadb_deploy_prep ## installs the service instance using
 
 .PHONY: mariadb_deploy_validate
 mariadb_deploy_validate: input ## checks that mariadb was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
-	kubectl-kuttl assert -n ${NAMESPACE} ${MARIADB_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout ${MARIADB_KUTTL_TIMEOUT}
+	kubectl-kuttl assert -n ${NAMESPACE} ${MARIADB_ASSERT} --timeout ${MARIADB_KUTTL_TIMEOUT}
 
 .PHONY: mariadb_deploy_cleanup
 mariadb_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
