@@ -506,7 +506,7 @@ openstack_wait_deploy: openstack_deploy ## waits for ctlplane readiness. Runs pr
 .PHONY: openstack_deploy_cleanup
 openstack_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,openstack))
-	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f - || true
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/openstack-operator ${DEPLOY_DIR}
 
 .PHONY: edpm_deploy_prep
