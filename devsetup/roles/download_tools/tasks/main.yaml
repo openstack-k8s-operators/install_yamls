@@ -67,6 +67,14 @@
     dest: "{{ lookup('env', 'HOME') }}/bin/"
     remote_src: true
 
+- name: Download kubectl
+  ansible.builtin.get_url:
+    url:
+      "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
+    dest: "{{ lookup('env', 'HOME') }}/bin/kubectl"
+    mode: '0755'
+    timeout: 30
+
 - name: Download kuttl
   ansible.builtin.get_url:
     url:
