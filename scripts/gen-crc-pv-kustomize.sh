@@ -49,6 +49,8 @@ metadata:
   name: "$(sed -e 's/^"//' -e 's/"$//' <<<"${STORAGE_CLASS}")$i"
   annotations:
     pv.kubernetes.io/provisioned-by: crc-devsetup
+  labels:
+    provisioned-by: crc-devsetup
 spec:
   storageClassName: ${STORAGE_CLASS}
   capacity:
