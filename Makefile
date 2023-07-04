@@ -379,10 +379,7 @@ crc_storage: ## initialize local storage PVs in CRC vm
 .PHONY: crc_storage_cleanup
 crc_storage_cleanup: ## cleanup local storage PVs in CRC vm
 	$(eval $(call vars,$@))
-ifeq ($(DBSERVICE), galera)
-	oc get pvc | grep ${STORAGE_CLASS} | cut -f 1 -d ' ' | xargs --no-run-if-empty oc delete --ignore-not-found=true pvc
-endif
-	if oc get pv | grep ${STORAGE_CLASS}; then oc get pv | grep ${STORAGE_CLASS} | cut -f 1 -d ' ' | xargs oc delete pv; fi
+	bash scripts/cleanup-crc-pv.sh
 	if oc get sc ${STORAGE_CLASS}; then oc delete sc ${STORAGE_CLASS}; fi
 	bash scripts/delete-pv.sh
 
