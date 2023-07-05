@@ -41,7 +41,7 @@ OPENSTACK_BRANCH             ?= main
 
 ifeq ($(NETWORK_ISOLATION), true)
 ifeq ($(DBSERVICE), galera)
-OPENSTACK_CTLPLANE           ?= config/samples/core_v1beta1_openstackcontrolplane_galera_network_isolation.yaml
+OPENSTACK_CTLPLANE           ?= $(if $(findstring 3,$(GALERA_REPLICAS)),config/samples/core_v1beta1_openstackcontrolplane_galera_network_isolation_3replicas.yaml,config/samples/core_v1beta1_openstackcontrolplane_galera_network_isolation.yaml)
 else
 OPENSTACK_CTLPLANE           ?= config/samples/core_v1beta1_openstackcontrolplane_network_isolation.yaml
 endif
