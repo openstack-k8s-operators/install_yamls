@@ -14,3 +14,6 @@ go_version: 1.19.5
 
 # kustomize version to use (must be specific version)
 kustomize_version: v4.5.7
+
+# kubectl version
+kubectl_version: v1.25.7

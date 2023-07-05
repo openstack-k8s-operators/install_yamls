@@ -77,6 +77,14 @@
     mode: '0755'
     timeout: 30
 
+- name: Download kubectl
+  ansible.builtin.get_url:
+    url:
+      "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
+    dest: "{{ lookup('env', 'HOME') }}/bin/kubectl"
+    mode: '0755'
+    timeout: 30
+
 - name: Set proper golang on the system
   become: true
   become_user: root
