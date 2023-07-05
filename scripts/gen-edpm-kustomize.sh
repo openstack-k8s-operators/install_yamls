@@ -85,23 +85,24 @@ patches:
       path: /spec/nodes/edpm-compute-0/node/ansibleVars
       value: |
         ctlplane_ip: ${EDPM_COMPUTE_IP}
-        internal_api_ip: 172.17.0.100
-        storage_ip: 172.18.0.100
-        tenant_ip: 172.19.0.100
-        fqdn_internal_api: '{{ ansible_fqdn }}'
-    - op: replace
-      path: /spec/nodes/edpm-compute-0/node/ansibleSSHPrivateKeySecret
-      value: ${EDPM_ANSIBLE_SECRET}
     - op: add
       path: /spec/roles/edpm-compute/services/0
       value: repo-setup
+    - op: add
+      path: /spec/roles/edpm-compute/nodeTemplate/networks
+      value:
+        - name: InternalApi
+          subnetName: subnet1
+        - name: Storage
+          subnetName: subnet1
+        - name: Tenant
+          subnetName: subnet1
     - op: replace
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars
       value: |
         service_net_map:
           nova_api_network: internal_api
           nova_libvirt_network: internal_api
-
         # edpm_network_config
         # Default nic config template for a EDPM compute node
         # These vars are edpm_network_config role vars
@@ -118,22 +119,6 @@ patches:
         ctlplane_host_routes:
         - ip_netmask: 0.0.0.0/0
           next_hop: 192.168.122.1
-        external_mtu: 1500
-        external_vlan_id: 44
-        external_cidr: '24'
-        external_host_routes: []
-        internal_api_mtu: 1500
-        internal_api_vlan_id: 20
-        internal_api_cidr: '24'
-        internal_api_host_routes: []
-        storage_mtu: 1500
-        storage_vlan_id: 21
-        storage_cidr: '24'
-        storage_host_routes: []
-        tenant_mtu: 1500
-        tenant_vlan_id: 22
-        tenant_cidr: '24'
-        tenant_host_routes: []
         role_networks:
         - InternalApi
         - Storage
@@ -143,7 +128,6 @@ patches:
           InternalApi: internal_api
           Storage: storage
           Tenant: tenant
-
         # edpm_nodes_validation
         edpm_nodes_validation_validate_controllers_icmp: false
         edpm_nodes_validation_validate_gateway_icmp: false
@@ -179,12 +163,6 @@ patches:
         edpm_sshd_allowed_ranges: ${EDPM_SSHD_ALLOWED_RANGES}
         # SELinux module
         edpm_selinux_mode: enforcing
-        edpm_hosts_entries_undercloud_hosts_entries: []
-        # edpm_hosts_entries role
-        edpm_hosts_entries_extra_hosts_entries: []
-        edpm_hosts_entries_vip_hosts_entries: []
-        hosts_entries: []
-        hosts_entry: []
         plan: overcloud
     - op: replace
       path: /spec/roles/edpm-compute/networkAttachments
@@ -229,10 +207,6 @@ cat <<EOF >>kustomization.yaml
       path: /spec/nodes/edpm-compute-${INDEX}/node/ansibleVars
       value: |
         ctlplane_ip: 192.168.122.$((100+${INDEX}))
-        internal_api_ip: 172.17.0.$((100+${INDEX}))
-        storage_ip: 172.18.0.$((100+${INDEX}))
-        tenant_ip: 172.19.0.$((100+${INDEX}))
-        fqdn_internal_api: '{{ ansible_fqdn }}'
     - op: replace
       path: /spec/nodes/edpm-compute-${INDEX}/node/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
@@ -247,10 +221,6 @@ cat <<EOF >>kustomization.yaml
       path: /spec/nodes/edpm-compute-1/node/ansibleVars
       value: |
         ctlplane_ip: ${EDPM_COMPUTE_1_IP}
-        internal_api_ip: 172.17.0.101
-        storage_ip: 172.18.0.101
-        tenant_ip: 172.19.0.101
-        fqdn_internal_api: '{{ ansible_fqdn }}'
     - op: replace
       path: /spec/nodes/edpm-compute-1/node/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}

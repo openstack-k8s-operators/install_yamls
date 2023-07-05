@@ -76,6 +76,11 @@ DNSMASQ_CR    ?= ${OPERATOR_BASE_DIR}/infra-operator/${DNSMASQ}
 DNSDATA_CR    ?= ${OPERATOR_BASE_DIR}/infra-operator/${DNSDATA}
 DNS_DEPL_IMG  ?= unused
 
+# NetConfig
+NETCONFIG     ?= config/samples/network_v1beta1_netconfig.yaml
+NETCONFIG_CR  ?= ${OPERATOR_BASE_DIR}/infra-operator/${NETCONFIG}
+NETCONFIG_DEPL_IMG  ?= unused
+
 # Memcached
 # MEMCACHED_IMG     ?= (this is unused because this is part of infra operator)
 MEMCACHED           ?= config/samples/memcached_v1beta1_memcached.yaml
@@ -533,7 +538,7 @@ edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_TRANSPORT_URL=$(shell oc get se
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_SB_CONNECTION=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
 edpm_deploy_prep: export EDPM_OVN_DBS=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"[0]')
 edpm_deploy_prep: export EDPM_NADS=$(shell oc get network-attachment-definitions -o json | jq -r "[.items[].metadata.name]")
-edpm_deploy_prep: edpm_deploy_cleanup $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config edpm_register_dns) ## prepares the CR to install the data plane
+edpm_deploy_prep: edpm_deploy_cleanup $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config netconfig_deploy) ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
@@ -606,6 +611,28 @@ dns_deploy: input dns_deploy_prep ## installs the service instance using kustomi
 
 .PHONY: dns_deploy_cleanup
 dns_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,infra))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	rm -Rf ${OPERATOR_BASE_DIR}/infra-operator ${DEPLOY_DIR}
+
+##@ NETCONFIG
+.PHONY: netconfig_deploy_prep
+netconfig_deploy_prep: export KIND=NetConfig
+netconfig_deploy_prep: export IMAGE=${NETCONFIG_DEPL_IMG}
+netconfig_deploy_prep: netconfig_deploy_cleanup ## prepares the CR to install the service based on the service sample file DNSMASQ and DNSDATA
+	$(eval $(call vars,$@,infra))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone -b ${INFRA_BRANCH} ${INFRA_REPO} && popd
+	cp ${NETCONFIG_CR} ${DEPLOY_DIR}
+	bash scripts/gen-service-kustomize.sh
+
+.PHONY: netconfig_deploy
+netconfig_deploy: input netconfig_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set INFRA_REPO and INFRA_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,infra))
+	bash scripts/operator-deploy-resources.sh
+
+.PHONY: netconfig_deploy_cleanup
+netconfig_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,infra))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/infra-operator ${DEPLOY_DIR}
