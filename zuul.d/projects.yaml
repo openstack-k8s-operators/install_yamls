@@ -7,5 +7,5 @@
         - install-yamls-crc-podified-edpm-baremetal: &content_provider
             dependencies:
               - install-yamls-content-provider
-        - install-yamls-crc-podified-deployment: *content_provider
+        - install-yamls-crc-podified-galera-deployment: *content_provider
         - install-yamls-crc-podified-edpm-deployment: *content_provider
