@@ -674,7 +674,7 @@ keystone_deploy_cleanup: namespace ## cleans up the service instance, Does not a
 	$(eval $(call vars,$@,keystone))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/keystone-operator ${DEPLOY_DIR}
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database keystone;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database if exists keystone;" || true
 
 ##@ MARIADB
 mariadb_prep: export IMAGE=${MARIADB_IMG}
@@ -756,7 +756,7 @@ placement_deploy_cleanup: namespace ## cleans up the service instance, Does not 
 	$(eval $(call vars,$@,placement))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/placement-operator ${DEPLOY_DIR}
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database placement;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database if exists placement;" || true
 
 ##@ GLANCE
 .PHONY: glance_prep
@@ -797,7 +797,7 @@ glance_deploy_cleanup: namespace ## cleans up the service instance, Does not aff
 	$(eval $(call vars,$@,glance))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/glance-operator ${DEPLOY_DIR}
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database glance;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database if exists glance;" || true
 
 ##@ OVN
 .PHONY: ovn_prep
@@ -875,7 +875,7 @@ neutron_deploy_cleanup: namespace ## cleans up the service instance, Does not af
 	$(eval $(call vars,$@,neutron))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/neutron-operator ${DEPLOY_DIR}
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database neutron;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database if exists neutron;" || true
 
 ##@ CINDER
 .PHONY: cinder_prep
@@ -918,7 +918,7 @@ cinder_deploy_cleanup: namespace ## cleans up the service instance, Does not aff
 	$(eval $(call vars,$@,cinder))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/cinder-operator ${DEPLOY_DIR}
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database cinder;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database if exists cinder;" || true
 
 ##@ RABBITMQ
 .PHONY: rabbitmq_prep
@@ -998,8 +998,8 @@ ironic_deploy_cleanup: namespace ## cleans up the service instance, Does not aff
 	$(eval $(call vars,$@,ironic))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/ironic-operator ${DEPLOY_DIR}
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database ironic;" || true
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database ironic_inspector;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database if exists ironic;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database if exists ironic_inspector;" || true
 
 ##@ OCTAVIA
 .PHONY: octavia_prep
@@ -1042,7 +1042,7 @@ octavia_deploy_cleanup: namespace ## cleans up the service instance, Does not af
 	$(eval $(call vars,$@,octavia))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/octavia-operator ${DEPLOY_DIR}
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database octavia;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "drop database if exists octavia;" || true
 
 ##@ DESIGNATE
 .PHONY: designate_prep
@@ -1085,7 +1085,7 @@ designate_deploy_cleanup: ## cleans up the service instance, Does not affect the
 	$(eval $(call vars,$@,designate))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/designate-operator ${DEPLOY_DIR}
-	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database designate;" || true
+	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database if exists designate;" || true
 
 ##@ NOVA
 .PHONY: nova_prep
@@ -1660,7 +1660,7 @@ manila_deploy_cleanup: ## cleans up the service instance, Does not affect the op
 	$(eval $(call vars,$@,manila))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/manila-operator ${DEPLOY_DIR}
-	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database manila;" || true
+	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database if exists manila;" || true
 
 ##@ TELEMETRY
 .PHONY: telemetry_prep
