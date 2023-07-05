@@ -4,7 +4,7 @@ The main purpose is to provide scripts to automate installing OpenStack in your 
 
 Aside from generating Yaml and running *oc* commands to apply them to your cluster nothing in this repo should modify the local machine, require sudo, or make any changes to the local machine.
 
-Helper scripts to automate installing CRC and required tools with versions used in openstack-k8s-operators can be found in [CRC/tools deployment](devsetup/README.md). These scripts/playbook required sudo permissions.
+Helper scripts to automate installing CRC and required tools with versions used in openstack-k8s-operators can be found in [devsetup](devsetup/README.md). These scripts/playbook required sudo permissions.
 
 ## Goals
 
