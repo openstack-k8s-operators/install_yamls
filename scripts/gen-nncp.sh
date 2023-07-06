@@ -35,7 +35,10 @@ echo DEPLOY_DIR ${DEPLOY_DIR}
 echo WORKERS ${WORKERS}
 echo INTERFACE ${INTERFACE}
 
-IP_ADRESS_SUFFIX=10
+CTLPLANE_IP_ADDRESS_SUFFIX=10
+# Use different suffix for other networks as the sample netconfig
+# we use starts with .10
+IP_ADDRESS_SUFFIX=5
 for WORKER in ${WORKERS}; do
   cat > ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
 apiVersion: nmstate.io/v1
@@ -50,7 +53,7 @@ spec:
     - description: internalapi vlan interface
       ipv4:
         address:
-        - ip: 172.17.0.${IP_ADRESS_SUFFIX}
+        - ip: 172.17.0.${IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
       ipv6:
@@ -64,7 +67,7 @@ spec:
     - description: storage vlan interface
       ipv4:
         address:
-        - ip: 172.18.0.${IP_ADRESS_SUFFIX}
+        - ip: 172.18.0.${IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
       ipv6:
@@ -78,7 +81,7 @@ spec:
     - description: tenant vlan interface
       ipv4:
         address:
-        - ip: 172.19.0.${IP_ADRESS_SUFFIX}
+        - ip: 172.19.0.${IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
       ipv6:
@@ -92,7 +95,7 @@ spec:
     - description: Configuring ${INTERFACE}
       ipv4:
         address:
-        - ip: 192.168.122.${IP_ADRESS_SUFFIX}
+        - ip: 192.168.122.${CTLPLANE_IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
       ipv6:
@@ -106,5 +109,6 @@ spec:
     node-role.kubernetes.io/worker: ""
 EOF_CAT
 
-    IP_ADRESS_SUFFIX=$((${IP_ADRESS_SUFFIX}+1))
+    IP_ADDRESS_SUFFIX=$((${IP_ADDRESS_SUFFIX}+1))
+    CTLPLANE_IP_ADDRESS_SUFFIX=$((${CTLPLANE_IP_ADDRESS_SUFFIX}+1))
 done
