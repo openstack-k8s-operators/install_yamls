@@ -18,20 +18,28 @@ set -ex
 NAMESPACE=${NAMESPACE:-"openstack"}
 DEPLOY_DIR=${DEPLOY_DIR:-"../out/edpm"}
 NODE_COUNT=${NODE_COUNT:-2}
-NETWORK_IPADDRESS=${BMAAS_NETWORK_IPADDRESS:-172.22.0.3}
-DATAPLANE_CR_URL=${DATAPLANE_CR_URL:-https://raw.githubusercontent.com/openstack-k8s-operators/dataplane-operator/main/config/samples/dataplane_v1beta1_openstackdataplane_baremetal_with_ipam.yaml}
-DATAPLANE_CR_FILE=${DATAPLANE_CR_FILE:-dataplane.yaml}
-NETCONFIG_CR_URL=${NETCONFIG_CR_URL:-https://raw.githubusercontent.com/openstack-k8s-operators/infra-operator/main/config/samples/network_v1beta1_netconfig.yaml}
-NETCONFIG_CR_FILE=${NETCONFIG_CR_FILE:-netconfig.yaml}
-DNSMASQ_CR_URL=${DNSMASQ_CR_URL:-https://raw.githubusercontent.com/openstack-k8s-operators/infra-operator/main/config/samples/network_v1beta1_dnsmasq.yaml}
-DNSMASQ_CR_FILE=${DNSMASQ_CR_FILE:-dnsmasq.yaml}
+NETWORK_IPADDRESS=${BMAAS_NETWORK_IPADDRESS:-192.168.122.1}
 BMH_CR_FILE=${BMH_CR_FILE:-bmh_deploy.yaml}
+OPERATOR_DIR=${OPERATOR_DIR:-../out/operator}
+OPENSTACK_DATAPLANE=${OPENSTACK_DATAPLANE:-config/samples/dataplane_v1beta1_openstackdataplane_baremetal_with_ipam.yaml}
+DATAPLANE_REPO=${DATAPLANE_REPO:-https://github.com/openstack-k8s-operators/dataplane-operator.git}
+DATAPLNE_BRANCH=${DATAPLANE_BRANCH:-main}
+DATAPLANE_CR_FILE=${DATAPLANE_CR_FILE:-dataplane.yaml}
+
+mkdir -p ${OPERATOR_DIR} ${DEPLOY_DIR}
+
+# Add DataPlane CR to the DEPLOY_DIR
+rm -Rf ${OPERATOR_DIR}/dataplane-operator || true
+pushd ${OPERATOR_DIR} && git clone $(if [ ${DATAPLANE_BRANCH} ]; then echo -b ${DATAPLANE_BRANCH}; fi) \
+    ${DATAPLANE_REPO} "dataplane-operator" && popd
+cp  ${OPERATOR_DIR}/dataplane-operator/${OPENSTACK_DATAPLANE} ${DEPLOY_DIR}/${DATAPLANE_CR_FILE}
+
+# Patch netconfig to add default route
+oc patch netconfig -n ${NAMESPACE} netconfig --type json \
+    -p="[{"op": "add", "path": "/spec/networks/0/subnets/0/routes", \
+    "value": [{"destination": "0.0.0.0/0", "nexthop": ${NETWORK_IPADDRESS}}]}]"
 
 pushd ${DEPLOY_DIR}
-
-curl -L -k ${DATAPLANE_CR_URL} -o ${DATAPLANE_CR_FILE}
-curl -L -k ${NETCONFIG_CR_URL} -o ${NETCONFIG_CR_FILE}
-curl -L -k ${DNSMASQ_CR_URL} -o ${DNSMASQ_CR_FILE}
 
 cat <<EOF >>kustomization.yaml
 
@@ -39,46 +47,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - ${DATAPLANE_CR_FILE}
-  - ${NETCONFIG_CR_FILE}
-  - ${DNSMASQ_CR_FILE}
   - ${BMH_CR_FILE}
 namespace: ${NAMESPACE}
 patches:
-- target:
-    kind: DNSMasq
-  patch: |-
-    - op: replace
-      path: /spec/externalEndpoints/0/loadBalancerIPs/0
-      value: 172.22.0.80
-    - op: replace
-      path: /spec/options/0/values/0
-      value: ${NETWORK_IPADDRESS}
-- target:
-    kind: NetConfig
-  patch: |-
-    - op: replace
-      path: /spec/networks/0/subnets/0/cidr
-      value: 172.22.0.0/24
-    - op: replace
-      path: /spec/networks/0/subnets/0/gateway
-      value: ${NETWORK_IPADDRESS}
-    - op: replace
-      path: /spec/networks/0/subnets/0/allocationRanges/0/start
-      value: 172.22.0.100
-    - op: replace
-      path: /spec/networks/0/subnets/0/allocationRanges/0/end
-      value: 172.22.0.130
-    - op: replace
-      path: /spec/networks/0/subnets/0/allocationRanges/1/start
-      value: 172.22.0.150
-    - op: replace
-      path: /spec/networks/0/subnets/0/allocationRanges/1/end
-      value: 172.22.0.200
-    - op: add
-      path: /spec/networks/0/subnets/0/routes
-      value:
-        - destination: 0.0.0.0/0
-          nexthop: ${NETWORK_IPADDRESS}
 - target:
     kind: OpenStackDataPlane
   patch: |-
@@ -154,7 +125,7 @@ fi)
           enable_debug: false
           # edpm firewall, change the allowed CIDR if needed
           edpm_sshd_configure_firewall: true
-          edpm_sshd_allowed_ranges: ['172.22.0.0/24']
+          edpm_sshd_allowed_ranges: ['192.168.122.0/24']
           # SELinux module
           edpm_selinux_mode: enforcing
 
