@@ -18,6 +18,9 @@ set -ex
 openstack tripleo container image prepare default \
     --output-env-file $HOME/containers-prepare-parameters.yaml
 
+# Use the files created in the previous steps including the network_data.yaml file and thw deployed_network.yaml file.
+# The deployed_network.yaml file hard codes the IPs and VIPs configured from the network.sh
+
 export NEUTRON_INTERFACE=eth0
 export CTLPLANE_IP=192.168.122.100
 export CTLPLANE_VIP=192.168.122.99
@@ -26,6 +29,7 @@ export DNS_SERVERS=192.168.122.1
 export GATEWAY=192.168.122.1
 export BRIDGE="br-ctlplane"
 
+# Create standalone_parameters.yaml file and deploy standalone OpenStack using the following commands.
 cat <<EOF > standalone_parameters.yaml
 parameter_defaults:
   CloudName: $CTLPLANE_IP
