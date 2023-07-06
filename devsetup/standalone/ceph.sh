@@ -14,30 +14,45 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 set -ex
+
+# These steps are based on TripleO Standalone to configure Ceph on the Standalone node to simulate an HCI or internal Ceph adoption.
+# Ceph will be configured to use the Storage network (vlan21) and Storage Management network (vlan23).
+# The storage management network, is not configured by default in an NG environment and does not need to be accessed by the NG environment
+# as it is only used by Ceph (AKA the cluster_network) to make OSD replicas and NG will not be deploying Ceph.
+# Post adoption this network will remain isolated and the Ceph cluster may be considered external.
+
+# Assign the IP from vlan21 to a variable representing the Ceph IP
 export CEPH_IP=${CEPH_IP:-"172.18.0.100"}
 
+# Create a block device with logical volumes to be used as an OSD.
 sudo dd if=/dev/zero of=/var/lib/ceph-osd.img bs=1 count=0 seek=7G
 sudo losetup /dev/loop3 /var/lib/ceph-osd.img
 sudo pvcreate /dev/loop3
 sudo vgcreate vg2 /dev/loop3
 sudo lvcreate -n data-lv2 -l +100%FREE vg2
 
+# Create an OSD spec file which references the block device.
 cat <<EOF > $HOME/osd_spec.yaml
 data_devices:
   paths:
     - /dev/vg2/data-lv2
 EOF
 
+# Use the Ceph IP and OSD spec file to create a Ceph spec file which will describe the Ceph cluster in a format cephadm can parse.
 sudo openstack overcloud ceph spec \
     --standalone \
     --mon-ip $CEPH_IP \
     --osd-spec $HOME/osd_spec.yaml \
     --output $HOME/ceph_spec.yaml
 
+# Create the ceph-admin user by passing the Ceph spec created earlier.
 sudo openstack overcloud ceph user enable \
     --standalone \
     $HOME/ceph_spec.yaml
 
+# Though Ceph will be configured to run on a single host via the --single-host-defaults option,
+# this deployment only has a single OSD so it cannot replicate data even on the same host.
+# Create an initial Ceph configuration to disable replication:
 cat <<EOF > $HOME/initial_ceph.conf
 [global]
 osd pool default size = 1
@@ -45,6 +60,8 @@ osd pool default size = 1
 mon_warn_on_pool_no_redundancy = false
 EOF
 
+# Use the files created in the previous steps to install Ceph.
+# Use thw network_data.yaml file so that Ceph uses the isolated networks for storage and storage management.
 sudo openstack overcloud ceph deploy \
     --mon-ip $CEPH_IP \
     --ceph-spec $HOME/ceph_spec.yaml \
@@ -57,3 +74,5 @@ sudo openstack overcloud ceph deploy \
     --network-data /tmp/network_data.yaml \
     --ntp-server $NTP_SERVER \
     --output $HOME/deployed_ceph.yaml
+
+# Ceph should now be installed. Use sudo cephadm shell -- ceph -s to confirm the Ceph cluster health.

@@ -30,6 +30,13 @@ if [[ ! -f $SSH_KEY ]]; then
     exit 1
 fi
 
+# Clock synchronization is important for both Ceph and OpenStack services, so both ceph deploy and tripleo deploy commands will make use of chrony to ensure the clock is properly in sync.
+# We'll use the NTP_SERVER environmental variable to define the NTP server to use.
+# If we are running alls these commands in a system inside the Red Hat network we should use the clock.corp.redhat.com server:
+# export NTP_SERVER=clock.corp.redhat.com
+# And when running it from our own systems outside of the Red Hat network we can use any available server:
+# export NTP_SERVER=pool.ntp.org
+
 if [[ ! -f $CMDS_FILE ]]; then
 cat <<EOF > $CMDS_FILE
 set -ex
