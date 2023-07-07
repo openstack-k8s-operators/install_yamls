@@ -180,7 +180,7 @@ RABBITMQ_REPO       ?= https://github.com/openstack-k8s-operators/rabbitmq-clust
 RABBITMQ_BRANCH     ?= patches
 RABBITMQ            ?= docs/examples/default-security-context/rabbitmq.yaml
 RABBITMQ_CR         ?= ${OPERATOR_BASE_DIR}/rabbitmq-operator/${RABBITMQ}
-# TODO: Image customizations for all RabbitMQ services
+RABBITMQ_DEPL_IMG   ?= unused
 
 # Ironic
 IRONIC_IMG          ?= quay.io/openstack-k8s-operators/ironic-operator-index:latest
@@ -968,23 +968,24 @@ rabbitmq_cleanup: ## deletes the operator, but does not cleanup the service reso
 
 .PHONY: rabbitmq_deploy_prep
 rabbitmq_deploy_prep: export KIND=RabbitmqCluster
+rabbitmq_deploy_prep: export IMAGE=${RABBITMQ_DEPL_IMG}
+rabbitmq_deploy_prep: export IMAGE_PATH=image
 rabbitmq_deploy_prep: rabbitmq_deploy_cleanup ## prepares the CR to install the service based on the service sample file RABBITMQ
 	$(eval $(call vars,$@,rabbitmq))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(RABBITMQ_BRANCH),-b ${RABBITMQ_BRANCH}) ${RABBITMQ_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${RABBITMQ_CR} ${DEPLOY_DIR}
-	#bash scripts/gen-service-kustomize.sh
+	bash scripts/gen-service-kustomize.sh
 
 .PHONY: rabbitmq_deploy
 rabbitmq_deploy: input rabbitmq_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set RABBITMQ_REPO and RABBITMQ_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,rabbitmq))
-	KIND=RabbitmqCluster NAME=rabbitmq bash scripts/gen-name-kustomize.sh
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: rabbitmq_deploy_cleanup
 rabbitmq_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,rabbitmq))
-	if oc get RabbitmqCluster; then oc delete --ignore-not-found=true RabbitmqCluster rabbitmq; fi
+	if oc get RabbitmqCluster; then oc delete --ignore-not-found=true RabbitmqCluster --all; fi
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/rabbitmq-operator ${DEPLOY_DIR}
 
 ##@ IRONIC
