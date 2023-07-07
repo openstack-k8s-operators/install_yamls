@@ -1637,7 +1637,7 @@ metallb: ## installs metallb operator in the metallb-system namespace
 metallb_config: export NAMESPACE=metallb-system
 metallb_config: export CTLPLANE_METALLB_POOL=${METALLB_POOL}
 metallb_config: export INTERFACE=${NNCP_INTERFACE}
-metallb_config: ## creates the IPAddressPools and l2advertisement resources
+metallb_config: metallb_config_cleanup ## creates the IPAddressPools and l2advertisement resources
 	$(eval $(call vars,$@,metallb))
 	bash scripts/gen-olm-metallb.sh
 	oc apply -f ${DEPLOY_DIR}/ipaddresspools.yaml
