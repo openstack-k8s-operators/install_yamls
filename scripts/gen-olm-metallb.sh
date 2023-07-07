@@ -116,12 +116,44 @@ cat > ${DEPLOY_DIR}/l2advertisement.yaml <<EOF_CAT
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
 metadata:
-  name: l2advertisement
+  name: ctlplane
   namespace: metallb-system
 spec:
   ipAddressPools:
   - ctlplane
+  interfaces:
+  - ${INTERFACE}
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: internalapi
+  namespace: metallb-system
+spec:
+  ipAddressPools:
   - internalapi
-  - tenant
+  interfaces:
+  - ${INTERFACE}.20
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: storage
+  namespace: metallb-system
+spec:
+  ipAddressPools:
   - storage
+  interfaces:
+  - ${INTERFACE}.21
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: tenant
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+  - tenant
+  interfaces:
+  - ${INTERFACE}.22
 EOF_CAT
