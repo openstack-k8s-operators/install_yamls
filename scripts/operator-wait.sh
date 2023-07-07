@@ -21,6 +21,7 @@
 set -x
 
 TIMEOUT=${TIMEOUT:-300s}
+SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 if [ -z "${OPERATOR_NAMESPACE}" ]; then
     echo "Please set OPERATOR_NAMESPACE"; exit 1
@@ -30,8 +31,8 @@ if [ -z "$OPERATOR_NAME" ]; then
     echo "Please set OPERATOR_NAME"; exit 1
 fi
 
-# wait for controller-manager deployment to appear
-timeout ${TIMEOUT} bash -c 'until [ "$(oc get deployment -l openstack.org/operator-name=${OPERATOR_NAME} -n ${OPERATOR_NAMESPACE} -o name)" != "" ]; do sleep 1; done'
-
-# wait for controller-manager deployment to reach available state
-oc wait deployment -l openstack.org/operator-name=${OPERATOR_NAME} -n ${OPERATOR_NAMESPACE} --for condition=Available --timeout=${TIMEOUT}
+pushd $SCRIPTPATH
+timeout ${TIMEOUT} bash -c 'until [ "$(bash ./get-operator-status.sh)" == "Succeeded" ]; do sleep 1; done'
+rc=$?
+popd
+exit $rc

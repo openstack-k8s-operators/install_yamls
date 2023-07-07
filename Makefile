@@ -507,6 +507,7 @@ openstack_deploy_prep: openstack_deploy_cleanup ## prepares the CR to install th
 .PHONY: openstack_deploy
 openstack_deploy: input openstack_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,openstack))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: openstack_wait_deploy
@@ -608,6 +609,7 @@ dns_deploy_prep: dns_deploy_cleanup ## prepares the CR to install the service ba
 .PHONY: dns_deploy
 dns_deploy: input dns_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set INFRA_REPO and INFRA_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,infra))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: dns_deploy_cleanup
@@ -630,6 +632,7 @@ netconfig_deploy_prep: netconfig_deploy_cleanup ## prepares the CR to install th
 .PHONY: netconfig_deploy
 netconfig_deploy: input netconfig_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set INFRA_REPO and INFRA_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,infra))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: netconfig_deploy_cleanup
@@ -652,6 +655,7 @@ memcached_deploy_prep: memcached_deploy_cleanup ## prepares the CR to install th
 .PHONY: memcached_deploy
 memcached_deploy: input memcached_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set INFRA_REPO and INFRA_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,infra))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: memcached_deploy_cleanup
@@ -691,6 +695,7 @@ keystone_deploy_prep: keystone_deploy_cleanup ## prepares the CR to install the 
 .PHONY: keystone_deploy
 keystone_deploy: input keystone_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set KEYSTONE_REPO and KEYSTONE_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,keystone))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: keystone_deploy_validate
@@ -734,6 +739,7 @@ mariadb_deploy_prep: mariadb_deploy_cleanup ## prepares the CRs files to install
 .PHONY: mariadb_deploy
 mariadb_deploy: input mariadb_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set MARIADB_REPO and MARIADB_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,mariadb))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: mariadb_deploy_validate
@@ -777,6 +783,7 @@ placement_deploy_prep: placement_deploy_cleanup ## prepares the CR to install th
 .PHONY: placement_deploy
 placement_deploy: input placement_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set PLACEMENT_REPO and PLACEMENT_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,placement))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: placement_deploy_cleanup
@@ -818,6 +825,7 @@ glance_deploy_prep: glance_deploy_cleanup ## prepares the CR to install the serv
 .PHONY: glance_deploy
 glance_deploy: input glance_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set GLANCE_REPO and GLANCE_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,glance))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: glance_deploy_cleanup
@@ -857,6 +865,7 @@ ovn_deploy_prep: ovn_deploy_cleanup ## prepares the CR to install the service ba
 .PHONY: ovn_deploy
 ovn_deploy: ovn_deploy_prep namespace ## installs the service instance using kustomize. Runs prep step in advance. Set OVN_REPO and OVN_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,ovn))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: ovn_deploy_cleanup
@@ -896,6 +905,7 @@ neutron_deploy_prep: neutron_deploy_cleanup ## prepares the CR to install the se
 .PHONY: neutron_deploy
 neutron_deploy: input neutron_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set NEUTRON_REPO and NEUTRON_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,neutron))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: neutron_deploy_cleanup
@@ -935,6 +945,7 @@ cinder_deploy_prep: cinder_deploy_cleanup ## prepares the CR to install the serv
 .PHONY: cinder_deploy
 cinder_deploy: input cinder_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set CINDER_REPO and CINDER_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,cinder))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: cinder_deploy_validate
@@ -980,6 +991,7 @@ rabbitmq_deploy_prep: rabbitmq_deploy_cleanup ## prepares the CR to install the 
 .PHONY: rabbitmq_deploy
 rabbitmq_deploy: input rabbitmq_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set RABBITMQ_REPO and RABBITMQ_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,rabbitmq))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: rabbitmq_deploy_cleanup
@@ -1020,6 +1032,7 @@ ironic_deploy_prep: ironic_deploy_cleanup ## prepares the CR to install the serv
 .PHONY: ironic_deploy
 ironic_deploy: input ironic_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set IRONIC_REPO and IRONIC_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,ironic))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: ironic_deploy_cleanup
@@ -1060,6 +1073,7 @@ octavia_deploy_prep: octavia_deploy_cleanup ## prepares the CR to install the se
 .PHONY: octavia_deploy
 octavia_deploy: input octavia_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set OCTAVIA_REPO and OCTAVIA_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,octavia))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: octavia_deploy_validate
@@ -1103,6 +1117,7 @@ designate_deploy_prep: designate_deploy_cleanup ## prepares the CR to install th
 .PHONY: designate_deploy
 designate_deploy: input designate_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set DESIGNATE_REPO and DESIGNATE_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,designate))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: designate_deploy_validate
@@ -1150,6 +1165,7 @@ nova_deploy_prep: nova_deploy_cleanup ## prepares the CR to install the service 
 .PHONY: nova_deploy
 nova_deploy: input nova_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set NOVA_REPO and NOVA_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,nova))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: nova_deploy_cleanup
@@ -1166,7 +1182,7 @@ mariadb_kuttl_run: ## runs kuttl tests for the mariadb operator, assumes that ev
 	kubectl-kuttl test --config ${MARIADB_KUTTL_CONF} ${MARIADB_KUTTL_DIR}
 
 .PHONY: mariadb_kuttl
-mariadb_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy_prep ## runs kuttl tests for the mariadb operator. Installs mariadb operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+mariadb_kuttl: input deploy_cleanup mariadb mariadb_deploy_prep ## runs kuttl tests for the mariadb operator. Installs mariadb operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,mariadb))
 	make wait
 	make mariadb_kuttl_run
@@ -1174,7 +1190,7 @@ mariadb_kuttl: input openstack_crds deploy_cleanup mariadb mariadb_deploy_prep #
 	make mariadb_cleanup
 
 .PHONY: kuttl_db_prep
-kuttl_db_prep: input openstack_crds deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate infra memcached_deploy ## installs common DB service(MariaDB and Memcached)
+kuttl_db_prep: input deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate infra memcached_deploy ## installs common DB service(MariaDB and Memcached)
 
 .PHONY: kuttl_db_cleanup
 kuttl_db_cleanup: memcached_deploy_cleanup infra_cleanup mariadb_deploy_cleanup mariadb_cleanup input_cleanup
@@ -1265,7 +1281,7 @@ ovn_kuttl_run: ## runs kuttl tests for the ovn operator, assumes that everything
 ovn_kuttl: export NAMESPACE = ${OVN_KUTTL_NAMESPACE}
 # Set the value of $OVN_KUTTL_NAMESPACE if you want to run the ovn
 # kuttl tests in a namespace different than the default (ovn-kuttl-tests)
-ovn_kuttl: input openstack_crds deploy_cleanup ovn_deploy_prep ## runs kuttl tests for the ovn operator. Installs ovn operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+ovn_kuttl: input deploy_cleanup ovn_deploy_prep ## runs kuttl tests for the ovn operator. Installs ovn operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,ovn))
 	make wait
 	make ovn_kuttl_run
@@ -1277,7 +1293,7 @@ infra_kuttl_run: ## runs kuttl tests for the infra operator, assumes that everyt
 	kubectl-kuttl test --config ${INFRA_KUTTL_CONF} ${INFRA_KUTTL_DIR}
 
 .PHONY: infra_kuttl
-infra_kuttl: input openstack_crds deploy_cleanup mariadb keystone rabbitmq mariadb_deploy keystone_deploy rabbitmq_deploy infra ## runs kuttl tests for the infra operator. Installs infra operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+infra_kuttl: input deploy_cleanup mariadb keystone rabbitmq mariadb_deploy keystone_deploy rabbitmq_deploy infra ## runs kuttl tests for the infra operator. Installs infra operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,infra))
 	make wait
 	make infra_kuttl_run
@@ -1338,7 +1354,9 @@ ansibleee_kuttl_prep: ansibleee_kuttl_cleanup
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(ANSIBLEEE_BRANCH),-b ${ANSIBLEEE_BRANCH}) ${ANSIBLEEE_REPO} "${OPERATOR_NAME}-operator" && popd
 
 .PHONY: ansibleee_kuttl
-ansibleee_kuttl: input openstack_crds ansibleee_kuttl_prep ansibleee ## runs kuttl tests for the openstack-ansibleee operator. Installs openstack-ansibleee operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+ansibleee_kuttl: input ansibleee_kuttl_prep ansibleee ## runs kuttl tests for the openstack-ansibleee operator. Installs openstack-ansibleee operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+	$(eval $(call vars,$@,openstack-ansibleee))
+	make wait
 	make ansibleee_kuttl_run
 	make ansibleee_cleanup
 
@@ -1362,7 +1380,7 @@ dataplane_kuttl_prep: dataplane_kuttl_cleanup
 
 .PHONY: dataplane_kuttl
 # dataplane must come before dataplane_kuttl_prep since dataplane creates the CRDs
-dataplane_kuttl: input openstack_crds dataplane ansibleee namespace dataplane_kuttl_prep operator_namespace ## runs kuttl tests for the openstack-dataplane operator. Installs openstack-dataplane operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+dataplane_kuttl: input dataplane ansibleee namespace dataplane_kuttl_prep operator_namespace ## runs kuttl tests for the openstack-dataplane operator. Installs openstack-dataplane operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,dataplane))
 	make wait
 	make dataplane_kuttl_run
@@ -1439,6 +1457,7 @@ horizon_deploy_prep: horizon_deploy_cleanup ## prepares the CR to install the se
 .PHONY: horizon_deploy
 horizon_deploy: input horizon_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set HORIZON_REPO and HORIZON_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,horizon))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: horizon_deploy_cleanup
@@ -1479,6 +1498,7 @@ heat_deploy_prep: heat_deploy_cleanup ## prepares the CR to install the service 
 .PHONY: heat_deploy
 heat_deploy: input heat_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set HEAT_REPO and HEAT_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,heat))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: heat_deploy_cleanup
@@ -1682,6 +1702,7 @@ manila_deploy_prep: manila_deploy_cleanup ## prepares the CR to install the serv
 .PHONY: manila_deploy
 manila_deploy: input manila_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set CINDER_REPO and CINDER_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,manila))
+	make wait
 	# bash scripts/operator-deploy-resources.sh
 
 .PHONY: manila_deploy_cleanup
@@ -1723,6 +1744,7 @@ telemetry_deploy_prep: telemetry_deploy_cleanup ## prepares the CR to install th
 .PHONY: telemetry_deploy
 telemetry_deploy: input telemetry_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set TELEMETRY_REPO and TELEMETRY_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,telemetry))
+	make wait
 	bash scripts/operator-deploy-resources.sh
 
 .PHONY: telemetry_deploy_cleanup
@@ -1765,6 +1787,7 @@ swift_deploy_prep: swift_deploy_cleanup ## prepares the CR to install the servic
 .PHONY: swift_deploy
 swift_deploy: input swift_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set SWIFT_REPO and SWIFT_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,swift))
+	make wait
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 
 .PHONY: swift_deploy_cleanup
