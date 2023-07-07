@@ -120,12 +120,16 @@ MARIADB_ASSERT      ?= ${MARIADB_KUTTL_DIR}/mariadb_deploy/01-assert.yaml
 endif
 
 # Placement
-PLACEMENT_IMG         ?= quay.io/openstack-k8s-operators/placement-operator-index:latest
-PLACEMENT_REPO        ?= https://github.com/openstack-k8s-operators/placement-operator.git
-PLACEMENT_BRANCH      ?= main
-PLACEMENTAPI          ?= config/samples/placement_v1beta1_placementapi.yaml
-PLACEMENTAPI_CR       ?= ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI}
-PLACEMENTAPI_DEPL_IMG ?= unused
+PLACEMENT_IMG             ?= quay.io/openstack-k8s-operators/placement-operator-index:latest
+PLACEMENT_REPO            ?= https://github.com/openstack-k8s-operators/placement-operator.git
+PLACEMENT_BRANCH          ?= main
+PLACEMENTAPI              ?= config/samples/placement_v1beta1_placementapi.yaml
+PLACEMENTAPI_CR           ?= ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI}
+PLACEMENTAPI_DEPL_IMG     ?= unused
+PLACEMENT_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/placement-operator/kuttl-test.yaml
+PLACEMENT_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/placement-operator/tests/kuttl/tests
+PLACEMENT_KUTTL_NAMESPACE ?= placement-kuttl-tests
+PLACEMENT_KUTTL_TIMEOUT   ?= 180
 
 # Sir Glancealot
 GLANCE_IMG          ?= quay.io/openstack-k8s-operators/glance-operator-index:latest
@@ -1216,6 +1220,21 @@ keystone_kuttl: kuttl_db_prep keystone keystone_deploy_prep ## runs kuttl tests 
 	make deploy_cleanup
 	make keystone_cleanup
 	make kuttl_db_cleanup
+	bash scripts/restore-namespace.sh
+
+.PHONY: placement_kuttl_run
+placement_kuttl_run: ## runs kuttl tests for the placement operator, assumes that everything needed for running the test was deployed beforehand.
+	PLACEMENT_KUTTL_DIR=${PLACEMENT_KUTTL_DIR} kubectl-kuttl test --config ${PLACEMENT_KUTTL_CONF} ${PLACEMENT_KUTTL_DIR} --namespace ${NAMESPACE}
+
+.PHONY: placement_kuttl
+placement_kuttl: export NAMESPACE = ${PLACEMENT_KUTTL_NAMESPACE}
+placement_kuttl: kuttl_common_prep placement placement_deploy_prep ## runs kuttl tests for the placement operator. Installs placement operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+	$(eval $(call vars,$@,placement))
+	make wait
+	make placement_kuttl_run
+	make deploy_cleanup
+	make placement_cleanup
+	make kuttl_common_cleanup
 	bash scripts/restore-namespace.sh
 
 .PHONY: cinder_kuttl_run
