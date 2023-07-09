@@ -36,7 +36,7 @@ if [ "$OPERATOR_NAME" = "rabbitmq" ]; then
 fi
 
 pushd $SCRIPTPATH
-timeout ${TIMEOUT} bash -c 'until [ "$(bash ./get-operator-status.sh)" == "Succeeded" ]; do sleep 1; done'
+timeout ${TIMEOUT} bash -c 'until [ "$(bash ./get-operator-status.sh)" == "Succeeded" ]; do sleep 5; done'
 rc=$?
 popd
 exit $rc
