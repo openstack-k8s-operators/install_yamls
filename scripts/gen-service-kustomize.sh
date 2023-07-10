@@ -38,8 +38,6 @@ fi
 IMAGE=${IMAGE:-unused}
 IMAGE_PATH=${IMAGE_PATH:-containerImage}
 
-NAME=${KIND,,}
-
 if [ ! -d ${DEPLOY_DIR} ]; then
     mkdir -p ${DEPLOY_DIR}
 fi
@@ -82,6 +80,14 @@ for (( i=0; i < ${#IMAGES[@]}; i++)); do
 EOF
     fi
 done
+
+if [ -n "$NAME" ]; then
+    cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /metadata/name
+      value: ${NAME}
+EOF
+fi
 
 kustomization_add_resources
 
