@@ -1615,12 +1615,12 @@ nmstate: ## installs nmstate operator in the openshift-nmstate namespace
 	sleep 2
 	bash scripts/gen-olm-nmstate.sh
 	oc apply -f ${OPERATOR_DIR}
-	while ! (oc get pod --no-headers=true -l app=kubernetes-nmstate-operator -n ${NAMESPACE}| grep "nmstate-operator"); do sleep 10; done
+	timeout ${TIMEOUT} bash -c "while ! (oc get pod --no-headers=true -l app=kubernetes-nmstate-operator -n ${NAMESPACE}| grep nmstate-operator); do sleep 10; done"
 	oc wait pod -n ${NAMESPACE} --for condition=Ready -l app=kubernetes-nmstate-operator --timeout=$(TIMEOUT)
 	oc apply -f ${DEPLOY_DIR}
-	while ! (oc get pod --no-headers=true -l component=kubernetes-nmstate-handler -n ${NAMESPACE}| grep "nmstate-handler"); do sleep 10; done
+	timeout ${TIMEOUT} bash -c "while ! (oc get pod --no-headers=true -l component=kubernetes-nmstate-handler -n ${NAMESPACE}| grep nmstate-handler); do sleep 10; done"
 	oc wait pod -n ${NAMESPACE} -l component=kubernetes-nmstate-handler --for condition=Ready --timeout=$(TIMEOUT)
-	while ! (oc get pod --no-headers=true -l component=kubernetes-nmstate-webhook -n ${NAMESPACE}| grep "nmstate-webhook"); do sleep 10; done
+	timeout ${TIMEOUT} bash -c "while ! (oc get pod --no-headers=true -l component=kubernetes-nmstate-webhook -n ${NAMESPACE}| grep nmstate-webhook); do sleep 10; done"
 	oc wait pod -n ${NAMESPACE} -l component=kubernetes-nmstate-webhook --for condition=Ready --timeout=$(TIMEOUT)
 
 .PHONY: nncp
@@ -1666,12 +1666,12 @@ metallb: ## installs metallb operator in the metallb-system namespace
 	sleep 2
 	bash scripts/gen-olm-metallb.sh
 	oc apply -f ${OPERATOR_DIR}
-	while ! (oc get pod --no-headers=true -l control-plane=controller-manager -n ${NAMESPACE}| grep "metallb-operator-controller"); do sleep 10; done
+	timeout ${TIMEOUT} bash -c "while ! (oc get pod --no-headers=true -l control-plane=controller-manager -n ${NAMESPACE}| grep metallb-operator-controller); do sleep 10; done"
 	oc wait pod -n ${NAMESPACE} --for condition=Ready -l control-plane=controller-manager --timeout=$(TIMEOUT)
-	while ! (oc get pod --no-headers=true -l component=webhook-server -n ${NAMESPACE}| grep "metallb-operator-webhook"); do sleep 10; done
+	timeout ${TIMEOUT} bash -c "while ! (oc get pod --no-headers=true -l component=webhook-server -n ${NAMESPACE}| grep metallb-operator-webhook); do sleep 10; done"
 	oc wait pod -n ${NAMESPACE} --for condition=Ready -l component=webhook-server --timeout=$(TIMEOUT)
 	oc apply -f ${DEPLOY_DIR}/deploy_operator.yaml
-	while ! (oc get pod --no-headers=true -l component=speaker -n ${NAMESPACE} | grep "speaker"); do sleep 10; done
+	timeout ${TIMEOUT} bash -c "while ! (oc get pod --no-headers=true -l component=speaker -n ${NAMESPACE} | grep speaker); do sleep 10; done"
 	oc wait pod -n ${NAMESPACE} -l component=speaker --for condition=Ready --timeout=$(TIMEOUT)
 
 .PHONY: metallb_config
