@@ -320,8 +320,8 @@ SG_CORE_DEPL_IMG                 ?= unused
 BMO_REPO                         ?= https://github.com/metal3-io/baremetal-operator
 BMO_BRANCH                       ?= main
 CERTMANAGER_URL                  ?= https://github.com/jetstack/cert-manager/releases/download/v1.5.4/cert-manager.yaml
-PROVISIONING_INTERFACE           ?= enp2s0
-BMO_IRONIC_HOST                  ?= 172.22.0.2
+BMO_PROVISIONING_INTERFACE       ?= enp6s0
+BMO_IRONIC_HOST                  ?= 192.168.122.10
 
 # Swift
 SWIFT_IMG        ?= quay.io/openstack-k8s-operators/swift-operator-index:latest
@@ -452,10 +452,11 @@ crc_bmo_setup:
 	timeout ${TIMEOUT} bash -c 'until [ "$$(oc get pod -l app=webhook -n cert-manager -o name)" != "" ]; do sleep 1; done'
 	oc wait pod -n cert-manager --for condition=Ready -l app=webhook --timeout=$(TIMEOUT)
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(BMO_BRANCH),-b ${BMO_BRANCH}) ${BMO_REPO} "baremetal-operator" && popd
-	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/eth2/${PROVISIONING_INTERFACE}/g' ironic-deployment/default/ironic_bmo_configmap.env && popd
-	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/eth2/${PROVISIONING_INTERFACE}/g' config/default/ironic.env
-	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/ENDPOINT\=http/ENDPOINT\=https/g' ironic-deployment/default/ironic_bmo_configmap.env && popd
-	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/ENDPOINT\=http/ENDPOINT\=https/g' config/default/ironic.env
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/eth2/${BMO_PROVISIONING_INTERFACE}/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/ENDPOINT\=http/ENDPOINT\=https/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0.2\:/192.168.122.10\:/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0.1\:/192.168.122.11\:/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0./192.168.122./g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && make generate manifests && bash tools/deploy.sh -bitm && popd
 	## Hack to add required scc
 	oc adm policy add-scc-to-user privileged system:serviceaccount:baremetal-operator-system:baremetal-operator-controller-manager
@@ -476,8 +477,8 @@ endif
 ##@ OPENSTACK
 .PHONY: openstack_prep
 openstack_prep: export IMAGE=${OPENSTACK_IMG}
-openstack_prep: $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config) ## creates the files to install the operator using olm
-openstack_prep: $(if $(findstring true,$(BMO_SETUP)), crc_bmo_setup) ## Setup BMO
+openstack_prep: $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config)
+openstack_prep: $(if $(findstring true,$(BMO_SETUP)), crc_bmo_setup) ## creates the files to install the operator using olm
 	$(eval $(call vars,$@,openstack))
 	bash scripts/gen-olm.sh
 
