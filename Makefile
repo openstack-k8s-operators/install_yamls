@@ -979,6 +979,7 @@ rabbitmq_cleanup: ## deletes the operator, but does not cleanup the service reso
 
 .PHONY: rabbitmq_deploy_prep
 rabbitmq_deploy_prep: export KIND=RabbitmqCluster
+rabbitmq_deploy_prep: export NAME=rabbitmq
 rabbitmq_deploy_prep: export IMAGE=${RABBITMQ_DEPL_IMG}
 rabbitmq_deploy_prep: export IMAGE_PATH=image
 rabbitmq_deploy_prep: rabbitmq_deploy_cleanup ## prepares the CR to install the service based on the service sample file RABBITMQ
