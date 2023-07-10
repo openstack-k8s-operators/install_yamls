@@ -22,6 +22,13 @@ BMAAS_REDFISH_PASSWORD ?= password
 BMAAS_SUSHY_EMULATOR_NAMESPACE ?= sushy-emulator
 BMAAS_LIBVIRT_USER ?= sushyemu
 
+
+BM_PROVISIONING_INTERFACE  ?=enp6s0
+BM_NETWORK_NAME            ?=default
+BM_NETWORK_IPADDRESS       ?=192.168.122.1
+BM_INSTANCE_NAME_PREFIX    ?=edpm-compute
+BM_NODE_COUNT              ?=1
+
 CLEANUP_DIR_CMD ?= rm -Rf
 
 define vars
@@ -82,55 +89,35 @@ crc_attach_default_interface_cleanup: ## Detach default libvirt network from CRC
 
 ##@ EDPM
 
-.PHONY: edpm_compute_baremetal
-edpm_compute_baremetal: export PROVISIONING_INTERFACE=${BMAAS_NETWORK_NAME}
-edpm_compute_baremetal: export NNCP_INTERFACE=${BMAAS_NETWORK_NAME}
-edpm_compute_baremetal: export BMAAS_NETWORK_IPADDRESS=172.22.0.3
-edpm_compute_baremetal: export BMAAS_BRIDGE_IPADDRESS=172.22.0.2
-edpm_compute_baremetal: export OPERATOR_NAME=openstack
-edpm_compute_baremetal: export NODE_COUNT=${BMAAS_NODE_COUNT}
-edpm_compute_baremetal: export CTLPLANE_METALLB_POOL=172.22.0.80-172.22.0.90
-edpm_compute_baremetal: ## Deploy controlplane and dataplane with BMAAS
-	$(eval $(call vars))
-	make bmaas
-	pushd .. && NETWORK_ISOLATION=false make metallb metallb_config openstack wait openstack_deploy && popd
-	scripts/gen-ansibleee-ssh-key.sh
-	scripts/edpm-compute-bmaas.sh
-
-.PHONY: edpm_compute_baremetal_cleanup
-edpm_compute_baremetal_cleanup:  ## Cleanup dataplane with BMAAS and controlplane
-	$(eval $(call vars))
-	oc delete openstackdataplane/openstack-edpm --ignore-not-found=true || true
-	oc delete openstackdataplaneservice --all --ignore-not-found=true || true
-	while oc get bmh | grep -q -e "deprovisioning" -e "provisioned"; do sleep 5; done || true
-	oc delete --all bmh --ignore-not-found=true || true
-	oc delete openstackprovisionserver/openstackprovisionserver --ignore-not-found=true || true
-	pushd .. && make openstack_deploy_cleanup openstack_cleanup || true && popd
-	pushd .. && rm -Rf out/edpm || true && popd
-	make bmaas_cleanup || true
-
 .PHONY: edpm_baremetal
-edpm_baremetal: export PROVISIONING_INTERFACE=${BMAAS_NETWORK_NAME}
-edpm_baremetal: export BMAAS_NETWORK_IPADDRESS=172.22.0.3
-edpm_baremetal: export BMAAS_BRIDGE_IPADDRESS=172.22.0.2
+edpm_baremetal: export PROVISIONING_INTERFACE=${BM_PROVISIONING_INTERFACE}
 edpm_baremetal: export OPERATOR_NAME=openstack
-edpm_baremetal: export NODE_COUNT=${BMAAS_NODE_COUNT}
+edpm_baremetal: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
+edpm_baremetal: export BMAAS_NETWORK_IPADDRESS=${BM_NETWORK_IPADDRESS}
+edpm_baremetal: export BMAAS_INSTANCE_NAME_PREFIX=${BM_INSTANCE_NAME_PREFIX}
+edpm_baremetal: export NODE_COUNT=${BM_NODE_COUNT}
 edpm_baremetal: ## Deploy only dataplane with BMAAS
 	$(eval $(call vars))
-	make bmaas
+	make bmaas_virtual_bms
+	make bmaas_sushy_emulator
+	pushd .. && make netconfig_deploy && popd
 	scripts/gen-ansibleee-ssh-key.sh
 	scripts/edpm-compute-bmaas.sh
 
 .PHONY: edpm_baremetal_cleanup
+edpm_baremetal_cleanup: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
+edpm_baremetal_cleanup: export BMAAS_INSTANCE_NAME_PREFIX=${BM_INSTANCE_NAME_PREFIX}
 edpm_baremetal_cleanup:  ## Cleanup dataplane with BMAAS
 	$(eval $(call vars))
 	oc delete openstackdataplane/openstack-edpm --ignore-not-found=true || true
 	oc delete openstackdataplaneservice --all --ignore-not-found=true || true
+	pushd .. && make netconfig_deploy_cleanup && popd
 	while oc get bmh | grep -q -e "deprovisioning" -e "provisioned"; do sleep 5; done || true
 	oc delete --all bmh --ignore-not-found=true || true
 	oc delete openstackprovisionserver/openstackprovisionserver --ignore-not-found=true || true
 	pushd .. && rm -Rf out/edpm || true && popd
-	make bmaas_cleanup || true
+	make bmaas_sushy_emulator_cleanup || true
+	make bmaas_virtual_bms_cleanup || true
 
 .PHONY: edpm_compute
 edpm_compute: ## Create EDPM compute VM
@@ -251,7 +238,7 @@ bmaas_virtual_bms: ## Create libvirt VM for BMaaS
 .PHONY: bmaas_virtual_bms_cleanup
 bmaas_virtual_bms_cleanup: export NODE_COUNT = ${BMAAS_NODE_COUNT}
 bmaas_virtual_bms_cleanup: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
-bmaas_virtual_bms_cleanup: export NODE_NAME_PREFIX = ${BMAAS_NODE_NAME_PREFIX}
+bmaas_virtual_bms_cleanup: export NODE_NAME_PREFIX = ${BMAAS_INSTANCE_NAME_PREFIX}
 bmaas_virtual_bms_cleanup: export MEMORY = ${BMAAS_INSTANCE_MEMORY}
 bmaas_virtual_bms_cleanup: export VCPUS = ${BMAAS_INSTANCE_VCPUS}
 bmaas_virtual_bms_cleanup: export DISK_SIZE = ${BMAAS_INSTANCE_DISK_SIZE}
@@ -262,7 +249,7 @@ bmaas_virtual_bms_cleanup: ## Cleanup libvirt VM for BMaaS
 	scripts/bmaas/vbm-setup.sh --cleanup
 
 .PHONY: bmaas_sushy_emulator
-bmaas_sushy_emulator: export NODE_NAME_PREFIX = ${BMAAS_NODE_NAME_PREFIX}
+bmaas_sushy_emulator: export NODE_NAME_PREFIX = ${BMAAS_INSTANCE_NAME_PREFIX}
 bmaas_sushy_emulator: export LIBVIRT_USER = ${BMAAS_LIBVIRT_USER}
 bmaas_sushy_emulator: export SUSHY_EMULATOR_NAMESPACE = ${BMAAS_SUSHY_EMULATOR_NAMESPACE}
 bmaas_sushy_emulator: export REDFISH_USERNAME = ${BMAAS_REDFISH_USERNAME}
@@ -271,7 +258,7 @@ bmaas_sushy_emulator: ## Create BMaaS sushy-emulator (Virtual RedFish)
 	scripts/bmaas/sushy-emulator.sh --create
 
 .PHONY: bmaas_sushy_emulator_cleanup
-bmaas_sushy_emulator_cleanup: export NODE_NAME_PREFIX = ${BMAAS_NODE_NAME_PREFIX}
+bmaas_sushy_emulator_cleanup: export NODE_NAME_PREFIX = ${BMAAS_INSTANCE_NAME_PREFIX}
 bmaas_sushy_emulator_cleanup: export LIBVIRT_USER = ${BMAAS_LIBVIRT_USER}
 bmaas_sushy_emulator_cleanup: export SUSHY_EMULATOR_NAMESPACE = ${BMAAS_SUSHY_EMULATOR_NAMESPACE}
 bmaas_sushy_emulator_cleanup: export REDFISH_USERNAME = ${BMAAS_REDFISH_USERNAME}
@@ -280,7 +267,7 @@ bmaas_sushy_emulator_cleanup: ## Cleanup BMaaS sushy-emulator (Virtual RedFish)
 	scripts/bmaas/sushy-emulator.sh --cleanup
 
 .PHONY: bmaas_generate_nodes_yaml
-bmaas_generate_nodes_yaml: export NODE_NAME_PREFIX = ${BMAAS_NODE_NAME_PREFIX}
+bmaas_generate_nodes_yaml: export NODE_NAME_PREFIX = ${BMAAS_INSTANCE_NAME_PREFIX}
 bmaas_generate_nodes_yaml: export REDFISH_USERNAME = ${BMAAS_REDFISH_USERNAME}
 bmaas_generate_nodes_yaml: export REDFISH_PASSWORD = ${BMAAS_REDFISH_PASSWORD}
 bmaas_generate_nodes_yaml: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}

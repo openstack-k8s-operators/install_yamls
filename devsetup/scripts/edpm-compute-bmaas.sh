@@ -19,8 +19,8 @@ export DEPLOY_DIR=${DEPLOY_DIR:-"../out/edpm"}
 
 OPERATOR_DIR=${OPERATOR_DIR:-../out/operator}
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-NODE_NAME_PREFIX=${NODE_NAME_PREFIX:-"crc-bmaas"}
-NETWORK_NAME=${NETWORK_NAME:-"crc-bmaas"}
+NODE_NAME_PREFIX=${BMAAS_INSTANCE_NAME_PREFIX=:-"edpm-compute"}
+NETWORK_NAME=${BMAAS_NETWORK_NAME:-"default"}
 BMH_CR_FILE=${BMH_CR_FILE:-bmh_deploy.yaml}
 
 mkdir -p ${DEPLOY_DIR}
@@ -51,7 +51,7 @@ data:
 apiVersion: metal3.io/v1alpha1
 kind: BareMetalHost
 metadata:
-  name: crc-bmaas-${i}
+  name: edpm-compute-${i}
   annotations:
     inspect.metal3.io: disabled
   labels:

@@ -56,6 +56,7 @@ spec:
         - ip: 172.17.0.${IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
+        dhcp: false
       ipv6:
         enabled: false
       name: ${INTERFACE}.20
@@ -70,6 +71,7 @@ spec:
         - ip: 172.18.0.${IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
+        dhcp: false
       ipv6:
         enabled: false
       name: ${INTERFACE}.21
@@ -84,6 +86,7 @@ spec:
         - ip: 172.19.0.${IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
+        dhcp: false
       ipv6:
         enabled: false
       name: ${INTERFACE}.22
@@ -98,6 +101,7 @@ spec:
         - ip: 192.168.122.${CTLPLANE_IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
+        dhcp: false
       ipv6:
         enabled: false
       mtu: 1500
