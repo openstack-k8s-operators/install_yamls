@@ -55,6 +55,10 @@ if [ -z "$EDPM_NADS" ]; then
     echo "Please set EDPM_NADS"; exit 1
 fi
 
+if [ -z "${INTERFACE_MTU}" ]; then
+    echo "Please set INTERFACE_MTU"; exit 1
+fi
+
 NAME=${KIND,,}
 
 if [ ! -d ${DEPLOY_DIR} ]; then
@@ -113,7 +117,7 @@ patches:
         # considered EDPM network defaults.
         neutron_physical_bridge_name: br-ex
         neutron_public_interface_name: eth0
-        ctlplane_mtu: 1500
+        ctlplane_mtu: ${INTERFACE_MTU}
         ctlplane_subnet_cidr: 24
         ctlplane_gateway_ip: 192.168.122.1
         ctlplane_host_routes:

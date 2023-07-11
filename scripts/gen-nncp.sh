@@ -31,9 +31,14 @@ if [ -z "${INTERFACE}" ]; then
     echo "Please set INTERFACE"; exit 1
 fi
 
+if [ -z "${INTERFACE_MTU}" ]; then
+    echo "Please set INTERFACE_MTU"; exit 1
+fi
+
 echo DEPLOY_DIR ${DEPLOY_DIR}
 echo WORKERS ${WORKERS}
 echo INTERFACE ${INTERFACE}
+echo INTERFACE_MTU ${INTERFACE_MTU}
 
 CTLPLANE_IP_ADDRESS_SUFFIX=10
 # Use different suffix for other networks as the sample netconfig
@@ -104,7 +109,7 @@ spec:
         dhcp: false
       ipv6:
         enabled: false
-      mtu: 1500
+      mtu: ${INTERFACE_MTU}
       name: ${INTERFACE}
       state: up
       type: ethernet
