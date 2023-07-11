@@ -233,14 +233,15 @@ NOVA_CR             ?= ${OPERATOR_BASE_DIR}/nova-operator/${NOVA}
 # TODO: Image customizations for all Nova services
 
 # Horizon
-HORIZON_IMG         ?= quay.io/openstack-k8s-operators/horizon-operator-index:latest
-HORIZON_REPO        ?= https://github.com/openstack-k8s-operators/horizon-operator.git
-HORIZON_BRANCH      ?= main
-HORIZON             ?= config/samples/horizon_v1beta1_horizon.yaml
-HORIZON_CR          ?= ${OPERATOR_BASE_DIR}/horizon-operator/${HORIZON}
-HORIZON_DEPL_IMG    ?= unused
-HORIZON_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/horizon-operator/kuttl-test.yaml
-HORIZON_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/horizon-operator/tests/kuttl/tests
+HORIZON_IMG             ?= quay.io/openstack-k8s-operators/horizon-operator-index:latest
+HORIZON_REPO            ?= https://github.com/openstack-k8s-operators/horizon-operator.git
+HORIZON_BRANCH          ?= main
+HORIZON                 ?= config/samples/horizon_v1beta1_horizon.yaml
+HORIZON_CR              ?= ${OPERATOR_BASE_DIR}/horizon-operator/${HORIZON}
+HORIZON_DEPL_IMG        ?= unused
+HORIZON_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/horizon-operator/kuttl-test.yaml
+HORIZON_KUTTL_NAMESPACE ?= horizon-kuttl-tests
+HORIZON_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/horizon-operator/tests/kuttl/tests
 
 # Heat
 HEAT_IMG             ?= quay.io/openstack-k8s-operators/heat-operator-index:latest
@@ -1423,9 +1424,10 @@ glance_kuttl: kuttl_common_prep glance glance_deploy_prep ## runs kuttl tests fo
 
 .PHONY: horizon_kuttl_run
 horizon_kuttl_run: ## runs kuttl tests for the horizon operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${HORIZON_KUTTL_CONF} ${HORIZON_KUTTL_DIR}
+	kubectl-kuttl test --config ${HORIZON_KUTTL_CONF} ${HORIZON_KUTTL_DIR} --config ${HORIZON_KUTTL_CONF} --namespace ${NAMESPACE}
 
 .PHONY: horizon_kuttl
+horizon_kuttl: export NAMESPACE = ${HORIZON_KUTTL_NAMESPACE}
 horizon_kuttl: kuttl_common_prep horizon horizon_deploy_prep ## runs kuttl tests for the horizon operator. Installs horizon operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,horizon))
 	make wait
