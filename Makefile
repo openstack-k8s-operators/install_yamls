@@ -1384,12 +1384,12 @@ ansibleee_kuttl: input ansibleee_kuttl_prep ansibleee ## runs kuttl tests for th
 	make ansibleee_cleanup
 
 .PHONY: dataplane_kuttl_run
-dataplane_kuttl_run: ## runs kuttl tests for the openstack-dataplane operator, assumes that everything needed for running the test was deployed beforehand.
+dataplane_kuttl_run: ## runs kuttl tests for the dataplane operator, assumes that everything needed for running the test was deployed beforehand.
 	kubectl-kuttl test --config ${DATAPLANE_KUTTL_CONF} ${DATAPLANE_KUTTL_DIR}
 
 .PHONY: dataplane_kuttl_cleanup
 dataplane_kuttl_cleanup:
-	$(eval $(call vars,$@,openstack-dataplane))
+	$(eval $(call vars,$@,dataplane))
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/dataplane-operator
 
 .PHONY: dataplane_kuttl_prep
@@ -1402,7 +1402,15 @@ dataplane_kuttl_prep: dataplane_kuttl_cleanup
 
 .PHONY: dataplane_kuttl
 # dataplane must come before dataplane_kuttl_prep since dataplane creates the CRDs
-dataplane_kuttl: input dataplane ansibleee namespace dataplane_kuttl_prep operator_namespace ## runs kuttl tests for the openstack-dataplane operator. Installs openstack-dataplane operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+dataplane_kuttl: input ansibleee infra nova dataplane namespace dataplane_kuttl_prep operator_namespace ## runs kuttl tests for the openstack-dataplane operator. Installs openstack-dataplane operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+	$(eval $(call vars,$@,ansibleee))
+	make wait
+	$(eval $(call vars,$@,infra))
+	make wait
+	$(eval $(call vars,$@,openstack-baremetal))
+	make wait
+	$(eval $(call vars,$@,nova))
+	make wait
 	$(eval $(call vars,$@,dataplane))
 	make wait
 	make dataplane_kuttl_run
