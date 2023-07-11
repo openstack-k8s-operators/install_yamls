@@ -4,6 +4,7 @@ PULL_SECRET  ?= ${PWD}/pull-secret.txt
 CRC_DEFAULT_NETWORK_IP ?= 192.168.122.10
 EDPM_COMPUTE_SUFFIX ?= 0
 EDPM_TOTAL_NODES ?= 1
+NETWORK_MTU	?= 1500
 
 BMAAS_INSTANCE_NAME_PREFIX ?= crc-bmaas
 BMAAS_INSTANCE_MEMORY ?= 4096
@@ -156,6 +157,7 @@ edpm_deploy_instance: ## Spin a instance on edpm node
 standalone: export EDPM_COMPUTE_VCPUS=8
 standalone: export EDPM_COMPUTE_RAM=20
 standalone: export EDPM_COMPUTE_DISK_SIZE=70
+standalone: export INTERFACE_MTU=${NETWORK_MTU}
 standalone: edpm_compute ## Create standalone VM
 	$(eval $(call vars))
 	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX}
@@ -206,6 +208,7 @@ bmaas_crc_attach_network_cleanup: ## Detach BMaaS network from CRC
 
 .PHONY: bmaas_crc_baremetal_bridge
 bmaas_crc_baremetal_bridge: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
+bmaas_crc_baremetal_bridge: export INTERFACE_MTU = ${NETWORK_MTU}
 bmaas_crc_baremetal_bridge:
 	scripts/bmaas/baremetal-bridge.sh --create
 

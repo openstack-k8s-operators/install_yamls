@@ -53,7 +53,7 @@ parameter_defaults:
   NeutronPhysicalBridge: $BRIDGE
   StandaloneEnableRoutedNetworks: false
   StandaloneHomeDir: $HOME
-  InterfaceLocalMtu: 1500
+  InterfaceLocalMtu: ${INTERFACE_MTU}
   # Needed if running in a VM
   NovaComputeLibvirtType: qemu
   ValidateGatewaysIcmp: false

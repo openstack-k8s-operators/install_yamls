@@ -27,6 +27,7 @@ STORAGE_CLASS       ?= "local-storage"
 
 # network isolation
 NETWORK_ISOLATION   ?= true
+NETWORK_MTU         ?= 1500
 
 # options to pass in all targets that use git clone
 GIT_CLONE_OPTS      ?=
@@ -98,7 +99,7 @@ KEYSTONEAPI_DEPL_IMG     ?= unused
 KEYSTONE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.yaml
 KEYSTONE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
 KEYSTONE_KUTTL_NAMESPACE ?= keystone-kuttl-tests
-KEYSTONE_KUTTL_TIMEOUT 	 ?= 180
+KEYSTONE_KUTTL_TIMEOUT   ?= 180
 
 # Mariadb
 MARIADB_IMG         ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
@@ -548,6 +549,7 @@ edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_TRANSPORT_URL=$(shell oc get se
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_SB_CONNECTION=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
 edpm_deploy_prep: export EDPM_OVN_DBS=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"[0]')
 edpm_deploy_prep: export EDPM_NADS=$(shell oc get network-attachment-definitions -o json | jq -r "[.items[].metadata.name]")
+edpm_deploy_prep: export INTERFACE_MTU=${NETWORK_MTU}
 edpm_deploy_prep: edpm_deploy_cleanup $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config netconfig_deploy) ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -1640,6 +1642,7 @@ nmstate: ## installs nmstate operator in the openshift-nmstate namespace
 
 .PHONY: nncp
 nncp: export INTERFACE=${NNCP_INTERFACE}
+nncp: export INTERFACE_MTU=${NETWORK_MTU}
 nncp: ## installs the nncp resources to configure the interface connected to the edpm node, right now only single nic vlan. Interface referenced via NNCP_INTERFACE
 	$(eval $(call vars,$@,nncp))
 	WORKERS='$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}")' \
