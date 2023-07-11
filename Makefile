@@ -62,11 +62,12 @@ OPENSTACK_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/openstack-operator/tests/kuttl
 OPENSTACK_KUTTL_NAMESPACE ?= openstack-kuttl-tests
 
 # Infra Operator
-INFRA_IMG           ?= quay.io/openstack-k8s-operators/infra-operator-index:latest
-INFRA_REPO          ?= https://github.com/openstack-k8s-operators/infra-operator.git
-INFRA_BRANCH        ?= main
-INFRA_KUTTL_CONF    ?= ${OPERATOR_BASE_DIR}/infra-operator/kuttl-test.yaml
-INFRA_KUTTL_DIR     ?= ${OPERATOR_BASE_DIR}/infra-operator/tests/kuttl/tests
+INFRA_IMG             ?= quay.io/openstack-k8s-operators/infra-operator-index:latest
+INFRA_REPO            ?= https://github.com/openstack-k8s-operators/infra-operator.git
+INFRA_BRANCH          ?= main
+INFRA_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/infra-operator/kuttl-test.yaml
+INFRA_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/infra-operator/tests/kuttl/tests
+INFRA_KUTTL_NAMESPACE ?= infra-kuttl-tests
 
 # DNS
 # DNS_IMG     ?= (this is unused because this is part of infra operator)
@@ -1313,10 +1314,13 @@ ovn_kuttl: input deploy_cleanup ovn ovn_deploy_prep ## runs kuttl tests for the 
 
 .PHONY: infra_kuttl_run
 infra_kuttl_run: ## runs kuttl tests for the infra operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${INFRA_KUTTL_CONF} ${INFRA_KUTTL_DIR}
+	kubectl-kuttl test --config ${INFRA_KUTTL_CONF} ${INFRA_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: infra_kuttl
-infra_kuttl: input deploy_cleanup mariadb keystone rabbitmq mariadb_deploy keystone_deploy rabbitmq_deploy infra ## runs kuttl tests for the infra operator. Installs infra operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+infra_kuttl: export NAMESPACE = ${INFRA_KUTTL_NAMESPACE}
+# Set the value of $INFRA_KUTTL_NAMESPACE if you want to run the infra
+# kuttl tests in a namespace different than the default (infra-kuttl-tests)
+infra_kuttl: input deploy_cleanup mariadb keystone rabbitmq mariadb_deploy keystone_deploy rabbitmq_deploy infra memcached_deploy_prep ## runs kuttl tests for the infra operator. Installs infra operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,infra))
 	make wait
 	make infra_kuttl_run
