@@ -19,13 +19,15 @@
       - OWNERS
       - .*/*.md
 
-# Job to deploy podified control plane with network isolation
+# Job to deploy podified control plane with network isolation and 3 galera replicas
 - job:
-    name: install-yamls-crc-podified-deployment
+    name: install-yamls-crc-podified-galera-deployment
     parent: cifmw-crc-podified-edpm-deployment
     vars:
       deploy_edpm: false
       podified_validation: true
+      make_openstack_deploy_params:
+        GALERA_REPLICAS: 3
     irrelevant-files: *openstack_if
 
 # Job for edpm deployment
