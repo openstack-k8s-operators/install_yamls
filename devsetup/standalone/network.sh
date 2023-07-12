@@ -31,7 +31,7 @@ cat << EOF | sudo tee /etc/os-net-config/config.yaml
 network_config:
 - type: ovs_bridge
   name: br-ctlplane
-  mtu: 1500
+  mtu: ${INTERFACE_MTU}
   use_dhcp: false
   dns_servers:
   - $GATEWAY
@@ -44,13 +44,13 @@ network_config:
   members:
   - type: interface
     name: nic1
-    mtu: 1500
+    mtu: ${INTERFACE_MTU}
     # force the MAC address of the bridge to this interface
     primary: true
 
   # external
   - type: vlan
-    mtu: 1500
+    mtu: ${INTERFACE_MTU}
     vlan_id: 44
     addresses:
     - ip_netmask: $EXTERNAL_IP/24
@@ -58,7 +58,7 @@ network_config:
 
   # internal
   - type: vlan
-    mtu: 1500
+    mtu: ${INTERFACE_MTU}
     vlan_id: 20
     addresses:
     - ip_netmask: $INTERNAL_IP/24
@@ -66,7 +66,7 @@ network_config:
 
   # storage
   - type: vlan
-    mtu: 1500
+    mtu: ${INTERFACE_MTU}
     vlan_id: 21
     addresses:
     - ip_netmask: $STORAGE_IP/24
@@ -74,7 +74,7 @@ network_config:
 
   # storage_mgmt
   - type: vlan
-    mtu: 1500
+    mtu: ${INTERFACE_MTU}
     vlan_id: 23
     addresses:
     - ip_netmask: $STORAGE_MGMT_IP/24
@@ -82,7 +82,7 @@ network_config:
 
   # tenant
   - type: vlan
-    mtu: 1500
+    mtu: ${INTERFACE_MTU}
     vlan_id: 22
     addresses:
     - ip_netmask: $TENANT_IP/24
