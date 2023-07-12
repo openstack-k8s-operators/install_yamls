@@ -280,6 +280,7 @@ DATAPLANE_BRANCH                                 ?= main
 OPENSTACK_DATAPLANE                              ?= config/samples/dataplane_v1beta1_openstackdataplane.yaml
 DATAPLANE_CR                                     ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANE}
 DATAPLANE_ANSIBLE_SECRET                         ?=dataplane-ansible-ssh-private-key-secret
+DATAPLANE_ANSIBLE_USER                           ?=
 DATAPLANE_COMPUTE_IP                             ?=192.168.122.100
 DATAPLANE_COMPUTE_1_IP                           ?=192.168.122.101
 DATAPLANE_TOTAL_NODES                            ?=2
@@ -533,6 +534,7 @@ openstack_deploy_cleanup: namespace ## cleans up the service instance, Does not 
 .PHONY: edpm_deploy_prep
 edpm_deploy_prep: export KIND=OpenStackDataPlane
 edpm_deploy_prep: export EDPM_ANSIBLE_SECRET=${DATAPLANE_ANSIBLE_SECRET}
+edpm_deploy_prep: export EDPM_ANSIBLE_USER=${DATAPLANE_ANSIBLE_USER}
 edpm_deploy_prep: export EDPM_SINGLE_NODE=${DATAPLANE_SINGLE_NODE}
 edpm_deploy_prep: export EDPM_COMPUTE_IP=${DATAPLANE_COMPUTE_IP}
 edpm_deploy_prep: export EDPM_COMPUTE_1_IP=${DATAPLANE_COMPUTE_1_IP}
