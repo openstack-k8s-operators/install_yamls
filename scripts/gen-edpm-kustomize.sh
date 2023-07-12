@@ -230,6 +230,13 @@ cat <<EOF >>kustomization.yaml
       value: ${EDPM_ANSIBLE_SECRET}
 EOF
 fi
+if [ ! -z "$EDPM_ANSIBLE_USER" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleUser
+      value: ${EDPM_ANSIBLE_USER}
+EOF
+fi
 
 kustomization_add_resources
 
