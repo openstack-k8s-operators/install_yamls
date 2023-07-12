@@ -6,6 +6,12 @@ Aside from generating Yaml and running *oc* commands to apply them to your clust
 
 Helper scripts to automate installing CRC and required tools with versions used in openstack-k8s-operators can be found in [devsetup](devsetup/README.md). These scripts/playbook required sudo permissions.
 
+**Note**
+The `install_yamls` project expects several dependencies on the host machine.
+Without them the deployment will fail and you will have install them first.
+In general terms, all tools required by Openshift are also required by `install_yamls`.
+Most importanly, the `kubectl` must be present on the system.
+
 ## Goals
 
 1) WIP: Support installing individual operators for fast testing iteration
