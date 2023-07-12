@@ -652,6 +652,7 @@ netconfig_deploy_cleanup: ## cleans up the service instance, Does not affect the
 ##@ MEMCACHED
 .PHONY: memcached_deploy_prep
 memcached_deploy_prep: export KIND=Memcached
+memcached_deploy_prep: export NAME=memcached
 memcached_deploy_prep: export IMAGE=${MEMCACHED_DEPL_IMG}
 memcached_deploy_prep: memcached_deploy_cleanup ## prepares the CR to install the service based on the service sample file MEMCACHED
 	$(eval $(call vars,$@,infra))
