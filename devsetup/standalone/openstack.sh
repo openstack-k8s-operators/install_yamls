@@ -15,6 +15,8 @@
 # under the License.
 set -ex
 
+EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
+
 openstack tripleo container image prepare default \
     --output-env-file $HOME/containers-prepare-parameters.yaml
 
@@ -60,15 +62,19 @@ parameter_defaults:
   ValidateControllersIcmp: false
 EOF
 
+if [ "$EDPM_COMPUTE_CEPH_ENABLED" = "true" ] ; then
+    CEPH_ARGS=${CEPH_ARGS:-"-e ~/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml"}
+else
+    CEPH_ARGS=""
+fi
+
 sudo openstack tripleo deploy \
     --templates /usr/share/openstack-tripleo-heat-templates \
     --standalone-role Standalone \
     -e /usr/share/openstack-tripleo-heat-templates/environments/standalone/standalone-tripleo.yaml \
     -e /usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml \
     -e ~/containers-prepare-parameters.yaml \
-    -e standalone_parameters.yaml \
-    -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml \
-    -e ~/deployed_ceph.yaml \
+    -e standalone_parameters.yaml $CEPH_ARGS \
     -e /usr/share/openstack-tripleo-heat-templates/environments/deployed-network-environment.yaml \
     -e /tmp/deployed_network.yaml \
     -r /usr/share/openstack-tripleo-heat-templates/roles/Standalone.yaml \
