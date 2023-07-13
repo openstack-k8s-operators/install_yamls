@@ -149,6 +149,17 @@ cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/nodes/edpm-compute-${INDEX}/hostName
       value: edpm-compute-${INDEX}
+EOF
+if [ -n "$BGP" ] && [ "$BGP" = "ovn" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/nodes/edpm-compute-${INDEX}/ansible/ansibleVars
+      value:
+        edpm_ovn_bgp_agent_local_ovn_peer_ips: ['100.64.$((1+${INDEX})).5', '100.65.$((1+${INDEX})).5']
+        edpm_frr_bgp_peers: ['100.64.$((1+${INDEX})).5', '100.65.$((1+${INDEX})).5']
+EOF
+fi
+cat <<EOF >>kustomization.yaml
     - op: add
       path: /spec/nodes/edpm-compute-${INDEX}/networks
       value:
