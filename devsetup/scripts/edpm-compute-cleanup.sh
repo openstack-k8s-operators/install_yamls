@@ -19,7 +19,7 @@ SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
 CRC_POOL=${CRC_POOL:-"$HOME/.crc/machines/crc"}
-OUTPUT_BASEDIR=${OUTPUT_BASEDIR:-"../out/edpm/"}
+OUTPUT_DIR=${OUTPUT_DIR:-"../out/edpm/"}
 CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD:-"rm -Rf"}
 
 virsh destroy ${EDPM_COMPUTE_NAME} || :
