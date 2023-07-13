@@ -24,7 +24,7 @@
     name: install-yamls-crc-podified-galera-deployment
     parent: cifmw-crc-podified-edpm-deployment
     vars:
-      deploy_edpm: false
+      cifmw_deploy_edpm: false
       podified_validation: true
       make_openstack_deploy_params:
         GALERA_REPLICAS: 3
