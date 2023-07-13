@@ -20,13 +20,14 @@ EDPM_COMPUTE_SUFFIX=${1:-"0"}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
 IP_ADRESS_SUFFIX=${IP_ADRESS_SUFFIX:-"$((100+${EDPM_COMPUTE_SUFFIX}))"}
 IP="192.168.122.${IP_ADRESS_SUFFIX}"
-SSH_KEY=${SSH_KEY:-"${SCRIPTPATH}/../../out/edpm/ansibleee-ssh-key-id_rsa"}
-SSH_OPT="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $SSH_KEY"
+OUTPUT_DIR=${OUTPUT_DIR:-"${SCRIPTPATH}/../../out/edpm/"}
+SSH_KEY_FILE=${SSH_KEY_FILE:-"${OUTPUT_DIR}/ansibleee-ssh-key-id_rsa"}
+SSH_OPT="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $SSH_KEY_FILE"
 CMDS_FILE=${CMDS_FILE:-"/tmp/standalone_repos"}
 CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD:-"rm -Rf"}
 
-if [[ ! -f $SSH_KEY ]]; then
-    echo "$SSH_KEY is missing"
+if [[ ! -f $SSH_KEY_FILE ]]; then
+    echo "$SSH_KEY_FILE is missing"
     exit 1
 fi
 

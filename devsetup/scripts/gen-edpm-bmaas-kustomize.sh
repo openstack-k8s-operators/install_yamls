@@ -16,7 +16,8 @@
 set -ex
 
 NAMESPACE=${NAMESPACE:-"openstack"}
-DEPLOY_DIR=${DEPLOY_DIR:-"../out/edpm"}
+SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+OUTPUT_DIR=${OUTPUT_DIR:-"${SCRIPTPATH}/../../out/edpm/"}
 NODE_COUNT=${NODE_COUNT:-2}
 NETWORK_IPADDRESS=${BMAAS_NETWORK_IPADDRESS:-192.168.122.1}
 BMH_CR_FILE=${BMH_CR_FILE:-bmh_deploy.yaml}
@@ -26,20 +27,20 @@ DATAPLANE_REPO=${DATAPLANE_REPO:-https://github.com/openstack-k8s-operators/data
 DATAPLNE_BRANCH=${DATAPLANE_BRANCH:-main}
 DATAPLANE_CR_FILE=${DATAPLANE_CR_FILE:-dataplane.yaml}
 
-mkdir -p ${OPERATOR_DIR} ${DEPLOY_DIR}
+mkdir -p ${OPERATOR_DIR} ${OUTPUT_DIR}
 
-# Add DataPlane CR to the DEPLOY_DIR
+# Add DataPlane CR to the OUTPUT_DIR
 rm -Rf ${OPERATOR_DIR}/dataplane-operator || true
 pushd ${OPERATOR_DIR} && git clone $(if [ ${DATAPLANE_BRANCH} ]; then echo -b ${DATAPLANE_BRANCH}; fi) \
     ${DATAPLANE_REPO} "dataplane-operator" && popd
-cp  ${OPERATOR_DIR}/dataplane-operator/${OPENSTACK_DATAPLANE} ${DEPLOY_DIR}/${DATAPLANE_CR_FILE}
+cp  ${OPERATOR_DIR}/dataplane-operator/${OPENSTACK_DATAPLANE} ${OUTPUT_DIR}/${DATAPLANE_CR_FILE}
 
 # Patch netconfig to add default route
 oc patch netconfig -n ${NAMESPACE} netconfig --type json \
     -p="[{"op": "add", "path": "/spec/networks/0/subnets/0/routes", \
     "value": [{"destination": "0.0.0.0/0", "nexthop": ${NETWORK_IPADDRESS}}]}]"
 
-pushd ${DEPLOY_DIR}
+pushd ${OUTPUT_DIR}
 
 cat <<EOF >>kustomization.yaml
 

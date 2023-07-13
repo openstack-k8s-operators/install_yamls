@@ -14,16 +14,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 set -ex
+
+SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+
 export NODE_COUNT=${NODE_COUNT:-2}
-export DEPLOY_DIR=${DEPLOY_DIR:-"../out/edpm"}
+export OUTPUT_DIR=${OUTPUT_DIR:-"${SCRIPTPATH}/../../out/edpm/"}
 
 OPERATOR_DIR=${OPERATOR_DIR:-../out/operator}
-SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 NODE_NAME_PREFIX=${BMAAS_INSTANCE_NAME_PREFIX=:-"edpm-compute"}
 NETWORK_NAME=${BMAAS_NETWORK_NAME:-"default"}
 BMH_CR_FILE=${BMH_CR_FILE:-bmh_deploy.yaml}
 
-mkdir -p ${DEPLOY_DIR}
+mkdir -p ${OUTPUT_DIR}
 NODE_INDEX=0
 while IFS= read -r instance; do
     export uuid_${NODE_INDEX}="${instance% *}"
@@ -36,7 +38,7 @@ done <<< "$(virsh --connect=qemu:///system list --all --uuid --name | grep "${NO
 for (( i=0; i<${NODE_COUNT}; i++ )); do
     mac_var=mac_address_${i}
     uuid_var=uuid_${i}
-    cat <<EOF >>${DEPLOY_DIR}/${BMH_CR_FILE}
+    cat <<EOF >>${OUTPUT_DIR}/${BMH_CR_FILE}
 ---
 # This is the secret with the BMC credentials (Redfish in this case).
 apiVersion: v1
