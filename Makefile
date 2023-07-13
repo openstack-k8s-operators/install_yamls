@@ -175,6 +175,16 @@ NEUTRON_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/neutron-operator/kuttl-test.yaml
 NEUTRON_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/neutron-operator/test/kuttl/tests
 NEUTRON_KUTTL_NAMESPACE ?= neutron-kuttl-tests
 
+# BGP
+NETWORK_BGP           ?= false
+BGP_ASN               ?= 64999
+BGP_LEAF_1            ?= 100.65.4.1
+BGP_LEAF_2            ?= 100.64.4.1
+NNCP_BGP_1_INTERFACE  ?= enp7s0
+NNCP_BGP_2_INTERFACE  ?= enp8s0
+NNCP_BGP_1_IP_ADDRESS ?= 100.65.4.2
+NNCP_BGP_2_IP_ADDRESS ?= 100.64.4.2
+
 # Cinder
 CINDER_IMG             ?= quay.io/openstack-k8s-operators/cinder-operator-index:latest
 CINDER_REPO            ?= https://github.com/openstack-k8s-operators/cinder-operator.git
@@ -288,7 +298,11 @@ DATAPLANE_IMG                                    ?= quay.io/openstack-k8s-operat
 DATAPLANE_REPO                                   ?= https://github.com/openstack-k8s-operators/dataplane-operator.git
 DATAPLANE_BRANCH                                 ?= main
 DATAPLANE_TIMEOUT                                ?= 20m
+ifeq ($(NETWORK_BGP), true)
+OPENSTACK_DATAPLANENODESET                       ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset_bgp.yaml
+else
 OPENSTACK_DATAPLANENODESET                       ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset.yaml
+endif
 OPENSTACK_DATAPLANENODESET_BAREMETAL             ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset_baremetal_with_ipam.yaml
 OPENSTACK_DATAPLANEDEPLOYMENT		             ?= config/samples/dataplane_v1beta1_openstackdataplanedeployment.yaml
 OPENSTACK_DATAPLANEDEPLOYMENT_BAREMETAL		 	 ?= config/samples/dataplane_v1beta1_openstackdataplanedeployment_baremetal_with_ipam.yaml
@@ -520,6 +534,7 @@ endif
 ##@ OPENSTACK
 .PHONY: openstack_prep
 openstack_prep: export IMAGE=${OPENSTACK_IMG}
+openstack_prep: $(if $(findstring true,$(NETWORK_BGP)), nmstate nncp netattach metallb metallb_config)
 openstack_prep: $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config)
 openstack_prep: $(if $(findstring true,$(BMO_SETUP)), crc_bmo_setup) ## creates the files to install the operator using olm
 	$(eval $(call vars,$@,openstack))
@@ -582,6 +597,9 @@ edpm_deploy_prep: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALLOWED_RANGE
 edpm_deploy_prep: export EDPM_CHRONY_NTP_SERVER=${DATAPLANE_CHRONY_NTP_SERVER}
 edpm_deploy_prep: export EDPM_REGISTRY_URL=${DATAPLANE_REGISTRY_URL}
 edpm_deploy_prep: export EDPM_CONTAINER_TAG=${DATAPLANE_CONTAINER_TAG}
+ifeq ($(NETWORK_BGP), true)
+edpm_deploy_prep: export BGP=enabled
+endif
 edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -707,6 +725,9 @@ dns_deploy_cleanup: ## cleans up the service instance, Does not affect the opera
 ##@ NETCONFIG
 .PHONY: netconfig_deploy_prep
 netconfig_deploy_prep: export KIND=NetConfig
+ifeq ($(NETWORK_BGP), true)
+netconfig_deploy_prep: export BGP=enabled
+endif
 netconfig_deploy_prep: export IMAGE=${NETCONFIG_DEPL_IMG}
 netconfig_deploy_prep: netconfig_deploy_cleanup ## prepares the CR to install the service based on the service sample file DNSMASQ and DNSDATA
 	$(eval $(call vars,$@,infra))
@@ -1750,6 +1771,13 @@ nmstate: ## installs nmstate operator in the openshift-nmstate namespace
 
 .PHONY: nncp
 nncp: export INTERFACE=${NNCP_INTERFACE}
+ifeq ($(NETWORK_BGP), true)
+nncp: export BGP=enabled
+nncp: export INTERFACE_BGP_1=${NNCP_BGP_1_INTERFACE}
+nncp: export INTERFACE_BGP_2=${NNCP_BGP_2_INTERFACE}
+nncp: export BGP_1_IP_ADDRESS=${NNCP_BGP_1_IP_ADDRESS}
+nncp: export BGP_2_IP_ADDRESS=${NNCP_BGP_2_IP_ADDRESS}
+endif
 nncp: export CTLPLANE_IP_ADDRESS_PREFIX=${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}
 nncp: export CTLPLANE_IP_ADDRESS_SUFFIX=${NNCP_CTLPLANE_IP_ADDRESS_SUFFIX}
 nncp: export GATEWAY=${NNCP_GATEWAY}
@@ -1764,6 +1792,7 @@ nncp: ## installs the nncp resources to configure the interface connected to the
 	oc apply -f ${DEPLOY_DIR}/
 	oc wait nncp -l osp/interface=${NNCP_INTERFACE} --for condition=available --timeout=$(NNCP_TIMEOUT)
 
+
 .PHONY: nncp_cleanup
 nncp_cleanup: export INTERFACE=${NNCP_INTERFACE}
 nncp_cleanup: ## unconfigured nncp configuration on worker node and deletes the nncp resource
@@ -1776,6 +1805,10 @@ nncp_cleanup: ## unconfigured nncp configuration on worker node and deletes the 
 
 .PHONY: netattach
 netattach: export INTERFACE=${NNCP_INTERFACE}
+ifeq ($(NETWORK_BGP), true)
+netattach: export INTERFACE_BGP_1=${NNCP_BGP_1_INTERFACE}
+netattach: export INTERFACE_BGP_2=${NNCP_BGP_2_INTERFACE}
+endif
 netattach: export VLAN_START=${NETWORK_VLAN_START}
 netattach: export VLAN_STEP=${NETWORK_VLAN_STEP}
 netattach: namespace ## Creates network-attachment-definitions for the networks the workers are attached via nncp
@@ -1793,6 +1826,9 @@ netattach_cleanup: ## Deletes the network-attachment-definitions
 .PHONY: metallb
 metallb: export NAMESPACE=metallb-system
 metallb: export INTERFACE=${NNCP_INTERFACE}
+metallb: export ASN=${BGP_ASN}
+metallb: export LEAF_1=${BGP_LEAF_1}
+metallb: export LEAF_2=${BGP_LEAF_2}
 metallb: ## installs metallb operator in the metallb-system namespace
 	$(eval $(call vars,$@,metallb))
 	bash scripts/gen-namespace.sh
@@ -1812,11 +1848,18 @@ metallb: ## installs metallb operator in the metallb-system namespace
 metallb_config: export NAMESPACE=metallb-system
 metallb_config: export CTLPLANE_METALLB_POOL=${METALLB_POOL}
 metallb_config: export INTERFACE=${NNCP_INTERFACE}
+metallb_config: export ASN=${BGP_ASN}
+metallb_config: export LEAF_1=${BGP_LEAF_1}
+metallb_config: export LEAF_2=${BGP_LEAF_2}
 metallb_config: metallb_config_cleanup ## creates the IPAddressPools and l2advertisement resources
 	$(eval $(call vars,$@,metallb))
 	bash scripts/gen-olm-metallb.sh
 	oc apply -f ${DEPLOY_DIR}/ipaddresspools.yaml
 	oc apply -f ${DEPLOY_DIR}/l2advertisement.yaml
+ifeq ($(NETWORK_BGP), true)
+	oc apply -f ${DEPLOY_DIR}/bgppeers.yaml
+	oc apply -f ${DEPLOY_DIR}/bgpadvertisement.yaml
+endif
 
 .PHONY: metallb_config_cleanup
 metallb_config_cleanup: export NAMESPACE=metallb-system
@@ -1824,7 +1867,9 @@ metallb_config_cleanup: ## deletes the IPAddressPools and l2advertisement resour
 	$(eval $(call vars,$@,metallb))
 	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/ipaddresspools.yaml
 	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/l2advertisement.yaml
-	${CLEANUP_DIR_CMD} ${DEPLOY_DIR}/ipaddresspools.yaml ${DEPLOY_DIR}/l2advertisement.yaml
+	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/bgppeers.yaml
+	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/bgpadvertisement.yaml
+	${CLEANUP_DIR_CMD} ${DEPLOY_DIR}/ipaddresspools.yaml ${DEPLOY_DIR}/l2advertisement.yaml ${DEPLOY_DIR}/bgppeers.yaml ${DEPLOY_DIR}/bgpadvertisement.yaml
 
 ##@ MANILA
 .PHONY: manila_prep
