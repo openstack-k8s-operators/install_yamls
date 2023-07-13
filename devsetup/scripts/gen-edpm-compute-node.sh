@@ -18,7 +18,7 @@ export LIBVIRT_DEFAULT_URI=qemu:///system
 # expect that the common.sh is in the same dir as the calling script
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 CRC_POOL=${CRC_POOL:-"$HOME/.crc/machines/crc"}
-OUTPUT_BASEDIR=${OUTPUT_BASEDIR:-"../out/edpm"}
+OUTPUT_DIR=${OUTPUT_DIR:-"../out/edpm"}
 
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
@@ -35,7 +35,7 @@ BASE_DISK_FILENAME=${BASE_DISK_FILENAME:-"centos-9-stream-base.qcow2"}
 DISK_FILENAME=${DISK_FILENAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2"}
 DISK_FILEPATH=${DISK_FILEPATH:-"${CRC_POOL}/${DISK_FILENAME}"}
 
-SSH_PUBLIC_KEY=${SSH_PUBLIC_KEY:-"${OUTPUT_BASEDIR}/ansibleee-ssh-key-id_rsa.pub"}
+SSH_PUBLIC_KEY=${SSH_PUBLIC_KEY:-"${OUTPUT_DIR}/ansibleee-ssh-key-id_rsa.pub"}
 MAC_ADDRESS=${MAC_ADDRESS:-"$(echo -n 52:54:00; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':')"}
 IP_ADRESS_SUFFIX=${IP_ADRESS_SUFFIX:-"$((100+${EDPM_COMPUTE_SUFFIX}))"}
 
@@ -50,7 +50,7 @@ if test -f "${HOME}/.ssh"; then
     chcon unconfined_u:object_r:ssh_home_t:s0 "${HOME}/.ssh"
 fi
 
-cat <<EOF >${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}.xml
+cat <<EOF >${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}.xml
 <domain type='kvm'>
   <name>${EDPM_COMPUTE_NAME}</name>
   <memory unit='GiB'>${EDPM_COMPUTE_RAM}</memory>
@@ -166,7 +166,7 @@ GATEWAY=192.168.122.1
 DNS=${DATAPLANE_DNS_SERVER}
 PREFIX=24
 
-cat <<EOF >${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
+cat <<EOF >${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
 PARTITION=\$(df / --output=source | grep -o "[[:digit:]]")
 FS_PATH=\$(df / --output=source | grep -v Filesystem | tr -d \$PARTITION)
 growpart \$FS_PATH \$PARTITION
@@ -194,7 +194,7 @@ sed -i s/dhcp/none/g $NETSCRIPT
 sed -i /PERSISTENT_DHCLIENT/d $NETSCRIPT
 EOF
 
-chmod +x ${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
+chmod +x ${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
 
 if [ ! -f ${DISK_FILEPATH} ]; then
     if [ ! -f ${CRC_POOL}/${BASE_DISK_FILENAME} ]; then
@@ -209,7 +209,7 @@ if [ ! -f ${DISK_FILEPATH} ]; then
     virt-customize -a ${DISK_FILEPATH} \
         --root-password password:12345678 \
         --hostname ${EDPM_COMPUTE_NAME} \
-        --firstboot ${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}-firstboot.sh \
+        --firstboot ${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}-firstboot.sh \
         --run-command "systemctl disable cloud-init cloud-config cloud-final cloud-init-local" \
         --run-command "echo 'PermitRootLogin yes' > /etc/ssh/sshd_config.d/99-root-login.conf" \
         --run-command "mkdir -p /root/.ssh; chmod 0700 /root/.ssh" \
@@ -222,7 +222,7 @@ if [ ! -f ${DISK_FILEPATH} ]; then
 fi
 
 if ! virsh domuuid ${EDPM_COMPUTE_NAME}; then
-    virsh define "${OUTPUT_BASEDIR}/${EDPM_COMPUTE_NAME}.xml"
+    virsh define "${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}.xml"
 else
     echo "${EDPM_COMPUTE_NAME} already defined in libvirt, not redefining."
 fi
