@@ -170,15 +170,16 @@ NEUTRON_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/neutron-operator/kuttl-test.yaml
 NEUTRON_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/neutron-operator/test/kuttl/tests
 
 # Cinder
-CINDER_IMG          ?= quay.io/openstack-k8s-operators/cinder-operator-index:latest
-CINDER_REPO         ?= https://github.com/openstack-k8s-operators/cinder-operator.git
-CINDER_BRANCH       ?= main
-CINDER              ?= config/samples/cinder_v1beta1_cinder.yaml
-CINDER_CR           ?= ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
+CINDER_IMG             ?= quay.io/openstack-k8s-operators/cinder-operator-index:latest
+CINDER_REPO            ?= https://github.com/openstack-k8s-operators/cinder-operator.git
+CINDER_BRANCH          ?= main
+CINDER                 ?= config/samples/cinder_v1beta1_cinder.yaml
+CINDER_CR              ?= ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
 # TODO: Image customizations for all Cinder services
-CINDER_KUTTL_CONF   ?= ${OPERATOR_BASE_DIR}/cinder-operator/kuttl-test.yaml
-CINDER_KUTTL_DIR    ?= ${OPERATOR_BASE_DIR}/cinder-operator/tests/kuttl/tests
-CINDER_KUTTL_TIMEOUT ?= 180
+CINDER_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/cinder-operator/kuttl-test.yaml
+CINDER_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/cinder-operator/tests/kuttl/tests
+CINDER_KUTTL_TIMEOUT   ?= 180
+CINDER_KUTTL_NAMESPACE ?= cinder-kuttl-tests
 
 # RabbitMQ
 RABBITMQ_IMG        ?= quay.io/openstack-k8s-operators/rabbitmq-cluster-operator-index:latest
@@ -1249,9 +1250,10 @@ placement_kuttl: kuttl_common_prep placement placement_deploy_prep ## runs kuttl
 
 .PHONY: cinder_kuttl_run
 cinder_kuttl_run: ## runs kuttl tests for the cinder operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${CINDER_KUTTL_CONF} ${CINDER_KUTTL_DIR}
+	kubectl-kuttl test --config ${CINDER_KUTTL_CONF} ${CINDER_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: cinder_kuttl
+cinder_kuttl: export NAMESPACE = ${CINDER_KUTTL_NAMESPACE}
 cinder_kuttl: kuttl_common_prep cinder cinder_deploy_prep ## runs kuttl tests for the cinder operator. Installs cinder operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,cinder))
 	make wait
@@ -1259,6 +1261,7 @@ cinder_kuttl: kuttl_common_prep cinder cinder_deploy_prep ## runs kuttl tests fo
 	make deploy_cleanup
 	make cinder_cleanup
 	make kuttl_common_cleanup
+	bash scripts/restore-namespace.sh
 
 .PHONY: neutron_kuttl_run
 neutron_kuttl_run: ## runs kuttl tests for the neutron operator, assumes that everything needed for running the test was deployed beforehand.
