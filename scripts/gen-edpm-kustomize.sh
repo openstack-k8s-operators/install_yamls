@@ -59,6 +59,14 @@ if [ -z "${INTERFACE_MTU}" ]; then
     echo "Please set INTERFACE_MTU"; exit 1
 fi
 
+if [ -z "${NET_PREFIX}" ]; then
+    echo "Please set NET_PREFIX"; exit 1
+fi
+
+if [ -z "${EDPM_DATAPLANE_GW_IP}" ]; then
+    echo "Please set EDPM_DATAPLANE_GW_IP"; exit 1
+fi
+
 NAME=${KIND,,}
 
 if [ ! -d ${DEPLOY_DIR} ]; then
@@ -116,13 +124,13 @@ patches:
         # These vars are for the network config templates themselves and are
         # considered EDPM network defaults.
         neutron_physical_bridge_name: br-ex
-        neutron_public_interface_name: eth0
+        neutron_public_interface_name: ${NEUTRON_PUB_INTERFACE}
         ctlplane_mtu: ${INTERFACE_MTU}
         ctlplane_subnet_cidr: 24
-        ctlplane_gateway_ip: 192.168.122.1
+        ctlplane_gateway_ip: ${EDPM_DATAPLANE_GW_IP}
         ctlplane_host_routes:
         - ip_netmask: 0.0.0.0/0
-          next_hop: 192.168.122.1
+          next_hop: ${EDPM_DATAPLANE_GW_IP}
         role_networks:
         - InternalApi
         - Storage
@@ -203,14 +211,14 @@ cat <<EOF >>kustomization.yaml
       path: /spec/nodes/edpm-compute-${INDEX}
     - op: replace
       path: /spec/nodes/edpm-compute-${INDEX}/ansibleHost
-      value: 192.168.122.$((100+${INDEX}))
+      value: ${NET_PREFIX}.$((100+${INDEX}))
     - op: replace
       path: /spec/nodes/edpm-compute-${INDEX}/hostName
       value: edpm-compute-${INDEX}
     - op: replace
       path: /spec/nodes/edpm-compute-${INDEX}/node/ansibleVars
       value: |
-        ctlplane_ip: 192.168.122.$((100+${INDEX}))
+        ctlplane_ip: ${NET_PREFIX}.$((100+${INDEX}))
     - op: replace
       path: /spec/nodes/edpm-compute-${INDEX}/node/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}

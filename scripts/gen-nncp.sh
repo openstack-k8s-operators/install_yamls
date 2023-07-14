@@ -35,10 +35,15 @@ if [ -z "${INTERFACE_MTU}" ]; then
     echo "Please set INTERFACE_MTU"; exit 1
 fi
 
+if [ -z "${NET_PREFIX}" ]; then
+    echo "Please set NET_PREFIX"; exit 1
+fi
+
 echo DEPLOY_DIR ${DEPLOY_DIR}
 echo WORKERS ${WORKERS}
 echo INTERFACE ${INTERFACE}
 echo INTERFACE_MTU ${INTERFACE_MTU}
+echo NET_PREFIX ${NET_PREFIX}
 
 CTLPLANE_IP_ADDRESS_SUFFIX=10
 # Use different suffix for other networks as the sample netconfig
@@ -103,7 +108,7 @@ spec:
     - description: Configuring ${INTERFACE}
       ipv4:
         address:
-        - ip: 192.168.122.${CTLPLANE_IP_ADDRESS_SUFFIX}
+        - ip: ${NET_PREFIX}.${CTLPLANE_IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
         dhcp: false

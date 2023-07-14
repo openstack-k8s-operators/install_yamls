@@ -1,11 +1,12 @@
 # general
 SHELL := /bin/bash
-OPERATOR_NAMESPACE      ?= openstack-operators
+OPERATOR_NAMESPACE       ?= openstack-operators
 NAMESPACE                ?= openstack
 PASSWORD                 ?= 12345678
 SECRET                   ?= osp-secret
 OUT                      ?= ${PWD}/out
 TIMEOUT                  ?= 300s
+IP_PREFIX                ?= 192.168.122
 DBSERVICE           ?= galera
 ifeq ($(DBSERVICE), galera)
 DBSERVICE_CONTAINER = openstack-galera-0
@@ -15,7 +16,7 @@ endif
 METADATA_SHARED_SECRET   ?= 1234567842
 HEAT_AUTH_ENCRYPTION_KEY ?= 767c3ed056cbaa3b9dfedb8c6f825bf0
 CLEANUP_DIR_CMD					 ?= rm -Rf
-METALLB_POOL			 ?=192.168.122.80-192.168.122.90
+METALLB_POOL			 ?= ${IP_PREFIX}.80-${IP_PREFIX}.90
 # are we deploying to microshift
 MICROSHIFT ?= 0
 
@@ -159,15 +160,16 @@ OVN_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovn-operator/tests/kuttl/tests
 OVN_KUTTL_NAMESPACE ?= ovn-kuttl-tests
 
 # Neutron
-NEUTRON_IMG         ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
-NEUTRON_REPO        ?= https://github.com/openstack-k8s-operators/neutron-operator.git
-NEUTRON_BRANCH      ?= main
-NEUTRONAPI          ?= config/samples/neutron_v1beta1_neutronapi.yaml
-NEUTRONAPI_CR       ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
-NEUTRONAPI_DEPL_IMG ?= unused
+NEUTRON_IMG           ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
+NEUTRON_REPO          ?= https://github.com/openstack-k8s-operators/neutron-operator.git
+NEUTRON_BRANCH        ?= main
+NEUTRONAPI            ?= config/samples/neutron_v1beta1_neutronapi.yaml
+NEUTRONAPI_CR         ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
+NEUTRONAPI_DEPL_IMG   ?= unused
 # TODO: Do we need interfaces to customize images for the other services ?
-NEUTRON_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/neutron-operator/kuttl-test.yaml
-NEUTRON_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/neutron-operator/test/kuttl/tests
+NEUTRON_KUTTL_CONF    ?= ${OPERATOR_BASE_DIR}/neutron-operator/kuttl-test.yaml
+NEUTRON_KUTTL_DIR     ?= ${OPERATOR_BASE_DIR}/neutron-operator/test/kuttl/tests
+NEUTRON_PUB_INTERFACE ?= eth0
 
 # Cinder
 CINDER_IMG          ?= quay.io/openstack-k8s-operators/cinder-operator-index:latest
@@ -281,18 +283,19 @@ OPENSTACK_DATAPLANE                              ?= config/samples/dataplane_v1b
 DATAPLANE_CR                                     ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANE}
 DATAPLANE_ANSIBLE_SECRET                         ?=dataplane-ansible-ssh-private-key-secret
 DATAPLANE_ANSIBLE_USER                           ?=
-DATAPLANE_COMPUTE_IP                             ?=192.168.122.100
-DATAPLANE_COMPUTE_1_IP                           ?=192.168.122.101
+DATAPLANE_COMPUTE_IP                             ?=${IP_PREFIX}.100
+DATAPLANE_COMPUTE_1_IP                           ?=${IP_PREFIX}.101
 DATAPLANE_TOTAL_NODES                            ?=2
 DATAPLANE_RUNNER_IMG                             ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
 DATAPLANE_NETWORK_CONFIG_TEMPLATE                ?=templates/single_nic_vlans/single_nic_vlans.j2
-DATAPLANE_SSHD_ALLOWED_RANGES                    ?=['192.168.122.0/24']
+DATAPLANE_SSHD_ALLOWED_RANGES                    ?=["${IP_PREFIX}.0/24"]
 DATAPLANE_CHRONY_NTP_SERVER                      ?=pool.ntp.org
 DATAPLANE_OVN_METADATA_AGENT_BIND_HOST           ?=127.0.0.1
 DATAPLANE_SINGLE_NODE                            ?=true
 DATAPLANE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/dataplane-operator/kuttl-test.yaml
 DATAPLANE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/dataplane-operator/tests/kuttl/tests
 DATAPLANE_KUTTL_NAMESPACE ?= dataplane-kuttl-tests
+DATAPLANE_GW_IP           ?= ${IP_PREFIX}.1
 
 # Manila
 MANILA_IMG          ?= quay.io/openstack-k8s-operators/manila-operator-index:latest
@@ -325,7 +328,7 @@ BMO_REPO                         ?= https://github.com/metal3-io/baremetal-opera
 BMO_BRANCH                       ?= main
 CERTMANAGER_URL                  ?= https://github.com/jetstack/cert-manager/releases/download/v1.5.4/cert-manager.yaml
 BMO_PROVISIONING_INTERFACE       ?= enp6s0
-BMO_IRONIC_HOST                  ?= 192.168.122.10
+BMO_IRONIC_HOST                  ?= ${IP_PREFIX}.10
 
 # Swift
 SWIFT_IMG        ?= quay.io/openstack-k8s-operators/swift-operator-index:latest
@@ -458,9 +461,9 @@ crc_bmo_setup:
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(BMO_BRANCH),-b ${BMO_BRANCH}) ${BMO_REPO} "baremetal-operator" && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/eth2/${BMO_PROVISIONING_INTERFACE}/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/ENDPOINT\=http/ENDPOINT\=https/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
-	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0.2\:/192.168.122.10\:/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
-	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0.1\:/192.168.122.11\:/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
-	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0./192.168.122./g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i "s/172.22.0.2\:/${BMO_IRONIC_HOST}\:/g" ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i "s/172.22.0.1\:/${IP_PREFIX}.11\:/g" ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i "s/172.22.0./${IP_PREFIX}./g" ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && make generate manifests && bash tools/deploy.sh -bitm && popd
 	## Hack to add required scc
 	oc adm policy add-scc-to-user privileged system:serviceaccount:baremetal-operator-system:baremetal-operator-controller-manager
@@ -552,6 +555,9 @@ edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_SB_CONNECTION=$(shell oc get ov
 edpm_deploy_prep: export EDPM_OVN_DBS=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"[0]')
 edpm_deploy_prep: export EDPM_NADS=$(shell oc get network-attachment-definitions -o json | jq -r "[.items[].metadata.name]")
 edpm_deploy_prep: export INTERFACE_MTU=${NETWORK_MTU}
+edpm_deploy_prep: export NET_PREFIX=${IP_PREFIX}
+edpm_deploy_prep: export EDPM_DATAPLANE_GW_IP=${DATAPLANE_GW_IP}
+edpm_deploy_prep: export NET_PREFIX=${IP_PREFIX}
 edpm_deploy_prep: edpm_deploy_cleanup $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config netconfig_deploy) ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -1644,6 +1650,7 @@ nmstate: ## installs nmstate operator in the openshift-nmstate namespace
 .PHONY: nncp
 nncp: export INTERFACE=${NNCP_INTERFACE}
 nncp: export INTERFACE_MTU=${NETWORK_MTU}
+nncp: export NET_PREFIX=${IP_PREFIX}
 nncp: ## installs the nncp resources to configure the interface connected to the edpm node, right now only single nic vlan. Interface referenced via NNCP_INTERFACE
 	$(eval $(call vars,$@,nncp))
 	WORKERS='$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}")' \
@@ -1663,6 +1670,7 @@ nncp_cleanup: ## unconfigured nncp configuration on worker node and deletes the 
 
 .PHONY: netattach
 netattach: export INTERFACE=${NNCP_INTERFACE}
+netattach: export NET_PREFIX=${IP_PREFIX}
 netattach: namespace ## Creates network-attachment-definitions for the networks the workers are attached via nncp
 	$(eval $(call vars,$@,netattach))
 	bash scripts/gen-netatt.sh

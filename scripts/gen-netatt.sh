@@ -27,8 +27,13 @@ if [ -z "${INTERFACE}" ]; then
     echo "Please set INTERFACE"; exit 1
 fi
 
+if [ -z "${NET_PREFIX}" ]; then
+    echo "Please set NET_PREFIX"; exit 1
+fi
+
 echo DEPLOY_DIR ${DEPLOY_DIR}
 echo INTERFACE ${INTERFACE}
+echo NET_PREFIX ${NET_PREFIX}
 
 cat > ${DEPLOY_DIR}/ctlplane.yaml <<EOF_CAT
 apiVersion: k8s.cni.cncf.io/v1
@@ -47,9 +52,9 @@ spec:
       "master": "${INTERFACE}",
       "ipam": {
         "type": "whereabouts",
-        "range": "192.168.122.0/24",
-        "range_start": "192.168.122.30",
-        "range_end": "192.168.122.70"
+        "range": "${NET_PREFIX}.0/24",
+        "range_start": "${NET_PREFIX}.30",
+        "range_end": "${NET_PREFIX}.70"
       }
     }
 EOF_CAT
