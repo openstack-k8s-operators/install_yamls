@@ -41,6 +41,7 @@ POOLS=("volumes" "images" "backups" "cephfs.cephfs.meta" "cephfs.cephfs.data")
 DAEMONS="osd,mds"
 DATA_SIZE=${DATA_SIZE:-500Mi}
 WORKER=${WORKER:-""}
+MON_CONF=${MON_CONF:-""}
 
 function add_ceph_pod {
 cat <<EOF >ceph-pod.yaml
@@ -61,7 +62,7 @@ spec:
      name: ceph
      env:
      - name: MON_IP
-       value: "$MON_IP"
+       value: "$MON_IP" $MON_CONF
      - name: CEPH_DAEMON
        value: demo
      - name: CEPH_PUBLIC_NETWORK
@@ -117,14 +118,13 @@ patches:
 EOF
 }
 
-function get_pod_ip {
-    if [[ "$HOSTNETWORK" == "false" ]]; then
-        echo "HOSTNETWORK must be set to true!"
-        exit 1
-    fi
+function bootstrap_ceph {
     NODES=$(oc get nodes --selector='node-role.kubernetes.io/worker=' -o 'jsonpath={.items[*].status.addresses[*].address}')
     read -ra values <<< "$NODES"
-    MON_IP="${values[0]}"
+    [[ -z "$MON_IP" ]] && MON_IP="${values[0]}"
+    # we need affinity when we do HOSTNETWORKING
+    # hence we schedule the pod to the worker node
+    # where the IP address is assigned
     if [ -z "$WORKER" ]; then
         WORKER="${values[1]}"
     fi
@@ -233,10 +233,26 @@ function usage {
     fi
 }
 
+# if HOSTNETWORK is false, we always need
+# to produce the following snippet that is
+# supposed to get the IP assigned to the
+# POD and pass it to the MON process.
+if [[ "$HOSTNETWORK" == "false" ]]; then
+MON_IP="0.0.0.0"
+MON_CONF=$(cat <<END
+
+     - name: MON_IP
+       valueFrom:
+         fieldRef:
+           fieldPath: status.podIP
+END
+)
+fi
+
 ## MAIN
 case "$1" in
     "build")
-        [[ -z "$MON_IP" ]] && get_pod_ip;
+        bootstrap_ceph
         add_ceph_pod
         ceph_kustomize
         kustomization_add_resources
