@@ -182,10 +182,6 @@ cat <<EOF >>kustomization.yaml
       value: edpm-compute-${INDEX}
 EOF
     done
-else
-cat <<EOF >>kustomization.yaml
-      value: ${EDPM_ANSIBLE_SECRET}
-EOF
 fi
 if [ ! -z "$EDPM_ANSIBLE_USER" ]; then
 cat <<EOF >>kustomization.yaml
