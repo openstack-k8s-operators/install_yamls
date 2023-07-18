@@ -154,9 +154,7 @@ edpm_deploy_instance: ## Spin a instance on edpm node
 	-oc rsh openstackclient bash /tmp/edpm-deploy-instance.sh
 
 .PHONY: standalone
-standalone: export EDPM_COMPUTE_VCPUS=8
-standalone: export EDPM_COMPUTE_RAM=20
-standalone: export EDPM_COMPUTE_DISK_SIZE=70
+standalone: export STANDALONE=true
 standalone: export INTERFACE_MTU=${NETWORK_MTU}
 standalone: edpm_compute ## Create standalone VM
 	$(eval $(call vars))
