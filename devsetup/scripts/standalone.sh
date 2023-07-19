@@ -58,10 +58,10 @@ sudo hostnamectl set-hostname standalone.localdomain --transient
 
 export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
-export CEPH_ARGS=${CEPH_ARGS:-"-e ~/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml"}
+export CEPH_ARGS=${CEPH_ARGS:-\"-e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml\"}
 
 /tmp/network.sh
-[[ "$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]] && /tmp/ceph.sh
+[[ "\$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]] && /tmp/ceph.sh
 /tmp/openstack.sh
 EOF
 fi
@@ -80,5 +80,8 @@ scp $SSH_OPT standalone/ceph.sh root@$IP:/tmp/ceph.sh
 scp $SSH_OPT standalone/openstack.sh root@$IP:/tmp/openstack.sh
 
 # Running
-ssh $SSH_OPT root@$IP "bash /tmp/repo-setup.sh; rm -f /tmp/repo-setup.sh"
+ssh $SSH_OPT root@$IP "bash /tmp/repo-setup.sh"
+# separate the two commands so we can properly detect whether there is
+# a failure while deploying standalone
+ssh $SSH_OPT root@$IP "rm -f /tmp/repo-setup.sh"
 ${CLEANUP_DIR_CMD} $CMDS_FILE
