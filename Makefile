@@ -685,7 +685,8 @@ netconfig_deploy: input netconfig_deploy_prep ## installs the service instance u
 .PHONY: netconfig_deploy_cleanup
 netconfig_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,infra))
-	oc delete --all netconfig --ignore-not-found=true || true
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	rm -Rf ${OPERATOR_BASE_DIR}/infra-operator ${DEPLOY_DIR}
 
 ##@ MEMCACHED
 .PHONY: memcached_deploy_prep
