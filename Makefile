@@ -290,6 +290,7 @@ DATAPLANE_COMPUTE_1_IP                           ?=192.168.122.101
 DATAPLANE_TOTAL_NODES                            ?=2
 DATAPLANE_RUNNER_IMG                             ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
 DATAPLANE_NETWORK_CONFIG_TEMPLATE                ?=templates/single_nic_vlans/single_nic_vlans.j2
+DATAPLANE_NETWORK_INTERFACE_NAME                 ?=eth0
 DATAPLANE_SSHD_ALLOWED_RANGES                    ?=['192.168.122.0/24']
 DATAPLANE_CHRONY_NTP_SERVER                      ?=pool.ntp.org
 DATAPLANE_OVN_METADATA_AGENT_BIND_HOST           ?=127.0.0.1
@@ -545,6 +546,7 @@ edpm_deploy_prep: export EDPM_COMPUTE_1_IP=${DATAPLANE_COMPUTE_1_IP}
 edpm_deploy_prep: export EDPM_TOTAL_NODES=${DATAPLANE_TOTAL_NODES}
 edpm_deploy_prep: export OPENSTACK_RUNNER_IMG=${DATAPLANE_RUNNER_IMG}
 edpm_deploy_prep: export EDPM_NETWORK_CONFIG_TEMPLATE=${DATAPLANE_NETWORK_CONFIG_TEMPLATE}
+edpm_deploy_prep: export EDPM_NETWORK_INTERFACE_NAME=${DATAPLANE_NETWORK_INTERFACE_NAME}
 edpm_deploy_prep: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALLOWED_RANGES}
 edpm_deploy_prep: export EDPM_CHRONY_NTP_SERVER=${DATAPLANE_CHRONY_NTP_SERVER}
 edpm_deploy_prep: export EDPM_DNS_SERVER=$(shell oc get svc -l service=dnsmasq -o json | jq -r '.items[0].status.loadBalancer.ingress[0].ip')
