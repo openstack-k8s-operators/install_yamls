@@ -511,7 +511,7 @@ openstack_cleanup: operator_namespace## deletes the operator, but does not clean
 
 .PHONY: openstack_deploy_prep
 openstack_deploy_prep: export KIND=OpenStackControlPlane
-openstack_deploy_prep: openstack_deploy_cleanup netconfig_deploy ## prepares the CR to install the service based on the service sample file OPENSTACK
+openstack_deploy_prep: openstack_deploy_cleanup ## prepares the CR to install the service based on the service sample file OPENSTACK
 	$(eval $(call vars,$@,openstack))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(OPENSTACK_BRANCH),-b ${OPENSTACK_BRANCH}) ${OPENSTACK_REPO} "${OPERATOR_NAME}-operator" && popd
@@ -519,7 +519,7 @@ openstack_deploy_prep: openstack_deploy_cleanup netconfig_deploy ## prepares the
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: openstack_deploy
-openstack_deploy: input openstack_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
+openstack_deploy: input openstack_deploy_prep netconfig_deploy ## installs the service instance using kustomize. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,openstack))
 	make wait
 	bash scripts/operator-deploy-resources.sh
@@ -685,7 +685,8 @@ netconfig_deploy: input netconfig_deploy_prep ## installs the service instance u
 .PHONY: netconfig_deploy_cleanup
 netconfig_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,infra))
-	oc delete --all netconfig --ignore-not-found=true || true
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	rm -Rf ${OPERATOR_BASE_DIR}/infra-operator ${DEPLOY_DIR}
 
 ##@ MEMCACHED
 .PHONY: memcached_deploy_prep
