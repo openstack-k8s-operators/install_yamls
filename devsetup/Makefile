@@ -101,7 +101,6 @@ edpm_baremetal: ## Deploy only dataplane with BMAAS
 	$(eval $(call vars))
 	make bmaas_virtual_bms
 	make bmaas_sushy_emulator
-	pushd .. && make netconfig_deploy && popd
 	scripts/gen-ansibleee-ssh-key.sh
 	scripts/edpm-compute-bmaas.sh
 
