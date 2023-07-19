@@ -234,6 +234,10 @@ NOVA_BRANCH         ?= main
 NOVA                ?= config/samples/nova_v1beta1_nova_collapsed_cell.yaml
 NOVA_CR             ?= ${OPERATOR_BASE_DIR}/nova-operator/${NOVA}
 # TODO: Image customizations for all Nova services
+NOVA_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/nova-operator/kuttl-test.yaml
+NOVA_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/nova-operator/tests/kuttl/tests
+NOVA_KUTTL_NAMESPACE ?= nova-kuttl-tests
+NOVA_KUTTL_TIMEOUT   ?= 180
 
 # Horizon
 HORIZON_IMG             ?= quay.io/openstack-k8s-operators/horizon-operator-index:latest
@@ -1265,6 +1269,21 @@ keystone_kuttl: kuttl_db_prep keystone keystone_deploy_prep ## runs kuttl tests 
 	make deploy_cleanup
 	make keystone_cleanup
 	make kuttl_db_cleanup
+	bash scripts/restore-namespace.sh
+
+.PHONY: nova_kuttl_run
+nova_kuttl_run: ## runs kuttl tests for the nova operator, assumes that everything needed for running the test was deployed beforehand.
+	NOVA_KUTTL_DIR=${NOVA_KUTTL_DIR} kubectl-kuttl test --config ${NOVA_KUTTL_CONF} ${NOVA_KUTTL_DIR} --namespace ${NAMESPACE}
+
+.PHONY: nova_kuttl
+nova_kuttl: export NAMESPACE = ${NOVA_KUTTL_NAMESPACE}
+nova_kuttl: kuttl_common_prep placement placement_deploy_prep placement_deploy nova nova_deploy_prep ## runs kuttl tests for the nova operator. Installs nova operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+	$(eval $(call vars,$@,nova))
+	make wait
+	make nova_kuttl_run
+	make deploy_cleanup
+	make nova_cleanup
+	make kuttl_common_cleanup
 	bash scripts/restore-namespace.sh
 
 .PHONY: placement_kuttl_run
