@@ -116,7 +116,7 @@ patches:
         # These vars are for the network config templates themselves and are
         # considered EDPM network defaults.
         neutron_physical_bridge_name: br-ex
-        neutron_public_interface_name: eth0
+        neutron_public_interface_name: ${EDPM_NETWORK_INTERFACE_NAME}
         ctlplane_mtu: ${INTERFACE_MTU}
         ctlplane_subnet_cidr: 24
         ctlplane_gateway_ip: 192.168.122.1
