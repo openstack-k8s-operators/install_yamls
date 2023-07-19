@@ -134,14 +134,15 @@ PLACEMENT_KUTTL_NAMESPACE ?= placement-kuttl-tests
 PLACEMENT_KUTTL_TIMEOUT   ?= 180
 
 # Sir Glancealot
-GLANCE_IMG          ?= quay.io/openstack-k8s-operators/glance-operator-index:latest
-GLANCE_REPO         ?= https://github.com/openstack-k8s-operators/glance-operator.git
-GLANCE_BRANCH       ?= main
-GLANCE              ?= config/samples/glance_v1beta1_glance.yaml
-GLANCE_CR           ?= ${OPERATOR_BASE_DIR}/glance-operator/${GLANCE}
-GLANCEAPI_DEPL_IMG  ?= unused
-GLANCE_KUTTL_CONF   ?= ${OPERATOR_BASE_DIR}/glance-operator/kuttl-test.yaml
-GLANCE_KUTTL_DIR    ?= ${OPERATOR_BASE_DIR}/glance-operator/tests/kuttl/tests
+GLANCE_IMG              ?= quay.io/openstack-k8s-operators/glance-operator-index:latest
+GLANCE_REPO             ?= https://github.com/openstack-k8s-operators/glance-operator.git
+GLANCE_BRANCH           ?= main
+GLANCE                  ?= config/samples/glance_v1beta1_glance.yaml
+GLANCE_CR               ?= ${OPERATOR_BASE_DIR}/glance-operator/${GLANCE}
+GLANCEAPI_DEPL_IMG      ?= unused
+GLANCE_KUTTL_CONF       ?= ${OPERATOR_BASE_DIR}/glance-operator/kuttl-test.yaml
+GLANCE_KUTTL_DIR        ?= ${OPERATOR_BASE_DIR}/glance-operator/tests/kuttl/tests
+GLANCE_KUTTL_NAMESPACE  ?= glance-kuttl-tests
 
 # Ovn
 OVN_IMG             ?= quay.io/openstack-k8s-operators/ovn-operator-index:latest
@@ -1462,9 +1463,11 @@ dataplane_kuttl: input ansibleee infra baremetal nova dataplane namespace datapl
 
 .PHONY: glance_kuttl_run
 glance_kuttl_run: ## runs kuttl tests for the glance operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${GLANCE_KUTTL_CONF} ${GLANCE_KUTTL_DIR}
+	kubectl-kuttl test --config ${GLANCE_KUTTL_CONF} ${GLANCE_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: glance_kuttl
+glance_kuttl: export NAMESPACE = ${GLANCE_KUTTL_NAMESPACE}
+# Set the value of $GLANCE_KUTTL_NAMESPACE if you want to run the glance kuttl tests in a namespace different than the default (glance-kuttl-tests)
 glance_kuttl: kuttl_common_prep glance glance_deploy_prep ## runs kuttl tests for the glance operator. Installs glance operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,glance))
 	make wait
