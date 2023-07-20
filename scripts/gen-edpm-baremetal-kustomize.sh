@@ -59,6 +59,10 @@ if [ -z "${INTERFACE_MTU}" ]; then
     echo "Please set INTERFACE_MTU"; exit 1
 fi
 
+if [ -z "${EDPM_DEFAULT_GW}" ]; then
+    echo "Please set EDPM_DEFAULT_GW"; exit 1
+fi
+
 NAME=${KIND,,}
 
 if [ ! -d ${DEPLOY_DIR} ]; then
@@ -122,7 +126,7 @@ patches:
         edpm_nodes_validation_validate_gateway_icmp: false
         ctlplane_host_routes:
         - ip_netmask: 0.0.0.0/0
-          next_hop: 192.168.122.1
+          next_hop: ${EDPM_DEFAULT_GW}
         edpm_ovn_metadata_agent_DEFAULT_transport_url: ${EDPM_OVN_METADATA_AGENT_TRANSPORT_URL}
         edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection: ${EDPM_OVN_METADATA_AGENT_SB_CONNECTION}
         edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host: ${EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST}
