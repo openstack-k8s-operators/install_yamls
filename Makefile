@@ -1362,13 +1362,13 @@ infra_kuttl_run: ## runs kuttl tests for the infra operator, assumes that everyt
 infra_kuttl: export NAMESPACE = ${INFRA_KUTTL_NAMESPACE}
 # Set the value of $INFRA_KUTTL_NAMESPACE if you want to run the infra
 # kuttl tests in a namespace different than the default (infra-kuttl-tests)
-infra_kuttl: kuttl_common_prep keystone keystone_deploy ## runs kuttl tests for the infra operator. Installs infra operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+infra_kuttl: input deploy_cleanup rabbitmq rabbitmq_deploy infra memcached_deploy_prep ## runs kuttl tests for the infra operator. Installs infra operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,infra))
 	make wait
 	make infra_kuttl_run
 	make deploy_cleanup
-	make keystone_cleanup
-	make kuttl_common_cleanup
+	make infra_cleanup
+	make rabbitmq_cleanup
 
 .PHONY: ironic_kuttl_run
 ironic_kuttl_run: ## runs kuttl tests for the ironic operator, assumes that everything needed for running the test was deployed beforehand.
