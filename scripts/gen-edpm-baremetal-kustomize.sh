@@ -108,7 +108,6 @@ patches:
         # These vars are for the network config templates themselves and are
         # considered EDPM network defaults.
         neutron_physical_bridge_name: br-ex
-        neutron_public_interface_name: eth0
         role_networks:
         - InternalApi
         - Storage
