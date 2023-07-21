@@ -1,4 +1,5 @@
-CRC_URL ?= 'https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz'
+# Pin to crc-2.19.0 due to https://issues.redhat.com/browse/OSP-25627
+CRC_URL ?= 'https://developers.redhat.com/content-gateway/file/pub/openshift-v4/clients/crc/2.19.0/crc-linux-amd64.tar.xz'
 KUBEADMIN_PWD ?= 12345678
 PULL_SECRET  ?= ${PWD}/pull-secret.txt
 CRC_DEFAULT_NETWORK_IP ?= 192.168.122.10
