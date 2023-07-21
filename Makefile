@@ -299,6 +299,7 @@ DATAPLANE_SINGLE_NODE                            ?=true
 DATAPLANE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/dataplane-operator/kuttl-test.yaml
 DATAPLANE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/dataplane-operator/tests/kuttl/tests
 DATAPLANE_KUTTL_NAMESPACE ?= dataplane-kuttl-tests
+DATAPLANE_DEFAULT_GW      ?= 192.168.122.1
 
 # Manila
 MANILA_IMG          ?= quay.io/openstack-k8s-operators/manila-operator-index:latest
@@ -559,6 +560,7 @@ edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_SB_CONNECTION=$(shell oc get ov
 edpm_deploy_prep: export EDPM_OVN_DBS=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"[0]')
 edpm_deploy_prep: export EDPM_NADS=$(shell oc get network-attachment-definitions -o json | jq -r "[.items[].metadata.name]")
 edpm_deploy_prep: export INTERFACE_MTU=${NETWORK_MTU}
+edpm_deploy_prep: export EDPM_DEFAULT_GW=${DATAPLANE_DEFAULT_GW}
 edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -600,6 +602,7 @@ edpm_deploy_baremetal_prep: export EDPM_OVN_METADATA_AGENT_SB_CONNECTION=$(shell
 edpm_deploy_baremetal_prep: export EDPM_OVN_DBS=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"[0]')
 edpm_deploy_baremetal_prep: export EDPM_NADS=$(shell oc get network-attachment-definitions -o json | jq -r "[.items[].metadata.name]")
 edpm_deploy_baremetal_prep: export INTERFACE_MTU=${NETWORK_MTU}
+edpm_deploy_baremetal_prep: export EDPM_DEFAULT_GW=${DATAPLANE_DEFAULT_GW}
 edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
