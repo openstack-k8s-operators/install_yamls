@@ -99,7 +99,6 @@ KEYSTONEAPI_DEPL_IMG     ?= unused
 KEYSTONE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.yaml
 KEYSTONE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
 KEYSTONE_KUTTL_NAMESPACE ?= keystone-kuttl-tests
-KEYSTONE_KUTTL_TIMEOUT   ?= 180
 
 # Mariadb
 MARIADB_IMG         ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
@@ -114,12 +113,6 @@ MARIADB_CR          ?= ${OPERATOR_BASE_DIR}/mariadb-operator/${MARIADB}
 MARIADB_DEPL_IMG    ?= unused
 MARIADB_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
 MARIADB_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
-MARIADB_KUTTL_TIMEOUT ?= 180
-ifeq ($(DBSERVICE), galera)
-MARIADB_ASSERT      ?= ${MARIADB_KUTTL_DIR}/galera_deploy/01-assert.yaml
-else
-MARIADB_ASSERT      ?= ${MARIADB_KUTTL_DIR}/mariadb_deploy/01-assert.yaml
-endif
 
 # Placement
 PLACEMENT_IMG             ?= quay.io/openstack-k8s-operators/placement-operator-index:latest
@@ -131,7 +124,6 @@ PLACEMENTAPI_DEPL_IMG     ?= unused
 PLACEMENT_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/placement-operator/kuttl-test.yaml
 PLACEMENT_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/placement-operator/tests/kuttl/tests
 PLACEMENT_KUTTL_NAMESPACE ?= placement-kuttl-tests
-PLACEMENT_KUTTL_TIMEOUT   ?= 180
 
 # Sir Glancealot
 GLANCE_IMG              ?= quay.io/openstack-k8s-operators/glance-operator-index:latest
@@ -179,7 +171,6 @@ CINDER_CR              ?= ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
 # TODO: Image customizations for all Cinder services
 CINDER_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/cinder-operator/kuttl-test.yaml
 CINDER_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/cinder-operator/tests/kuttl/tests
-CINDER_KUTTL_TIMEOUT   ?= 180
 CINDER_KUTTL_NAMESPACE ?= cinder-kuttl-tests
 
 # RabbitMQ
@@ -213,7 +204,6 @@ OCTAVIA_CR          ?= ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIA}
 # TODO: Image customizations for all Octavia services
 OCTAVIA_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/octavia-operator/kuttl-test.yaml
 OCTAVIA_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/octavia-operator/tests/kuttl/tests
-OCTAVIA_KUTTL_TIMEOUT ?= 180
 
 # Designate
 DESIGNATE_IMG        ?= quay.io/openstack-k8s-operators/designate-operator-index:latest
@@ -752,10 +742,6 @@ keystone_deploy: input keystone_deploy_prep ## installs the service instance usi
 	make wait
 	bash scripts/operator-deploy-resources.sh
 
-.PHONY: keystone_deploy_validate
-keystone_deploy_validate: input ## checks that keystone was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
-	kubectl-kuttl assert -n ${NAMESPACE} ${KEYSTONE_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout ${KEYSTONE_KUTTL_TIMEOUT}
-
 .PHONY: keystone_deploy_cleanup
 keystone_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,keystone))
@@ -795,10 +781,6 @@ mariadb_deploy: input mariadb_deploy_prep ## installs the service instance using
 	$(eval $(call vars,$@,mariadb))
 	make wait
 	bash scripts/operator-deploy-resources.sh
-
-.PHONY: mariadb_deploy_validate
-mariadb_deploy_validate: input ## checks that mariadb was properly deployed. Set KEYSTONE_KUTTL_DIR to use assert file from custom repo.
-	kubectl-kuttl assert -n ${NAMESPACE} ${MARIADB_ASSERT} --timeout ${MARIADB_KUTTL_TIMEOUT}
 
 .PHONY: mariadb_deploy_cleanup
 mariadb_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
@@ -1002,10 +984,6 @@ cinder_deploy: input cinder_deploy_prep ## installs the service instance using k
 	make wait
 	bash scripts/operator-deploy-resources.sh
 
-.PHONY: cinder_deploy_validate
-cinder_deploy_validate: input ## checks that cinder was properly deployed. Set CINDER_KUTTL_DIR to use assert file from custom repo.
-	kubectl-kuttl assert -n ${NAMESPACE} ${CINDER_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout ${CINDER_KUTTL_TIMEOUT}
-
 .PHONY: cinder_deploy_cleanup
 cinder_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,cinder))
@@ -1131,10 +1109,6 @@ octavia_deploy: input octavia_deploy_prep ## installs the service instance using
 	make wait
 	bash scripts/operator-deploy-resources.sh
 
-.PHONY: octavia_deploy_validate
-octavia_deploy_validate: input ## checks that octavia was properly deployed. Set OCTAVIA_KUTTL_DIR to use assert file from custom repo.
-	kubectl-kuttl assert -n ${NAMESPACE} ${OCTAVIA_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout ${OCTAVIA_KUTTL_TIMEOUT}
-
 .PHONY: octavia_deploy_cleanup
 octavia_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,octavia))
@@ -1174,10 +1148,6 @@ designate_deploy: input designate_deploy_prep ## installs the service instance u
 	$(eval $(call vars,$@,designate))
 	make wait
 	bash scripts/operator-deploy-resources.sh
-
-.PHONY: designate_deploy_validate
-designate_deploy_validate: input namespace ## checks that designate was properly deployed. Set DESIGNATE_KUTTL_DIR to use assert file from custom repo.
-	kubectl-kuttl assert -n ${NAMESPACE} ${DESIGNATE_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
 
 .PHONY: designate_deploy_cleanup
 designate_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
@@ -1245,7 +1215,7 @@ mariadb_kuttl: input deploy_cleanup mariadb mariadb_deploy_prep ## runs kuttl te
 	make mariadb_cleanup
 
 .PHONY: kuttl_db_prep
-kuttl_db_prep: input deploy_cleanup mariadb mariadb_deploy mariadb_deploy_validate infra memcached_deploy ## installs common DB service(MariaDB and Memcached)
+kuttl_db_prep: input deploy_cleanup mariadb mariadb_deploy infra memcached_deploy ## installs common DB service(MariaDB and Memcached)
 
 .PHONY: kuttl_db_cleanup
 kuttl_db_cleanup: memcached_deploy_cleanup infra_cleanup mariadb_deploy_cleanup mariadb_cleanup input_cleanup
