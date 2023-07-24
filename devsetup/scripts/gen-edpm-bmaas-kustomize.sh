@@ -34,11 +34,6 @@ pushd ${OPERATOR_DIR} && git clone $(if [ ${DATAPLANE_BRANCH} ]; then echo -b ${
     ${DATAPLANE_REPO} "dataplane-operator" && popd
 cp  ${OPERATOR_DIR}/dataplane-operator/${OPENSTACK_DATAPLANE} ${DEPLOY_DIR}/${DATAPLANE_CR_FILE}
 
-# Patch netconfig to add default route
-oc patch netconfig -n ${NAMESPACE} netconfig --type json \
-    -p="[{"op": "add", "path": "/spec/networks/0/subnets/0/routes", \
-    "value": [{"destination": "0.0.0.0/0", "nexthop": ${NETWORK_IPADDRESS}}]}]"
-
 pushd ${DEPLOY_DIR}
 
 cat <<EOF >>kustomization.yaml
