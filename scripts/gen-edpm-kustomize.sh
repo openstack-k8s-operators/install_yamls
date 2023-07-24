@@ -93,18 +93,22 @@ patches:
       path: /spec/nodes/edpm-compute-0/node/ansibleVars
       value: |
         ctlplane_ip: ${EDPM_COMPUTE_IP}
-    - op: add
-      path: /spec/roles/edpm-compute/services/0
-      value: repo-setup
-    - op: add
-      path: /spec/roles/edpm-compute/nodeTemplate/networks
+    - op: replace
+      path: /spec/nodes/edpm-compute-0/node/networks
       value:
+        - name: CtlPlane
+          subnetName: subnet1
+          defaultRoute: true
+          fixedIP: ${EDPM_COMPUTE_IP}
         - name: InternalApi
           subnetName: subnet1
         - name: Storage
           subnetName: subnet1
         - name: Tenant
           subnetName: subnet1
+    - op: add
+      path: /spec/roles/edpm-compute/services/0
+      value: repo-setup
     - op: replace
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars
       value: |
@@ -121,12 +125,6 @@ patches:
         # considered EDPM network defaults.
         neutron_physical_bridge_name: br-ex
         neutron_public_interface_name: ${EDPM_NETWORK_INTERFACE_NAME}
-        ctlplane_mtu: ${INTERFACE_MTU}
-        ctlplane_subnet_cidr: 24
-        ctlplane_gateway_ip: 192.168.122.1
-        ctlplane_host_routes:
-        - ip_netmask: 0.0.0.0/0
-          next_hop: ${EDPM_DEFAULT_GW}
         role_networks:
         - InternalApi
         - Storage
@@ -214,6 +212,19 @@ cat <<EOF >>kustomization.yaml
       path: /spec/nodes/edpm-compute-${INDEX}/node/ansibleVars
       value: |
         ctlplane_ip: 192.168.122.$((100+${INDEX}))
+    - op: add
+      path: /spec/nodes/edpm-compute-${INDEX}/node/networks
+      value:
+        - name: CtlPlane
+          subnetName: subnet1
+          defaultRoute: true
+          fixedIP: 192.168.122.$((100+${INDEX}))
+        - name: InternalApi
+          subnetName: subnet1
+        - name: Storage
+          subnetName: subnet1
+        - name: Tenant
+          subnetName: subnet1
     - op: replace
       path: /spec/nodes/edpm-compute-${INDEX}/node/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
@@ -224,6 +235,19 @@ cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/nodes/edpm-compute-1/ansibleHost
       value: ${EDPM_COMPUTE_1_IP}
+    - op: replace
+      path: /spec/nodes/edpm-compute-1/node/networks
+      value:
+        - name: CtlPlane
+          subnetName: subnet1
+          defaultRoute: true
+          fixedIP: ${EDPM_COMPUTE_1_IP}
+        - name: InternalApi
+          subnetName: subnet1
+        - name: Storage
+          subnetName: subnet1
+        - name: Tenant
+          subnetName: subnet1
     - op: replace
       path: /spec/nodes/edpm-compute-1/node/ansibleVars
       value: |
