@@ -74,6 +74,9 @@ fi)
     - op: add
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleSSHPrivateKeySecret
       value: dataplane-ansible-ssh-private-key-secret
+    - op: add
+      path: /spec/roles/edpm-compute/nodeTemplate/nova
+      value: {}
     - op: replace
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars
       value: |
