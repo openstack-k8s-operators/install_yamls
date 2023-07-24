@@ -101,18 +101,19 @@ KEYSTONE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/t
 KEYSTONE_KUTTL_NAMESPACE ?= keystone-kuttl-tests
 
 # Mariadb
-MARIADB_IMG         ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
-MARIADB_REPO        ?= https://github.com/openstack-k8s-operators/mariadb-operator.git
-MARIADB_BRANCH      ?= main
+MARIADB_IMG             ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
+MARIADB_REPO            ?= https://github.com/openstack-k8s-operators/mariadb-operator.git
+MARIADB_BRANCH          ?= main
 ifeq ($(DBSERVICE), galera)
-MARIADB             ?= config/samples/mariadb_v1beta1_galera.yaml
+MARIADB                 ?= config/samples/mariadb_v1beta1_galera.yaml
 else
-MARIADB             ?= config/samples/mariadb_v1beta1_mariadb.yaml
+MARIADB                 ?= config/samples/mariadb_v1beta1_mariadb.yaml
 endif
-MARIADB_CR          ?= ${OPERATOR_BASE_DIR}/mariadb-operator/${MARIADB}
-MARIADB_DEPL_IMG    ?= unused
-MARIADB_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
-MARIADB_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
+MARIADB_CR              ?= ${OPERATOR_BASE_DIR}/mariadb-operator/${MARIADB}
+MARIADB_DEPL_IMG        ?= unused
+MARIADB_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
+MARIADB_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
+MARIADB_KUTTL_NAMESPACE ?= mariadb-kuttl-tests
 
 # Placement
 PLACEMENT_IMG             ?= quay.io/openstack-k8s-operators/placement-operator-index:latest
@@ -1208,9 +1209,12 @@ nova_deploy_cleanup: namespace ## cleans up the service instance, Does not affec
 
 .PHONY: mariadb_kuttl_run
 mariadb_kuttl_run: ## runs kuttl tests for the mariadb operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${MARIADB_KUTTL_CONF} ${MARIADB_KUTTL_DIR}
+	kubectl-kuttl test --config ${MARIADB_KUTTL_CONF} ${MARIADB_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: mariadb_kuttl
+mariadb_kuttl: export NAMESPACE = ${MARIADB_KUTTL_NAMESPACE}
+# Set the value of $MARIADB_KUTTL_NAMESPACE if you want to run the keystone
+# kuttl tests in a namespace different than the default (mariadb-kuttl-tests)
 mariadb_kuttl: input deploy_cleanup mariadb mariadb_deploy_prep ## runs kuttl tests for the mariadb operator. Installs mariadb operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,mariadb))
 	make wait
