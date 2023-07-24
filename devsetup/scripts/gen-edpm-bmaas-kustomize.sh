@@ -111,13 +111,14 @@ fi)
           dns_search_domains: []
           edpm_ovn_dbs:
           - ${NETWORK_IPADDRESS}
-
-          edpm_ovn_controller_agent_image: quay.io/podified-antelope-centos9/openstack-ovn-controller:current-podified
-          edpm_iscsid_image: quay.io/podified-antelope-centos9/openstack-iscsid:current-podified
-          edpm_logrotate_crond_image: quay.io/podified-antelope-centos9/openstack-cron:current-podified
-          edpm_nova_compute_container_image: quay.io/podified-antelope-centos9/openstack-nova-compute:current-podified
-          edpm_nova_libvirt_container_image: quay.io/podified-antelope-centos9/openstack-nova-libvirt:current-podified
-          edpm_ovn_metadata_agent_image: quay.io/podified-antelope-centos9/openstack-neutron-metadata-agent-ovn:current-podified
+          registry_url: ${REGISTRY_URL}
+          image_tag: ${CONTAINER_TAG}
+          edpm_ovn_controller_agent_image: "{{ registry_url }}/openstack-ovn-controller:{{ image_tag }}"
+          edpm_iscsid_image: "{{ registry_url }}/openstack-iscsid:{{ image_tag }}"
+          edpm_logrotate_crond_image: "{{ registry_url }}/openstack-cron:{{ image_tag }}"
+          edpm_nova_compute_container_image: "{{ registry_url }}/openstack-nova-compute:{{ image_tag }}"
+          edpm_nova_libvirt_container_image: "{{ registry_url }}/openstack-nova-libvirt:{{ image_tag }}"
+          edpm_ovn_metadata_agent_image: "{{ registry_url }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
 
           gather_facts: false
           enable_debug: false
