@@ -1,5 +1,6 @@
 # general
-SHELL := /bin/bash
+SHELL       := /bin/bash
+OCP_RELEASE := $(shell cut -d '.' -f 1,2 <<< $(shell oc version -o json | jq -r .openshiftVersion))
 OPERATOR_NAMESPACE      ?= openstack-operators
 NAMESPACE                ?= openstack
 PASSWORD                 ?= 12345678
@@ -323,7 +324,6 @@ SG_CORE_DEPL_IMG                 ?= unused
 # BMO
 BMO_REPO                         ?= https://github.com/metal3-io/baremetal-operator
 BMO_BRANCH                       ?= main
-CERTMANAGER_URL                  ?= https://github.com/jetstack/cert-manager/releases/download/v1.5.4/cert-manager.yaml
 BMO_PROVISIONING_INTERFACE       ?= enp6s0
 BMO_IRONIC_HOST                  ?= 192.168.122.10
 
@@ -336,6 +336,7 @@ SWIFT_CR         ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFT}
 
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
+${1}: export OCP_RELEASE=$(OCP_RELEASE)
 ${1}: export NAMESPACE=${NAMESPACE}
 ${1}: export OPERATOR_NAMESPACE=${OPERATOR_NAMESPACE}
 ${1}: export SECRET=${SECRET}
@@ -449,12 +450,9 @@ input_cleanup: ## deletes the secret/CM, used by the services as input
 ##@ CRC BMO SETUP
 .PHONY: crc_bmo_setup
 crc_bmo_setup: export IRONIC_HOST_IP=${BMO_IRONIC_HOST}
-crc_bmo_setup:
+crc_bmo_setup: certmanager
 	$(eval $(call vars,$@))
 	mkdir -p ${OPERATOR_BASE_DIR}
-	oc apply -f ${CERTMANAGER_URL}
-	timeout ${TIMEOUT} bash -c 'until [ "$$(oc get pod -l app=webhook -n cert-manager -o name)" != "" ]; do sleep 1; done'
-	oc wait pod -n cert-manager --for condition=Ready -l app=webhook --timeout=$(TIMEOUT)
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(BMO_BRANCH),-b ${BMO_BRANCH}) ${BMO_REPO} "baremetal-operator" && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/eth2/${BMO_PROVISIONING_INTERFACE}/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/ENDPOINT\=http/ENDPOINT\=https/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
@@ -487,7 +485,7 @@ openstack_prep: $(if $(findstring true,$(BMO_SETUP)), crc_bmo_setup) ## creates 
 	bash scripts/gen-olm.sh
 
 .PHONY: openstack
-openstack: operator_namespace openstack_prep ## installs the operator, also runs the prep step. Set OPENSTACK_IMG for custom image.
+openstack: certmanager operator_namespace openstack_prep ## installs the operator, also runs the prep step. Set OPENSTACK_IMG for custom image.
 	$(eval $(call vars,$@,openstack))
 	oc apply -f ${OPERATOR_DIR}
 
@@ -1861,3 +1859,31 @@ swift_deploy_cleanup: ## cleans up the service instance, Does not affect the ope
 	$(eval $(call vars,$@,swift))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	rm -Rf ${OPERATOR_BASE_DIR}/swift-operator ${DEPLOY_DIR}
+
+##@ CERT-MANAGER
+.PHONY: certmanager
+certmanager: export NAMESPACE=$(if $(findstring 4.10,$(OCP_RELEASE)),openshift-cert-manager,cert-manager)
+certmanager: export OPERATOR_NAMESPACE=$(if $(findstring 4.10,$(OCP_RELEASE)),openshift-cert-manager-operator,cert-manager-operator)
+certmanager: export CHANNEL=$(if $(findstring 4.10,$(OCP_RELEASE)),tech-preview,stable-v1)
+certmanager: ## installs cert-manager operator in the cert-manager-operator namespace, cert-manager runs it cert-manager namespace
+	$(eval $(call vars,$@,cert-manager))
+	$(MAKE) operator_namespace
+	bash scripts/gen-olm-cert-manager.sh
+	oc apply -f ${OPERATOR_DIR}
+	while ! (oc get pod --no-headers=true -l name=cert-manager-operator -n ${OPERATOR_NAMESPACE}| grep "cert-manager-operator"); do sleep 10; done
+	oc wait pod -n ${OPERATOR_NAMESPACE} --for condition=Ready -l name=cert-manager-operator --timeout=$(TIMEOUT)
+	while ! (oc get pod --no-headers=true -l app=cainjector -n ${NAMESPACE} | grep "cert-manager-cainjector"); do sleep 10; done
+	oc wait pod -n ${NAMESPACE} -l app=cainjector --for condition=Ready --timeout=$(TIMEOUT)
+	while ! (oc get pod --no-headers=true -l app=webhook -n ${NAMESPACE} | grep "cert-manager-webhook"); do sleep 10; done
+	oc wait pod -n ${NAMESPACE} -l app=webhook --for condition=Ready --timeout=$(TIMEOUT)
+	while ! (oc get pod --no-headers=true -l app=cert-manager -n ${NAMESPACE} | grep "cert-manager"); do sleep 10; done
+	oc wait pod -n ${NAMESPACE} -l app=cert-manager --for condition=Ready --timeout=$(TIMEOUT)
+
+certmanager_cleanup: export NAMESPACE=$(if $(findstring 4.10,$(OCP_RELEASE)),openshift-cert-manager,cert-manager)
+certmanager_cleanup: export OPERATOR_NAMESPACE=$(if $(findstring 4.10,$(OCP_RELEASE)),openshift-cert-manager-operator,cert-manager-operator)
+certmanager_cleanup:
+	oc delete -n ${OPERATOR_NAMESPACE} operatorgroup --all --ignore-not-found=true
+	oc delete -n ${OPERATOR_NAMESPACE} subscription --all --ignore-not-found=true
+	oc delete -n ${OPERATOR_NAMESPACE} csv --all --ignore-not-found=true
+	oc delete -n ${NAMESPACE} installplan --all --ignore-not-found=true
+	oc delete -n cert-manager deployment --all
