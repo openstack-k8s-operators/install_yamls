@@ -35,10 +35,15 @@ if [ -z "${INTERFACE_MTU}" ]; then
     echo "Please set INTERFACE_MTU"; exit 1
 fi
 
+if [ -z "${INTERFACE_TYPE}" ]; then
+    echo "Please et INTERFACE_TYPE"; exit 1
+fi
+
 echo DEPLOY_DIR ${DEPLOY_DIR}
 echo WORKERS ${WORKERS}
 echo INTERFACE ${INTERFACE}
 echo INTERFACE_MTU ${INTERFACE_MTU}
+echo INTERFACE_TYPE ${INTERFACE_TYPE}
 
 CTLPLANE_IP_ADDRESS_SUFFIX=10
 # Use different suffix for other networks as the sample netconfig
@@ -66,8 +71,8 @@ spec:
         enabled: false
       name: ${INTERFACE}.20
       state: up
-      type: vlan
-      vlan:
+      type: ${INTERFACE_TYPE}
+      ${INTERFACE_TYPE}:
         base-iface: ${INTERFACE}
         id: 20
     - description: storage vlan interface
@@ -81,8 +86,8 @@ spec:
         enabled: false
       name: ${INTERFACE}.21
       state: up
-      type: vlan
-      vlan:
+      type: ${INTERFACE_TYPE}
+      ${INTERFACE_TYPE}:
         base-iface: ${INTERFACE}
         id: 21
     - description: tenant vlan interface
@@ -96,8 +101,8 @@ spec:
         enabled: false
       name: ${INTERFACE}.22
       state: up
-      type: vlan
-      vlan:
+      type: ${INTERFACE_TYPE}
+      ${INTERFACE_TYPE}:
         base-iface: ${INTERFACE}
         id: 22
     - description: Configuring ${INTERFACE}

@@ -284,6 +284,7 @@ DATAPLANE_TOTAL_NODES                            ?=2
 DATAPLANE_RUNNER_IMG                             ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
 DATAPLANE_NETWORK_CONFIG_TEMPLATE                ?=templates/single_nic_vlans/single_nic_vlans.j2
 DATAPLANE_NETWORK_INTERFACE_NAME                 ?=eth0
+DATAPLANE_NETWORK_TYPE                           ?=vlan
 DATAPLANE_SSHD_ALLOWED_RANGES                    ?=['192.168.122.0/24']
 DATAPLANE_CHRONY_NTP_SERVER                      ?=pool.ntp.org
 DATAPLANE_REGISTRY_URL                           ?=quay.io/podified-antelope-centos9
