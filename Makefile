@@ -25,6 +25,7 @@ OPERATOR_BASE_DIR   ?= ${OUT}/operator
 
 # storage (used by some operators)
 STORAGE_CLASS       ?= "local-storage"
+CRC_STORAGE_RETRIES ?= 3
 
 # network isolation
 NETWORK_ISOLATION   ?= true
@@ -397,6 +398,16 @@ crc_storage_cleanup: ## cleanup local storage PVs in CRC vm
 	bash scripts/cleanup-crc-pv.sh
 	if oc get sc ${STORAGE_CLASS}; then oc delete sc ${STORAGE_CLASS}; fi
 	bash scripts/delete-pv.sh
+
+.PHONY: crc_storage_with_retries
+crc_storage_with_retries: ## initialize local storage PVs with retries
+	 $(eval $(call vars,$@))
+	bash scripts/retry_make_crc_storage.sh $(CRC_STORAGE_RETRIES)
+
+.PHONY: crc_storage_cleanup_with_retries
+crc_storage_cleanup_with_retries: ## cleanup local storage PVs with retries
+	 $(eval $(call vars,$@))
+	bash scripts/retry_make_crc_storage_cleanup.sh $(CRC_STORAGE_RETRIES)
 
 ##@ OPERATOR_NAMESPACE
 .PHONY: operator_namespace
