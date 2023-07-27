@@ -1503,10 +1503,11 @@ horizon_kuttl: kuttl_common_prep horizon horizon_deploy_prep ## runs kuttl tests
 
 .PHONY: openstack_kuttl_run
 openstack_kuttl_run: ## runs kuttl tests for the openstack operator, assumes that everything needed for running the test was deployed beforehand.
+	set -e; \
 	for test_dir in $(shell ls ${OPENSTACK_KUTTL_DIR}); do \
 	    oc delete osctlplane --all --namespace ${NAMESPACE}; \
-		make crc_storage_cleanup; \
-		make crc_storage; \
+		make crc_storage_cleanup_with_retries; \
+		make crc_storage_with_retries; \
 		kubectl-kuttl test --config ${OPENSTACK_KUTTL_CONF} ${OPENSTACK_KUTTL_DIR} --test $${test_dir}; \
 	done
 
