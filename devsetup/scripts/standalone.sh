@@ -40,7 +40,6 @@ fi
 # And when running it from our own systems outside of the Red Hat network we can use any available server:
 # export NTP_SERVER=pool.ntp.org
 
-if [[ ! -f $CMDS_FILE ]]; then
 cat <<EOF > $CMDS_FILE
 set -ex
 sudo dnf remove -y epel-release
@@ -66,7 +65,6 @@ export CEPH_ARGS=${CEPH_ARGS}
 [[ "\$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]] && /tmp/ceph.sh
 /tmp/openstack.sh
 EOF
-fi
 
 while [[ $(ssh -o BatchMode=yes -o ConnectTimeout=5 $SSH_OPT root@$IP echo ok) != "ok" ]]; do
     true
