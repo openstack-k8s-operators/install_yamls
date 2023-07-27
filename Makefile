@@ -297,12 +297,15 @@ DATAPLANE_KUTTL_NAMESPACE ?= dataplane-kuttl-tests
 DATAPLANE_DEFAULT_GW      ?= 192.168.122.1
 
 # Manila
-MANILA_IMG          ?= quay.io/openstack-k8s-operators/manila-operator-index:latest
-MANILA_REPO         ?= https://github.com/openstack-k8s-operators/manila-operator.git
-MANILA_BRANCH       ?= main
-MANILA              ?= config/samples/manila_v1beta1_manila.yaml
-MANILA_CR           ?= ${OPERATOR_BASE_DIR}/manila-operator/${MANILA}
+MANILA_IMG            ?= quay.io/openstack-k8s-operators/manila-operator-index:latest
+MANILA_REPO           ?= https://github.com/openstack-k8s-operators/manila-operator.git
+MANILA_BRANCH         ?= main
+MANILA                ?= config/samples/manila_v1beta1_manila.yaml
+MANILA_CR             ?= ${OPERATOR_BASE_DIR}/manila-operator/${MANILA}
 # TODO: Image customizations for all Manila services
+MANILA_KUTTL_CONF     ?= ${OPERATOR_BASE_DIR}/manila-operator/kuttl-test.yaml
+MANILA_KUTTL_DIR      ?= ${OPERATOR_BASE_DIR}/manila-operator/tests/kuttl/tests
+MANILA_KUTTL_TIMEOUT  ?= 180
 
 # Ceph
 CEPH_IMG            ?= quay.io/ceph/demo:latest
@@ -377,7 +380,7 @@ help: ## Display this help.
 cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup designate_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup dataplane_cleanup ansibleee_cleanup rabbitmq_cleanup infra_cleanup ## Delete all operators
 
 .PHONY: deploy_cleanup
-deploy_cleanup: heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup designate_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
+deploy_cleanup: manila_deploy_cleanup heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup designate_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
 
 .PHONY: wait
 wait: ## wait for an operator's controller-manager pod to be ready (requires OPERATOR_NAME to be explicitly passed!)
@@ -1468,6 +1471,21 @@ glance_kuttl: kuttl_common_prep glance glance_deploy_prep ## runs kuttl tests fo
 	make deploy_cleanup
 	make glance_cleanup
 	make kuttl_common_cleanup
+
+.PHONY: manila_kuttl_run
+manila_kuttl_run: ## runs kuttl tests for the manila operator,
+	kubectl-kuttl test --config ${MANILA_KUTTL_CONF} ${MANILA_KUTTL_DIR}
+
+.PHONY: manila_kuttl
+manila_kuttl: kuttl_common_prep ceph manila manila_deploy_prep ## runs kuttl tests for manila operator. Installs manila operator and cleans up previous deployments before and after running the tests.
+	$(eval $(call vars,$@,manila))
+	make wait
+	make manila_kuttl_run
+	make manila_cleanup
+	make deploy_cleanup
+	make ceph_cleanup
+	make kuttl_common_cleanup
+	make cleanup
 
 .PHONY: horizon_kuttl_run
 horizon_kuttl_run: ## runs kuttl tests for the horizon operator, assumes that everything needed for running the test was deployed beforehand.
