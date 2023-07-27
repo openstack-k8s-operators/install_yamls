@@ -73,66 +73,25 @@ fi)
       path: /spec/roles/edpm-compute/nodeTemplate/nova
       value: {}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars
-      value: |
-          growvols_args: '/=8GB /tmp=1GB /home=1GB /var=80%'
-          service_net_map:
-            nova_api_network: internal_api
-            nova_libvirt_network: internal_api
-          edpm_chrony_ntp_servers:
-            - 0.pool.ntp.org
-            - 1.pool.ntp.org
-          # edpm_network_config
-          # Default nic config template for a EDPM compute node
-          # These vars are edpm_network_config role vars
-          edpm_network_config_template: templates/single_nic_vlans/single_nic_vlans.j2
-          edpm_network_config_hide_sensitive_logs: false
-          neutron_physical_bridge_name: br-ex
-          neutron_public_interface_name: eth0
-          role_networks:
-          - InternalApi
-          - Storage
-          - Tenant
-          networks_lower:
-            External: external
-            InternalApi: internal_api
-            Storage: storage
-            Tenant: tenant
-
-          # edpm_nodes_validation
-          edpm_nodes_validation_validate_controllers_icmp: false
-          edpm_nodes_validation_validate_gateway_icmp: false
-
-          edpm_ovn_metadata_agent_DEFAULT_transport_url: rabbit://default_user@rabbitmq.openstack.svc:5672
-          edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection: tcp:10.217.5.121:6642
-          edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host: 127.0.0.1
-          edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret: 12345678
-          edpm_ovn_metadata_agent_DEFAULT_bind_host: 127.0.0.1
-          dns_search_domains: []
-          edpm_ovn_dbs:
-          - ${NETWORK_IPADDRESS}
-          registry_url: ${REGISTRY_URL}
-          image_tag: ${CONTAINER_TAG}
-          edpm_ovn_controller_agent_image: "{{ registry_url }}/openstack-ovn-controller:{{ image_tag }}"
-          edpm_iscsid_image: "{{ registry_url }}/openstack-iscsid:{{ image_tag }}"
-          edpm_logrotate_crond_image: "{{ registry_url }}/openstack-cron:{{ image_tag }}"
-          edpm_nova_compute_container_image: "{{ registry_url }}/openstack-nova-compute:{{ image_tag }}"
-          edpm_nova_libvirt_container_image: "{{ registry_url }}/openstack-nova-libvirt:{{ image_tag }}"
-          edpm_ovn_metadata_agent_image: "{{ registry_url }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
-
-          gather_facts: false
-          enable_debug: false
-          # edpm firewall, change the allowed CIDR if needed
-          edpm_sshd_configure_firewall: true
-          edpm_sshd_allowed_ranges: ['192.168.122.0/24']
-          # SELinux module
-          edpm_selinux_mode: enforcing
-
-          # Remove these after edpm.edpm_hosts_entries role has been dropped
-          edpm_hosts_entries_undercloud_hosts_entries: []
-          edpm_hosts_entries_extra_hosts_entries: []
-          edpm_hosts_entries_vip_hosts_entries: []
-
-
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_dbs
+      value: [${NETWORK_IPADDRESS}]
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_controller_agent_image
+      value: "${REGISTRY_URL}/openstack-ovn-controller:${CONTAINER_TAG}"
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_iscsid_image
+      value: "${REGISTRY_URL}/openstack-iscsid:${CONTAINER_TAG}"
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_logrotate_crond_image
+      value: "${REGISTRY_URL}/openstack-cron:${CONTAINER_TAG}"
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_nova_compute_container_image
+      value: "${REGISTRY_URL}/openstack-nova-compute:${CONTAINER_TAG}"
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_nova_libvirt_container_image
+      value: "${REGISTRY_URL}/openstack-nova-libvirt:${CONTAINER_TAG}"
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_image
+      value: "${REGISTRY_URL}/openstack-neutron-metadata-agent-ovn:${CONTAINER_TAG}"
 EOF
 popd
