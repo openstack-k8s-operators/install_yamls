@@ -25,7 +25,7 @@ if [ ! -d ${OUT}/crc ]; then
 fi
 PV_NUM=${PV_NUM:-12}
 
-NODE_NAMES=$(oc get node -o name -l node-role.kubernetes.io/worker | sed -e 's|node/||' | head -c-1 | tr '\n' ',')
+NODE_NAMES=$(oc get node -o name -l node-role.kubernetes.io/worker | sed -e 's|node/||' | head -c-1 | tr '\n' ' ')
 if [ -z "$NODE_NAMES" ]; then
     echo "Unable to determine node name with 'oc' command."
     exit 1
@@ -40,13 +40,14 @@ provisioner: kubernetes.io/no-provisioner
 volumeBindingMode: WaitForFirstConsumer
 EOF_CAT
 
+for node in $NODE_NAMES; do
 for i in `seq -w $PV_NUM`; do
 cat >> ${OUT}/crc/storage.yaml <<EOF_CAT
 ---
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: "$(sed -e 's/^"//' -e 's/"$//' <<<"${STORAGE_CLASS}")$i"
+  name: "$(sed -e 's/^"//' -e 's/"$//' <<<"${STORAGE_CLASS}")$i-${node}"
   annotations:
     pv.kubernetes.io/provisioned-by: crc-devsetup
   labels:
@@ -70,8 +71,9 @@ spec:
       - matchExpressions:
         - key: kubernetes.io/hostname
           operator: In
-          values: [${NODE_NAMES}]
+          values: [${node}]
 EOF_CAT
+done
 done
 cat >> ${OUT}/crc/storage.yaml <<EOF_CAT
 ---
