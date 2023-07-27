@@ -26,6 +26,8 @@ SSH_OPT="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $SSH_KEY
 CMDS_FILE=${CMDS_FILE:-"/tmp/standalone_repos"}
 CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD:-"rm -Rf"}
 
+CEPH_ARGS=${CEPH_ARGS:-'"-e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml"'}
+
 if [[ ! -f $SSH_KEY_FILE ]]; then
     echo "$SSH_KEY_FILE is missing"
     exit 1
@@ -58,7 +60,7 @@ sudo hostnamectl set-hostname standalone.localdomain --transient
 
 export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
-export CEPH_ARGS=${CEPH_ARGS:-\"-e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml\"}
+export CEPH_ARGS=${CEPH_ARGS}
 
 /tmp/network.sh
 [[ "\$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]] && /tmp/ceph.sh
