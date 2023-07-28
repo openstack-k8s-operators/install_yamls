@@ -319,7 +319,10 @@ MANILA_KUTTL_DIR      ?= ${OPERATOR_BASE_DIR}/manila-operator/tests/kuttl/tests
 MANILA_KUTTL_TIMEOUT  ?= 180
 
 # Ceph
-CEPH_IMG            ?= quay.io/ceph/demo:latest
+CEPH_IMG            		?= quay.io/ceph/demo:latest
+CEPH_FSID           		?= _FSID_
+CEPH_STORAGE_MGMT_NETWORK	?= false
+CEPH_HCI_NOVA_CONFIG		?= false
 
 # NNCP
 NNCP_INTERFACE      ?= enp6s0
@@ -581,6 +584,10 @@ edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_BIND_HOST=${DATAPLANE_OVN_METAD
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_TRANSPORT_URL=$(shell oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_SB_CONNECTION=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
 edpm_deploy_prep: export EDPM_OVN_DBS=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"')
+edpm_deploy_prep: export EDPM_STORAGE_MGMT_NETWORK=${CEPH_STORAGE_MGMT_NETWORK}
+edpm_deploy_prep: export EDPM_HCI_NOVA_CONFIG=${CEPH_HCI_NOVA_CONFIG}
+edpm_deploy_prep: export EDPM_CONFIG_NET_ONLY=${DATAPLANE_CONFIG_NET_ONLY}
+edpm_deploy_prep: export EDPM_CEPH_FSID=${CEPH_FSID}
 edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}

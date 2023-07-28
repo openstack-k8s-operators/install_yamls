@@ -133,6 +133,21 @@ patches:
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
 EOF
+if [ "$EDPM_STORAGE_MGMT_NETWORK" == "true" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/nodes/edpm-compute-0/node/networks/-
+      value:
+        name: StorageMgmt
+        subnetName: subnet1
+    - op: add
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/role_networks/-
+      value: StorageMgmt
+    - op: add
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/networks_lower/StorageMgmt
+      value: storage_mgmt
+EOF
+fi
 if oc get pvc ansible-ee-logs -n ${NAMESPACE} 2>&1 1>/dev/null; then
 cat <<EOF >>kustomization.yaml
     - op: replace
@@ -165,19 +180,9 @@ cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/nodes/edpm-compute-${INDEX}/hostName
       value: edpm-compute-${INDEX}
-    - op: add
-      path: /spec/nodes/edpm-compute-${INDEX}/node/networks
-      value:
-        - name: CtlPlane
-          subnetName: subnet1
-          defaultRoute: true
-          fixedIP: 192.168.122.$((100+${INDEX}))
-        - name: InternalApi
-          subnetName: subnet1
-        - name: Storage
-          subnetName: subnet1
-        - name: Tenant
-          subnetName: subnet1
+    - op: replace
+      path: /spec/nodes/edpm-compute-${INDEX}/node/networks/0/fixedIP
+      value: 192.168.122.$((100+${INDEX}))
     - op: replace
       path: /spec/nodes/edpm-compute-${INDEX}/node/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
@@ -189,19 +194,9 @@ cat <<EOF >>kustomization.yaml
       path: /spec/nodes/edpm-compute-1/ansibleHost
       value: ${EDPM_COMPUTE_1_IP}
     - op: replace
-      path: /spec/nodes/edpm-compute-1/node/networks
-      value:
-        - name: CtlPlane
-          subnetName: subnet1
-          defaultRoute: true
-          fixedIP: ${EDPM_COMPUTE_1_IP}
-        - name: InternalApi
-          subnetName: subnet1
-        - name: Storage
-          subnetName: subnet1
-        - name: Tenant
-          subnetName: subnet1
-    - op: remove
+      path: /spec/nodes/edpm-compute-1/node/networks/0/fixedIP
+      value: ${EDPM_COMPUTE_1_IP}
+    - op: replace
       path: /spec/nodes/edpm-compute-1/node/ansibleVars
     - op: replace
       path: /spec/nodes/edpm-compute-1/node/ansibleSSHPrivateKeySecret
@@ -213,6 +208,64 @@ cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleUser
       value: ${EDPM_ANSIBLE_USER}
+EOF
+fi
+
+if [ "$EDPM_CONFIG_NET_ONLY" == "true" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/roles/edpm-compute/services
+      value:
+        - configure-network
+        - validate-network
+        - ceph-hci-pre
+    - op: remove
+      path: /spec/roles/edpm-compute/nodeTemplate/nova
+EOF
+fi
+
+if [ "$EDPM_HCI_NOVA_CONFIG" == "true" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/nova
+      value:
+        cellName: cell1
+        customServiceConfig: |
+          [DEFAULT]
+          reserved_host_memory_mb=75000
+          [libvirt]
+          images_type=rbd
+          images_rbd_pool=vms
+          images_rbd_ceph_conf=/etc/ceph/ceph.conf
+          images_rbd_glance_store_name=default_backend
+          images_rbd_glance_copy_poll_interval=15
+          images_rbd_glance_copy_timeout=600
+          rbd_user=openstack
+          rbd_secret_uuid=${EDPM_CEPH_FSID}
+        deploy: true
+        novaInstance: nova
+    - op: add
+      path: /spec/roles/edpm-compute/nodeTemplate/extraMounts
+      value:
+        - extraVolType: Ceph
+          volumes:
+          - name: ceph
+            secret:
+              secretName: ceph-conf-files
+          mounts:
+          - name: ceph
+            mountPath: "/etc/ceph"
+            readOnly: true
+    - op: replace
+      path: /spec/roles/edpm-compute/services
+      value:
+        - configure-network
+        - validate-network
+        - ceph-hci-pre
+        - install-os
+        - ceph-client
+        - configure-os
+        - run-os
 EOF
 fi
 
