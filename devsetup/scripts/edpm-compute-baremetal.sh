@@ -68,5 +68,5 @@ spec:
 EOF
 done
 
-/bin/bash ${SCRIPTPATH}/gen-edpm-bmaas-kustomize.sh
+/bin/bash ${SCRIPTPATH}/gen-edpm-baremetal-kustomize.sh
 /bin/bash ../scripts/operator-deploy-resources.sh

@@ -55,14 +55,6 @@ if [ -z "$EDPM_BMH_NAMESPACE" ]; then
     echo "Please set EDPM_BMH_NAMESPACE"; exit 1
 fi
 
-if [ -z "${INTERFACE_MTU}" ]; then
-    echo "Please set INTERFACE_MTU"; exit 1
-fi
-
-if [ -z "${EDPM_DEFAULT_GW}" ]; then
-    echo "Please set EDPM_DEFAULT_GW"; exit 1
-fi
-
 NAME=${KIND,,}
 
 if [ ! -d ${DEPLOY_DIR} ]; then
@@ -99,60 +91,40 @@ patches:
         - name: Tenant
           subnetName: subnet1
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars
-      value: |
-        service_net_map:
-          nova_api_network: internal_api
-          nova_libvirt_network: internal_api
-        # edpm_network_config
-        # Default nic config template for a EDPM compute node
-        # These vars are edpm_network_config role vars
-        edpm_network_config_template: ${EDPM_NETWORK_CONFIG_TEMPLATE}
-        edpm_network_config_hide_sensitive_logs: false
-        #
-        # These vars are for the network config templates themselves and are
-        # considered EDPM network defaults.
-        neutron_physical_bridge_name: br-ex
-        role_networks:
-        - InternalApi
-        - Storage
-        - Tenant
-        networks_lower:
-          External: external
-          InternalApi: internal_api
-          Storage: storage
-          Tenant: tenant
-        # edpm_nodes_validation
-        edpm_nodes_validation_validate_controllers_icmp: false
-        edpm_nodes_validation_validate_gateway_icmp: false
-        edpm_ovn_metadata_agent_DEFAULT_transport_url: ${EDPM_OVN_METADATA_AGENT_TRANSPORT_URL}
-        edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection: ${EDPM_OVN_METADATA_AGENT_SB_CONNECTION}
-        edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host: ${EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST}
-        edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret: ${EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET}
-        edpm_ovn_metadata_agent_DEFAULT_bind_host: ${EDPM_OVN_METADATA_AGENT_BIND_HOST}
-        edpm_chrony_ntp_servers:
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_DEFAULT_transport_url
+      value: ${EDPM_OVN_METADATA_AGENT_TRANSPORT_URL}
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection
+      value: ${EDPM_OVN_METADATA_AGENT_SB_CONNECTION}
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host
+      value: ${EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST}
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret
+      value: ${EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET}
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_DEFAULT_bind_host
+      value: ${EDPM_OVN_METADATA_AGENT_BIND_HOST}
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_chrony_ntp_servers
+      value:
         - ${EDPM_CHRONY_NTP_SERVER}
-        dns_search_domains: []
-        edpm_ovn_dbs:
-        - ${EDPM_OVN_DBS}
-        registry_name: quay.io
-        registry_namespace: podified-antelope-centos9
-        image_tag: current-podified
-        edpm_ovn_controller_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-ovn-controller:{{ image_tag }}"
-        edpm_iscsid_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-iscsid:{{ image_tag }}"
-        edpm_logrotate_crond_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-cron:{{ image_tag }}"
-        edpm_nova_compute_container_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-nova-compute:{{ image_tag }}"
-        edpm_nova_libvirt_container_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-nova-libvirt:{{ image_tag }}"
-        edpm_ovn_metadata_agent_image: "{{ registry_name }}/{{ registry_namespace }}/openstack-neutron-metadata-agent-ovn:{{ image_tag }}"
-
-        gather_facts: false
-        enable_debug: false
-        # edpm firewall, change the allowed CIDR if needed
-        edpm_sshd_configure_firewall: true
-        edpm_sshd_allowed_ranges: ${EDPM_SSHD_ALLOWED_RANGES}
-        # SELinux module
-        edpm_selinux_mode: enforcing
-        plan: overcloud
+    - op: add
+      path: /spec/roles/edpm-compute/nodeTemplate/networkConfig
+      value:
+       template: ${EDPM_NETWORK_CONFIG_TEMPLATE}
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_dbs
+      value: ${EDPM_OVN_DBS}
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/registry_url
+      value: ${EDPM_REGISTRY_URL}
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/image_tag
+      value: ${EDPM_CONTAINER_TAG}
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_sshd_allowed_ranges
+      value: ${EDPM_SSHD_ALLOWED_RANGES}
     - op: replace
       path: /spec/roles/edpm-compute/networkAttachments
       value: ${EDPM_NADS}
