@@ -171,30 +171,23 @@ GATEWAY=192.168.122.1
 DNS=${DATAPLANE_DNS_SERVER}
 PREFIX=24
 
-cat <<EOF >${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
-# Set network for current session
-nmcli device set eth0 managed yes
-n=0
-retries=6
-while true; do
-  nmcli device modify $NETDEV ipv4.addresses $IP/$PREFIX ipv4.gateway $GATEWAY ipv4.dns $DNS ipv4.method manual && break
-  n="\$((n+1))"
-  if (( n >= retries )); then
-    echo "Failed to configure ipv4 address in $NETDEV."
-    break
-  fi
-  sleep 5
-done
-# Set network to survive reboots
-echo IPADDR=$IP >> $NETSCRIPT
-echo PREFIX=$PREFIX >> $NETSCRIPT
-echo GATEWAY=$GATEWAY >> $NETSCRIPT
-echo DNS1=$DNS >> $NETSCRIPT
-sed -i s/dhcp/none/g $NETSCRIPT
-sed -i /PERSISTENT_DHCLIENT/d $NETSCRIPT
-EOF
+OS_NET_CONFIG=${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}/os-net-config
 
-chmod +x ${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
+if [ ! -d "$OS_NET_CONFIG" ]; then
+    mkdir -p $OS_NET_CONFIG
+fi
+cat <<EOF >$OS_NET_CONFIG/config.yaml
+network_config:
+- type: interface
+  name: $NETDEV
+  addresses:
+  - ip_netmask: $IP/$PREFIX
+  dns_servers:
+  - $DNS
+  routes:
+  - default: true
+    next_hop: $GATEWAY
+EOF
 
 if [ ! -f ${DISK_FILEPATH} ]; then
     if [ ! -f ${CRC_POOL}/${BASE_DISK_FILENAME} ]; then
@@ -210,7 +203,8 @@ if [ ! -f ${DISK_FILEPATH} ]; then
     virt-customize -a ${DISK_FILEPATH} \
         --root-password password:12345678 \
         --hostname ${EDPM_COMPUTE_NAME} \
-        --firstboot ${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}-firstboot.sh \
+        --copy-in $OS_NET_CONFIG:/etc \
+        --firstboot-command /usr/bin/os-net-config \
         --run-command "systemctl disable cloud-init cloud-config cloud-final cloud-init-local" \
         --run-command "echo 'PermitRootLogin yes' > /etc/ssh/sshd_config.d/99-root-login.conf" \
         --run-command "mkdir -p /root/.ssh; chmod 0700 /root/.ssh" \
