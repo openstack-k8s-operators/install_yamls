@@ -132,7 +132,7 @@ function bootstrap_ceph {
 
 function ceph_is_ready {
     echo "Waiting the cluster to be up"
-    until oc rsh ceph ls /etc/ceph/I_AM_A_DEMO &> /dev/null; do
+    until oc rsh -n $NAMESPACE ceph ls /etc/ceph/I_AM_A_DEMO &> /dev/null; do
         sleep 1
         echo -n .
         (( TIMEOUT-- ))
@@ -147,9 +147,9 @@ function create_pool {
 
     for pool in "${POOLS[@]}"; do
         app="rbd"
-        oc rsh ceph ceph osd pool create $pool 4
+        oc rsh -n $NAMESPACE ceph ceph osd pool create $pool 4
         [[ $pool = *"cephfs"* ]] && app=cephfs
-        oc rsh ceph ceph osd pool application enable $pool $app
+        oc rsh -n $NAMESPACE ceph ceph osd pool application enable $pool $app
     done
 }
 
@@ -174,7 +174,7 @@ function create_key {
         osd_caps="allow class-read object_prefix rbd_children, $caps"
     fi
     # do not log the key if exists
-    oc rsh ceph ceph auth get-or-create "$client" mgr "allow rw" mon "allow r" osd "$osd_caps" >/dev/null
+    oc rsh -n $NAMESPACE ceph ceph auth get-or-create "$client" mgr "allow rw" mon "allow r" osd "$osd_caps" >/dev/null
 }
 
 function create_secret {
@@ -185,14 +185,14 @@ function create_secret {
     local client="client.openstack"
     trap 'rm -rf -- "$TEMPDIR"' EXIT
     echo 'Copying Ceph config files from the container to $TEMPDIR'
-    oc rsync ceph:/etc/ceph/ceph.conf $TEMPDIR
+    oc rsync -n $NAMESPACE ceph:/etc/ceph/ceph.conf $TEMPDIR
     echo 'Create OpenStack keyring'
     # we build the cephx openstack key
     create_key "$client"
     # do not log the exported key
     echo 'Copying OpenStack keyring from the container to $TEMPDIR'
-    oc rsh ceph ceph auth export "$client" -o /etc/ceph/ceph.$client.keyring >/dev/null
-    oc rsync ceph:/etc/ceph/ceph.$client.keyring $TEMPDIR
+    oc rsh -n $NAMESPACE ceph ceph auth export "$client" -o /etc/ceph/ceph.$client.keyring >/dev/null
+    oc rsync -n $NAMESPACE ceph:/etc/ceph/ceph.$client.keyring $TEMPDIR
 
     echo "Replacing openshift secret $SECRET_NAME"
     oc delete secret "$SECRET_NAME" -n $NAMESPACE 2>/dev/null || true
@@ -202,7 +202,7 @@ function create_secret {
 function create_volume {
     # Create cephfs volume for manila service
     echo "Creating cephfs volume"
-    oc rsh ceph ceph fs volume create cephfs >/dev/null || true
+    oc rsh -n $NAMESPACE ceph ceph fs volume create cephfs >/dev/null || true
 }
 
 function usage {
