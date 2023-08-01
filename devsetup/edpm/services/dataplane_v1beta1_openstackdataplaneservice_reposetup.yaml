@@ -15,13 +15,21 @@ spec:
     - hosts: all
       strategy: linear
       tasks:
+        - name: Install Python dependencies
+          ansible.builtin.package:
+            name:
+              - git
+              - python-setuptools
+              - python-requests
+              - python3-pip
+            state: present
+          become: True
+        - name: Install repo-setup directly from github
+          ansible.builtin.pip:
+            name: git+https://github.com/openstack-k8s-operators/repo-setup
+          become: True
         - name: Enable podified-repos
           ansible.builtin.shell: |
-            rpm -q git || sudo yum -y install git
-            sudo yum -y install python-setuptools python-requests python3-pip
-            git clone https://github.com/openstack-k8s-operators/repo-setup
-            pushd repo-setup
-            sudo pip install -r requirements.txt
-            sudo python3 setup.py install
-            popd
             sudo /usr/local/bin/repo-setup current-podified-dev
+          changed_when: True
+          become: True
