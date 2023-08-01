@@ -15,7 +15,13 @@ DBSERVICE_CONTAINER = mariadb-openstack
 endif
 METADATA_SHARED_SECRET   ?= 1234567842
 HEAT_AUTH_ENCRYPTION_KEY ?= 767c3ed056cbaa3b9dfedb8c6f825bf0
+
+# Allows overriding the cleanup command used in *_cleanup targets.
+# Useful in CI, to allow injectin kustomization in each operator CR directory
+# before the resource gets deployed. If it's not possible to inject Kustomizations/CRs
+# in the CR dir if a call to each deploy target cleans the CR dir.
 CLEANUP_DIR_CMD					 ?= rm -Rf
+
 METALLB_POOL			 ?=192.168.122.80-192.168.122.90
 # are we deploying to microshift
 MICROSHIFT ?= 0
@@ -675,7 +681,7 @@ dns_deploy: input dns_deploy_prep ## installs the service instance using kustomi
 dns_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,infra))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/infra-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/infra-operator ${DEPLOY_DIR}
 
 ##@ NETCONFIG
 .PHONY: netconfig_deploy_prep
@@ -698,7 +704,7 @@ netconfig_deploy: input netconfig_deploy_prep ## installs the service instance u
 netconfig_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,infra))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/infra-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/infra-operator ${DEPLOY_DIR}
 
 ##@ MEMCACHED
 .PHONY: memcached_deploy_prep
@@ -1846,7 +1852,7 @@ telemetry_deploy_cleanup: ## cleans up the service instance, Does not affect the
 	$(eval $(call vars,$@,telemetry))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/telemetry-operator ${DEPLOY_DIR}
-	rm -Rf ${OPERATOR_BASE_DIR}/ceilometer-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/ceilometer-operator ${DEPLOY_DIR}
 
 
 ##@ SWIFT
@@ -1865,7 +1871,7 @@ swift: operator_namespace swift_prep ## installs the operator, also runs the pre
 swift_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,swift))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: swift_deploy_prep
 swift_deploy_prep: export KIND=Swift
@@ -1888,7 +1894,7 @@ swift_deploy: input swift_deploy_prep ## installs the service instance using kus
 swift_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,swift))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/swift-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} -Rf ${OPERATOR_BASE_DIR}/swift-operator ${DEPLOY_DIR}
 
 ##@ CERT-MANAGER
 .PHONY: certmanager
