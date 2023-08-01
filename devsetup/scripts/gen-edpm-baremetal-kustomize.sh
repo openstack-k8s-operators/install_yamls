@@ -65,6 +65,9 @@ fi)
       path: /spec/roles/edpm-compute/baremetalSetTemplate/provisioningInterface
       value: ${PROVISIONING_INTERFACE}
     - op: add
+      path: /spec/roles/edpm-compute/env/0
+      value: {"name": "ANSIBLE_CALLBACKS_ENABLED", "value": "profile_tasks"}
+    - op: add
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleSSHPrivateKeySecret
       value: dataplane-ansible-ssh-private-key-secret
     - op: replace
