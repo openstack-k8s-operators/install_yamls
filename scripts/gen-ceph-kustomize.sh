@@ -19,7 +19,7 @@
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 . ${SCRIPTPATH}/common.sh --source-only
 
-if [ -z "$IMAGE" ]; then
+if [ -z "$CEPH_IMAGE" ]; then
     echo "Unable to determine ceph image."
     exit 1
 fi
@@ -35,13 +35,13 @@ fi
 
 pushd ${DEPLOY_DIR}
 
-TIMEOUT=${TIMEOUT:-30}
-HOSTNETWORK=${HOSTNETWORK:-true}
-POOLS=("volumes" "images" "backups" "cephfs.cephfs.meta" "cephfs.cephfs.data")
-DAEMONS="osd,mds"
-DATA_SIZE=${DATA_SIZE:-500Mi}
-WORKER=${WORKER:-""}
-MON_CONF=${MON_CONF:-""}
+CEPH_TIMEOUT=${CEPH_TIMEOUT:-30}
+CEPH_HOSTNETWORK=${CEPH_HOSTNETWORK:-true}
+CEPH_POOLS=("volumes" "images" "backups" "cephfs.cephfs.meta" "cephfs.cephfs.data")
+CEPH_DAEMONS="osd,mds"
+CEPH_DATASIZE=${CEPH_DATASIZE:-500Mi}
+CEPH_WORKER=${CEPH_WORKER:-""}
+CEPH_MON_CONF=${CEPH_MON_CONF:-""}
 
 function add_ceph_pod {
 cat <<EOF >ceph-pod.yaml
@@ -56,19 +56,19 @@ metadata:
     app.kubernetes.io/name: ceph
     app: ceph
 spec:
-  hostNetwork: $HOSTNETWORK
+  hostNetwork: $CEPH_HOSTNETWORK
   containers:
    - image: quay.io/ceph/daemon:latest-quincy
      name: ceph
      env:
      - name: MON_IP
-       value: "$MON_IP" $MON_CONF
+       value: "$MON_IP" $CEPH_MON_CONF
      - name: CEPH_DAEMON
        value: demo
      - name: CEPH_PUBLIC_NETWORK
        value: "0.0.0.0/0"
      - name: DEMO_DAEMONS
-       value: "$DAEMONS"
+       value: "$CEPH_DAEMONS"
      volumeMounts:
       - mountPath: /var/lib/ceph
         name: data
@@ -79,19 +79,19 @@ spec:
   volumes:
   - name: data
     emptyDir:
-      sizeLimit: "$DATA_SIZE"
+      sizeLimit: "$CEPH_DATASIZE"
   - name: run
     emptyDir:
-      sizeLimit: "$DATA_SIZE"
+      sizeLimit: "$CEPH_DATASIZE"
   - name: log
     emptyDir:
-      sizeLimit: "$DATA_SIZE"
+      sizeLimit: "$CEPH_DATASIZE"
   securityContext:
     runAsUser: 0
     seccompProfile:
       type: Unconfined
   nodeSelector:
-    kubernetes.io/hostname: "$WORKER"
+    kubernetes.io/hostname: "$CEPH_WORKER"
 EOF
 }
 
@@ -111,7 +111,7 @@ patches:
       value: $NAMESPACE
     - op: replace
       path: /spec/containers/0/image
-      value: $IMAGE
+      value: $CEPH_IMAGE
     - op: replace
       path: /metadata/annotations/k8s.v1.cni.cncf.io~1networks
       value: $NETWORKS_ANNOTATION
@@ -125,8 +125,8 @@ function bootstrap_ceph {
     # we need affinity when we do HOSTNETWORKING
     # hence we schedule the pod to the worker node
     # where the IP address is assigned
-    if [ -z "$WORKER" ]; then
-        WORKER="${values[1]}"
+    if [ -z "$CEPH_WORKER" ]; then
+        CEPH_WORKER="${values[1]}"
     fi
 }
 
@@ -135,17 +135,17 @@ function ceph_is_ready {
     until oc rsh -n $NAMESPACE ceph ls /etc/ceph/I_AM_A_DEMO &> /dev/null; do
         sleep 1
         echo -n .
-        (( TIMEOUT-- ))
-        [[ "$TIMEOUT" -eq 0 ]] && exit 1
+        (( CEPH_TIMEOUT-- ))
+        [[ "$CEPH_TIMEOUT" -eq 0 ]] && exit 1
     done
     echo
 }
 
 function create_pool {
 
-    [ "${#POOLS[@]}" -eq 0 ] && return;
+    [ "${#CEPH_POOLS[@]}" -eq 0 ] && return;
 
-    for pool in "${POOLS[@]}"; do
+    for pool in "${CEPH_POOLS[@]}"; do
         app="rbd"
         oc rsh -n $NAMESPACE ceph ceph osd pool create $pool 4
         [[ $pool = *"cephfs"* ]] && app=cephfs
@@ -155,7 +155,7 @@ function create_pool {
 
 function build_caps {
     local CAPS=""
-    for pool in "${POOLS[@]}"; do
+    for pool in "${CEPH_POOLS[@]}"; do
         caps="allow rwx pool="$pool
         CAPS+=$caps,
     done
@@ -167,7 +167,7 @@ function create_key {
     local caps
     local osd_caps
 
-    if [ "${#POOLS[@]}" -eq 0 ]; then
+    if [ "${#CEPH_POOLS[@]}" -eq 0 ]; then
         osd_caps="allow *"
     else
         caps=$(build_caps)
@@ -210,7 +210,7 @@ function usage {
     echo
     echo "Relevant Parameters"
     echo
-    echo "* HOSTNETWORK: true by default, used to bind the pod to the hostNetwork of the worker node"
+    echo "* CEPH_HOSTNETWORK: true by default, used to bind the pod to the hostNetwork of the worker node"
     echo "* MON_IP: the IP address (if known in  advance) to bind the mon when the cluster is run"
     echo "* NETWORKS_ANNOTATION: the NAD(s) that will be applied to the pod using kustomize"
     echo
@@ -228,18 +228,18 @@ function usage {
         echo
         echo  "3. NETWORKS_ANNOTATION="[{\"Name\":\"storage\",\"Namespace\":\"openstack\"}]" make ceph # attach the NAD to the POD provided it's precreated."
         echo
-        echo  "4. HOSTNETWORK=false NETWORKS_ANNOTATION=\'[{\"Name\":\"storage\",\"Namespace\":\"openstack\",\"ips\":[\"172\.18\.0\.51\/24\"]}]\' MON_IP="172.18.0.51" make ceph # example of binding the Ceph Pod to the storage NAD"
+        echo  "4. CEPH_HOSTNETWORK=false NETWORKS_ANNOTATION=\'[{\"Name\":\"storage\",\"Namespace\":\"openstack\",\"ips\":[\"172\.18\.0\.51\/24\"]}]\' MON_IP="172.18.0.51" make ceph # example of binding the Ceph Pod to the storage NAD"
         echo
     fi
 }
 
-# if HOSTNETWORK is false, we always need
+# if CEPH_HOSTNETWORK is false, we always need
 # to produce the following snippet that is
 # supposed to get the IP assigned to the
 # POD and pass it to the MON process.
-if [[ "$HOSTNETWORK" == "false" ]]; then
+if [[ "$CEPH_HOSTNETWORK" == "false" ]]; then
 MON_IP="0.0.0.0"
-MON_CONF=$(cat <<END
+CEPH_MON_CONF=$(cat <<END
 
      - name: MON_IP
        valueFrom:
