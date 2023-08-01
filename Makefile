@@ -338,6 +338,9 @@ SWIFT_BRANCH     ?= main
 SWIFT            ?= config/samples/swift_v1beta1_swift.yaml
 SWIFT_CR         ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFT}
 
+# CertManager
+CERTMANAGER_TIMEOUT                  ?= 300s
+
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
 ${1}: export OCP_RELEASE=$(OCP_RELEASE)
@@ -1902,13 +1905,13 @@ certmanager: ## installs cert-manager operator in the cert-manager-operator name
 	bash scripts/gen-olm-cert-manager.sh
 	oc apply -f ${OPERATOR_DIR}
 	while ! (oc get pod --no-headers=true -l name=cert-manager-operator -n ${OPERATOR_NAMESPACE}| grep "cert-manager-operator"); do sleep 10; done
-	oc wait pod -n ${OPERATOR_NAMESPACE} --for condition=Ready -l name=cert-manager-operator --timeout=$(TIMEOUT)
+	oc wait pod -n ${OPERATOR_NAMESPACE} --for condition=Ready -l name=cert-manager-operator --timeout=$(CERTMANAGER_TIMEOUT)
 	while ! (oc get pod --no-headers=true -l app=cainjector -n ${NAMESPACE} | grep "cert-manager-cainjector"); do sleep 10; done
-	oc wait pod -n ${NAMESPACE} -l app=cainjector --for condition=Ready --timeout=$(TIMEOUT)
+	oc wait pod -n ${NAMESPACE} -l app=cainjector --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
 	while ! (oc get pod --no-headers=true -l app=webhook -n ${NAMESPACE} | grep "cert-manager-webhook"); do sleep 10; done
-	oc wait pod -n ${NAMESPACE} -l app=webhook --for condition=Ready --timeout=$(TIMEOUT)
+	oc wait pod -n ${NAMESPACE} -l app=webhook --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
 	while ! (oc get pod --no-headers=true -l app=cert-manager -n ${NAMESPACE} | grep "cert-manager"); do sleep 10; done
-	oc wait pod -n ${NAMESPACE} -l app=cert-manager --for condition=Ready --timeout=$(TIMEOUT)
+	oc wait pod -n ${NAMESPACE} -l app=cert-manager --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
 
 certmanager_cleanup: export NAMESPACE=$(if $(findstring 4.10,$(OCP_RELEASE)),openshift-cert-manager,cert-manager)
 certmanager_cleanup: export OPERATOR_NAMESPACE=$(if $(findstring 4.10,$(OCP_RELEASE)),openshift-cert-manager-operator,cert-manager-operator)
