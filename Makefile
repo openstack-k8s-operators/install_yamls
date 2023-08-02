@@ -1662,13 +1662,13 @@ dataplane_cleanup: ## deletes the operator, but does not cleanup the service res
 
 ##@ CEPH
 .PHONY: ceph_help
-ceph_help: export IMAGE=${CEPH_IMG}
+ceph_help: export CEPH_IMAGE=${CEPH_IMG}
 ceph_help: ## Ceph helper
 	$(eval $(call vars,$@,ceph))
 	bash scripts/gen-ceph-kustomize.sh "help" "full"
 
 .PHONY: ceph
-ceph: export IMAGE=${CEPH_IMG}
+ceph: export CEPH_IMAGE=${CEPH_IMG}
 ceph: namespace ## deploy the Ceph Pod
 	$(eval $(call vars,$@,ceph))
 	bash scripts/gen-ceph-kustomize.sh "build"
