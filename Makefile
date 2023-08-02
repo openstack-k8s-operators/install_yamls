@@ -398,14 +398,14 @@ wait: ## wait for an operator's controller-manager pod to be ready (requires OPE
 
 ##@ CRC
 .PHONY: crc_storage
-crc_storage: ## initialize local storage PVs in CRC vm
+crc_storage: namespace ## initialize local storage PVs in CRC vm
 	$(eval $(call vars,$@))
 	bash scripts/create-pv.sh
 	bash scripts/gen-crc-pv-kustomize.sh
 	oc apply -f ${OUT}/crc/storage.yaml
 
 .PHONY: crc_storage_cleanup
-crc_storage_cleanup: ## cleanup local storage PVs in CRC vm
+crc_storage_cleanup: namespace ## cleanup local storage PVs in CRC vm
 	$(eval $(call vars,$@))
 	bash scripts/cleanup-crc-pv.sh
 	if oc get sc ${STORAGE_CLASS}; then oc delete sc ${STORAGE_CLASS}; fi
