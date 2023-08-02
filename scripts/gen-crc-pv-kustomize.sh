@@ -81,6 +81,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: ansible-ee-logs
+  namespace: ${NAMESPACE}
   annotations:
     pv.kubernetes.io/provisioned-by: crc-devsetup
 spec:

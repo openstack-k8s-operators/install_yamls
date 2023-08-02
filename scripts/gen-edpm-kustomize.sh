@@ -137,6 +137,9 @@ patches:
     - op: replace
       path: /spec/roles/edpm-compute/networkAttachments
       value: ${EDPM_NADS}
+    - op: add
+      path: /spec/roles/edpm-compute/env/0
+      value: {"name": "ANSIBLE_CALLBACKS_ENABLED", "value": "profile_tasks"}
     - op: replace
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
