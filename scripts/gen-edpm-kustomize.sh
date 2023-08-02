@@ -173,8 +173,6 @@ cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/nodes/edpm-compute-${INDEX}/hostName
       value: edpm-compute-${INDEX}
-    - op: remove
-      path: /spec/nodes/edpm-compute-${INDEX}/node/ansibleVars
     - op: add
       path: /spec/nodes/edpm-compute-${INDEX}/node/networks
       value:
