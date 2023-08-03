@@ -473,7 +473,7 @@ input_cleanup: ## deletes the secret/CM, used by the services as input
 ##@ CRC BMO SETUP
 .PHONY: crc_bmo_setup
 crc_bmo_setup: export IRONIC_HOST_IP=${BMO_IRONIC_HOST}
-crc_bmo_setup: certmanager
+crc_bmo_setup: crc_bmo_cleanup certmanager
 	$(eval $(call vars,$@))
 	mkdir -p ${OPERATOR_BASE_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(BMO_BRANCH),-b ${BMO_BRANCH}) ${BMO_REPO} "baremetal-operator" && popd
