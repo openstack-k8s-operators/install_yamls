@@ -161,15 +161,16 @@ OVN_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovn-operator/tests/kuttl/tests
 OVN_KUTTL_NAMESPACE ?= ovn-kuttl-tests
 
 # Neutron
-NEUTRON_IMG         ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
-NEUTRON_REPO        ?= https://github.com/openstack-k8s-operators/neutron-operator.git
-NEUTRON_BRANCH      ?= main
-NEUTRONAPI          ?= config/samples/neutron_v1beta1_neutronapi.yaml
-NEUTRONAPI_CR       ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
-NEUTRONAPI_DEPL_IMG ?= unused
+NEUTRON_IMG             ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
+NEUTRON_REPO            ?= https://github.com/openstack-k8s-operators/neutron-operator.git
+NEUTRON_BRANCH          ?= main
+NEUTRONAPI              ?= config/samples/neutron_v1beta1_neutronapi.yaml
+NEUTRONAPI_CR           ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
+NEUTRONAPI_DEPL_IMG     ?= unused
 # TODO: Do we need interfaces to customize images for the other services ?
-NEUTRON_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/neutron-operator/kuttl-test.yaml
-NEUTRON_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/neutron-operator/test/kuttl/tests
+NEUTRON_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/neutron-operator/kuttl-test.yaml
+NEUTRON_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/neutron-operator/test/kuttl/tests
+NEUTRON_KUTTL_NAMESPACE ?= neutron-kuttl-tests
 
 # Cinder
 CINDER_IMG             ?= quay.io/openstack-k8s-operators/cinder-operator-index:latest
@@ -1300,9 +1301,10 @@ cinder_kuttl: kuttl_common_prep cinder cinder_deploy_prep ## runs kuttl tests fo
 
 .PHONY: neutron_kuttl_run
 neutron_kuttl_run: ## runs kuttl tests for the neutron operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${NEUTRON_KUTTL_CONF} ${NEUTRON_KUTTL_DIR}
+	kubectl-kuttl test --config ${NEUTRON_KUTTL_CONF} ${NEUTRON_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: neutron_kuttl
+neutron_kuttl: export NAMESPACE = ${NEUTRON_KUTTL_NAMESPACE}
 neutron_kuttl: kuttl_common_prep ovn ovn_deploy neutron neutron_deploy_prep ## runs kuttl tests for the neutron operator. Installs neutron operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,neutron))
 	make wait
@@ -1311,6 +1313,7 @@ neutron_kuttl: kuttl_common_prep ovn ovn_deploy neutron neutron_deploy_prep ## r
 	make neutron_cleanup
 	make ovn_cleanup
 	make kuttl_common_cleanup
+	bash scripts/restore-namespace.sh
 
 .PHONY: octavia_kuttl_run
 octavia_kuttl_run: ## runs kuttl tests for the octavia operator, assumes that everything needed for running the test was deployed beforehand.
