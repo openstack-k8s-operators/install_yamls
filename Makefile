@@ -263,11 +263,12 @@ HEAT_KUTTL_NAMESPACE ?= heat-kuttl-tests
 # AnsibleEE
 ANSIBLEEE_IMG        ?= quay.io/openstack-k8s-operators/openstack-ansibleee-operator-index:latest
 ANSIBLEEE_REPO       ?= https://github.com/openstack-k8s-operators/openstack-ansibleee-operator
-ANSIBLEEE_BRANCH     ?= main
-ANSIBLEEE            ?= config/samples/_v1alpha1_ansibleee.yaml
-ANSIBLEEE_CR         ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/${ANSIBLEEE}
-ANSIBLEEE_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/kuttl-test.yaml
-ANSIBLEEE_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/tests/kuttl/tests
+ANSIBLEEE_BRANCH          ?= main
+ANSIBLEEE                 ?= config/samples/_v1alpha1_ansibleee.yaml
+ANSIBLEEE_CR              ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/${ANSIBLEEE}
+ANSIBLEEE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/kuttl-test.yaml
+ANSIBLEEE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/tests/kuttl/tests
+ANSIBLEEE_KUTTL_NAMESPACE ?= ansibleee-kuttl-tests
 
 
 # Baremetal Operator
@@ -1411,7 +1412,7 @@ heat_kuttl_crc: crc_storage heat_kuttl
 
 .PHONY: ansibleee_kuttl_run
 ansibleee_kuttl_run: ## runs kuttl tests for the openstack-ansibleee operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${ANSIBLEEE_KUTTL_CONF} ${ANSIBLEEE_KUTTL_DIR}
+	kubectl-kuttl test --config ${ANSIBLEEE_KUTTL_CONF} ${ANSIBLEEE_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: ansibleee_kuttl_cleanup
 ansibleee_kuttl_cleanup:
@@ -1425,11 +1426,13 @@ ansibleee_kuttl_prep: ansibleee_kuttl_cleanup
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(ANSIBLEEE_BRANCH),-b ${ANSIBLEEE_BRANCH}) ${ANSIBLEEE_REPO} "${OPERATOR_NAME}-operator" && popd
 
 .PHONY: ansibleee_kuttl
+ansibleee_kuttl: export NAMESPACE= ${ANSIBLEEE_KUTTL_NAMESPACE}
 ansibleee_kuttl: input ansibleee_kuttl_prep ansibleee ## runs kuttl tests for the openstack-ansibleee operator. Installs openstack-ansibleee operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,openstack-ansibleee))
 	make wait
 	make ansibleee_kuttl_run
 	make ansibleee_cleanup
+	bash scripts/restore-namespace.sh
 
 .PHONY: dataplane_kuttl_run
 dataplane_kuttl_run: ## runs kuttl tests for the dataplane operator, assumes that everything needed for running the test was deployed beforehand.
