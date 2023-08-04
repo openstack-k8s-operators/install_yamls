@@ -113,6 +113,7 @@ edpm_baremetal: export EDPM_OVN_METADATA_AGENT_BIND_HOST=${DATAPLANE_OVN_METADAT
 edpm_baremetal: export EDPM_OVN_METADATA_AGENT_TRANSPORT_URL=$(shell oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
 edpm_baremetal: export EDPM_OVN_METADATA_AGENT_SB_CONNECTION=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
 edpm_baremetal: export EDPM_OVN_DBS=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"')
+edpm_baremetal: export BMAAS_NODE_COUNT=${BM_NODE_COUNT}
 edpm_baremetal: export NODE_COUNT=${BM_NODE_COUNT}
 edpm_baremetal: export REGISTRY_URL=${EDPM_REGISTRY_URL}
 edpm_baremetal: export CONTAINER_TAG=${EDPM_CONTAINER_TAG}
@@ -121,18 +122,16 @@ edpm_baremetal: ## Deploy only dataplane with BMAAS
 	make bmaas_virtual_bms
 	make bmaas_sushy_emulator
 	scripts/gen-ansibleee-ssh-key.sh
-	scripts/edpm-compute-baremetal.sh
+	scripts/edpm-compute-baremetal.sh --create
 
 .PHONY: edpm_baremetal_cleanup
 edpm_baremetal_cleanup: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
 edpm_baremetal_cleanup: export BMAAS_INSTANCE_NAME_PREFIX=${BM_INSTANCE_NAME_PREFIX}
+edpm_baremetal_cleanup: export BMAAS_NODE_COUNT=${BM_NODE_COUNT}
+edpm_baremetal_cleanup: export NODE_COUNT=${BM_NODE_COUNT}
 edpm_baremetal_cleanup:  ## Cleanup dataplane with BMAAS
 	$(eval $(call vars))
-	oc delete openstackdataplane/openstack-edpm --ignore-not-found=true || true
-	oc delete openstackdataplaneservice --all --ignore-not-found=true || true
-	while oc get bmh | grep -q -e "deprovisioning" -e "provisioned"; do sleep 5; done || true
-	oc delete --all bmh --ignore-not-found=true || true
-	oc delete openstackprovisionserver/openstackprovisionserver --ignore-not-found=true || true
+	scripts/edpm-compute-baremetal.sh --cleanup
 	pushd .. && rm -Rf out/edpm || true && popd
 	make bmaas_sushy_emulator_cleanup || true
 	make bmaas_virtual_bms_cleanup || true
