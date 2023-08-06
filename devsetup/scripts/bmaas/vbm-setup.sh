@@ -40,11 +40,9 @@ function usage {
 function create_vm {
     local temp_file
     local name
-    local vnc_port
     temp_file=$(mktemp -p "$MY_TMP_DIR")
     name="$NODE_NAME_PREFIX-$(printf "%02d" "$i")"
     echo "Creating VM: $name"
-    vnc_port=59$(printf "%02d" "$i")
     virt-install --connect qemu:///system \
         --name "$name" \
         --memory "$MEMORY" \
@@ -53,7 +51,7 @@ function create_vm {
         --os-variant "$OS_VARIANT" \
         --disk size="$DISK_SIZE" \
         --network network="$NETWORK_NAME",model="$NET_MODEL" \
-        --graphics vnc,port="$vnc_port",listen=0.0.0.0 \
+        --graphics vnc \
         --virt-type "$VIRT_TYPE" \
         --print-xml \
         > "$temp_file"
