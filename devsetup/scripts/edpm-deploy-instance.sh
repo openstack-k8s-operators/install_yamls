@@ -44,4 +44,8 @@ openstack security group rule create --protocol icmp --ingress --icmp-type -1 $(
 openstack security group rule create --protocol tcp --ingress --dst-port 22 $(openstack security group list --project admin -f value -c ID)
 
 # check connectivity via FIP
-ping -c4 192.168.122.20
+if type ping >/dev/null 2>&1; then
+    ping -c4 192.168.122.20
+else
+    echo "ping command not available"
+fi

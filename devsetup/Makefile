@@ -167,8 +167,8 @@ edpm_compute_cleanup: ## Delete EDPM compute VM
 
 .PHONY: edpm_deploy_instance
 edpm_deploy_instance: ## Spin a instance on edpm node
-	-oc cp scripts/edpm-deploy-instance.sh openstackclient:/tmp/
-	-oc rsh openstackclient bash /tmp/edpm-deploy-instance.sh
+	id;oc cp scripts/edpm-deploy-instance.sh openstackclient:/tmp/
+	oc rsh openstackclient bash /tmp/edpm-deploy-instance.sh
 
 .PHONY: standalone
 standalone: export STANDALONE=true
