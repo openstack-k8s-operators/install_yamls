@@ -23,7 +23,9 @@ IP="192.168.122.${IP_ADRESS_SUFFIX}"
 OUTPUT_DIR=${OUTPUT_DIR:-"${SCRIPTPATH}/../../out/edpm/"}
 SSH_KEY_FILE=${SSH_KEY_FILE:-"${OUTPUT_DIR}/ansibleee-ssh-key-id_rsa"}
 SSH_OPT="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $SSH_KEY_FILE"
-CMDS_FILE=${CMDS_FILE:-"/tmp/standalone_repos"}
+REPO_SETUP_CMDS=${REPO_SETUP_CMDS:-"/tmp/standalone_repos"}
+CMDS_FILE=${CMDS_FILE:-"/tmp/standalone_cmds"}
+SKIP_TRIPLEO_REPOS=${SKIP_TRIPLEO_REPOS:="false"}
 CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD:-"rm -Rf"}
 
 if [[ ! -f $SSH_KEY_FILE ]]; then
@@ -38,8 +40,8 @@ fi
 # And when running it from our own systems outside of the Red Hat network we can use any available server:
 # export NTP_SERVER=pool.ntp.org
 
-if [[ ! -f $CMDS_FILE ]]; then
-cat <<EOF > $CMDS_FILE
+if [[ ! -f $REPO_SETUP_CMDS ]]; then
+cat <<EOF > $REPO_SETUP_CMDS
 set -ex
 sudo dnf remove -y epel-release
 sudo dnf update -y
@@ -51,6 +53,11 @@ sudo dnf install -y \$URL\$RPM
 sudo -E tripleo-repos -b wallaby current-tripleo-dev ceph --stream
 sudo dnf repolist
 sudo dnf update -y
+EOF
+fi
+
+if [[ ! -f $CMDS_FILE ]]; then
+cat <<EOF > $CMDS_FILE
 sudo dnf install -y podman python3-tripleoclient util-linux lvm2 cephadm
 
 sudo hostnamectl set-hostname standalone.localdomain
@@ -71,7 +78,8 @@ while [[ $(ssh -o BatchMode=yes -o ConnectTimeout=5 $SSH_OPT root@$IP echo ok) !
 done
 
 # Copying files
-scp $SSH_OPT $CMDS_FILE root@$IP:/tmp/repo-setup.sh
+scp $SSH_OPT $REPO_SETUP_CMDS root@$IP:/tmp/repo-setup.sh
+scp $SSH_OPT $CMDS_FILE root@$IP:/tmp/standalone-deploy.sh
 scp $SSH_OPT standalone/standalone.j2 root@$IP:/tmp/standalone.j2
 scp $SSH_OPT standalone/network_data.yaml root@$IP:/tmp/network_data.yaml
 scp $SSH_OPT standalone/deployed_network.yaml root@$IP:/tmp/deployed_network.yaml
@@ -80,8 +88,14 @@ scp $SSH_OPT standalone/ceph.sh root@$IP:/tmp/ceph.sh
 scp $SSH_OPT standalone/openstack.sh root@$IP:/tmp/openstack.sh
 
 # Running
-ssh $SSH_OPT root@$IP "bash /tmp/repo-setup.sh"
-# separate the two commands so we can properly detect whether there is
-# a failure while deploying standalone
-ssh $SSH_OPT root@$IP "rm -f /tmp/repo-setup.sh"
+if [[ -z ${SKIP_TRIPLEO_REPOS} || ${SKIP_TRIPLEO_REPOS} == "false" ]]; then
+    ssh $SSH_OPT root@$IP "bash /tmp/repo-setup.sh"
+    # separate the two commands so we can properly detect whether there is
+    # a failure while deploying standalone
+    ssh $SSH_OPT root@$IP "rm -f /tmp/repo-setup.sh"
+fi
+ssh $SSH_OPT root@$IP "bash /tmp/standalone-deploy.sh"
+ssh $SSH_OPT root@$IP "rm -f /tmp/standalone-deploy.sh"
+
 ${CLEANUP_DIR_CMD} $CMDS_FILE
+${CLEANUP_DIR_CMD} $REPO_SETUP_CMDS
