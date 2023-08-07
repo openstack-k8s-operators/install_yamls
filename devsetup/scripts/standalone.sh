@@ -63,6 +63,7 @@ sudo dnf install -y podman python3-tripleoclient util-linux lvm2 cephadm
 sudo hostnamectl set-hostname standalone.localdomain
 sudo hostnamectl set-hostname standalone.localdomain --transient
 
+export INTERFACE_MTU=${INTERFACE_MTU:-1500}
 export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
 export CEPH_ARGS=${CEPH_ARGS:-\"-e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml\"}
