@@ -24,6 +24,7 @@ export STORAGE_IP=$(sed -e 's/192.168.122/172.18.0/' <<<"$CTLPLANE_IP")
 export STORAGE_MGMT_IP=$(sed -e 's/192.168.122/172.20.0/' <<<"$CTLPLANE_IP")
 export TENANT_IP=$(sed -e 's/192.168.122/172.19.0/' <<<"$CTLPLANE_IP")
 export EXTERNAL_IP=$(sed -e 's/192.168.122/172.21.0/' <<<"$CTLPLANE_IP")
+export INTERFACE_MTU=${INTERFACE_MTU:-1500}
 
 sudo mkdir -p /etc/os-net-config
 

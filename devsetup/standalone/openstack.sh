@@ -16,6 +16,7 @@
 set -ex
 
 EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
+INTERFACE_MTU=${INTERFACE_MTU:-1500}
 
 openstack tripleo container image prepare default \
     --output-env-file $HOME/containers-prepare-parameters.yaml
