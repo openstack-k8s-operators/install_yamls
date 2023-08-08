@@ -206,14 +206,15 @@ IRONIC_KUTTL_CONF   ?= ${OPERATOR_BASE_DIR}/ironic-operator/kuttl-test.yaml
 IRONIC_KUTTL_DIR    ?= ${OPERATOR_BASE_DIR}/ironic-operator/tests/kuttl/tests
 
 # Octavia
-OCTAVIA_IMG         ?= quay.io/openstack-k8s-operators/octavia-operator-index:latest
-OCTAVIA_REPO        ?= https://github.com/openstack-k8s-operators/octavia-operator.git
-OCTAVIA_BRANCH      ?= main
-OCTAVIA             ?= config/samples/octavia_v1beta1_octavia.yaml
-OCTAVIA_CR          ?= ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIA}
-# TODO: Image customizations for all Octavia services
-OCTAVIA_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/octavia-operator/kuttl-test.yaml
-OCTAVIA_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/octavia-operator/tests/kuttl/tests
+OCTAVIA_IMG             ?= quay.io/openstack-k8s-operators/octavia-operator-index:latest
+OCTAVIA_REPO            ?= https://github.com/openstack-k8s-operators/octavia-operator.git
+OCTAVIA_BRANCH          ?= main
+OCTAVIA                 ?= config/samples/octavia_v1beta1_octavia.yaml
+OCTAVIA_CR              ?= ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIA}
+# TODO: Image custom    izations for all Octavia services
+OCTAVIA_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/octavia-operator/kuttl-test.yaml
+OCTAVIA_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/octavia-operator/tests/kuttl/tests
+OCTAVIA_KUTTL_NAMESPACE ?= octavia-kuttl-tests
 
 # Designate
 DESIGNATE_IMG        ?= quay.io/openstack-k8s-operators/designate-operator-index:latest
@@ -1318,9 +1319,10 @@ neutron_kuttl: kuttl_common_prep ovn ovn_deploy neutron neutron_deploy_prep ## r
 
 .PHONY: octavia_kuttl_run
 octavia_kuttl_run: ## runs kuttl tests for the octavia operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${OCTAVIA_KUTTL_CONF} ${OCTAVIA_KUTTL_DIR}
+	kubectl-kuttl test --config ${OCTAVIA_KUTTL_CONF} ${OCTAVIA_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: octavia_kuttl
+octavia_kuttl: export NAMESPACE = ${OCTAVIA_KUTTL_NAMESPACE}
 octavia_kuttl: kuttl_common_prep ovn ovn_deploy octavia octavia_deploy_prep ## runs kuttl tests for the octavia operator. Installs octavia operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,octavia))
 	make wait
