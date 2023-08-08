@@ -31,30 +31,6 @@ if [ -z "$DEPLOY_DIR" ]; then
     echo "Please set DEPLOY_DIR"; exit 1
 fi
 
-if [ -z "$EDPM_DNS_SERVER" ]; then
-    echo "Please set EDPM_DNS_SERVER"; exit 1
-fi
-
-if [ -z "$EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST" ]; then
-    echo "Please set EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST"; exit 1
-fi
-
-if [ -z "$EDPM_OVN_METADATA_AGENT_TRANSPORT_URL" ]; then
-    echo "Please set EDPM_OVN_METADATA_AGENT_TRANSPORT_URL"; exit 1
-fi
-
-if [ -z "$EDPM_OVN_METADATA_AGENT_SB_CONNECTION" ]; then
-    echo "Please set EDPM_OVN_METADATA_AGENT_SB_CONNECTION"; exit 1
-fi
-
-if [ -z "$EDPM_OVN_DBS" ]; then
-    echo "Please set EDPM_OVN_DBS"; exit 1
-fi
-
-if [ -z "$EDPM_NADS" ]; then
-    echo "Please set EDPM_NADS"; exit 1
-fi
-
 NAME=${KIND,,}
 
 if [ ! -d ${DEPLOY_DIR} ]; then
@@ -100,15 +76,6 @@ patches:
       path: /spec/roles/edpm-compute/services/0
       value: repo-setup
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_DEFAULT_transport_url
-      value: ${EDPM_OVN_METADATA_AGENT_TRANSPORT_URL}
-    - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection
-      value: ${EDPM_OVN_METADATA_AGENT_SB_CONNECTION}
-    - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host
-      value: ${EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST}
-    - op: replace
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret
       value: ${EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET}
     - op: replace
@@ -123,9 +90,6 @@ patches:
       value:
        template: ${EDPM_NETWORK_CONFIG_TEMPLATE}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_dbs
-      value: ${EDPM_OVN_DBS}
-    - op: replace
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/registry_url
       value: ${EDPM_REGISTRY_URL}
     - op: replace
@@ -134,9 +98,6 @@ patches:
     - op: replace
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_sshd_allowed_ranges
       value: ${EDPM_SSHD_ALLOWED_RANGES}
-    - op: replace
-      path: /spec/roles/edpm-compute/networkAttachments
-      value: ${EDPM_NADS}
     - op: add
       path: /spec/roles/edpm-compute/env/0
       value: {"name": "ANSIBLE_CALLBACKS_ENABLED", "value": "profile_tasks"}
