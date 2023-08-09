@@ -60,6 +60,9 @@ patches:
     - op: remove
       path: /spec/nodes/edpm-compute-0/node/ansibleVars
     - op: replace
+      path: /spec/nodes/edpm-compute-0/node/ansibleSSHPrivateKeySecret
+      value: ${EDPM_ANSIBLE_SECRET}
+    - op: replace
       path: /spec/nodes/edpm-compute-0/node/networks
       value:
         - name: CtlPlane
