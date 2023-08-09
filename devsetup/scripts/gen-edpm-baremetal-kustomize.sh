@@ -56,6 +56,9 @@ cat <<SECOND_NODE_EOF
 SECOND_NODE_EOF
 fi)
     - op: replace
+      path: /spec/deployStrategy/deploy
+      value: ${EDPM_DEPLOY_STRATEGY_DEPLOY}
+    - op: replace
       path: /spec/roles/edpm-compute/baremetalSetTemplate/bmhNamespace
       value: ${NAMESPACE}
     - op: replace
