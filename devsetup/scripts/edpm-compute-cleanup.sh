@@ -20,8 +20,15 @@ EDPM_COMPUTE_SUFFIX=${1:-"0"}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
 CRC_POOL=${CRC_POOL:-"$HOME/.crc/machines/crc"}
 OUTPUT_DIR=${OUTPUT_DIR:-"../out/edpm/"}
+REPO_SETUP_CMDS=${REPO_SETUP_CMDS:-"/tmp/standalone_repos"}
+CMDS_FILE=${CMDS_FILE:-"/tmp/standalone_cmds"}
 CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD:-"rm -Rf"}
 
 virsh destroy ${EDPM_COMPUTE_NAME} || :
 virsh undefine --snapshots-metadata --remove-all-storage ${EDPM_COMPUTE_NAME} || :
 ${CLEANUP_DIR_CMD} "${CRC_POOL}/${EDPM_COMPUTE_NAME}.qcow2"
+
+if [ ${STANDALONE} = "true" ]; then
+    ${CLEANUP_DIR_CMD} $CMDS_FILE
+    ${CLEANUP_DIR_CMD} $REPO_SETUP_CMDS
+fi

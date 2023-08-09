@@ -177,6 +177,11 @@ standalone: edpm_compute ## Create standalone VM
 	$(eval $(call vars))
 	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX}
 
+.PHONY: standalone_cleanup
+standalone_cleanup: export STANDALONE=true
+standalone_cleanup: edpm_compute_cleanup ## Delete standalone VM
+	$(eval $(call vars))
+
 .PHONY: standalone_snapshot
 standalone_snapshot: ## Create standalone snapshot
 	$(eval $(call vars))
