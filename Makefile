@@ -217,13 +217,14 @@ OCTAVIA_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/octavia-operator/tests/kuttl/tes
 OCTAVIA_KUTTL_NAMESPACE ?= octavia-kuttl-tests
 
 # Designate
-DESIGNATE_IMG        ?= quay.io/openstack-k8s-operators/designate-operator-index:latest
-DESIGNATE_REPO       ?= https://github.com/openstack-k8s-operators/designate-operator.git
-DESIGNATE_BRANCH     ?= main
-DESIGNATE            ?= config/samples/designate_v1beta1_designate.yaml
-DESIGNATE_CR         ?= ${OPERATOR_BASE_DIR}/designate-operator/${DESIGNATE}
-DESIGNATE_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/designate-operator/kuttl-test.yaml
-DESIGNATE_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/designate-operator/tests/kuttl/tests
+DESIGNATE_IMG             ?= quay.io/openstack-k8s-operators/designate-operator-index:latest
+DESIGNATE_REPO            ?= https://github.com/openstack-k8s-operators/designate-operator.git
+DESIGNATE_BRANCH          ?= main
+DESIGNATE                 ?= config/samples/designate_v1beta1_designate.yaml
+DESIGNATE_CR              ?= ${OPERATOR_BASE_DIR}/designate-operator/${DESIGNATE}
+DESIGNATE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/designate-operator/kuttl-test.yaml
+DESIGNATE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/designate-operator/tests/kuttl/tests
+DESIGNATE_KUTTL_NAMESPACE ?= designate-kuttl-tests
 
 # Nova
 NOVA_IMG            ?= quay.io/openstack-k8s-operators/nova-operator-index:latest
@@ -1324,6 +1325,7 @@ octavia_kuttl: kuttl_common_prep ovn ovn_deploy octavia octavia_deploy_prep ## r
 	make kuttl_common_cleanup
 
 .PHONY: designate_kuttl
+designate_kuttl: export NAMESPACE = ${DESIGNATE_KUTTL_NAMESPACE}
 designate_kuttl: kuttl_common_prep ovn ovn_deploy designate designate_deploy_prep ## runs kuttl tests for the designate operator. Installs designate operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	$(eval $(call vars,$@,designate))
 	make wait
@@ -1335,7 +1337,7 @@ designate_kuttl: kuttl_common_prep ovn ovn_deploy designate designate_deploy_pre
 
 .PHONY: designate_kuttl_run
 designate_kuttl_run: ## runs kuttl tests for the designate operator, assumes that everything needed for running the test was deployed beforehand.
-	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${DESIGNATE_KUTTL_CONF} ${DESIGNATE_KUTTL_DIR}
+	kubectl-kuttl test --config ${DESIGNATE_KUTTL_CONF} ${DESIGNATE_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: ovn_kuttl_run
 ovn_kuttl_run: ## runs kuttl tests for the ovn operator, assumes that everything needed for running the test was deployed beforehand.
