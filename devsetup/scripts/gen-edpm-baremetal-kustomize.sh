@@ -71,6 +71,15 @@ fi)
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleSSHPrivateKeySecret
       value: dataplane-ansible-ssh-private-key-secret
     - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_DEFAULT_transport_url
+      value: ${EDPM_OVN_METADATA_AGENT_TRANSPORT_URL}
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection
+      value: ${EDPM_OVN_METADATA_AGENT_SB_CONNECTION}
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host
+      value: ${EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST}
+    - op: replace
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret
       value: ${EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET}
     - op: replace
@@ -84,6 +93,9 @@ fi)
       path: /spec/roles/edpm-compute/nodeTemplate/networkConfig
       value:
         template: ${EDPM_NETWORK_CONFIG_TEMPLATE}
+    - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_dbs
+      value: ${NETWORK_IPADDRESS}
     - op: replace
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/registry_url
       value: ${REGISTRY_URL}
