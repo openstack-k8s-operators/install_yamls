@@ -35,6 +35,7 @@ network_config:
   mtu: ${INTERFACE_MTU}
   use_dhcp: false
   dns_servers:
+  - $HOST_PRIMARY_RESOLV_CONF_ENTRY
   - $GATEWAY
   domain: []
   addresses:

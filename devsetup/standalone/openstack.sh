@@ -28,7 +28,6 @@ export NEUTRON_INTERFACE=eth0
 export CTLPLANE_IP=192.168.122.100
 export CTLPLANE_VIP=192.168.122.99
 export CIDR=24
-export DNS_SERVERS=192.168.122.1
 export GATEWAY=192.168.122.1
 export BRIDGE="br-ctlplane"
 
@@ -42,7 +41,9 @@ parameter_defaults:
       default: true
   Debug: true
   DeploymentUser: $USER
-  DnsServers: $DNS_SERVERS
+  DnsServers:
+    - $HOST_PRIMARY_RESOLV_CONF_ENTRY
+    - 192.168.122.1
   NtpServer: $NTP_SERVER
   # needed for vip & pacemaker
   KernelIpNonLocalBind: 1
