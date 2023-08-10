@@ -1444,8 +1444,8 @@ ansibleee_kuttl: input ansibleee_kuttl_prep ansibleee ## runs kuttl tests for th
 
 .PHONY: dataplane_kuttl_run
 dataplane_kuttl_run: ## runs kuttl tests for the dataplane operator, assumes that everything needed for running the test was deployed beforehand.
-	if oc get dnsmasq dns; then echo "dnsmasq/dns CR can not exist during kuttl tests"; exit 1; fi
-	if oc get netconfig netconfig; then echo "netconfig/netconfig CR can not exist during kuttl tests"; exit 1; fi
+	if oc get -n ${NAMESPACE} dnsmasq dns; then echo "dnsmasq/dns CR can not exist during kuttl tests"; exit 1; fi
+	if oc get -n ${NAMESPACE} netconfig netconfig; then echo "netconfig/netconfig CR can not exist during kuttl tests"; exit 1; fi
 	kubectl-kuttl test --config ${DATAPLANE_KUTTL_CONF} ${DATAPLANE_KUTTL_DIR}
 
 .PHONY: dataplane_kuttl_cleanup
