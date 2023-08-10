@@ -56,6 +56,12 @@ sudo dnf update -y
 EOF
 fi
 
+if [[ -e /run/systemd/resolve/resolv.conf ]]; then
+    HOST_PRIMARY_RESOLV_CONF_ENTRY=$(cat /run/systemd/resolve/resolv.conf | grep ^nameserver | grep -v '192.168' | head -n1 | cut -d' ' -f2)
+else
+    HOST_PRIMARY_RESOLV_CONF_ENTRY=192.168.122.1
+fi
+
 if [[ ! -f $CMDS_FILE ]]; then
 cat <<EOF > $CMDS_FILE
 sudo dnf install -y podman python3-tripleoclient util-linux lvm2 cephadm
@@ -68,6 +74,7 @@ sudo dnf install -y https://kojihub.stream.centos.org/kojifiles/packages/podman/
 sudo hostnamectl set-hostname standalone.localdomain
 sudo hostnamectl set-hostname standalone.localdomain --transient
 
+export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
 export INTERFACE_MTU=${INTERFACE_MTU:-1500}
 export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
