@@ -192,18 +192,19 @@ RABBITMQ_CR         ?= ${OPERATOR_BASE_DIR}/rabbitmq-operator/${RABBITMQ}
 RABBITMQ_DEPL_IMG   ?= unused
 
 # Ironic
-IRONIC_IMG          ?= quay.io/openstack-k8s-operators/ironic-operator-index:latest
-IRONIC_REPO         ?= https://github.com/openstack-k8s-operators/ironic-operator.git
-IRONIC_BRANCH       ?= main
-IRONIC              ?= config/samples/ironic_v1beta1_ironic.yaml
-IRONIC_CR           ?= ${OPERATOR_BASE_DIR}/ironic-operator/${IRONIC}
-IRONICAPI_DEPL_IMG  ?= unused
-IRONICCON_DEPL_IMG  ?= unused
-IRONICPXE_DEPL_IMG  ?= unused
-IRONICINS_DEPL_IMG  ?= unused
-IRONICNAG_DEPL_IMG  ?= unused
-IRONIC_KUTTL_CONF   ?= ${OPERATOR_BASE_DIR}/ironic-operator/kuttl-test.yaml
-IRONIC_KUTTL_DIR    ?= ${OPERATOR_BASE_DIR}/ironic-operator/tests/kuttl/tests
+IRONIC_IMG             ?= quay.io/openstack-k8s-operators/ironic-operator-index:latest
+IRONIC_REPO            ?= https://github.com/openstack-k8s-operators/ironic-operator.git
+IRONIC_BRANCH          ?= main
+IRONIC                 ?= config/samples/ironic_v1beta1_ironic.yaml
+IRONIC_CR              ?= ${OPERATOR_BASE_DIR}/ironic-operator/${IRONIC}
+IRONICAPI_DEPL_IMG     ?= unused
+IRONICCON_DEPL_IMG     ?= unused
+IRONICPXE_DEPL_IMG     ?= unused
+IRONICINS_DEPL_IMG     ?= unused
+IRONICNAG_DEPL_IMG     ?= unused
+IRONIC_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/ironic-operator/kuttl-test.yaml
+IRONIC_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ironic-operator/tests/kuttl/tests
+IRONIC_KUTTL_NAMESPACE ?= ironic-kuttl-tests
 
 # Octavia
 OCTAVIA_IMG             ?= quay.io/openstack-k8s-operators/octavia-operator-index:latest
@@ -1380,9 +1381,10 @@ infra_kuttl: input deploy_cleanup rabbitmq rabbitmq_deploy infra memcached_deplo
 
 .PHONY: ironic_kuttl_run
 ironic_kuttl_run: ## runs kuttl tests for the ironic operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${IRONIC_KUTTL_CONF} ${IRONIC_KUTTL_DIR}
+	kubectl-kuttl test --config ${IRONIC_KUTTL_CONF} ${IRONIC_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: ironic_kuttl
+ironic_kuttl: export NAMESPACE = ${IRONIC_KUTTL_NAMESPACE}
 ironic_kuttl: kuttl_common_prep ironic ironic_deploy_prep  ## runs kuttl tests for the ironic operator. Installs ironic operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,ironic))
 	make wait
