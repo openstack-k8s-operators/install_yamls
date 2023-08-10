@@ -348,6 +348,9 @@ SWIFT_REPO       ?= https://github.com/openstack-k8s-operators/swift-operator.gi
 SWIFT_BRANCH     ?= main
 SWIFT            ?= config/samples/swift_v1beta1_swift.yaml
 SWIFT_CR         ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFT}
+SWIFT_KUTTL_CONF   ?= ${OPERATOR_BASE_DIR}/swift-operator/kuttl-test.yaml
+SWIFT_KUTTL_DIR    ?= ${OPERATOR_BASE_DIR}/swift-operator/tests/kuttl/tests
+SWIFT_KUTTL_NAMESPACE ?= swift-kuttl-tests
 
 # CertManager
 CERTMANAGER_TIMEOUT                  ?= 300s
@@ -1504,6 +1507,20 @@ manila_kuttl: kuttl_common_prep ceph manila manila_deploy_prep ## runs kuttl tes
 	make ceph_cleanup
 	make kuttl_common_cleanup
 	make cleanup
+
+.PHONY: swift_kuttl_run
+swift_kuttl_run: ## runs kuttl tests for the swift operator, assumes that everything needed for running the test was deployed beforehand.
+	kubectl-kuttl test --config ${SWIFT_KUTTL_CONF} ${SWIFT_KUTTL_DIR} --namespace ${NAMESPACE}
+
+.PHONY: swift_kuttl
+swift_kuttl: export NAMESPACE = ${SWIFT_KUTTL_NAMESPACE}
+swift_kuttl: kuttl_common_prep swift swift_deploy_prep ## runs kuttl tests for the swift operator. Installs swift operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+	$(eval $(call vars,$@,swift))
+	make wait
+	make swift_kuttl_run
+	make deploy_cleanup
+	make swift_cleanup
+	make kuttl_common_cleanup
 
 .PHONY: horizon_kuttl_run
 horizon_kuttl_run: ## runs kuttl tests for the horizon operator, assumes that everything needed for running the test was deployed beforehand.
