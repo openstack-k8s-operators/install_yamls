@@ -15,7 +15,13 @@ DBSERVICE_CONTAINER = mariadb-openstack
 endif
 METADATA_SHARED_SECRET   ?= 1234567842
 HEAT_AUTH_ENCRYPTION_KEY ?= 767c3ed056cbaa3b9dfedb8c6f825bf0
+
+# Allows overriding the cleanup command used in *_cleanup targets.
+# Useful in CI, to allow injectin kustomization in each operator CR directory
+# before the resource gets deployed. If it's not possible to inject Kustomizations/CRs
+# in the CR dir if a call to each deploy target cleans the CR dir.
 CLEANUP_DIR_CMD					 ?= rm -Rf
+
 METALLB_POOL			 ?=192.168.122.80-192.168.122.90
 # are we deploying to microshift
 MICROSHIFT ?= 0
@@ -25,6 +31,7 @@ OPERATOR_BASE_DIR   ?= ${OUT}/operator
 
 # storage (used by some operators)
 STORAGE_CLASS       ?= "local-storage"
+CRC_STORAGE_RETRIES ?= 3
 
 # network isolation
 NETWORK_ISOLATION   ?= true
@@ -154,15 +161,16 @@ OVN_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovn-operator/tests/kuttl/tests
 OVN_KUTTL_NAMESPACE ?= ovn-kuttl-tests
 
 # Neutron
-NEUTRON_IMG         ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
-NEUTRON_REPO        ?= https://github.com/openstack-k8s-operators/neutron-operator.git
-NEUTRON_BRANCH      ?= main
-NEUTRONAPI          ?= config/samples/neutron_v1beta1_neutronapi.yaml
-NEUTRONAPI_CR       ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
-NEUTRONAPI_DEPL_IMG ?= unused
+NEUTRON_IMG             ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
+NEUTRON_REPO            ?= https://github.com/openstack-k8s-operators/neutron-operator.git
+NEUTRON_BRANCH          ?= main
+NEUTRONAPI              ?= config/samples/neutron_v1beta1_neutronapi.yaml
+NEUTRONAPI_CR           ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
+NEUTRONAPI_DEPL_IMG     ?= unused
 # TODO: Do we need interfaces to customize images for the other services ?
-NEUTRON_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/neutron-operator/kuttl-test.yaml
-NEUTRON_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/neutron-operator/test/kuttl/tests
+NEUTRON_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/neutron-operator/kuttl-test.yaml
+NEUTRON_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/neutron-operator/test/kuttl/tests
+NEUTRON_KUTTL_NAMESPACE ?= neutron-kuttl-tests
 
 # Cinder
 CINDER_IMG             ?= quay.io/openstack-k8s-operators/cinder-operator-index:latest
@@ -184,37 +192,40 @@ RABBITMQ_CR         ?= ${OPERATOR_BASE_DIR}/rabbitmq-operator/${RABBITMQ}
 RABBITMQ_DEPL_IMG   ?= unused
 
 # Ironic
-IRONIC_IMG          ?= quay.io/openstack-k8s-operators/ironic-operator-index:latest
-IRONIC_REPO         ?= https://github.com/openstack-k8s-operators/ironic-operator.git
-IRONIC_BRANCH       ?= main
-IRONIC              ?= config/samples/ironic_v1beta1_ironic.yaml
-IRONIC_CR           ?= ${OPERATOR_BASE_DIR}/ironic-operator/${IRONIC}
-IRONICAPI_DEPL_IMG  ?= unused
-IRONICCON_DEPL_IMG  ?= unused
-IRONICPXE_DEPL_IMG  ?= unused
-IRONICINS_DEPL_IMG  ?= unused
-IRONICNAG_DEPL_IMG  ?= unused
-IRONIC_KUTTL_CONF   ?= ${OPERATOR_BASE_DIR}/ironic-operator/kuttl-test.yaml
-IRONIC_KUTTL_DIR    ?= ${OPERATOR_BASE_DIR}/ironic-operator/tests/kuttl/tests
+IRONIC_IMG             ?= quay.io/openstack-k8s-operators/ironic-operator-index:latest
+IRONIC_REPO            ?= https://github.com/openstack-k8s-operators/ironic-operator.git
+IRONIC_BRANCH          ?= main
+IRONIC                 ?= config/samples/ironic_v1beta1_ironic.yaml
+IRONIC_CR              ?= ${OPERATOR_BASE_DIR}/ironic-operator/${IRONIC}
+IRONICAPI_DEPL_IMG     ?= unused
+IRONICCON_DEPL_IMG     ?= unused
+IRONICPXE_DEPL_IMG     ?= unused
+IRONICINS_DEPL_IMG     ?= unused
+IRONICNAG_DEPL_IMG     ?= unused
+IRONIC_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/ironic-operator/kuttl-test.yaml
+IRONIC_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ironic-operator/tests/kuttl/tests
+IRONIC_KUTTL_NAMESPACE ?= ironic-kuttl-tests
 
 # Octavia
-OCTAVIA_IMG         ?= quay.io/openstack-k8s-operators/octavia-operator-index:latest
-OCTAVIA_REPO        ?= https://github.com/openstack-k8s-operators/octavia-operator.git
-OCTAVIA_BRANCH      ?= main
-OCTAVIA             ?= config/samples/octavia_v1beta1_octavia.yaml
-OCTAVIA_CR          ?= ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIA}
-# TODO: Image customizations for all Octavia services
-OCTAVIA_KUTTL_CONF  ?= ${OPERATOR_BASE_DIR}/octavia-operator/kuttl-test.yaml
-OCTAVIA_KUTTL_DIR   ?= ${OPERATOR_BASE_DIR}/octavia-operator/tests/kuttl/tests
+OCTAVIA_IMG             ?= quay.io/openstack-k8s-operators/octavia-operator-index:latest
+OCTAVIA_REPO            ?= https://github.com/openstack-k8s-operators/octavia-operator.git
+OCTAVIA_BRANCH          ?= main
+OCTAVIA                 ?= config/samples/octavia_v1beta1_octavia.yaml
+OCTAVIA_CR              ?= ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIA}
+# TODO: Image custom    izations for all Octavia services
+OCTAVIA_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/octavia-operator/kuttl-test.yaml
+OCTAVIA_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/octavia-operator/tests/kuttl/tests
+OCTAVIA_KUTTL_NAMESPACE ?= octavia-kuttl-tests
 
 # Designate
-DESIGNATE_IMG        ?= quay.io/openstack-k8s-operators/designate-operator-index:latest
-DESIGNATE_REPO       ?= https://github.com/openstack-k8s-operators/designate-operator.git
-DESIGNATE_BRANCH     ?= main
-DESIGNATE            ?= config/samples/designate_v1beta1_designate.yaml
-DESIGNATE_CR         ?= ${OPERATOR_BASE_DIR}/designate-operator/${DESIGNATE}
-DESIGNATE_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/designate-operator/kuttl-test.yaml
-DESIGNATE_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/designate-operator/tests/kuttl/tests
+DESIGNATE_IMG             ?= quay.io/openstack-k8s-operators/designate-operator-index:latest
+DESIGNATE_REPO            ?= https://github.com/openstack-k8s-operators/designate-operator.git
+DESIGNATE_BRANCH          ?= main
+DESIGNATE                 ?= config/samples/designate_v1beta1_designate.yaml
+DESIGNATE_CR              ?= ${OPERATOR_BASE_DIR}/designate-operator/${DESIGNATE}
+DESIGNATE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/designate-operator/kuttl-test.yaml
+DESIGNATE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/designate-operator/tests/kuttl/tests
+DESIGNATE_KUTTL_NAMESPACE ?= designate-kuttl-tests
 
 # Nova
 NOVA_IMG            ?= quay.io/openstack-k8s-operators/nova-operator-index:latest
@@ -255,11 +266,12 @@ HEAT_KUTTL_NAMESPACE ?= heat-kuttl-tests
 # AnsibleEE
 ANSIBLEEE_IMG        ?= quay.io/openstack-k8s-operators/openstack-ansibleee-operator-index:latest
 ANSIBLEEE_REPO       ?= https://github.com/openstack-k8s-operators/openstack-ansibleee-operator
-ANSIBLEEE_BRANCH     ?= main
-ANSIBLEEE            ?= config/samples/_v1alpha1_ansibleee.yaml
-ANSIBLEEE_CR         ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/${ANSIBLEEE}
-ANSIBLEEE_KUTTL_CONF ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/kuttl-test.yaml
-ANSIBLEEE_KUTTL_DIR  ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/tests/kuttl/tests
+ANSIBLEEE_BRANCH          ?= main
+ANSIBLEEE                 ?= config/samples/_v1alpha1_ansibleee.yaml
+ANSIBLEEE_CR              ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/${ANSIBLEEE}
+ANSIBLEEE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/kuttl-test.yaml
+ANSIBLEEE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/tests/kuttl/tests
+ANSIBLEEE_KUTTL_NAMESPACE ?= ansibleee-kuttl-tests
 
 
 # Baremetal Operator
@@ -272,7 +284,7 @@ BMH_NAMESPACE       ?= ${NAMESPACE}
 DATAPLANE_IMG                                    ?= quay.io/openstack-k8s-operators/dataplane-operator-index:latest
 DATAPLANE_REPO                                   ?= https://github.com/openstack-k8s-operators/dataplane-operator.git
 DATAPLANE_BRANCH                                 ?= main
-OPENSTACK_DATAPLANE                              ?= config/samples/dataplane_v1beta1_openstackdataplane.yaml
+OPENSTACK_DATAPLANE                              ?= config/samples/dataplane_v1beta1_openstackdataplane_with_ipam.yaml
 OPENSTACK_DATAPLANE_BAREMETAL                    ?= config/samples/dataplane_v1beta1_openstackdataplane_baremetal_with_ipam.yaml
 DATAPLANE_CR                                     ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANE}
 DATAPLANE_BAREMETAL_CR                           ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANE_BAREMETAL}
@@ -296,12 +308,15 @@ DATAPLANE_KUTTL_NAMESPACE ?= dataplane-kuttl-tests
 DATAPLANE_DEFAULT_GW      ?= 192.168.122.1
 
 # Manila
-MANILA_IMG          ?= quay.io/openstack-k8s-operators/manila-operator-index:latest
-MANILA_REPO         ?= https://github.com/openstack-k8s-operators/manila-operator.git
-MANILA_BRANCH       ?= main
-MANILA              ?= config/samples/manila_v1beta1_manila.yaml
-MANILA_CR           ?= ${OPERATOR_BASE_DIR}/manila-operator/${MANILA}
+MANILA_IMG            ?= quay.io/openstack-k8s-operators/manila-operator-index:latest
+MANILA_REPO           ?= https://github.com/openstack-k8s-operators/manila-operator.git
+MANILA_BRANCH         ?= main
+MANILA                ?= config/samples/manila_v1beta1_manila.yaml
+MANILA_CR             ?= ${OPERATOR_BASE_DIR}/manila-operator/${MANILA}
 # TODO: Image customizations for all Manila services
+MANILA_KUTTL_CONF     ?= ${OPERATOR_BASE_DIR}/manila-operator/kuttl-test.yaml
+MANILA_KUTTL_DIR      ?= ${OPERATOR_BASE_DIR}/manila-operator/tests/kuttl/tests
+MANILA_KUTTL_TIMEOUT  ?= 180
 
 # Ceph
 CEPH_IMG            ?= quay.io/ceph/demo:latest
@@ -333,6 +348,12 @@ SWIFT_REPO       ?= https://github.com/openstack-k8s-operators/swift-operator.gi
 SWIFT_BRANCH     ?= main
 SWIFT            ?= config/samples/swift_v1beta1_swift.yaml
 SWIFT_CR         ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFT}
+SWIFT_KUTTL_CONF   ?= ${OPERATOR_BASE_DIR}/swift-operator/kuttl-test.yaml
+SWIFT_KUTTL_DIR    ?= ${OPERATOR_BASE_DIR}/swift-operator/tests/kuttl/tests
+SWIFT_KUTTL_NAMESPACE ?= swift-kuttl-tests
+
+# CertManager
+CERTMANAGER_TIMEOUT                  ?= 300s
 
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
@@ -373,10 +394,10 @@ help: ## Display this help.
 
 .PHONY: cleanup
 
-cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup designate_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup dataplane_cleanup ansibleee_cleanup rabbitmq_cleanup infra_cleanup ## Delete all operators
+cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup designate_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup swift_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup dataplane_cleanup ansibleee_cleanup rabbitmq_cleanup infra_cleanup ## Delete all operators
 
 .PHONY: deploy_cleanup
-deploy_cleanup: heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup designate_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
+deploy_cleanup: manila_deploy_cleanup heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup designate_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup swift_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
 
 .PHONY: wait
 wait: ## wait for an operator's controller-manager pod to be ready (requires OPERATOR_NAME to be explicitly passed!)
@@ -385,18 +406,28 @@ wait: ## wait for an operator's controller-manager pod to be ready (requires OPE
 
 ##@ CRC
 .PHONY: crc_storage
-crc_storage: ## initialize local storage PVs in CRC vm
+crc_storage: namespace ## initialize local storage PVs in CRC vm
 	$(eval $(call vars,$@))
 	bash scripts/create-pv.sh
 	bash scripts/gen-crc-pv-kustomize.sh
 	oc apply -f ${OUT}/crc/storage.yaml
 
 .PHONY: crc_storage_cleanup
-crc_storage_cleanup: ## cleanup local storage PVs in CRC vm
+crc_storage_cleanup: namespace ## cleanup local storage PVs in CRC vm
 	$(eval $(call vars,$@))
 	bash scripts/cleanup-crc-pv.sh
 	if oc get sc ${STORAGE_CLASS}; then oc delete sc ${STORAGE_CLASS}; fi
 	bash scripts/delete-pv.sh
+
+.PHONY: crc_storage_with_retries
+crc_storage_with_retries: ## initialize local storage PVs with retries
+	 $(eval $(call vars,$@))
+	bash scripts/retry_make_crc_storage.sh $(CRC_STORAGE_RETRIES)
+
+.PHONY: crc_storage_cleanup_with_retries
+crc_storage_cleanup_with_retries: ## cleanup local storage PVs with retries
+	 $(eval $(call vars,$@))
+	bash scripts/retry_make_crc_storage_cleanup.sh $(CRC_STORAGE_RETRIES)
 
 ##@ OPERATOR_NAMESPACE
 .PHONY: operator_namespace
@@ -450,7 +481,7 @@ input_cleanup: ## deletes the secret/CM, used by the services as input
 ##@ CRC BMO SETUP
 .PHONY: crc_bmo_setup
 crc_bmo_setup: export IRONIC_HOST_IP=${BMO_IRONIC_HOST}
-crc_bmo_setup: certmanager
+crc_bmo_setup: crc_bmo_cleanup certmanager
 	$(eval $(call vars,$@))
 	mkdir -p ${OPERATOR_BASE_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(BMO_BRANCH),-b ${BMO_BRANCH}) ${BMO_REPO} "baremetal-operator" && popd
@@ -544,16 +575,12 @@ edpm_deploy_prep: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALLOWED_RANGE
 edpm_deploy_prep: export EDPM_CHRONY_NTP_SERVER=${DATAPLANE_CHRONY_NTP_SERVER}
 edpm_deploy_prep: export EDPM_REGISTRY_URL=${DATAPLANE_REGISTRY_URL}
 edpm_deploy_prep: export EDPM_CONTAINER_TAG=${DATAPLANE_CONTAINER_TAG}
-edpm_deploy_prep: export EDPM_DNS_SERVER=$(shell oc get svc -l service=dnsmasq -o json | jq -r '.items[0].status.loadBalancer.ingress[0].ip')
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST=$(shell oc get svc nova-metadata-internal -o json |jq -r '.status.loadBalancer.ingress[0].ip')
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET=${METADATA_SHARED_SECRET}
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_BIND_HOST=${DATAPLANE_OVN_METADATA_AGENT_BIND_HOST}
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_TRANSPORT_URL=$(shell oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
 edpm_deploy_prep: export EDPM_OVN_METADATA_AGENT_SB_CONNECTION=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
-edpm_deploy_prep: export EDPM_OVN_DBS=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"[0]')
-edpm_deploy_prep: export EDPM_NADS=$(shell oc get network-attachment-definitions -o json | jq -r "[.items[].metadata.name]")
-edpm_deploy_prep: export INTERFACE_MTU=${NETWORK_MTU}
-edpm_deploy_prep: export EDPM_DEFAULT_GW=${DATAPLANE_DEFAULT_GW}
+edpm_deploy_prep: export EDPM_OVN_DBS=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"')
 edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -587,15 +614,14 @@ edpm_deploy_baremetal_prep: export EDPM_TOTAL_NODES=${DATAPLANE_TOTAL_NODES}
 edpm_deploy_baremetal_prep: export EDPM_NETWORK_CONFIG_TEMPLATE=${DATAPLANE_NETWORK_CONFIG_TEMPLATE}
 edpm_deploy_baremetal_prep: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALLOWED_RANGES}
 edpm_deploy_baremetal_prep: export EDPM_CHRONY_NTP_SERVER=${DATAPLANE_CHRONY_NTP_SERVER}
+edpm_deploy_baremetal_prep: export EDPM_REGISTRY_URL=${DATAPLANE_REGISTRY_URL}
+edpm_deploy_baremetal_prep: export EDPM_CONTAINER_TAG=${DATAPLANE_CONTAINER_TAG}
 edpm_deploy_baremetal_prep: export EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST=$(shell oc get svc nova-metadata-internal -o json |jq -r '.status.loadBalancer.ingress[0].ip')
 edpm_deploy_baremetal_prep: export EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET=${METADATA_SHARED_SECRET}
 edpm_deploy_baremetal_prep: export EDPM_OVN_METADATA_AGENT_BIND_HOST=${DATAPLANE_OVN_METADATA_AGENT_BIND_HOST}
 edpm_deploy_baremetal_prep: export EDPM_OVN_METADATA_AGENT_TRANSPORT_URL=$(shell oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
 edpm_deploy_baremetal_prep: export EDPM_OVN_METADATA_AGENT_SB_CONNECTION=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
-edpm_deploy_baremetal_prep: export EDPM_OVN_DBS=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"[0]')
-edpm_deploy_baremetal_prep: export EDPM_NADS=$(shell oc get network-attachment-definitions -o json | jq -r "[.items[].metadata.name]")
-edpm_deploy_baremetal_prep: export INTERFACE_MTU=${NETWORK_MTU}
-edpm_deploy_baremetal_prep: export EDPM_DEFAULT_GW=${DATAPLANE_DEFAULT_GW}
+edpm_deploy_baremetal_prep: export EDPM_OVN_DBS=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"')
 edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -662,7 +688,7 @@ dns_deploy: input dns_deploy_prep ## installs the service instance using kustomi
 dns_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,infra))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/infra-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/infra-operator ${DEPLOY_DIR}
 
 ##@ NETCONFIG
 .PHONY: netconfig_deploy_prep
@@ -685,7 +711,7 @@ netconfig_deploy: input netconfig_deploy_prep ## installs the service instance u
 netconfig_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,infra))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/infra-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/infra-operator ${DEPLOY_DIR}
 
 ##@ MEMCACHED
 .PHONY: memcached_deploy_prep
@@ -1281,9 +1307,10 @@ cinder_kuttl: kuttl_common_prep cinder cinder_deploy_prep ## runs kuttl tests fo
 
 .PHONY: neutron_kuttl_run
 neutron_kuttl_run: ## runs kuttl tests for the neutron operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${NEUTRON_KUTTL_CONF} ${NEUTRON_KUTTL_DIR}
+	kubectl-kuttl test --config ${NEUTRON_KUTTL_CONF} ${NEUTRON_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: neutron_kuttl
+neutron_kuttl: export NAMESPACE = ${NEUTRON_KUTTL_NAMESPACE}
 neutron_kuttl: kuttl_common_prep ovn ovn_deploy neutron neutron_deploy_prep ## runs kuttl tests for the neutron operator. Installs neutron operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,neutron))
 	make wait
@@ -1292,12 +1319,14 @@ neutron_kuttl: kuttl_common_prep ovn ovn_deploy neutron neutron_deploy_prep ## r
 	make neutron_cleanup
 	make ovn_cleanup
 	make kuttl_common_cleanup
+	bash scripts/restore-namespace.sh
 
 .PHONY: octavia_kuttl_run
 octavia_kuttl_run: ## runs kuttl tests for the octavia operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${OCTAVIA_KUTTL_CONF} ${OCTAVIA_KUTTL_DIR}
+	kubectl-kuttl test --config ${OCTAVIA_KUTTL_CONF} ${OCTAVIA_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: octavia_kuttl
+octavia_kuttl: export NAMESPACE = ${OCTAVIA_KUTTL_NAMESPACE}
 octavia_kuttl: kuttl_common_prep ovn ovn_deploy octavia octavia_deploy_prep ## runs kuttl tests for the octavia operator. Installs octavia operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,octavia))
 	make wait
@@ -1308,6 +1337,7 @@ octavia_kuttl: kuttl_common_prep ovn ovn_deploy octavia octavia_deploy_prep ## r
 	make kuttl_common_cleanup
 
 .PHONY: designate_kuttl
+designate_kuttl: export NAMESPACE = ${DESIGNATE_KUTTL_NAMESPACE}
 designate_kuttl: kuttl_common_prep ovn ovn_deploy designate designate_deploy_prep ## runs kuttl tests for the designate operator. Installs designate operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	$(eval $(call vars,$@,designate))
 	make wait
@@ -1319,7 +1349,7 @@ designate_kuttl: kuttl_common_prep ovn ovn_deploy designate designate_deploy_pre
 
 .PHONY: designate_kuttl_run
 designate_kuttl_run: ## runs kuttl tests for the designate operator, assumes that everything needed for running the test was deployed beforehand.
-	INSTALL_YAMLS=${INSTALL_YAMLS} kubectl-kuttl test --config ${DESIGNATE_KUTTL_CONF} ${DESIGNATE_KUTTL_DIR}
+	kubectl-kuttl test --config ${DESIGNATE_KUTTL_CONF} ${DESIGNATE_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: ovn_kuttl_run
 ovn_kuttl_run: ## runs kuttl tests for the ovn operator, assumes that everything needed for running the test was deployed beforehand.
@@ -1354,9 +1384,10 @@ infra_kuttl: input deploy_cleanup rabbitmq rabbitmq_deploy infra memcached_deplo
 
 .PHONY: ironic_kuttl_run
 ironic_kuttl_run: ## runs kuttl tests for the ironic operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${IRONIC_KUTTL_CONF} ${IRONIC_KUTTL_DIR}
+	kubectl-kuttl test --config ${IRONIC_KUTTL_CONF} ${IRONIC_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: ironic_kuttl
+ironic_kuttl: export NAMESPACE = ${IRONIC_KUTTL_NAMESPACE}
 ironic_kuttl: kuttl_common_prep ironic ironic_deploy_prep  ## runs kuttl tests for the ironic operator. Installs ironic operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,ironic))
 	make wait
@@ -1389,7 +1420,7 @@ heat_kuttl_crc: crc_storage heat_kuttl
 
 .PHONY: ansibleee_kuttl_run
 ansibleee_kuttl_run: ## runs kuttl tests for the openstack-ansibleee operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${ANSIBLEEE_KUTTL_CONF} ${ANSIBLEEE_KUTTL_DIR}
+	kubectl-kuttl test --config ${ANSIBLEEE_KUTTL_CONF} ${ANSIBLEEE_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: ansibleee_kuttl_cleanup
 ansibleee_kuttl_cleanup:
@@ -1403,14 +1434,18 @@ ansibleee_kuttl_prep: ansibleee_kuttl_cleanup
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(ANSIBLEEE_BRANCH),-b ${ANSIBLEEE_BRANCH}) ${ANSIBLEEE_REPO} "${OPERATOR_NAME}-operator" && popd
 
 .PHONY: ansibleee_kuttl
+ansibleee_kuttl: export NAMESPACE= ${ANSIBLEEE_KUTTL_NAMESPACE}
 ansibleee_kuttl: input ansibleee_kuttl_prep ansibleee ## runs kuttl tests for the openstack-ansibleee operator. Installs openstack-ansibleee operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,openstack-ansibleee))
 	make wait
 	make ansibleee_kuttl_run
 	make ansibleee_cleanup
+	bash scripts/restore-namespace.sh
 
 .PHONY: dataplane_kuttl_run
 dataplane_kuttl_run: ## runs kuttl tests for the dataplane operator, assumes that everything needed for running the test was deployed beforehand.
+	if oc get -n ${NAMESPACE} dnsmasq dns; then echo "dnsmasq/dns CR can not exist during kuttl tests"; exit 1; fi
+	if oc get -n ${NAMESPACE} netconfig netconfig; then echo "netconfig/netconfig CR can not exist during kuttl tests"; exit 1; fi
 	kubectl-kuttl test --config ${DATAPLANE_KUTTL_CONF} ${DATAPLANE_KUTTL_DIR}
 
 .PHONY: dataplane_kuttl_cleanup
@@ -1458,6 +1493,35 @@ glance_kuttl: kuttl_common_prep glance glance_deploy_prep ## runs kuttl tests fo
 	make glance_cleanup
 	make kuttl_common_cleanup
 
+.PHONY: manila_kuttl_run
+manila_kuttl_run: ## runs kuttl tests for the manila operator,
+	kubectl-kuttl test --config ${MANILA_KUTTL_CONF} ${MANILA_KUTTL_DIR}
+
+.PHONY: manila_kuttl
+manila_kuttl: kuttl_common_prep ceph manila manila_deploy_prep ## runs kuttl tests for manila operator. Installs manila operator and cleans up previous deployments before and after running the tests.
+	$(eval $(call vars,$@,manila))
+	make wait
+	make manila_kuttl_run
+	make manila_cleanup
+	make deploy_cleanup
+	make ceph_cleanup
+	make kuttl_common_cleanup
+	make cleanup
+
+.PHONY: swift_kuttl_run
+swift_kuttl_run: ## runs kuttl tests for the swift operator, assumes that everything needed for running the test was deployed beforehand.
+	kubectl-kuttl test --config ${SWIFT_KUTTL_CONF} ${SWIFT_KUTTL_DIR} --namespace ${NAMESPACE}
+
+.PHONY: swift_kuttl
+swift_kuttl: export NAMESPACE = ${SWIFT_KUTTL_NAMESPACE}
+swift_kuttl: kuttl_common_prep swift swift_deploy_prep ## runs kuttl tests for the swift operator. Installs swift operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+	$(eval $(call vars,$@,swift))
+	make wait
+	make swift_kuttl_run
+	make deploy_cleanup
+	make swift_cleanup
+	make kuttl_common_cleanup
+
 .PHONY: horizon_kuttl_run
 horizon_kuttl_run: ## runs kuttl tests for the horizon operator, assumes that everything needed for running the test was deployed beforehand.
 	kubectl-kuttl test --config ${HORIZON_KUTTL_CONF} ${HORIZON_KUTTL_DIR} --config ${HORIZON_KUTTL_CONF} --namespace ${NAMESPACE}
@@ -1474,15 +1538,17 @@ horizon_kuttl: kuttl_common_prep horizon horizon_deploy_prep ## runs kuttl tests
 
 .PHONY: openstack_kuttl_run
 openstack_kuttl_run: ## runs kuttl tests for the openstack operator, assumes that everything needed for running the test was deployed beforehand.
+	set -e; \
 	for test_dir in $(shell ls ${OPENSTACK_KUTTL_DIR}); do \
-		make crc_storage_cleanup; \
-		make crc_storage; \
+	    oc delete osctlplane --all --namespace ${NAMESPACE}; \
+		make crc_storage_cleanup_with_retries; \
+		make crc_storage_with_retries; \
 		kubectl-kuttl test --config ${OPENSTACK_KUTTL_CONF} ${OPENSTACK_KUTTL_DIR} --test $${test_dir}; \
 	done
 
 .PHONY: openstack_kuttl
 openstack_kuttl: export NAMESPACE = ${OPENSTACK_KUTTL_NAMESPACE}
-openstack_kuttl: input deploy_cleanup openstack ## runs kuttl tests for the openstack operator. Installs openstack operator and cleans up previous deployments before running the tests, cleans up after running the tests.
+openstack_kuttl: input deploy_cleanup openstack openstack_deploy_prep ## runs kuttl tests for the openstack operator. Installs openstack operator and cleans up previous deployments before running the tests, cleans up after running the tests.
 	$(eval $(call vars,$@,openstack))
 	make wait
 	make openstack_kuttl_run
@@ -1626,13 +1692,13 @@ dataplane_cleanup: ## deletes the operator, but does not cleanup the service res
 
 ##@ CEPH
 .PHONY: ceph_help
-ceph_help: export IMAGE=${CEPH_IMG}
+ceph_help: export CEPH_IMAGE=${CEPH_IMG}
 ceph_help: ## Ceph helper
 	$(eval $(call vars,$@,ceph))
 	bash scripts/gen-ceph-kustomize.sh "help" "full"
 
 .PHONY: ceph
-ceph: export IMAGE=${CEPH_IMG}
+ceph: export CEPH_IMAGE=${CEPH_IMG}
 ceph: namespace ## deploy the Ceph Pod
 	$(eval $(call vars,$@,ceph))
 	bash scripts/gen-ceph-kustomize.sh "build"
@@ -1816,7 +1882,7 @@ telemetry_deploy_cleanup: ## cleans up the service instance, Does not affect the
 	$(eval $(call vars,$@,telemetry))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/telemetry-operator ${DEPLOY_DIR}
-	rm -Rf ${OPERATOR_BASE_DIR}/ceilometer-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/ceilometer-operator ${DEPLOY_DIR}
 
 
 ##@ SWIFT
@@ -1835,7 +1901,7 @@ swift: operator_namespace swift_prep ## installs the operator, also runs the pre
 swift_cleanup: ## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,swift))
 	bash scripts/operator-cleanup.sh
-	rm -Rf ${OPERATOR_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: swift_deploy_prep
 swift_deploy_prep: export KIND=Swift
@@ -1858,7 +1924,7 @@ swift_deploy: input swift_deploy_prep ## installs the service instance using kus
 swift_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
 	$(eval $(call vars,$@,swift))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	rm -Rf ${OPERATOR_BASE_DIR}/swift-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} -Rf ${OPERATOR_BASE_DIR}/swift-operator ${DEPLOY_DIR}
 
 ##@ CERT-MANAGER
 .PHONY: certmanager
@@ -1871,13 +1937,13 @@ certmanager: ## installs cert-manager operator in the cert-manager-operator name
 	bash scripts/gen-olm-cert-manager.sh
 	oc apply -f ${OPERATOR_DIR}
 	while ! (oc get pod --no-headers=true -l name=cert-manager-operator -n ${OPERATOR_NAMESPACE}| grep "cert-manager-operator"); do sleep 10; done
-	oc wait pod -n ${OPERATOR_NAMESPACE} --for condition=Ready -l name=cert-manager-operator --timeout=$(TIMEOUT)
+	oc wait pod -n ${OPERATOR_NAMESPACE} --for condition=Ready -l name=cert-manager-operator --timeout=$(CERTMANAGER_TIMEOUT)
 	while ! (oc get pod --no-headers=true -l app=cainjector -n ${NAMESPACE} | grep "cert-manager-cainjector"); do sleep 10; done
-	oc wait pod -n ${NAMESPACE} -l app=cainjector --for condition=Ready --timeout=$(TIMEOUT)
+	oc wait pod -n ${NAMESPACE} -l app=cainjector --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
 	while ! (oc get pod --no-headers=true -l app=webhook -n ${NAMESPACE} | grep "cert-manager-webhook"); do sleep 10; done
-	oc wait pod -n ${NAMESPACE} -l app=webhook --for condition=Ready --timeout=$(TIMEOUT)
+	oc wait pod -n ${NAMESPACE} -l app=webhook --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
 	while ! (oc get pod --no-headers=true -l app=cert-manager -n ${NAMESPACE} | grep "cert-manager"); do sleep 10; done
-	oc wait pod -n ${NAMESPACE} -l app=cert-manager --for condition=Ready --timeout=$(TIMEOUT)
+	oc wait pod -n ${NAMESPACE} -l app=cert-manager --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
 
 certmanager_cleanup: export NAMESPACE=$(if $(findstring 4.10,$(OCP_RELEASE)),openshift-cert-manager,cert-manager)
 certmanager_cleanup: export OPERATOR_NAMESPACE=$(if $(findstring 4.10,$(OCP_RELEASE)),openshift-cert-manager-operator,cert-manager-operator)
