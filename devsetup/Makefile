@@ -186,7 +186,7 @@ standalone_cleanup: edpm_compute_cleanup ## Delete standalone VM
 .PHONY: standalone_snapshot
 standalone_snapshot: ## Create standalone snapshot
 	$(eval $(call vars))
-	virsh --connect=qemu:///system detach-device-alias edpm-compute-${EDPM_COMPUTE_SUFFIX} fs0 --live
+	virsh --connect=qemu:///system detach-device-alias edpm-compute-${EDPM_COMPUTE_SUFFIX} fs0 --live || true
 	virsh --connect=qemu:///system snapshot-create-as --atomic --domain edpm-compute-${EDPM_COMPUTE_SUFFIX} --name clean
 
 .PHONY: standalone_revert
