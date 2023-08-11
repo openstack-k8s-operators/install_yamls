@@ -23,7 +23,9 @@ IP="192.168.122.${IP_ADRESS_SUFFIX}"
 OUTPUT_DIR=${OUTPUT_DIR:-"${SCRIPTPATH}/../../out/edpm/"}
 SSH_KEY_FILE=${SSH_KEY_FILE:-"${OUTPUT_DIR}/ansibleee-ssh-key-id_rsa"}
 SSH_OPT="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $SSH_KEY_FILE"
-CMDS_FILE=${CMDS_FILE:-"/tmp/standalone_repos"}
+REPO_SETUP_CMDS=${REPO_SETUP_CMDS:-"/tmp/standalone_repos"}
+CMDS_FILE=${CMDS_FILE:-"/tmp/standalone_cmds"}
+SKIP_TRIPLEO_REPOS=${SKIP_TRIPLEO_REPOS:="false"}
 CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD:-"rm -Rf"}
 
 CEPH_ARGS=${CEPH_ARGS:-'"-e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml"'}
@@ -40,7 +42,7 @@ fi
 # And when running it from our own systems outside of the Red Hat network we can use any available server:
 # export NTP_SERVER=pool.ntp.org
 
-cat <<EOF > $CMDS_FILE
+cat <<EOF > $REPO_SETUP_CMDS
 set -ex
 sudo dnf remove -y epel-release
 sudo dnf update -y
@@ -52,11 +54,27 @@ sudo dnf install -y \$URL\$RPM
 sudo -E tripleo-repos -b wallaby current-tripleo-dev ceph --stream
 sudo dnf repolist
 sudo dnf update -y
+EOF
+
+if [[ -e /run/systemd/resolve/resolv.conf ]]; then
+    HOST_PRIMARY_RESOLV_CONF_ENTRY=$(cat /run/systemd/resolve/resolv.conf | grep ^nameserver | grep -v '192.168' | head -n1 | cut -d' ' -f2)
+else
+    HOST_PRIMARY_RESOLV_CONF_ENTRY=192.168.122.1
+fi
+
+cat <<EOF > $CMDS_FILE
 sudo dnf install -y podman python3-tripleoclient util-linux lvm2 cephadm
+
+# Pin Podman to work around a Podman regression where env variables
+# containing newlines get trimmed to the first line only, breaking
+# STEP_CONFIG in container-puppet-* containers.
+sudo dnf install -y https://kojihub.stream.centos.org/kojifiles/packages/podman/4.6.0/1.el9/x86_64/podman-4.6.0-1.el9.x86_64.rpm
 
 sudo hostnamectl set-hostname standalone.localdomain
 sudo hostnamectl set-hostname standalone.localdomain --transient
 
+export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
+export INTERFACE_MTU=${INTERFACE_MTU:-1500}
 export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
 export CEPH_ARGS=${CEPH_ARGS}
@@ -71,7 +89,8 @@ while [[ $(ssh -o BatchMode=yes -o ConnectTimeout=5 $SSH_OPT root@$IP echo ok) !
 done
 
 # Copying files
-scp $SSH_OPT $CMDS_FILE root@$IP:/tmp/repo-setup.sh
+scp $SSH_OPT $REPO_SETUP_CMDS root@$IP:/tmp/repo-setup.sh
+scp $SSH_OPT $CMDS_FILE root@$IP:/tmp/standalone-deploy.sh
 scp $SSH_OPT standalone/standalone.j2 root@$IP:/tmp/standalone.j2
 scp $SSH_OPT standalone/network_data.yaml root@$IP:/tmp/network_data.yaml
 scp $SSH_OPT standalone/deployed_network.yaml root@$IP:/tmp/deployed_network.yaml
@@ -80,8 +99,14 @@ scp $SSH_OPT standalone/ceph.sh root@$IP:/tmp/ceph.sh
 scp $SSH_OPT standalone/openstack.sh root@$IP:/tmp/openstack.sh
 
 # Running
-ssh $SSH_OPT root@$IP "bash /tmp/repo-setup.sh"
-# separate the two commands so we can properly detect whether there is
-# a failure while deploying standalone
-ssh $SSH_OPT root@$IP "rm -f /tmp/repo-setup.sh"
+if [[ -z ${SKIP_TRIPLEO_REPOS} || ${SKIP_TRIPLEO_REPOS} == "false" ]]; then
+    ssh $SSH_OPT root@$IP "bash /tmp/repo-setup.sh"
+    # separate the two commands so we can properly detect whether there is
+    # a failure while deploying standalone
+    ssh $SSH_OPT root@$IP "rm -f /tmp/repo-setup.sh"
+fi
+ssh $SSH_OPT root@$IP "bash /tmp/standalone-deploy.sh"
+ssh $SSH_OPT root@$IP "rm -f /tmp/standalone-deploy.sh"
+
 ${CLEANUP_DIR_CMD} $CMDS_FILE
+${CLEANUP_DIR_CMD} $REPO_SETUP_CMDS

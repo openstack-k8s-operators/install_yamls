@@ -26,6 +26,12 @@ BMAAS_LIBVIRT_USER ?= sushyemu
 
 EDPM_REGISTRY_URL ?= quay.io/podified-antelope-centos9
 EDPM_CONTAINER_TAG ?= current-podified
+DATAPLANE_CHRONY_NTP_SERVER ?=pool.ntp.org
+METADATA_SHARED_SECRET   ?= 1234567842
+DATAPLANE_OVN_METADATA_AGENT_BIND_HOST ?=127.0.0.1
+DATAPLANE_SSHD_ALLOWED_RANGES ?=['192.168.122.0/24']
+DATAPLANE_NETWORK_CONFIG_TEMPLATE ?=templates/single_nic_vlans/single_nic_vlans.j2
+DATAPLANE_DEPLOY_STRATEGY_DEPLOY ?= false
 
 BM_PROVISIONING_INTERFACE  ?=enp6s0
 BM_NETWORK_NAME            ?=default
@@ -98,7 +104,18 @@ edpm_baremetal: export PROVISIONING_INTERFACE=${BM_PROVISIONING_INTERFACE}
 edpm_baremetal: export OPERATOR_NAME=openstack
 edpm_baremetal: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
 edpm_baremetal: export BMAAS_NETWORK_IPADDRESS=${BM_NETWORK_IPADDRESS}
+edpm_baremetal: export EDPM_NETWORK_CONFIG_TEMPLATE=${DATAPLANE_NETWORK_CONFIG_TEMPLATE}
+edpm_baremetal: export EDPM_DEPLOY_STRATEGY_DEPLOY=${DATAPLANE_DEPLOY_STRATEGY_DEPLOY}
 edpm_baremetal: export BMAAS_INSTANCE_NAME_PREFIX=${BM_INSTANCE_NAME_PREFIX}
+edpm_baremetal: export EDPM_CHRONY_NTP_SERVER=${DATAPLANE_CHRONY_NTP_SERVER}
+edpm_baremetal: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALLOWED_RANGES}
+edpm_baremetal: export EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST=$(shell oc get svc nova-metadata-internal -o json |jq -r '.status.loadBalancer.ingress[0].ip')
+edpm_baremetal: export EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET=${METADATA_SHARED_SECRET}
+edpm_baremetal: export EDPM_OVN_METADATA_AGENT_BIND_HOST=${DATAPLANE_OVN_METADATA_AGENT_BIND_HOST}
+edpm_baremetal: export EDPM_OVN_METADATA_AGENT_TRANSPORT_URL=$(shell oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
+edpm_baremetal: export EDPM_OVN_METADATA_AGENT_SB_CONNECTION=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
+edpm_baremetal: export EDPM_OVN_DBS=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"')
+edpm_baremetal: export BMAAS_NODE_COUNT=${BM_NODE_COUNT}
 edpm_baremetal: export NODE_COUNT=${BM_NODE_COUNT}
 edpm_baremetal: export REGISTRY_URL=${EDPM_REGISTRY_URL}
 edpm_baremetal: export CONTAINER_TAG=${EDPM_CONTAINER_TAG}
@@ -107,19 +124,16 @@ edpm_baremetal: ## Deploy only dataplane with BMAAS
 	make bmaas_virtual_bms
 	make bmaas_sushy_emulator
 	scripts/gen-ansibleee-ssh-key.sh
-	scripts/edpm-compute-bmaas.sh
+	scripts/edpm-compute-baremetal.sh --create
 
 .PHONY: edpm_baremetal_cleanup
 edpm_baremetal_cleanup: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
 edpm_baremetal_cleanup: export BMAAS_INSTANCE_NAME_PREFIX=${BM_INSTANCE_NAME_PREFIX}
+edpm_baremetal_cleanup: export BMAAS_NODE_COUNT=${BM_NODE_COUNT}
+edpm_baremetal_cleanup: export NODE_COUNT=${BM_NODE_COUNT}
 edpm_baremetal_cleanup:  ## Cleanup dataplane with BMAAS
 	$(eval $(call vars))
-	oc delete openstackdataplane/openstack-edpm --ignore-not-found=true || true
-	oc delete openstackdataplaneservice --all --ignore-not-found=true || true
-	pushd .. && make netconfig_deploy_cleanup && popd
-	while oc get bmh | grep -q -e "deprovisioning" -e "provisioned"; do sleep 5; done || true
-	oc delete --all bmh --ignore-not-found=true || true
-	oc delete openstackprovisionserver/openstackprovisionserver --ignore-not-found=true || true
+	scripts/edpm-compute-baremetal.sh --cleanup
 	pushd .. && rm -Rf out/edpm || true && popd
 	make bmaas_sushy_emulator_cleanup || true
 	make bmaas_virtual_bms_cleanup || true
@@ -164,10 +178,15 @@ standalone: edpm_compute ## Create standalone VM
 	$(eval $(call vars))
 	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX}
 
+.PHONY: standalone_cleanup
+standalone_cleanup: export STANDALONE=true
+standalone_cleanup: edpm_compute_cleanup ## Delete standalone VM
+	$(eval $(call vars))
+
 .PHONY: standalone_snapshot
 standalone_snapshot: ## Create standalone snapshot
 	$(eval $(call vars))
-	virsh --connect=qemu:///system detach-device-alias edpm-compute-${EDPM_COMPUTE_SUFFIX} fs0 --live
+	virsh --connect=qemu:///system detach-device-alias edpm-compute-${EDPM_COMPUTE_SUFFIX} fs0 --live || true
 	virsh --connect=qemu:///system snapshot-create-as --atomic --domain edpm-compute-${EDPM_COMPUTE_SUFFIX} --name clean
 
 .PHONY: standalone_revert
