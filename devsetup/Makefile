@@ -195,7 +195,10 @@ standalone_revert: ## Revert standalone snapshot
 	virsh --connect=qemu:///system snapshot-revert --domain edpm-compute-${EDPM_COMPUTE_SUFFIX} --snapshotname clean
 
 .PHONY: cifmw_prepare
-cifmw_prepare: ## Clone the ci-framework repository in the ci-framework directory. That location is ignored from git.
+cifmw_prepare: ./ci-framework ## Clone or pull the ci-framework repository in the ci-framework directory. That location is ignored from git.
+	cd ci-framework && [[ -n "$$(git status --porcelain)" ]] || git pull --rebase
+
+./ci-framework: ## Actual git-cloning if the cifmw directory does not exist yet (make calls this only if target path is not there)
 	git clone https://github.com/openstack-k8s-operators/ci-framework ci-framework
 
 .PHONY: cifmw_cleanup
