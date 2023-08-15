@@ -23,6 +23,7 @@ OUTPUT_DIR=${OUTPUT_DIR:-"../out/edpm/"}
 REPO_SETUP_CMDS=${REPO_SETUP_CMDS:-"/tmp/standalone_repos"}
 CMDS_FILE=${CMDS_FILE:-"/tmp/standalone_cmds"}
 CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD:-"rm -Rf"}
+STANDALONE=${STANDALONE:-false}
 
 virsh destroy ${EDPM_COMPUTE_NAME} || :
 virsh undefine --snapshots-metadata --remove-all-storage ${EDPM_COMPUTE_NAME} || :
