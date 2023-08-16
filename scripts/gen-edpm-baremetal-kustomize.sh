@@ -128,11 +128,27 @@ patches:
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
 EOF
+if [ "$EDPM_ROOT_PASSWORD_SECRET" != "" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/roles/edpm-compute/baremetalSetTemplate/passwordSecret
+      value:
+        name: ${EDPM_ROOT_PASSWORD_SECRET}
+        namespace: ${NAMESPACE}
+EOF
+fi
 if [ "$EDPM_PROVISIONING_INTERFACE" != "" ]; then
 cat <<EOF >>kustomization.yaml
     - op: add
       path: /spec/roles/edpm-compute/baremetalSetTemplate/provisioningInterface
       value: ${EDPM_PROVISIONING_INTERFACE}
+EOF
+fi
+if [ "$EDPM_CTLPLANE_INTERFACE" != "" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/roles/edpm-compute/baremetalSetTemplate/ctlplaneInterface
+      value: ${EDPM_CTLPLANE_INTERFACE}
 EOF
 fi
 if [ "$EDPM_TOTAL_NODES" -eq 1 ]; then
