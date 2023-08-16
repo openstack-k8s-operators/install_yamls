@@ -497,7 +497,7 @@ crc_bmo_setup: crc_bmo_cleanup certmanager
 
 ##@ CRC BMO CLEANUP
 .PHONY: crc_bmo_cleanup
-crc_bmo_cleanup:
+crc_bmo_cleanup: certmanager_cleanup
 	oc kustomize ${OPERATOR_BASE_DIR}/baremetal-operator/ironic-deployment/default | oc delete --ignore-not-found=true -f -
 	oc kustomize ${OPERATOR_BASE_DIR}/baremetal-operator/config | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/baremetal-operator
@@ -516,7 +516,7 @@ openstack_prep: $(if $(findstring true,$(BMO_SETUP)), crc_bmo_setup) ## creates 
 	bash scripts/gen-olm.sh
 
 .PHONY: openstack
-openstack: certmanager operator_namespace openstack_prep ## installs the operator, also runs the prep step. Set OPENSTACK_IMG for custom image.
+openstack: operator_namespace openstack_prep ## installs the operator, also runs the prep step. Set OPENSTACK_IMG for custom image.
 	$(eval $(call vars,$@,openstack))
 	oc apply -f ${OPERATOR_DIR}
 
