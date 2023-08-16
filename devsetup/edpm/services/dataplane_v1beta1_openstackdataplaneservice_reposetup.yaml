@@ -16,12 +16,13 @@ spec:
       strategy: linear
       tasks:
         - name: Enable podified-repos
+          become: true
           ansible.builtin.shell: |
-            rpm -q git || sudo yum -y install git
-            sudo yum -y install python-setuptools python-requests python3-pip
-            git clone https://github.com/openstack-k8s-operators/repo-setup
-            pushd repo-setup
-            sudo pip install -r requirements.txt
-            sudo python3 setup.py install
+            pushd /var/tmp
+            curl -sL https://github.com/openstack-k8s-operators/repo-setup/archive/refs/heads/main.tar.gz | tar -xz
+            pushd repo-setup-main
+            python3 -m venv ./venv
+            PBR_VERSION=0.0.0 ./venv/bin/pip install ./
+            ./venv/bin/repo-setup current-podified-dev
             popd
-            sudo /usr/local/bin/repo-setup current-podified-dev
+            rm -rf repo-setup-main
