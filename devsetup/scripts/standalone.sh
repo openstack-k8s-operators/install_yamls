@@ -28,6 +28,8 @@ CMDS_FILE=${CMDS_FILE:-"/tmp/standalone_cmds"}
 SKIP_TRIPLEO_REPOS=${SKIP_TRIPLEO_REPOS:="false"}
 CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD:-"rm -Rf"}
 
+CEPH_ARGS=${CEPH_ARGS:-'"-e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml"'}
+
 if [[ ! -f $SSH_KEY_FILE ]]; then
     echo "$SSH_KEY_FILE is missing"
     exit 1
@@ -40,7 +42,6 @@ fi
 # And when running it from our own systems outside of the Red Hat network we can use any available server:
 # export NTP_SERVER=pool.ntp.org
 
-if [[ ! -f $REPO_SETUP_CMDS ]]; then
 cat <<EOF > $REPO_SETUP_CMDS
 set -ex
 sudo dnf remove -y epel-release
@@ -54,7 +55,6 @@ sudo -E tripleo-repos -b wallaby current-tripleo-dev ceph --stream
 sudo dnf repolist
 sudo dnf update -y
 EOF
-fi
 
 if [[ -e /run/systemd/resolve/resolv.conf ]]; then
     HOST_PRIMARY_RESOLV_CONF_ENTRY=$(cat /run/systemd/resolve/resolv.conf | grep ^nameserver | grep -v '192.168' | head -n1 | cut -d' ' -f2)
@@ -62,7 +62,6 @@ else
     HOST_PRIMARY_RESOLV_CONF_ENTRY=192.168.122.1
 fi
 
-if [[ ! -f $CMDS_FILE ]]; then
 cat <<EOF > $CMDS_FILE
 sudo dnf install -y podman python3-tripleoclient util-linux lvm2 cephadm
 
@@ -78,13 +77,12 @@ export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
 export INTERFACE_MTU=${INTERFACE_MTU:-1500}
 export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
-export CEPH_ARGS=${CEPH_ARGS:-\"-e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml\"}
+export CEPH_ARGS=${CEPH_ARGS}
 
 /tmp/network.sh
 [[ "\$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]] && /tmp/ceph.sh
 /tmp/openstack.sh
 EOF
-fi
 
 while [[ $(ssh -o BatchMode=yes -o ConnectTimeout=5 $SSH_OPT root@$IP echo ok) != "ok" ]]; do
     true
