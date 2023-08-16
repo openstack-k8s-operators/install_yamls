@@ -40,6 +40,7 @@ fi
 # And when running it from our own systems outside of the Red Hat network we can use any available server:
 # export NTP_SERVER=pool.ntp.org
 
+if [[ ! -f $REPO_SETUP_CMDS ]]; then
 cat <<EOF > $REPO_SETUP_CMDS
 set -ex
 sudo dnf remove -y epel-release
@@ -53,6 +54,7 @@ sudo -E tripleo-repos -b wallaby current-tripleo-dev ceph --stream
 sudo dnf repolist
 sudo dnf update -y
 EOF
+fi
 
 if [[ -e /run/systemd/resolve/resolv.conf ]]; then
     HOST_PRIMARY_RESOLV_CONF_ENTRY=$(cat /run/systemd/resolve/resolv.conf | grep ^nameserver | grep -v '192.168' | head -n1 | cut -d' ' -f2)
@@ -77,6 +79,16 @@ export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
 export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml}"
 
+if [[ -f \$HOME/containers-prepare-parameters.yaml ]]; then
+    echo "Using existing containers-prepare-parameters.yaml - contents:"
+    cat \$HOME/containers-prepare-parameters.yaml
+else
+    openstack tripleo container image prepare default \
+        --output-env-file \$HOME/containers-prepare-parameters.yaml
+    # Use wallaby el9 container images
+    sed -i 's|quay.io/tripleowallaby$|quay.io/tripleowallabycentos9|' \$HOME/containers-prepare-parameters.yaml
+fi
+
 /tmp/network.sh
 [[ "\$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]] && /tmp/ceph.sh
 /tmp/openstack.sh
@@ -95,6 +107,9 @@ scp $SSH_OPT standalone/deployed_network.yaml root@$IP:/tmp/deployed_network.yam
 scp $SSH_OPT standalone/network.sh root@$IP:/tmp/network.sh
 scp $SSH_OPT standalone/ceph.sh root@$IP:/tmp/ceph.sh
 scp $SSH_OPT standalone/openstack.sh root@$IP:/tmp/openstack.sh
+if [[ -f $HOME/containers-prepare-parameters.yaml ]]; then
+    scp $SSH_OPT $HOME/containers-prepare-parameters.yaml root@$IP:/root/containers-prepare-parameters.yaml
+fi
 
 # Running
 if [[ -z ${SKIP_TRIPLEO_REPOS} || ${SKIP_TRIPLEO_REPOS} == "false" ]]; then
