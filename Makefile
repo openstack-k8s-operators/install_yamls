@@ -325,6 +325,10 @@ CEPH_IMG            ?= quay.io/ceph/demo:latest
 NNCP_INTERFACE      ?= enp6s0
 NNCP_TIMEOUT		?= 240s
 NNCP_CLEANUP_TIMEOUT	?= 120s
+NNCP_CTLPLANE_IP_ADDRESS_PREFIX     ?=192.168.122
+NNCP_CTLPLANE_IP_ADDRESS_SUFFIX     ?=10
+NNCP_GATEWAY                        ?=192.168.122.1
+NNCP_DNS_SERVER                     ?=192.168.122.1
 
 # Telemetry
 TELEMETRY_IMG                    ?= quay.io/openstack-k8s-operators/telemetry-operator-index:latest
@@ -1734,6 +1738,10 @@ nmstate: ## installs nmstate operator in the openshift-nmstate namespace
 
 .PHONY: nncp
 nncp: export INTERFACE=${NNCP_INTERFACE}
+nncp: export CTLPLANE_IP_ADDRESS_PREFIX=${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}
+nncp: export CTLPLANE_IP_ADDRESS_SUFFIX=${NNCP_CTLPLANE_IP_ADDRESS_SUFFIX}
+nncp: export GATEWAY=${NNCP_GATEWAY}
+nncp: export DNS_SERVER=${NNCP_DNS_SERVER}
 nncp: export INTERFACE_MTU=${NETWORK_MTU}
 nncp: ## installs the nncp resources to configure the interface connected to the edpm node, right now only single nic vlan. Interface referenced via NNCP_INTERFACE
 	$(eval $(call vars,$@,nncp))
