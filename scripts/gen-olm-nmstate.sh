@@ -42,7 +42,7 @@ metadata:
     olm.providedAPIs: NMState.v1.nmstate.io
   generateName: openshift-nmstate-
   name: openshift-nmstate-tn6k8
-  namespace: openshift-nmstate
+  namespace: ${NAMESPACE}
 spec:
   targetNamespaces:
   - openshift-nmstate
@@ -55,7 +55,7 @@ metadata:
   labels:
     operators.coreos.com/kubernetes-nmstate-operator.openshift-nmstate: ""
   name: kubernetes-nmstate-operator
-  namespace: openshift-nmstate
+  namespace: ${NAMESPACE}
 spec:
   channel: stable
   installPlanApproval: Automatic
