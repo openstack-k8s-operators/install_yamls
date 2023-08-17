@@ -341,6 +341,8 @@ BMO_REPO                         ?= https://github.com/metal3-io/baremetal-opera
 BMO_BRANCH                       ?= main
 BMO_PROVISIONING_INTERFACE       ?= enp6s0
 BMO_IRONIC_HOST                  ?= 192.168.122.10
+BMO_CTLPLANE_INTERFACE           ?= enp1s0
+BMO_ROOT_PASSWORD_SECRET         ?=
 
 # Swift
 SWIFT_IMG        ?= quay.io/openstack-k8s-operators/swift-operator-index:latest
@@ -610,6 +612,7 @@ edpm_deploy_baremetal_prep: export EDPM_ANSIBLE_SECRET=${DATAPLANE_ANSIBLE_SECRE
 edpm_deploy_baremetal_prep: export EDPM_ANSIBLE_USER=cloud-admin
 edpm_deploy_baremetal_prep: export EDPM_BMH_NAMESPACE=${BMH_NAMESPACE}
 edpm_deploy_baremetal_prep: export EDPM_PROVISIONING_INTERFACE=${BMO_PROVISIONING_INTERFACE}
+edpm_deploy_baremetal_prep: export EDPM_CTLPLANE_INTERFACE=${BMO_CTLPLANE_INTERFACE}
 edpm_deploy_baremetal_prep: export EDPM_TOTAL_NODES=${DATAPLANE_TOTAL_NODES}
 edpm_deploy_baremetal_prep: export EDPM_NETWORK_CONFIG_TEMPLATE=${DATAPLANE_NETWORK_CONFIG_TEMPLATE}
 edpm_deploy_baremetal_prep: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALLOWED_RANGES}
@@ -622,6 +625,7 @@ edpm_deploy_baremetal_prep: export EDPM_OVN_METADATA_AGENT_BIND_HOST=${DATAPLANE
 edpm_deploy_baremetal_prep: export EDPM_OVN_METADATA_AGENT_TRANSPORT_URL=$(shell oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
 edpm_deploy_baremetal_prep: export EDPM_OVN_METADATA_AGENT_SB_CONNECTION=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
 edpm_deploy_baremetal_prep: export EDPM_OVN_DBS=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"')
+edpm_deploy_baremetal_prep: export EDPM_ROOT_PASSWORD_SECRET=${BMO_ROOT_PASSWORD_SECRET}
 edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
