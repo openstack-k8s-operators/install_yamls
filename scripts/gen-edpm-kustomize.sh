@@ -121,6 +121,9 @@ patches:
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_dbs
       value: ${EDPM_OVN_DBS}
     - op: replace
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/neutron_public_interface_name
+      value: ${EDPM_NETWORK_INTERFACE_NAME}
+    - op: replace
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/registry_url
       value: ${EDPM_REGISTRY_URL}
     - op: replace
