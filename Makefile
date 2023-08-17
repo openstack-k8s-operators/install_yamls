@@ -1728,13 +1728,13 @@ nmstate: ## installs nmstate operator in the openshift-nmstate namespace
 	sleep 2
 	bash scripts/gen-olm-nmstate.sh
 	oc apply -f ${OPERATOR_DIR}
-	timeout ${TIMEOUT} bash -c "while ! (oc get pod --no-headers=true -l app=kubernetes-nmstate-operator -n ${NAMESPACE}| grep nmstate-operator); do sleep 10; done"
-	oc wait pod -n ${NAMESPACE} --for condition=Ready -l app=kubernetes-nmstate-operator --timeout=$(TIMEOUT)
+	timeout ${TIMEOUT} bash -c "while ! (oc get deployments/nmstate-operator -n ${NAMESPACE}); do sleep 10; done"
+	oc wait deployments/nmstate-operator -n ${NAMESPACE} --for condition=Available --timeout=${TIMEOUT}
 	oc apply -f ${DEPLOY_DIR}
 	timeout ${TIMEOUT} bash -c "while ! (oc get pod --no-headers=true -l component=kubernetes-nmstate-handler -n ${NAMESPACE}| grep nmstate-handler); do sleep 10; done"
 	oc wait pod -n ${NAMESPACE} -l component=kubernetes-nmstate-handler --for condition=Ready --timeout=$(TIMEOUT)
-	timeout ${TIMEOUT} bash -c "while ! (oc get pod --no-headers=true -l component=kubernetes-nmstate-webhook -n ${NAMESPACE}| grep nmstate-webhook); do sleep 10; done"
-	oc wait pod -n ${NAMESPACE} -l component=kubernetes-nmstate-webhook --for condition=Ready --timeout=$(TIMEOUT)
+	timeout ${TIMEOUT} bash -c "while ! (oc get deployments/nmstate-webhook -n ${NAMESPACE}); do sleep 10; done"
+	oc wait deployments/nmstate-webhook -n ${NAMESPACE} --for condition=Available --timeout=${TIMEOUT}
 
 .PHONY: nncp
 nncp: export INTERFACE=${NNCP_INTERFACE}
