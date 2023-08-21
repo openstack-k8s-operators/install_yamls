@@ -19,7 +19,6 @@ NAMESPACE=${NAMESPACE:-"openstack"}
 DEPLOY_DIR=${DEPLOY_DIR:-"../out/edpm"}
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 NODE_COUNT=${NODE_COUNT:-1}
-NETWORK_IPADDRESS=${BMAAS_NETWORK_IPADDRESS:-192.168.122.1}
 BMH_CR_FILE=${BMH_CR_FILE:-bmh_deploy.yaml}
 OPERATOR_DIR=${OPERATOR_DIR:-../out/operator}
 DATAPLANE_REPO=${DATAPLANE_REPO:-https://github.com/openstack-k8s-operators/dataplane-operator.git}
@@ -76,21 +75,6 @@ patches:
       path: /spec/nodeTemplate/ansibleSSHPrivateKeySecret
       value: dataplane-ansible-ssh-private-key-secret
     - op: replace
-      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_metadata_agent_DEFAULT_transport_url
-      value: ${EDPM_OVN_METADATA_AGENT_TRANSPORT_URL}
-    - op: replace
-      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection
-      value: ${EDPM_OVN_METADATA_AGENT_SB_CONNECTION}
-    - op: replace
-      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host
-      value: ${EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST}
-    - op: replace
-      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret
-      value: ${EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET}
-    - op: replace
-      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_metadata_agent_DEFAULT_bind_host
-      value: ${EDPM_OVN_METADATA_AGENT_BIND_HOST}
-    - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/edpm_chrony_ntp_servers
       value:
         - ${EDPM_CHRONY_NTP_SERVER}
@@ -98,9 +82,6 @@ patches:
       path: /spec/nodeTemplate/networkConfig
       value:
         template: ${EDPM_NETWORK_CONFIG_TEMPLATE}
-    - op: replace
-      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_dbs
-      value: ${NETWORK_IPADDRESS}
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/registry_url
       value: ${REGISTRY_URL}
