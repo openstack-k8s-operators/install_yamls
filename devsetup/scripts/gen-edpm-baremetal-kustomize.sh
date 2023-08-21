@@ -113,4 +113,15 @@ fi)
       value: '/=8GB /tmp=1GB /home=1GB /var=80%'
 
 EOF
+
+if [ "$EDPM_ROOT_PASSWORD_SECRET" != "" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/roles/edpm-compute/baremetalSetTemplate/passwordSecret
+      value:
+        name: ${EDPM_ROOT_PASSWORD_SECRET}
+        namespace: ${NAMESPACE}
+EOF
+fi
+
 popd

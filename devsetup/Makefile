@@ -38,6 +38,7 @@ BM_NETWORK_NAME            ?=default
 BM_NETWORK_IPADDRESS       ?=192.168.122.1
 BM_INSTANCE_NAME_PREFIX    ?=edpm-compute
 BM_NODE_COUNT              ?=1
+BM_ROOT_PASSWORD_SECRET    ?=
 
 CLEANUP_DIR_CMD ?= rm -Rf
 
@@ -115,6 +116,7 @@ edpm_baremetal: export EDPM_OVN_METADATA_AGENT_BIND_HOST=${DATAPLANE_OVN_METADAT
 edpm_baremetal: export EDPM_OVN_METADATA_AGENT_TRANSPORT_URL=$(shell oc get secret rabbitmq-transport-url-neutron-neutron-transport -o json | jq -r .data.transport_url | base64 -d)
 edpm_baremetal: export EDPM_OVN_METADATA_AGENT_SB_CONNECTION=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r .status.dbAddress)
 edpm_baremetal: export EDPM_OVN_DBS=$(shell oc get ovndbcluster ovndbcluster-sb -o json | jq -r '.status.networkAttachments."openstack/internalapi"')
+edpm_baremetal: export EDPM_ROOT_PASSWORD_SECRET=${BM_ROOT_PASSWORD_SECRET}
 edpm_baremetal: export BMAAS_NODE_COUNT=${BM_NODE_COUNT}
 edpm_baremetal: export NODE_COUNT=${BM_NODE_COUNT}
 edpm_baremetal: export REGISTRY_URL=${EDPM_REGISTRY_URL}
