@@ -308,15 +308,16 @@ DATAPLANE_KUTTL_NAMESPACE ?= dataplane-kuttl-tests
 DATAPLANE_DEFAULT_GW      ?= 192.168.122.1
 
 # Manila
-MANILA_IMG            ?= quay.io/openstack-k8s-operators/manila-operator-index:latest
-MANILA_REPO           ?= https://github.com/openstack-k8s-operators/manila-operator.git
-MANILA_BRANCH         ?= main
-MANILA                ?= config/samples/manila_v1beta1_manila.yaml
-MANILA_CR             ?= ${OPERATOR_BASE_DIR}/manila-operator/${MANILA}
+MANILA_IMG              ?= quay.io/openstack-k8s-operators/manila-operator-index:latest
+MANILA_REPO             ?= https://github.com/openstack-k8s-operators/manila-operator.git
+MANILA_BRANCH           ?= main
+MANILA                  ?= config/samples/manila_v1beta1_manila.yaml
+MANILA_CR               ?= ${OPERATOR_BASE_DIR}/manila-operator/${MANILA}
 # TODO: Image customizations for all Manila services
-MANILA_KUTTL_CONF     ?= ${OPERATOR_BASE_DIR}/manila-operator/kuttl-test.yaml
-MANILA_KUTTL_DIR      ?= ${OPERATOR_BASE_DIR}/manila-operator/tests/kuttl/tests
-MANILA_KUTTL_TIMEOUT  ?= 180
+MANILA_KUTTL_CONF       ?= ${OPERATOR_BASE_DIR}/manila-operator/kuttl-test.yaml
+MANILA_KUTTL_DIR        ?= ${OPERATOR_BASE_DIR}/manila-operator/tests/kuttl/tests
+MANILA_KUTTL_TIMEOUT    ?= 180
+MANILA_KUTTL_NAMESPACE  ?= manila-kuttl-tests
 
 # Ceph
 CEPH_IMG            ?= quay.io/ceph/demo:latest
@@ -1499,9 +1500,11 @@ glance_kuttl: kuttl_common_prep glance glance_deploy_prep ## runs kuttl tests fo
 
 .PHONY: manila_kuttl_run
 manila_kuttl_run: ## runs kuttl tests for the manila operator,
-	kubectl-kuttl test --config ${MANILA_KUTTL_CONF} ${MANILA_KUTTL_DIR}
+	kubectl-kuttl test --config ${MANILA_KUTTL_CONF} ${MANILA_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: manila_kuttl
+manila_kuttl: export NAMESPACE = ${MANILA_KUTTL_NAMESPACE}
+# Set the value of $MANILA_KUTTL_NAMESPACE if you want to run manila kuttl tests in a namespace different than the default (manila-kuttl-tests)
 manila_kuttl: kuttl_common_prep ceph manila manila_deploy_prep ## runs kuttl tests for manila operator. Installs manila operator and cleans up previous deployments before and after running the tests.
 	$(eval $(call vars,$@,manila))
 	make wait
