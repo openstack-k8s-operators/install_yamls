@@ -3,9 +3,8 @@
     name: openstack-k8s-operators/install_yamls
     github-check:
       jobs:
-        - install-yamls-content-provider
+        - openstack-k8s-operators-content-provider
         - install-yamls-crc-podified-edpm-baremetal: &content_provider
             dependencies:
-              - install-yamls-content-provider
-        - install-yamls-crc-podified-galera-deployment: *content_provider
-        - install-yamls-crc-podified-edpm-deployment: *content_provider
+              - openstack-k8s-operators-content-provider
+        - podified-multinode-edpm-deployment-crc: *content_provider
