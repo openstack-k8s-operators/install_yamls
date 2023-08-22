@@ -40,7 +40,6 @@ echo WORKERS ${WORKERS}
 echo INTERFACE ${INTERFACE}
 echo INTERFACE_MTU ${INTERFACE_MTU}
 
-CTLPLANE_IP_ADDRESS_SUFFIX=10
 # Use different suffix for other networks as the sample netconfig
 # we use starts with .10
 IP_ADDRESS_SUFFIX=5
@@ -54,6 +53,16 @@ metadata:
   name: ${INTERFACE}-${WORKER}
 spec:
   desiredState:
+    dns-resolver:
+      config:
+        search: []
+        server:
+        - ${DNS_SERVER}
+    routes:
+      config:
+      - destination: 0.0.0.0/0
+        next-hop-address: ${GATEWAY}
+        next-hop-interface: ${INTERFACE}
     interfaces:
     - description: internalapi vlan interface
       ipv4:
@@ -103,7 +112,7 @@ spec:
     - description: Configuring ${INTERFACE}
       ipv4:
         address:
-        - ip: 192.168.122.${CTLPLANE_IP_ADDRESS_SUFFIX}
+        - ip: ${CTLPLANE_IP_ADDRESS_PREFIX}.${CTLPLANE_IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
         dhcp: false
