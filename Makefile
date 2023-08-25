@@ -36,6 +36,8 @@ CRC_STORAGE_RETRIES ?= 3
 # network isolation
 NETWORK_ISOLATION   ?= true
 NETWORK_MTU         ?= 1500
+NETWORK_VLAN_START  ?= 20
+NETWORK_VLAN_STEP   ?= 1
 
 # options to pass in all targets that use git clone
 GIT_CLONE_OPTS      ?=
@@ -1747,6 +1749,8 @@ nncp: export CTLPLANE_IP_ADDRESS_SUFFIX=${NNCP_CTLPLANE_IP_ADDRESS_SUFFIX}
 nncp: export GATEWAY=${NNCP_GATEWAY}
 nncp: export DNS_SERVER=${NNCP_DNS_SERVER}
 nncp: export INTERFACE_MTU=${NETWORK_MTU}
+nncp: export VLAN_START=${NETWORK_VLAN_START}
+nncp: export VLAN_STEP=${NETWORK_VLAN_STEP}
 nncp: ## installs the nncp resources to configure the interface connected to the edpm node, right now only single nic vlan. Interface referenced via NNCP_INTERFACE
 	$(eval $(call vars,$@,nncp))
 	WORKERS='$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}")' \
@@ -1766,6 +1770,8 @@ nncp_cleanup: ## unconfigured nncp configuration on worker node and deletes the 
 
 .PHONY: netattach
 netattach: export INTERFACE=${NNCP_INTERFACE}
+netattach: export VLAN_START=${NETWORK_VLAN_START}
+netattach: export VLAN_STEP=${NETWORK_VLAN_STEP}
 netattach: namespace ## Creates network-attachment-definitions for the networks the workers are attached via nncp
 	$(eval $(call vars,$@,netattach))
 	bash scripts/gen-netatt.sh

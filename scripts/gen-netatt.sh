@@ -27,8 +27,18 @@ if [ -z "${INTERFACE}" ]; then
     echo "Please set INTERFACE"; exit 1
 fi
 
+if [ -z "${VLAN_START}" ]; then
+    echo "Please set VLAN_START"; exit 1
+fi
+
+if [ -z "${VLAN_STEP}" ]; then
+    echo "Please set VLAN_STEP"; exit 1
+fi
+
 echo DEPLOY_DIR ${DEPLOY_DIR}
 echo INTERFACE ${INTERFACE}
+echo VLAN_START ${VLAN_START}
+echo VLAN_STEP ${VLAN_STEP}
 
 cat > ${DEPLOY_DIR}/ctlplane.yaml <<EOF_CAT
 apiVersion: k8s.cni.cncf.io/v1
@@ -68,7 +78,7 @@ spec:
       "cniVersion": "0.3.1",
       "name": "internalapi",
       "type": "macvlan",
-      "master": "${INTERFACE}.20",
+      "master": "${INTERFACE}.${VLAN_START}",
       "ipam": {
         "type": "whereabouts",
         "range": "172.17.0.0/24",
@@ -92,7 +102,7 @@ spec:
       "cniVersion": "0.3.1",
       "name": "storage",
       "type": "macvlan",
-      "master": "${INTERFACE}.21",
+      "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}))",
       "ipam": {
         "type": "whereabouts",
         "range": "172.18.0.0/24",
@@ -116,7 +126,7 @@ spec:
       "cniVersion": "0.3.1",
       "name": "tenant",
       "type": "macvlan",
-      "master": "${INTERFACE}.22",
+      "master": "${INTERFACE}.$((${VLAN_START}+$((${VLAN_STEP}*2))))",
       "ipam": {
         "type": "whereabouts",
         "range": "172.19.0.0/24",
