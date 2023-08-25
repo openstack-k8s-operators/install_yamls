@@ -49,10 +49,10 @@ if [ ! -f ${SSH_PUBLIC_KEY} ]; then
     exit 1
 fi
 
-if test -f "${HOME}/.ssh"; then
+if [ ! -d "${HOME}/.ssh" ]; then
     mkdir "${HOME}/.ssh"
     chmod 700 "${HOME}/.ssh"
-    chcon unconfined_u:object_r:ssh_home_t:s0 "${HOME}/.ssh"
+    restorecon -R "${HOME}/.ssh"
 fi
 
 cat <<EOF >${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}.xml
