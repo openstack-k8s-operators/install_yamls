@@ -35,10 +35,20 @@ if [ -z "${INTERFACE_MTU}" ]; then
     echo "Please set INTERFACE_MTU"; exit 1
 fi
 
+if [ -z "${VLAN_START}" ]; then
+    echo "Please set VLAN_START"; exit 1
+fi
+
+if [ -z "${VLAN_STEP}" ]; then
+    echo "Please set VLAN_STEP"; exit 1
+fi
+
 echo DEPLOY_DIR ${DEPLOY_DIR}
 echo WORKERS ${WORKERS}
 echo INTERFACE ${INTERFACE}
 echo INTERFACE_MTU ${INTERFACE_MTU}
+echo VLAN_START ${VLAN_START}
+echo VLAN_STEP ${VLAN_STEP}
 
 # Use different suffix for other networks as the sample netconfig
 # we use starts with .10
@@ -73,12 +83,12 @@ spec:
         dhcp: false
       ipv6:
         enabled: false
-      name: ${INTERFACE}.20
+      name: ${INTERFACE}.${VLAN_START}
       state: up
       type: vlan
       vlan:
         base-iface: ${INTERFACE}
-        id: 20
+        id: ${VLAN_START}
     - description: storage vlan interface
       ipv4:
         address:
@@ -88,12 +98,12 @@ spec:
         dhcp: false
       ipv6:
         enabled: false
-      name: ${INTERFACE}.21
+      name: ${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}))
       state: up
       type: vlan
       vlan:
         base-iface: ${INTERFACE}
-        id: 21
+        id: $((${VLAN_START}+${VLAN_STEP}))
     - description: tenant vlan interface
       ipv4:
         address:
@@ -103,12 +113,12 @@ spec:
         dhcp: false
       ipv6:
         enabled: false
-      name: ${INTERFACE}.22
+      name: ${INTERFACE}.$((${VLAN_START}+$((${VLAN_STEP}*2))))
       state: up
       type: vlan
       vlan:
         base-iface: ${INTERFACE}
-        id: 22
+        id: $((${VLAN_START}+$((${VLAN_STEP}*2))))
     - description: Configuring ${INTERFACE}
       ipv4:
         address:
