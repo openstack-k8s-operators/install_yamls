@@ -4,8 +4,8 @@
     github-check:
       jobs:
         - install-yamls-content-provider
-        - install-yamls-crc-podified-edpm-baremetal: &content_provider
+        - install-yamls-crc-podified-edpm-deployment:
             dependencies:
               - install-yamls-content-provider
-        - install-yamls-crc-podified-galera-deployment: *content_provider
-        - install-yamls-crc-podified-edpm-deployment: *content_provider
+            vars:
+              cifmw_edpm_deploy_run_validation: true
