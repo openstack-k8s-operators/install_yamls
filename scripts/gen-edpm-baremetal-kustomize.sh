@@ -51,11 +51,25 @@ if [ -z "$EDPM_BMH_NAMESPACE" ]; then
     echo "Please set EDPM_BMH_NAMESPACE"; exit 1
 fi
 
+# This statement is first since we don't want to start creating CR if provided file is not correct
+if [ ! -z "$EDPM_BAREMETAL_NETWORK_CONFIG_OVERRIDE" ]; then
+    if [ ! -f "$EDPM_BAREMETAL_NETWORK_CONFIG_OVERRIDE" ]; then
+        echo "Please esnure file ${EDPM_BAREMETAL_NETWORK_CONFIG_OVERRIDE} exists"
+        exit 1
+    fi
+    NETWORK_CONFIG_JSON=$(cat "${EDPM_BAREMETAL_NETWORK_CONFIG_OVERRIDE}" | jq -c -r . 2>/dev/null)
+    if [ ! "$NETWORK_CONFIG_JSON" ]; then
+        echo "Please esnure file ${EDPM_BAREMETAL_NETWORK_CONFIG_OVERRIDE} contains a valid JSON"
+        exit 1
+    fi
+fi
+
 NAME=${KIND,,}
 
 if [ ! -d ${DEPLOY_DIR} ]; then
     mkdir -p ${DEPLOY_DIR}
 fi
+
 
 pushd ${DEPLOY_DIR}
 
@@ -173,6 +187,51 @@ cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/roles/edpm-compute/nodeTemplate/ansibleUser
       value: ${EDPM_ANSIBLE_USER}
+EOF
+fi
+
+# Used for edpm_kernel role to provide additional kernel arguments
+if [ ! -z "$EDPM_BAREMETAL_KERNEL_ARGS" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_kernel_args
+      value: ${EDPM_BAREMETAL_KERNEL_ARGS}
+EOF
+fi
+
+# Used for edpm_kernel role to configure huge pages
+if [ ! -z "$EDPM_BAREMETAL_KERNEL_HUGEPAGES" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_kernel_hugepages
+      value: ${EDPM_BAREMETAL_KERNEL_HUGEPAGES}
+EOF
+fi
+
+# Used for edpm_tuned role to configure tuned profile
+if [ ! -z "$EDPM_BAREMETAL_TUNED_PROFILE" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_tuned_profile
+      value: ${EDPM_BAREMETAL_TUNED_PROFILE}
+EOF
+fi
+
+# Used for edpm_tuned role to configure tuned profile
+if [ ! -z "$EDPM_BAREMETAL_TUNED_ISOLATED_CORES" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_tuned_isolated_cores
+      value: ${EDPM_BAREMETAL_TUNED_ISOLATED_CORES}
+EOF
+fi
+
+# Used for edpm_network_config role to provide custom YAML file for network configuration
+if [ ! -z "$NETWORK_CONFIG_JSON" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_network_config_override
+      value: '${NETWORK_CONFIG_JSON}'
 EOF
 fi
 
