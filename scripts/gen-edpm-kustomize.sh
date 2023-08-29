@@ -68,18 +68,18 @@ patches:
       path: /spec/deployStrategy/deploy
       value: true
     - op: replace
-      path: /spec/roles/edpm-compute/preProvisioned
+      path: /spec/preProvisioned
       value: true
     - op: replace
-      path: /spec/nodes/edpm-compute-0/ansibleHost
+      path: /spec/nodeTemplate/nodes/edpm-compute-0/ansible/ansibleHost
       value: ${EDPM_COMPUTE_IP}
     - op: remove
-      path: /spec/nodes/edpm-compute-0/node/ansibleVars
+      path: /spec/nodeTemplate/nodes/edpm-compute-0/ansible/ansibleVars
     - op: replace
-      path: /spec/nodes/edpm-compute-0/node/ansibleSSHPrivateKeySecret
+      path: /spec/nodeTemplate/nodes/edpm-compute-0/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
     - op: replace
-      path: /spec/nodes/edpm-compute-0/node/networks
+      path: /spec/nodeTemplate/nodes/edpm-compute-0/networks
       value:
         - name: CtlPlane
           subnetName: subnet1
@@ -92,57 +92,57 @@ patches:
         - name: Tenant
           subnetName: subnet1
     - op: add
-      path: /spec/roles/edpm-compute/services/0
+      path: /spec/services/0
       value: repo-setup
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_DEFAULT_transport_url
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_metadata_agent_DEFAULT_transport_url
       value: ${EDPM_OVN_METADATA_AGENT_TRANSPORT_URL}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection
       value: ${EDPM_OVN_METADATA_AGENT_SB_CONNECTION}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host
       value: ${EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret
       value: ${EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_DEFAULT_bind_host
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_metadata_agent_DEFAULT_bind_host
       value: ${EDPM_OVN_METADATA_AGENT_BIND_HOST}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_chrony_ntp_servers
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_chrony_ntp_servers
       value:
         - ${EDPM_CHRONY_NTP_SERVER}
     - op: add
-      path: /spec/roles/edpm-compute/nodeTemplate/networkConfig
+      path: /spec/nodeTemplate/networkConfig
       value:
        template: ${EDPM_NETWORK_CONFIG_TEMPLATE}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_dbs
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_dbs
       value: ${EDPM_OVN_DBS}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/neutron_public_interface_name
+      path: /spec/nodeTemplate/ansible/ansibleVars/neutron_public_interface_name
       value: ${EDPM_NETWORK_INTERFACE_NAME}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/registry_url
+      path: /spec/nodeTemplate/ansible/ansibleVars/registry_url
       value: ${EDPM_REGISTRY_URL}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/image_tag
+      path: /spec/nodeTemplate/ansible/ansibleVars/image_tag
       value: ${EDPM_CONTAINER_TAG}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_sshd_allowed_ranges
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_sshd_allowed_ranges
       value: ${EDPM_SSHD_ALLOWED_RANGES}
     - op: add
-      path: /spec/roles/edpm-compute/env/0
+      path: /spec/env/0
       value: {"name": "ANSIBLE_CALLBACKS_ENABLED", "value": "profile_tasks"}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleSSHPrivateKeySecret
+      path: /spec/nodeTemplate/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
 EOF
 if oc get pvc ansible-ee-logs -n ${NAMESPACE} 2>&1 1>/dev/null; then
 cat <<EOF >>kustomization.yaml
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/extraMounts
+      path: /spec/nodeTemplate/extraMounts
       value:
         - extraVolType: Logs
           volumes:
@@ -157,22 +157,22 @@ fi
 if [ "$EDPM_SINGLE_NODE" == "true" ]; then
 cat <<EOF >>kustomization.yaml
     - op: remove
-      path: /spec/nodes/edpm-compute-1
+      path: /spec/nodeTemplate/nodes/edpm-compute-1
 EOF
 elif [ "$EDPM_TOTAL_NODES" -gt 2 ]; then
     for INDEX in $(seq 1 $((${EDPM_TOTAL_NODES} -1))) ; do
 cat <<EOF >>kustomization.yaml
     - op: copy
-      from: /spec/nodes/edpm-compute-0
-      path: /spec/nodes/edpm-compute-${INDEX}
+      from: /spec/nodeTemplate/nodes/edpm-compute-0
+      path: /spec/nodeTemplate/nodes/edpm-compute-${INDEX}
     - op: replace
-      path: /spec/nodes/edpm-compute-${INDEX}/ansibleHost
+      path: /spec/nodeTemplate/nodes/edpm-compute-${INDEX}/ansible/ansibleHost
       value: 192.168.122.$((100+${INDEX}))
     - op: replace
-      path: /spec/nodes/edpm-compute-${INDEX}/hostName
+      path: /spec/nodeTemplate/nodes/edpm-compute-${INDEX}/hostName
       value: edpm-compute-${INDEX}
     - op: add
-      path: /spec/nodes/edpm-compute-${INDEX}/node/networks
+      path: /spec/nodeTemplate/nodes/edpm-compute-${INDEX}/networks
       value:
         - name: CtlPlane
           subnetName: subnet1
@@ -185,17 +185,17 @@ cat <<EOF >>kustomization.yaml
         - name: Tenant
           subnetName: subnet1
     - op: replace
-      path: /spec/nodes/edpm-compute-${INDEX}/node/ansibleSSHPrivateKeySecret
+      path: /spec/nodeTemplate/nodes/edpm-compute-${INDEX}/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
 EOF
     done
 else
 cat <<EOF >>kustomization.yaml
     - op: replace
-      path: /spec/nodes/edpm-compute-1/ansibleHost
+      path: /spec/nodeTemplate/nodes/edpm-compute-1/ansible/ansibleHost
       value: ${EDPM_COMPUTE_1_IP}
     - op: replace
-      path: /spec/nodes/edpm-compute-1/node/networks
+      path: /spec/nodeTemplate/nodes/edpm-compute-1/networks
       value:
         - name: CtlPlane
           subnetName: subnet1
@@ -208,16 +208,16 @@ cat <<EOF >>kustomization.yaml
         - name: Tenant
           subnetName: subnet1
     - op: remove
-      path: /spec/nodes/edpm-compute-1/node/ansibleVars
+      path: /spec/nodeTemplate/nodes/edpm-compute-1/ansible/ansibleVars
     - op: replace
-      path: /spec/nodes/edpm-compute-1/node/ansibleSSHPrivateKeySecret
+      path: /spec/nodeTemplate/nodes/edpm-compute-1/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
 EOF
 fi
 if [ ! -z "$EDPM_ANSIBLE_USER" ]; then
 cat <<EOF >>kustomization.yaml
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleUser
+      path: /spec/nodeTemplate/ansible/ansibleUser
       value: ${EDPM_ANSIBLE_USER}
 EOF
 fi
