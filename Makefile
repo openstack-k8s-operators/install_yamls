@@ -283,9 +283,9 @@ BAREMETAL_BRANCH    ?= main
 BMH_NAMESPACE       ?= ${NAMESPACE}
 
 # Dataplane Operator
-DATAPLANE_IMG                                    ?= quay.io/openstack-k8s-operators/dataplane-operator-index:latest
-DATAPLANE_REPO                                   ?= https://github.com/openstack-k8s-operators/dataplane-operator.git
-DATAPLANE_BRANCH                                 ?= main
+DATAPLANE_IMG                                    ?= quay.io/bshephar/dataplane-operator-index:v0.0.1
+DATAPLANE_REPO                                   ?= https://github.com/bshephar/dataplane-operator.git
+DATAPLANE_BRANCH                                 ?= crd-proposal
 OPENSTACK_DATAPLANE                              ?= config/samples/dataplane_v1beta1_openstackdataplane_with_ipam.yaml
 OPENSTACK_DATAPLANE_BAREMETAL                    ?= config/samples/dataplane_v1beta1_openstackdataplane_baremetal_with_ipam.yaml
 DATAPLANE_CR                                     ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANE}
