@@ -38,10 +38,18 @@ pushd ${DEPLOY_DIR}
 CEPH_TIMEOUT=${CEPH_TIMEOUT:-30}
 CEPH_HOSTNETWORK=${CEPH_HOSTNETWORK:-true}
 CEPH_POOLS=("volumes" "images" "backups" "cephfs.cephfs.meta" "cephfs.cephfs.data")
-CEPH_DAEMONS="osd,mds"
+CEPH_DAEMONS="osd,mds,rgw"
 CEPH_DATASIZE=${CEPH_DATASIZE:-500Mi}
 CEPH_WORKER=${CEPH_WORKER:-""}
 CEPH_MON_CONF=${CEPH_MON_CONF:-""}
+CEPH_DEMO_UID=${CEPH_DAEMON:-0}
+OSP_SECRET=${OSP_SECRET:-"osp-secret"}
+RGW_USER=${RGW_USER:-"swift"}
+RGW_NAME=${RGW_NAME:-"ceph"}
+DOMAIN=$(oc get ingresses.config/cluster -o jsonpath={.spec.domain})
+# make input should be called before ceph to make sure we can access this info
+RGW_PASS=$(oc get secrets "$OSP_SECRET" -o jsonpath={.data.SwiftPassword} | base64 -d)
+
 
 function add_ceph_pod {
 cat <<EOF >ceph-pod.yaml
@@ -69,6 +77,10 @@ spec:
        value: "0.0.0.0/0"
      - name: DEMO_DAEMONS
        value: "$CEPH_DAEMONS"
+     - name: CEPH_DEMO_UID
+       value: "$CEPH_DEMO_UID"
+     - name: RGW_NAME
+       value: "$RGW_NAME"
      volumeMounts:
       - mountPath: /var/lib/ceph
         name: data
@@ -184,13 +196,13 @@ function create_secret {
     TEMPDIR=`mktemp -d`
     local client="client.openstack"
     trap 'rm -rf -- "$TEMPDIR"' EXIT
-    echo 'Copying Ceph config files from the container to $TEMPDIR'
+    echo "Copying Ceph config files from the container to $TEMPDIR"
     oc rsync -n $NAMESPACE ceph:/etc/ceph/ceph.conf $TEMPDIR
     echo 'Create OpenStack keyring'
     # we build the cephx openstack key
     create_key "$client"
     # do not log the exported key
-    echo 'Copying OpenStack keyring from the container to $TEMPDIR'
+    echo "Copying OpenStack keyring from the container to $TEMPDIR"
     oc rsh -n $NAMESPACE ceph ceph auth export "$client" -o /etc/ceph/ceph.$client.keyring >/dev/null
     oc rsync -n $NAMESPACE ceph:/etc/ceph/ceph.$client.keyring $TEMPDIR
 
@@ -203,6 +215,46 @@ function create_volume {
     # Create cephfs volume for manila service
     echo "Creating cephfs volume"
     oc rsh -n $NAMESPACE ceph ceph fs volume create cephfs >/dev/null || true
+}
+
+function config_ceph {
+    # Define any config option that should be set in the mgr database
+    # via associative arrays and inject to the Ceph Pod
+    # Define and set config options
+    echo "Apply Ceph config keys"
+    declare -A config_keys=(
+        ["rgw_keystone_url"]="http://keystone-public-$NAMESPACE.$DOMAIN"
+        ["rgw_keystone_verify_ssl"]="true"
+        ["rgw_keystone_api_version"]="3"
+        ["rgw_keystone_accepted_roles"]="\"member, Member, admin\""
+        ["rgw_keystone_accepted_admin_roles"]="\"ResellerAdmin, swiftoperator\""
+        ["rgw_keystone_admin_domain"]="default"
+        ["rgw_keystone_admin_project"]="service"
+        ["rgw_keystone_admin_user"]="$RGW_USER"
+        ["rgw_keystone_admin_password"]="$RGW_PASS"
+        ["rgw_keystone_implicit_tenants"]="true"
+        ["rgw_s3_auth_use_keystone"]="true"
+        ["rgw_swift_versioning_enabled"]="true"
+        ["rgw_swift_enforce_content_length"]="true"
+        ["rgw_swift_account_in_url"]="true"
+        ["rgw_trust_forwarded_https"]="true"
+        ["rgw_max_attr_name_len"]="128"
+        ["rgw_max_attrs_num_in_req"]="90")
+
+    # Apply config settings to Ceph
+    for key in "${!config_keys[@]}"; do
+        oc exec -it ceph -- sh -c "ceph config set global $key ${config_keys[$key]}"
+    done
+}
+
+function config_rgw {
+    echo "Restart RGW and reload the config"
+    oc rsh ceph pkill radosgw
+    # RGW data and options
+    name="client.rgw.$RGW_NAME"
+    path="/var/lib/ceph/radosgw/ceph-rgw.$RGW_NAME/keyring"
+    options=" --default-log-to-stderr=true --err-to-stderr=true --default-log-to-file=false"
+    oc rsh ceph radosgw --cluster ceph --setuser ceph --setgroup ceph "$options" -n "$name" -k "$path"
 }
 
 function usage {
@@ -257,6 +309,9 @@ case "$1" in
         ceph_kustomize
         kustomization_add_resources
         ;;
+    "config")
+        config_ceph
+        ;;
     "secret")
         create_secret "ceph-conf-files"
         ;;
@@ -271,5 +326,8 @@ case "$1" in
         ;;
     "help")
         usage "$2"
+        ;;
+    "post")
+        config_rgw
         ;;
 esac
