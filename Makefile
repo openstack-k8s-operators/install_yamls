@@ -1711,14 +1711,16 @@ ceph_help: ## Ceph helper
 
 .PHONY: ceph
 ceph: export CEPH_IMAGE=${CEPH_IMG}
-ceph: namespace ## deploy the Ceph Pod
+ceph: namespace input ## deploy the Ceph Pod
 	$(eval $(call vars,$@,ceph))
 	bash scripts/gen-ceph-kustomize.sh "build"
 	bash scripts/operator-deploy-resources.sh
 	bash scripts/gen-ceph-kustomize.sh "isready"
+	bash scripts/gen-ceph-kustomize.sh "config"
 	bash scripts/gen-ceph-kustomize.sh "cephfs"
 	bash scripts/gen-ceph-kustomize.sh "pools"
 	bash scripts/gen-ceph-kustomize.sh "secret"
+	bash scripts/gen-ceph-kustomize.sh "post"
 
 .PHONY: ceph_cleanup
 ceph_cleanup: ## deletes the ceph pod
