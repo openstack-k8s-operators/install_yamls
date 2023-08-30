@@ -22,7 +22,7 @@ trap 'rm -rf -- "$MY_TMP_DIR"' EXIT
 
 function attach_network {
     local mac_address
-    mac_address=$(echo -n 52:54:00; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':')
+    mac_address=$(echo -n $MAC_PREFIX; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':')
     virsh --connect=qemu:///system \
         attach-interface crc \
         --source "${NETWORK_NAME}" \
