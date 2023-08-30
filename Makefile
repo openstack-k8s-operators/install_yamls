@@ -17,6 +17,24 @@ endif
 METADATA_SHARED_SECRET   ?= 1234567842
 HEAT_AUTH_ENCRYPTION_KEY ?= 767c3ed056cbaa3b9dfedb8c6f825bf0
 
+# POD networks
+POD_INTERNALAPI_VLAN ?= 20
+POD_STORAGE_VLAN ?= 21
+POD_TENANT_VLAN ?= 22
+POD_INTERNALAPI_NET ?= 172.17.0
+POD_STORAGE_NET ?= 172.18.0
+POD_TENANT_NET ?= 172.19.0
+
+# multiple controller deployment (MCD)
+MCD_ENABLED 	?= true
+MCD_INTERNALAPI_VLAN ?= 20
+MCD_STORAGE_VLAN ?= 30
+MCD_TENANT_VLAN ?= 50
+MCD_INTERNALAPI_NET ?= 172.17.1
+MCD_STORAGE_NET ?= 172.17.3
+MCD_TENANT_NET ?= 172.17.2
+MCD_DATA_NET ?= 192.168.24
+
 # Allows overriding the cleanup command used in *_cleanup targets.
 # Useful in CI, to allow injectin kustomization in each operator CR directory
 # before the resource gets deployed. If it's not possible to inject Kustomizations/CRs
@@ -327,7 +345,21 @@ MANILA_KUTTL_NAMESPACE  ?= manila-kuttl-tests
 CEPH_IMG            ?= quay.io/ceph/demo:latest-reef
 
 # NNCP
-NNCP_INTERFACE      ?= enp6s0
+## Interfaces
+NNCP_INTERFACE ?= enp6s0
+NNCP_INTERFACE_DATA ?= $(if $(findstring true, $(MCD_ENABLED)),enp7s0,$(NNCP_INTERFACE))
+NNCP_INTERFACE_MANAGEMENT ?= $(if $(findstring true, $(MCD_ENABLED)),enp8s0,$(NNCP_INTERFACE))
+NNCP_INTERFACE_EXTERNAL ?= $(if $(findstring true, $(MCD_ENABLED)),enp9s0,$(NNCP_INTERFACE))
+## API
+NNCP_INTERNAL_API_VLAN ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_INTERNALAPI_VLAN),$(POD_INTERNALAPI_VLAN))
+NNCP_STORAGE_VLAN ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_STORAGE_VLAN),$(POD_STORAGE_VLAN))
+NNCP_TENANT_VLAN ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_TENANT_VLAN),$(POD_TENANT_VLAN))
+## Networks
+NNCP_INTERNAL_API_NET ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_INTERNALAPI_NET),$(POD_INTERNALAPI_NET))
+NNCP_STORAGE_NET ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_STORAGE_NET),$(POD_STORAGE_NET))
+NNCP_TENANT_NET ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_TENANT_NET),$(POD_TENANT_NET))
+NNCP_DATA_NET ?= $(MCD_DATA_NET)
+## Others
 NNCP_TIMEOUT		?= 240s
 NNCP_CLEANUP_TIMEOUT	?= 120s
 NNCP_CTLPLANE_IP_ADDRESS_PREFIX     ?=192.168.122
@@ -1750,13 +1782,21 @@ nmstate: ## installs nmstate operator in the openshift-nmstate namespace
 
 .PHONY: nncp
 nncp: export INTERFACE=${NNCP_INTERFACE}
+nncp: export INTERFACE_DATA=${NNCP_INTERFACE_DATA}
+nncp: export INTERFACE_MANAGEMENT=${NNCP_INTERFACE_MANAGEMENT}
+nncp: export INTERFACE_EXTERNAL=${NNCP_INTERFACE_MANAGEMENT}
+nncp: export INTERNALAPI_VLAN=${NNCP_INTERNAL_API_VLAN}
+nncp: export STORAGE_VLAN=${NNCP_STORAGE_VLAN}
+nncp: export TENANT_VLAN=${NNCP_TENANT_VLAN}
+nncp: export INTERNALAPI_NET=${NNCP_INTERNAL_API_NET}
+nncp: export STORAGE_NET=${NNCP_STORAGE_NET}
+nncp: export TENANT_NET=${NNCP_TENANT_NET}
+nncp: export DATA_NET=${NNCP_DATA_NET}
 nncp: export CTLPLANE_IP_ADDRESS_PREFIX=${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}
 nncp: export CTLPLANE_IP_ADDRESS_SUFFIX=${NNCP_CTLPLANE_IP_ADDRESS_SUFFIX}
 nncp: export GATEWAY=${NNCP_GATEWAY}
 nncp: export DNS_SERVER=${NNCP_DNS_SERVER}
 nncp: export INTERFACE_MTU=${NETWORK_MTU}
-nncp: export VLAN_START=${NETWORK_VLAN_START}
-nncp: export VLAN_STEP=${NETWORK_VLAN_STEP}
 nncp: ## installs the nncp resources to configure the interface connected to the edpm node, right now only single nic vlan. Interface referenced via NNCP_INTERFACE
 	$(eval $(call vars,$@,nncp))
 	WORKERS='$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}")' \
