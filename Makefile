@@ -24,9 +24,15 @@ POD_TENANT_VLAN ?= 22
 POD_INTERNALAPI_NET ?= 172.17.0
 POD_STORAGE_NET ?= 172.18.0
 POD_TENANT_NET ?= 172.19.0
+POD_INTERNALAPI_IP_START ?= 30
+POD_INTERNALAPI_IP_END ?= 70
+POD_STORAGE_IP_START ?= 30
+POD_STORAGE_IP_END ?= 70
+POD_TENANT_IP_START ?= 30
+POD_TENANT_IP_END ?= 70
 
 # multiple controller deployment (MCD)
-MCD_ENABLED 	?= true
+MCD_ENABLED 	?= false
 MCD_INTERNALAPI_VLAN ?= 20
 MCD_STORAGE_VLAN ?= 30
 MCD_TENANT_VLAN ?= 50
@@ -34,6 +40,12 @@ MCD_INTERNALAPI_NET ?= 172.17.1
 MCD_STORAGE_NET ?= 172.17.3
 MCD_TENANT_NET ?= 172.17.2
 MCD_DATA_NET ?= 192.168.24
+MCD_INTERNALAPI_IP_START ?= 150
+MCD_INTERNALAPI_IP_END ?= 190
+MCD_STORAGE_IP_START ?= 150
+MCD_STORAGE_IP_END ?= 190
+MCD_TENANT_IP_START ?= 150
+MCD_TENANT_IP_END ?= 190
 
 # Allows overriding the cleanup command used in *_cleanup targets.
 # Useful in CI, to allow injectin kustomization in each operator CR directory
@@ -351,11 +363,11 @@ NNCP_INTERFACE_DATA ?= $(if $(findstring true, $(MCD_ENABLED)),enp7s0,$(NNCP_INT
 NNCP_INTERFACE_MANAGEMENT ?= $(if $(findstring true, $(MCD_ENABLED)),enp8s0,$(NNCP_INTERFACE))
 NNCP_INTERFACE_EXTERNAL ?= $(if $(findstring true, $(MCD_ENABLED)),enp9s0,$(NNCP_INTERFACE))
 ## API
-NNCP_INTERNAL_API_VLAN ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_INTERNALAPI_VLAN),$(POD_INTERNALAPI_VLAN))
+NNCP_INTERNALAPI_VLAN ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_INTERNALAPI_VLAN),$(POD_INTERNALAPI_VLAN))
 NNCP_STORAGE_VLAN ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_STORAGE_VLAN),$(POD_STORAGE_VLAN))
 NNCP_TENANT_VLAN ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_TENANT_VLAN),$(POD_TENANT_VLAN))
 ## Networks
-NNCP_INTERNAL_API_NET ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_INTERNALAPI_NET),$(POD_INTERNALAPI_NET))
+NNCP_INTERNALAPI_NET ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_INTERNALAPI_NET),$(POD_INTERNALAPI_NET))
 NNCP_STORAGE_NET ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_STORAGE_NET),$(POD_STORAGE_NET))
 NNCP_TENANT_NET ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_TENANT_NET),$(POD_TENANT_NET))
 NNCP_DATA_NET ?= $(MCD_DATA_NET)
@@ -366,6 +378,14 @@ NNCP_CTLPLANE_IP_ADDRESS_PREFIX     ?=192.168.122
 NNCP_CTLPLANE_IP_ADDRESS_SUFFIX     ?=10
 NNCP_GATEWAY                        ?=192.168.122.1
 NNCP_DNS_SERVER                     ?=192.168.122.1
+
+# netattach
+NETATTACH_INTERNALIP_IP_START ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_INTERNALAPI_IP_START),$(POD_INTERNALAPI_IP_START))
+NETATTACH_INTERNALIP_IP_END ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_INTERNALAPI_IP_END),$(POD_INTERNALAPI_IP_END))
+NETATTACH_STORAGE_IP_START ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_STORAGE_IP_START),$(POD_STORAGE_IP_START))
+NETATTACH_STORAGE_IP_END ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_STORAGE_IP_END),$(POD_STORAGE_IP_END))
+NETATTACH_TENANT_IP_START ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_TENANT_IP_START),$(POD_TENANT_IP_START))
+NETATTACH_TENANT_IP_END ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_TENANT_IP_END),$(POD_TENANT_IP_END))
 
 # Telemetry
 TELEMETRY_IMG                    ?= quay.io/openstack-k8s-operators/telemetry-operator-index:latest
@@ -1784,11 +1804,11 @@ nmstate: ## installs nmstate operator in the openshift-nmstate namespace
 nncp: export INTERFACE=${NNCP_INTERFACE}
 nncp: export INTERFACE_DATA=${NNCP_INTERFACE_DATA}
 nncp: export INTERFACE_MANAGEMENT=${NNCP_INTERFACE_MANAGEMENT}
-nncp: export INTERFACE_EXTERNAL=${NNCP_INTERFACE_MANAGEMENT}
-nncp: export INTERNALAPI_VLAN=${NNCP_INTERNAL_API_VLAN}
+nncp: export INTERFACE_EXTERNAL=${NNCP_INTERFACE_EXTERNAL}
+nncp: export INTERNALAPI_VLAN=${NNCP_INTERNALAPI_VLAN}
 nncp: export STORAGE_VLAN=${NNCP_STORAGE_VLAN}
 nncp: export TENANT_VLAN=${NNCP_TENANT_VLAN}
-nncp: export INTERNALAPI_NET=${NNCP_INTERNAL_API_NET}
+nncp: export INTERNALAPI_NET=${NNCP_INTERNALAPI_NET}
 nncp: export STORAGE_NET=${NNCP_STORAGE_NET}
 nncp: export TENANT_NET=${NNCP_TENANT_NET}
 nncp: export DATA_NET=${NNCP_DATA_NET}
@@ -1816,8 +1836,21 @@ nncp_cleanup: ## unconfigured nncp configuration on worker node and deletes the 
 
 .PHONY: netattach
 netattach: export INTERFACE=${NNCP_INTERFACE}
-netattach: export VLAN_START=${NETWORK_VLAN_START}
-netattach: export VLAN_STEP=${NETWORK_VLAN_STEP}
+netattach: export INTERFACE_DATA=${NNCP_INTERFACE_DATA}
+netattach: export INTERFACE_MANAGEMENT=${NNCP_INTERFACE_MANAGEMENT}
+netattach: export INTERFACE_EXTERNAL=${NNCP_INTERFACE_EXTERNAL}
+netattach: export INTERNALAPI_VLAN=${NNCP_INTERNALAPI_VLAN}
+netattach: export STORAGE_VLAN=${NNCP_STORAGE_VLAN}
+netattach: export TENANT_VLAN=${NNCP_TENANT_VLAN}
+netattach: export INTERNALAPI_NET=${NNCP_INTERNALAPI_NET}
+netattach: export STORAGE_NET=${NNCP_STORAGE_NET}
+netattach: export TENANT_NET=${NNCP_TENANT_NET}
+netattach: export INTERNALAPI_IP_START=${NETATTACH_INTERNALIP_IP_START}
+netattach: export INTERNALAPI_IP_END=${NETATTACH_INTERNALIP_IP_END}
+netattach: export STORAGE_IP_START=${NETATTACH_STORAGE_IP_START}
+netattach: export STORAGE_IP_END=${NETATTACH_STORAGE_IP_END}
+netattach: export TENANT_IP_START=${NETATTACH_TENANT_IP_START}
+netattach: export TENANT_IP_END=${NETATTACH_TENANT_IP_END}
 netattach: namespace ## Creates network-attachment-definitions for the networks the workers are attached via nncp
 	$(eval $(call vars,$@,netattach))
 	bash scripts/gen-netatt.sh

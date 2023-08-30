@@ -15,30 +15,52 @@
 # under the License.
 set -ex
 
-if [ -z "${DEPLOY_DIR}" ]; then
-    echo "Please set DEPLOY_DIR"; exit 1
-fi
+function check_var_setted {
+    if [[ ! -v $1 ]]; then
+        echo "Please set $1"; exit 1
+    fi
+}
+
+check_var_setted DEPLOY_DIR
 
 if [ ! -d ${DEPLOY_DIR} ]; then
     mkdir -p ${DEPLOY_DIR}
 fi
 
-if [ -z "${INTERFACE}" ]; then
-    echo "Please set INTERFACE"; exit 1
-fi
-
-if [ -z "${VLAN_START}" ]; then
-    echo "Please set VLAN_START"; exit 1
-fi
-
-if [ -z "${VLAN_STEP}" ]; then
-    echo "Please set VLAN_STEP"; exit 1
-fi
+check_var_setted INTERFACE
+check_var_setted INTERFACE_DATA
+check_var_setted INTERFACE_MANAGEMENT
+check_var_setted INTERFACE_EXTERNAL
+check_var_setted INTERNALAPI_VLAN
+check_var_setted STORAGE_VLAN
+check_var_setted TENANT_VLAN
+check_var_setted INTERNALAPI_NET
+check_var_setted STORAGE_NET
+check_var_setted TENANT_NET
+check_var_setted INTERNALAPI_IP_START
+check_var_setted INTERNALAPI_IP_END
+check_var_setted STORAGE_IP_START
+check_var_setted STORAGE_IP_END
+check_var_setted TENANT_IP_START
+check_var_setted TENANT_IP_END
 
 echo DEPLOY_DIR ${DEPLOY_DIR}
 echo INTERFACE ${INTERFACE}
-echo VLAN_START ${VLAN_START}
-echo VLAN_STEP ${VLAN_STEP}
+echo INTERFACE_DATA ${INTERFACE_DATA}
+echo INTERFACE_MANAGEMENT ${INTERFACE_MANAGEMENT}
+echo INTERFACE_EXTERNAL ${INTERFACE_EXTERNAL}
+echo INTERNALAPI_VLAN ${INTERNALAPI_VLAN}
+echo STORAGE_VLAN ${STORAGE_VLAN}
+echo TENANT_VLAN ${TENANT_VLAN}
+echo INTERNALAPI_NET ${INTERNALAPI_NET}
+echo STORAGE_NET ${STORAGE_NET}
+echo TENANT_NET ${TENANT_NET}
+echo INTERNALAPI_IP_START ${INTERNALAPI_IP_START}
+echo INTERNALAPI_IP_END ${INTERNALAPI_IP_END}
+echo STORAGE_IP_START ${STORAGE_IP_START}
+echo STORAGE_IP_END ${STORAGE_IP_END}
+echo TENANT_IP_START ${TENANT_IP_START}
+echo TENANT_IP_END ${TENANT_IP_END}
 
 cat > ${DEPLOY_DIR}/ctlplane.yaml <<EOF_CAT
 apiVersion: k8s.cni.cncf.io/v1
@@ -78,12 +100,12 @@ spec:
       "cniVersion": "0.3.1",
       "name": "internalapi",
       "type": "macvlan",
-      "master": "${INTERFACE}.${VLAN_START}",
+      "master": "${INTERFACE_DATA}.${INTERNALAPI_VLAN}",
       "ipam": {
         "type": "whereabouts",
-        "range": "172.17.0.0/24",
-        "range_start": "172.17.0.30",
-        "range_end": "172.17.0.70"
+        "range": "${INTERNALAPI_NET}.0/24",
+        "range_start": "${INTERNALAPI_NET}.${INTERNALAPI_IP_START}",
+        "range_end": "${INTERNALAPI_NET}.${INTERNALAPI_IP_END}"
       }
     }
 EOF_CAT
@@ -102,12 +124,12 @@ spec:
       "cniVersion": "0.3.1",
       "name": "storage",
       "type": "macvlan",
-      "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}))",
+      "master": "${INTERFACE_MANAGEMENT}.${STORAGE_VLAN}",
       "ipam": {
         "type": "whereabouts",
-        "range": "172.18.0.0/24",
-        "range_start": "172.18.0.30",
-        "range_end": "172.18.0.70"
+        "range": "${STORAGE_NET}.0/24",
+        "range_start": "${STORAGE_NET}.${STORAGE_IP_START}",
+        "range_end": "${STORAGE_NET}.${STORAGE_IP_END}"
       }
     }
 EOF_CAT
@@ -126,12 +148,12 @@ spec:
       "cniVersion": "0.3.1",
       "name": "tenant",
       "type": "macvlan",
-      "master": "${INTERFACE}.$((${VLAN_START}+$((${VLAN_STEP}*2))))",
+      "master": "${INTERFACE_MANAGEMENT}.${TENANT_VLAN}",
       "ipam": {
         "type": "whereabouts",
-        "range": "172.19.0.0/24",
-        "range_start": "172.19.0.30",
-        "range_end": "172.19.0.70"
+        "range": "${TENANT_NET}.0/24",
+        "range_start": "${TENANT_NET}.${TENANT_IP_START}",
+        "range_end": "${TENANT_NET}.${TENANT_IP_END}"
       }
     }
 EOF_CAT
