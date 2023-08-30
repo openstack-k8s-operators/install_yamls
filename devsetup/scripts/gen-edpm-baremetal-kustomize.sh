@@ -17,6 +17,7 @@ set -ex
 
 NAMESPACE=${NAMESPACE:-"openstack"}
 DEPLOY_DIR=${DEPLOY_DIR:-"../out/edpm"}
+SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 NODE_COUNT=${NODE_COUNT:-2}
 NETWORK_IPADDRESS=${BMAAS_NETWORK_IPADDRESS:-192.168.122.1}
 BMH_CR_FILE=${BMH_CR_FILE:-bmh_deploy.yaml}
@@ -33,6 +34,10 @@ mkdir -p ${OPERATOR_DIR} ${DEPLOY_DIR}
 rm -Rf ${OPERATOR_DIR}/dataplane-operator || true
 pushd ${OPERATOR_DIR} && git clone ${GIT_CLONE_OPTS} $(if [ ${DATAPLANE_BRANCH} ]; then echo -b ${DATAPLANE_BRANCH}; fi) \
     ${DATAPLANE_REPO} "dataplane-operator" && popd
+cp ${SCRIPTPATH}/../edpm/services/* ${OPERATOR_DIR}/dataplane-operator/config/services
+NAMESPACE=${NAMESPACE} DEPLOY_DIR=${OPERATOR_DIR}/dataplane-operator/config/services KIND=OpenStackDataPlaneService bash ${SCRIPTPATH}/../../scripts/gen-edpm-services-kustomize.sh
+oc kustomize ${OPERATOR_DIR}/dataplane-operator/config/services | oc apply -f -
+oc apply -f ${SCRIPTPATH}/../edpm/config/ansible-ee-env.yaml
 cp  ${OPERATOR_DIR}/dataplane-operator/${OPENSTACK_DATAPLANE_BAREMETAL} ${DEPLOY_DIR}/${DATAPLANE_CR_FILE}
 
 pushd ${DEPLOY_DIR}
@@ -58,6 +63,18 @@ fi)
     - op: replace
       path: /spec/deployStrategy/deploy
       value: ${EDPM_DEPLOY_STRATEGY_DEPLOY}
+    - op: add
+      path: /spec/roles/edpm-compute/services
+      value:
+        - repo-setup
+        - configure-network
+        - validate-network
+        - install-os
+        - configure-os
+        - run-os
+        - ovn
+        - libvirt
+        - nova
     - op: replace
       path: /spec/roles/edpm-compute/baremetalSetTemplate/bmhNamespace
       value: ${NAMESPACE}
