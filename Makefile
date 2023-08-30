@@ -304,10 +304,11 @@ DATAPLANE_REGISTRY_URL                           ?=quay.io/podified-antelope-cen
 DATAPLANE_CONTAINER_TAG                          ?=current-podified
 DATAPLANE_OVN_METADATA_AGENT_BIND_HOST           ?=127.0.0.1
 DATAPLANE_SINGLE_NODE                            ?=true
-DATAPLANE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/dataplane-operator/kuttl-test.yaml
-DATAPLANE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/dataplane-operator/tests/kuttl/tests
-DATAPLANE_KUTTL_NAMESPACE ?= dataplane-kuttl-tests
-DATAPLANE_DEFAULT_GW      ?= 192.168.122.1
+DATAPLANE_KUTTL_CONF                             ?= ${OPERATOR_BASE_DIR}/dataplane-operator/kuttl-test.yaml
+DATAPLANE_KUTTL_DIR                              ?= ${OPERATOR_BASE_DIR}/dataplane-operator/tests/kuttl/tests
+DATAPLANE_KUTTL_NAMESPACE                        ?= dataplane-kuttl-tests
+DATAPLANE_DEFAULT_GW                             ?= 192.168.122.1
+BM_CTLPLANE_INTERFACE                            ?= enp1s0
 
 # Manila
 MANILA_IMG            ?= quay.io/openstack-k8s-operators/manila-operator-index:latest
@@ -347,7 +348,6 @@ BMO_REPO                         ?= https://github.com/metal3-io/baremetal-opera
 BMO_BRANCH                       ?= main
 BMO_PROVISIONING_INTERFACE       ?= enp6s0
 BMO_IRONIC_HOST                  ?= 192.168.122.10
-BMO_CTLPLANE_INTERFACE           ?= enp1s0
 BMO_ROOT_PASSWORD_SECRET         ?=
 
 # Swift
@@ -618,7 +618,7 @@ edpm_deploy_baremetal_prep: export EDPM_ANSIBLE_SECRET=${DATAPLANE_ANSIBLE_SECRE
 edpm_deploy_baremetal_prep: export EDPM_ANSIBLE_USER=cloud-admin
 edpm_deploy_baremetal_prep: export EDPM_BMH_NAMESPACE=${BMH_NAMESPACE}
 edpm_deploy_baremetal_prep: export EDPM_PROVISIONING_INTERFACE=${BMO_PROVISIONING_INTERFACE}
-edpm_deploy_baremetal_prep: export EDPM_CTLPLANE_INTERFACE=${BMO_CTLPLANE_INTERFACE}
+edpm_deploy_baremetal_prep: export EDPM_CTLPLANE_INTERFACE=${BM_CTLPLANE_INTERFACE}
 edpm_deploy_baremetal_prep: export EDPM_TOTAL_NODES=${DATAPLANE_TOTAL_NODES}
 edpm_deploy_baremetal_prep: export EDPM_NETWORK_CONFIG_TEMPLATE=${DATAPLANE_NETWORK_CONFIG_TEMPLATE}
 edpm_deploy_baremetal_prep: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALLOWED_RANGES}
