@@ -321,7 +321,7 @@ MANILA_KUTTL_DIR        ?= ${OPERATOR_BASE_DIR}/manila-operator/tests/kuttl/test
 MANILA_KUTTL_NAMESPACE  ?= manila-kuttl-tests
 
 # Ceph
-CEPH_IMG            ?= quay.io/ceph/demo:latest
+CEPH_IMG            ?= quay.io/ceph/demo:latest-reef
 
 # NNCP
 NNCP_INTERFACE      ?= enp6s0
