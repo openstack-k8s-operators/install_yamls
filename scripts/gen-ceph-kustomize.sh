@@ -46,9 +46,9 @@ CEPH_DEMO_UID=${CEPH_DAEMON:-0}
 OSP_SECRET=${OSP_SECRET:-"osp-secret"}
 RGW_USER=${RGW_USER:-"swift"}
 RGW_NAME=${RGW_NAME:-"ceph"}
-DOMAIN=$(oc get ingresses.config/cluster -o jsonpath={.spec.domain})
+DOMAIN=$(oc -n $NAMESPACE get ingresses.config/cluster -o jsonpath={.spec.domain})
 # make input should be called before ceph to make sure we can access this info
-RGW_PASS=$(oc get secrets "$OSP_SECRET" -o jsonpath={.data.SwiftPassword} | base64 -d)
+RGW_PASS=$(oc -n $NAMESPACE get secrets "$OSP_SECRET" -o jsonpath={.data.SwiftPassword} | base64 -d)
 
 
 function add_ceph_pod {
@@ -59,7 +59,7 @@ metadata:
   annotations:
     k8s.v1.cni.cncf.io/networks: ""
   name: ceph
-  namespace: openstack
+  namespace: $NAMESPACE
   labels:
     app.kubernetes.io/name: ceph
     app: ceph
@@ -113,7 +113,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - ./ceph-pod.yaml
-namespace: openstack
+namespace: $NAMESPACE
 patches:
 - target:
     kind: Pod
@@ -131,7 +131,7 @@ EOF
 }
 
 function bootstrap_ceph {
-    NODES=$(oc get nodes --selector='node-role.kubernetes.io/worker=' -o 'jsonpath={.items[*].status.addresses[*].address}')
+    NODES=$(oc -n $NAMESPACE get nodes --selector='node-role.kubernetes.io/worker=' -o 'jsonpath={.items[*].status.addresses[*].address}')
     read -ra values <<< "$NODES"
     [[ -z "$MON_IP" ]] && MON_IP="${values[0]}"
     # we need affinity when we do HOSTNETWORKING
@@ -243,18 +243,18 @@ function config_ceph {
 
     # Apply config settings to Ceph
     for key in "${!config_keys[@]}"; do
-        oc exec -it ceph -- sh -c "ceph config set global $key ${config_keys[$key]}"
+        oc exec -n $NAMESPACE -it ceph -- sh -c "ceph config set global $key ${config_keys[$key]}"
     done
 }
 
 function config_rgw {
     echo "Restart RGW and reload the config"
-    oc rsh ceph pkill radosgw
+    oc -n $NAMESPACE rsh ceph pkill radosgw
     # RGW data and options
     name="client.rgw.$RGW_NAME"
     path="/var/lib/ceph/radosgw/ceph-rgw.$RGW_NAME/keyring"
     options=" --default-log-to-stderr=true --err-to-stderr=true --default-log-to-file=false"
-    oc rsh ceph radosgw --cluster ceph --setuser ceph --setgroup ceph "$options" -n "$name" -k "$path"
+    oc -n $NAMESPACE rsh ceph radosgw --cluster ceph --setuser ceph --setgroup ceph "$options" -n "$name" -k "$path"
 }
 
 function usage {
@@ -278,9 +278,9 @@ function usage {
         echo
         echo  "2. MON_IP=<YOUR_HOST_IP_ADDRESS> make ceph # the pod uses hostNetworking and the container will be bound to the specified ip address"
         echo
-        echo  "3. NETWORKS_ANNOTATION="[{\"Name\":\"storage\",\"Namespace\":\"openstack\"}]" make ceph # attach the NAD to the POD provided it's precreated."
+        echo  "3. NETWORKS_ANNOTATION="[{\"Name\":\"storage\",\"Namespace\":\"$NAMESPACE\"}]" make ceph # attach the NAD to the POD provided it's precreated."
         echo
-        echo  "4. CEPH_HOSTNETWORK=false NETWORKS_ANNOTATION=\'[{\"Name\":\"storage\",\"Namespace\":\"openstack\",\"ips\":[\"172\.18\.0\.51\/24\"]}]\' MON_IP="172.18.0.51" make ceph # example of binding the Ceph Pod to the storage NAD"
+        echo  "4. CEPH_HOSTNETWORK=false NETWORKS_ANNOTATION=\'[{\"Name\":\"storage\",\"Namespace\":\"$NAMESPACE\",\"ips\":[\"172\.18\.0\.51\/24\"]}]\' MON_IP="172.18.0.51" make ceph # example of binding the Ceph Pod to the storage NAD"
         echo
     fi
 }
