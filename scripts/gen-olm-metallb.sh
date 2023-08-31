@@ -15,25 +15,40 @@
 # under the License.
 set -ex
 
-if [ -z "${OPERATOR_DIR}" ]; then
-    echo "Please set OPERATOR_DIR"; exit 1
-fi
+function check_var_setted () {
+  if [[ ! -v $1 ]]; then
+    echo "Please set $1"; exit 1
+  fi
+}
+
+check_var_setted OPERATOR_DIR
 
 if [ ! -d ${OPERATOR_DIR} ]; then
     mkdir -p ${OPERATOR_DIR}
 fi
 
-if [ -z "${DEPLOY_DIR}" ]; then
-    echo "Please set DEPLOY_DIR"; exit 1
-fi
+check_var_setted DEPLOY_DIR
 
 if [ ! -d ${DEPLOY_DIR} ]; then
     mkdir -p ${DEPLOY_DIR}
 fi
 
-if [ -z "${INTERFACE}" ]; then
-    echo "Please set INTERFACE"; exit 1
-fi
+check_var_setted INTERFACE
+check_var_setted INTERFACE_DATA
+check_var_setted INTERFACE_MANAGEMENT
+check_var_setted INTERFACE_EXTERNAL
+check_var_setted INTERNALAPI_VLAN
+check_var_setted STORAGE_VLAN
+check_var_setted TENANT_VLAN
+check_var_setted INTERNALAPI_NET
+check_var_setted STORAGE_NET
+check_var_setted TENANT_NET
+check_var_setted INTERNALAPI_IP_START
+check_var_setted INTERNALAPI_IP_END
+check_var_setted STORAGE_IP_START
+check_var_setted STORAGE_IP_END
+check_var_setted TENANT_IP_START
+check_var_setted TENANT_IP_END
 
 echo OPERATOR_DIR ${OPERATOR_DIR}
 echo DEPLOY_DIR ${DEPLOY_DIR}
@@ -90,7 +105,7 @@ metadata:
   name: internalapi
 spec:
   addresses:
-  - 172.17.0.80-172.17.0.90
+  - ${INTERNALAPI_NET}.${INTERNALAPI_IP_START}-${INTERNALAPI_NET}.${INTERNALAPI_IP_END}
 ---
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
@@ -99,7 +114,7 @@ metadata:
   name: storage
 spec:
   addresses:
-  - 172.18.0.80-172.18.0.90
+  - ${STORAGE_NET}.${STORAGE_IP_START}-${STORAGE_NET}.${STORAGE_IP_END}
 ---
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
@@ -108,7 +123,7 @@ metadata:
   name: tenant
 spec:
   addresses:
-  - 172.19.0.80-172.19.0.90
+  - ${TENANT_NET}.${TENANT_IP_START}-${TENANT_NET}.${TENANT_IP_END}
 EOF_CAT
 
 cat > ${DEPLOY_DIR}/l2advertisement.yaml <<EOF_CAT
@@ -133,7 +148,7 @@ spec:
   ipAddressPools:
   - internalapi
   interfaces:
-  - ${INTERFACE}.20
+  - ${INTERFACE_DATA}.${INTERNALAPI_VLAN}
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
@@ -144,7 +159,7 @@ spec:
   ipAddressPools:
   - storage
   interfaces:
-  - ${INTERFACE}.21
+  - ${INTERFACE_MANAGEMENT}.${STORAGE_VLAN}
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
@@ -155,5 +170,5 @@ spec:
   ipAddressPools:
   - tenant
   interfaces:
-  - ${INTERFACE}.22
+  - ${INTERFACE_MANAGEMENT}.${TENANT_VLAN}
 EOF_CAT

@@ -30,6 +30,12 @@ POD_STORAGE_IP_START ?= 30
 POD_STORAGE_IP_END ?= 70
 POD_TENANT_IP_START ?= 30
 POD_TENANT_IP_END ?= 70
+POD_METALLB_INTERNALAPI_IP_START ?= 80
+POD_METALLB_INTERNALAPI_IP_END ?= 90
+POD_METALLB_STORAGE_IP_START ?= 80
+POD_METALLB_STORAGE_IP_END ?= 90
+POD_METALLB_TENANT_IP_START ?= 80
+POD_METALLB_TENANT_IP_END ?= 90
 
 # multiple controller deployment (MCD)
 MCD_ENABLED 	?= false
@@ -46,6 +52,12 @@ MCD_STORAGE_IP_START ?= 150
 MCD_STORAGE_IP_END ?= 190
 MCD_TENANT_IP_START ?= 150
 MCD_TENANT_IP_END ?= 190
+MCD_METALLB_INTERNALAPI_IP_START ?= 191
+MCD_METALLB_INTERNALAPI_IP_END ?= 201
+MCD_METALLB_STORAGE_IP_START ?= 191
+MCD_METALLB_STORAGE_IP_END ?= 201
+MCD_METALLB_TENANT_IP_START ?= 191
+MCD_METALLB_TENANT_IP_END ?= 201
 
 # Allows overriding the cleanup command used in *_cleanup targets.
 # Useful in CI, to allow injectin kustomization in each operator CR directory
@@ -386,6 +398,14 @@ NETATTACH_STORAGE_IP_START ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_STOR
 NETATTACH_STORAGE_IP_END ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_STORAGE_IP_END),$(POD_STORAGE_IP_END))
 NETATTACH_TENANT_IP_START ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_TENANT_IP_START),$(POD_TENANT_IP_START))
 NETATTACH_TENANT_IP_END ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_TENANT_IP_END),$(POD_TENANT_IP_END))
+
+# metallb
+METALLB_INTERNALIP_IP_START ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_METALLB_INTERNALAPI_IP_START),$(POD_METALLB_INTERNALAPI_IP_START))
+METALLB_INTERNALIP_IP_END ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_METALLB_INTERNALAPI_IP_END),$(POD_METALLB_INTERNALAPI_IP_END))
+METALLB_STORAGE_IP_START ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_METALLB_STORAGE_IP_START),$(POD_METALLB_STORAGE_IP_START))
+METALLB_STORAGE_IP_END ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_METALLB_STORAGE_IP_END),$(POD_METALLB_STORAGE_IP_END))
+METALLB_STORAGE_IP_START ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_METALLB_TENANT_IP_START),$(POD_METALLB_TENANT_IP_START))
+METALLB_STORAGE_IP_END ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_METALLB_TENANT_IP_END),$(POD_METALLB_TENANT_IP_END))
 
 # Telemetry
 TELEMETRY_IMG                    ?= quay.io/openstack-k8s-operators/telemetry-operator-index:latest
@@ -1866,6 +1886,21 @@ netattach_cleanup: ## Deletes the network-attachment-definitions
 .PHONY: metallb
 metallb: export NAMESPACE=metallb-system
 metallb: export INTERFACE=${NNCP_INTERFACE}
+metallb: export INTERFACE_DATA=${NNCP_INTERFACE_DATA}
+metallb: export INTERFACE_MANAGEMENT=${NNCP_INTERFACE_MANAGEMENT}
+metallb: export INTERFACE_EXTERNAL=${NNCP_INTERFACE_EXTERNAL}
+metallb: export INTERNALAPI_VLAN=${NNCP_INTERNALAPI_VLAN}
+metallb: export STORAGE_VLAN=${NNCP_STORAGE_VLAN}
+metallb: export TENANT_VLAN=${NNCP_TENANT_VLAN}
+metallb: export INTERNALAPI_NET=${NNCP_INTERNALAPI_NET}
+metallb: export STORAGE_NET=${NNCP_STORAGE_NET}
+metallb: export TENANT_NET=${NNCP_TENANT_NET}
+metallb: export INTERNALAPI_IP_START=${METALLB_INTERNALIP_IP_START}
+metallb: export INTERNALAPI_IP_END=${METALLB_INTERNALIP_IP_END}
+metallb: export STORAGE_IP_START=${METALLB_STORAGE_IP_START}
+metallb: export STORAGE_IP_END=${METALLB_STORAGE_IP_END}
+metallb: export TENANT_IP_START=${METALLB_TENANT_IP_START}
+metallb: export TENANT_IP_END=${METALLB_TENANT_IP_END}
 metallb: ## installs metallb operator in the metallb-system namespace
 	$(eval $(call vars,$@,metallb))
 	bash scripts/gen-namespace.sh
@@ -1885,6 +1920,21 @@ metallb: ## installs metallb operator in the metallb-system namespace
 metallb_config: export NAMESPACE=metallb-system
 metallb_config: export CTLPLANE_METALLB_POOL=${METALLB_POOL}
 metallb_config: export INTERFACE=${NNCP_INTERFACE}
+metallb_config: export INTERFACE_DATA=${NNCP_INTERFACE_DATA}
+metallb_config: export INTERFACE_MANAGEMENT=${NNCP_INTERFACE_MANAGEMENT}
+metallb_config: export INTERFACE_EXTERNAL=${NNCP_INTERFACE_EXTERNAL}
+metallb_config: export INTERNALAPI_VLAN=${NNCP_INTERNALAPI_VLAN}
+metallb_config: export STORAGE_VLAN=${NNCP_STORAGE_VLAN}
+metallb_config: export TENANT_VLAN=${NNCP_TENANT_VLAN}
+metallb_config: export INTERNALAPI_NET=${NNCP_INTERNALAPI_NET}
+metallb_config: export STORAGE_NET=${NNCP_STORAGE_NET}
+metallb_config: export TENANT_NET=${NNCP_TENANT_NET}
+metallb_config: export INTERNALAPI_IP_START=${METALLB_INTERNALIP_IP_START}
+metallb_config: export INTERNALAPI_IP_END=${METALLB_INTERNALIP_IP_END}
+metallb_config: export STORAGE_IP_START=${METALLB_STORAGE_IP_START}
+metallb_config: export STORAGE_IP_END=${METALLB_STORAGE_IP_END}
+metallb_config: export TENANT_IP_START=${METALLB_STORAGE_IP_START}
+metallb_config: export TENANT_IP_END=${METALLB_STORAGE_IP_END}
 metallb_config: metallb_config_cleanup ## creates the IPAddressPools and l2advertisement resources
 	$(eval $(call vars,$@,metallb))
 	bash scripts/gen-olm-metallb.sh
