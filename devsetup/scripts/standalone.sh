@@ -45,7 +45,7 @@ set -ex
 sudo dnf remove -y epel-release
 sudo dnf update -y
 sudo dnf install -y vim git curl util-linux lvm2 tmux wget
-URL=https://trunk.rdoproject.org/centos9/component/tripleo/current/
+URL=https://trunk.rdoproject.org/centos9-wallaby/component/tripleo/current-tripleo/
 RPM_NAME=\$(curl \$URL | grep python3-tripleo-repos | sed -e 's/<[^>]*>//g' | awk 'BEGIN { FS = ".rpm" } ; { print \$1 }')
 RPM=\$RPM_NAME.rpm
 sudo dnf install -y \$URL\$RPM
