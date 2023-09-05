@@ -21,6 +21,9 @@ INTERFACE_MTU=${INTERFACE_MTU:-1500}
 openstack tripleo container image prepare default \
     --output-env-file $HOME/containers-prepare-parameters.yaml
 
+# Use wallaby el9 container images
+sed -i 's|quay.io/tripleowallaby$|quay.io/tripleowallabycentos9|' $HOME/containers-prepare-parameters.yaml
+
 # Use the files created in the previous steps including the network_data.yaml file and thw deployed_network.yaml file.
 # The deployed_network.yaml file hard codes the IPs and VIPs configured from the network.sh
 
