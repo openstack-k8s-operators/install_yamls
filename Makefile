@@ -654,11 +654,16 @@ edpm_deploy_baremetal: input edpm_deploy_baremetal_prep ## installs the dataplan
 edpm_wait_deploy: edpm_deploy ## waits for dataplane readiness. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,dataplane))
 	oc kustomize ${DEPLOY_DIR} | oc wait --for condition=Ready --timeout=$(TIMEOUT) -f -
+	$(MAKE) edpm_nova_discover_hosts
 
 .PHONY: edpm_register_dns
 edpm_register_dns: dns_deploy_prep ## register edpm nodes in dns as dnsdata
 	$(eval $(call vars,$@,infra))
 	oc apply -f ${DEPLOY_DIR}/network_v1beta1_dnsdata.yaml # TODO (mschuppert): register edpm nodes in DNS can be removed after full IPAM integration
+
+.PHONY: edpm_nova_discover_hosts
+edpm_nova_discover_hosts: ## trigger manual compute host discovery in nova
+	oc rsh nova-cell0-conductor-0 nova-manage cell_v2 discover_hosts --verbose
 
 .PHONY: openstack_crds
 openstack_crds: namespace openstack_deploy_prep ## installs all openstack CRDs. Useful for infrastructure dev
