@@ -28,11 +28,16 @@ sed -i 's|quay.io/tripleowallaby$|quay.io/tripleowallabycentos9|' $HOME/containe
 # The deployed_network.yaml file hard codes the IPs and VIPs configured from the network.sh
 
 export NEUTRON_INTERFACE=eth0
-export CTLPLANE_IP=192.168.122.100
-export CTLPLANE_VIP=192.168.122.99
+export CTLPLANE_IP=${IP:-192.168.122.100}
+export CTLPLANE_VIP=$(sed -e 's/[0-9][0-9][0-9]$/99/' <<<"$CTLPLANE_IP")
+
 export CIDR=24
-export GATEWAY=192.168.122.1
+export GATEWAY=${GATEWAY:-192.168.122.1}
 export BRIDGE="br-ctlplane"
+export SUBNET=$(sed -e 's/\.[0-9]*$//' <<<"$CTLPLANE_IP")
+sed -i -e "s/CTLPLANE_IP/$CTLPLANE_IP/" /tmp/deployed_network.yaml
+sed -i -e  "s/CTLPLANE_SUBNET/$SUBNET/" /tmp/deployed_network.yaml
+sed -i -e  "s/CTLPLANE_VIP/$CTLPLANE_VIP/" /tmp/deployed_network.yaml
 
 # Create standalone_parameters.yaml file and deploy standalone OpenStack using the following commands.
 cat <<EOF > standalone_parameters.yaml
@@ -46,7 +51,7 @@ parameter_defaults:
   DeploymentUser: $USER
   DnsServers:
     - $HOST_PRIMARY_RESOLV_CONF_ENTRY
-    - 192.168.122.1
+    - $GATEWAY
   NtpServer: $NTP_SERVER
   # needed for vip & pacemaker
   KernelIpNonLocalBind: 1
