@@ -34,7 +34,7 @@ if [ -z "${CRC_BIN}" ]; then
     export PATH="~/bin:${PATH}"
     export_path=1
     mkdir -p ~/bin
-    curl -L "${CRC_URL}" | tar -U --strip-components=1 -C ~/bin -xJf - *crc
+    curl -L "${CRC_URL}" | tar --wildcards -U --strip-components=1 -C ~/bin -xJf - *crc
     CRC_BIN=$(which crc)
 fi
 
