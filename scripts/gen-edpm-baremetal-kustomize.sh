@@ -151,12 +151,7 @@ cat <<EOF >>kustomization.yaml
       value: ${EDPM_CTLPLANE_INTERFACE}
 EOF
 fi
-if [ "$EDPM_TOTAL_NODES" -eq 1 ]; then
-cat <<EOF >>kustomization.yaml
-    - op: remove
-      path: /spec/nodeTemplate/nodes/edpm-compute-1
-EOF
-elif [ "$EDPM_TOTAL_NODES" -gt 2 ]; then
+if [ "$EDPM_TOTAL_NODES" -gt 1 ]; then
     for INDEX in $(seq 1 $((${EDPM_TOTAL_NODES} -1))) ; do
 cat <<EOF >>kustomization.yaml
     - op: copy

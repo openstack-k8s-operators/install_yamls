@@ -154,12 +154,7 @@ cat <<EOF >>kustomization.yaml
             mountPath: "/runner/artifacts"
 EOF
 fi
-if [ "$EDPM_SINGLE_NODE" == "true" ]; then
-cat <<EOF >>kustomization.yaml
-    - op: remove
-      path: /spec/nodeTemplate/nodes/edpm-compute-1
-EOF
-elif [ "$EDPM_TOTAL_NODES" -gt 2 ]; then
+if [ "$EDPM_TOTAL_NODES" -gt 1 ]; then
     for INDEX in $(seq 1 $((${EDPM_TOTAL_NODES} -1))) ; do
 cat <<EOF >>kustomization.yaml
     - op: copy
@@ -189,30 +184,6 @@ cat <<EOF >>kustomization.yaml
       value: ${EDPM_ANSIBLE_SECRET}
 EOF
     done
-else
-cat <<EOF >>kustomization.yaml
-    - op: replace
-      path: /spec/nodeTemplate/nodes/edpm-compute-1/ansible/ansibleHost
-      value: ${EDPM_COMPUTE_1_IP}
-    - op: replace
-      path: /spec/nodeTemplate/nodes/edpm-compute-1/networks
-      value:
-        - name: CtlPlane
-          subnetName: subnet1
-          defaultRoute: true
-          fixedIP: ${EDPM_COMPUTE_1_IP}
-        - name: InternalApi
-          subnetName: subnet1
-        - name: Storage
-          subnetName: subnet1
-        - name: Tenant
-          subnetName: subnet1
-    - op: remove
-      path: /spec/nodeTemplate/nodes/edpm-compute-1/ansible/ansibleVars
-    - op: replace
-      path: /spec/nodeTemplate/nodes/edpm-compute-1/ansibleSSHPrivateKeySecret
-      value: ${EDPM_ANSIBLE_SECRET}
-EOF
 fi
 if [ ! -z "$EDPM_ANSIBLE_USER" ]; then
 cat <<EOF >>kustomization.yaml
