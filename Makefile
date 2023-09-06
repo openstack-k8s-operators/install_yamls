@@ -569,7 +569,7 @@ openstack_deploy_cleanup: namespace netconfig_deploy_cleanup ## cleans up the se
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/openstack-operator ${DEPLOY_DIR}
 
 .PHONY: edpm_deploy_prep
-edpm_deploy_prep: export KIND=OpenStackDataPlane
+edpm_deploy_prep: export KIND=OpenStackDataPlaneNodeSet
 edpm_deploy_prep: export EDPM_ANSIBLE_SECRET=${DATAPLANE_ANSIBLE_SECRET}
 edpm_deploy_prep: export EDPM_ANSIBLE_USER=${DATAPLANE_ANSIBLE_USER}
 edpm_deploy_prep: export EDPM_SINGLE_NODE=${DATAPLANE_SINGLE_NODE}
@@ -613,7 +613,7 @@ edpm_deploy: input edpm_deploy_prep ## installs the dataplane instance using kus
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 
 .PHONY: edpm_deploy_baremetal_prep
-edpm_deploy_baremetal_prep: export KIND=OpenStackDataPlane
+edpm_deploy_baremetal_prep: export KIND=OpenStackDataPlaneNodeSet
 edpm_deploy_baremetal_prep: export EDPM_ANSIBLE_SECRET=${DATAPLANE_ANSIBLE_SECRET}
 edpm_deploy_baremetal_prep: export EDPM_ANSIBLE_USER=cloud-admin
 edpm_deploy_baremetal_prep: export EDPM_BMH_NAMESPACE=${BMH_NAMESPACE}
