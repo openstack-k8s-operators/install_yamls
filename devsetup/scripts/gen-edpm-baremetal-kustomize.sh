@@ -26,7 +26,7 @@ DATAPLANE_REPO=${DATAPLANE_REPO:-https://github.com/openstack-k8s-operators/data
 DATAPLNE_BRANCH=${DATAPLANE_BRANCH:-main}
 OPENSTACK_DATAPLANE_BAREMETAL=${OPENSTACK_DATAPLANE_BAREMETAL:-config/samples/dataplane_v1beta1_openstackdataplane_baremetal_with_ipam.yaml}
 DATAPLANE_BAREMETAL_CR=${OPERATOR_DIR}/dataplane-operator/${OPENSTACK_DATAPLANE_BAREMETAL}
-DATAPLANE_CR_FILE=${DATAPLANE_CR_FILE:-dataplane.yaml}
+DATAPLANE_NODESET_CR_FILE=${DATAPLANE_NODESET_CR_FILE:-dataplanenodeset.yaml}
 GIT_CLONE_OPTS=${GIT_CLONE_OPTS:-}
 
 mkdir -p ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -38,7 +38,7 @@ cp ${SCRIPTPATH}/../edpm/services/* ${OPERATOR_DIR}/dataplane-operator/config/se
 NAMESPACE=${NAMESPACE} DEPLOY_DIR=${OPERATOR_DIR}/dataplane-operator/config/services KIND=OpenStackDataPlaneService bash ${SCRIPTPATH}/../../scripts/gen-edpm-services-kustomize.sh
 oc kustomize ${OPERATOR_DIR}/dataplane-operator/config/services | oc apply -f -
 oc apply -f ${SCRIPTPATH}/../edpm/config/ansible-ee-env.yaml
-cp  ${OPERATOR_DIR}/dataplane-operator/${OPENSTACK_DATAPLANE_BAREMETAL} ${DEPLOY_DIR}/${DATAPLANE_CR_FILE}
+cp  ${OPERATOR_DIR}/dataplane-operator/${OPENSTACK_DATAPLANE_BAREMETAL} ${DEPLOY_DIR}/${DATAPLANE_NODESET_CR_FILE}
 
 pushd ${DEPLOY_DIR}
 
@@ -48,7 +48,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - ${BMH_CR_FILE}
-  - ${DATAPLANE_CR_FILE}
+  - ${DATAPLANE_NODESET_CR_FILE}
 namespace: ${NAMESPACE}
 patches:
 - target:

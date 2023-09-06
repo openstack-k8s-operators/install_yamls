@@ -286,10 +286,10 @@ BMH_NAMESPACE       ?= ${NAMESPACE}
 DATAPLANE_IMG                                    ?= quay.io/openstack-k8s-operators/dataplane-operator-index:latest
 DATAPLANE_REPO                                   ?= https://github.com/openstack-k8s-operators/dataplane-operator.git
 DATAPLANE_BRANCH                                 ?= main
-OPENSTACK_DATAPLANE                              ?= config/samples/dataplane_v1beta1_openstackdataplane_with_ipam.yaml
-OPENSTACK_DATAPLANE_BAREMETAL                    ?= config/samples/dataplane_v1beta1_openstackdataplane_baremetal_with_ipam.yaml
-DATAPLANE_CR                                     ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANE}
-DATAPLANE_BAREMETAL_CR                           ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANE_BAREMETAL}
+OPENSTACK_DATAPLANENODESET                       ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset.yaml
+OPENSTACK_DATAPLANENODESET_BAREMETAL             ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset_baremetal_with_ipam.yaml
+DATAPLANE_NODESET_CR                             ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANENODESET}
+DATAPLANE_NODESET_BAREMETAL_CR                   ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANENODESET_BAREMETAL}
 DATAPLANE_ANSIBLE_SECRET                         ?=dataplane-ansible-ssh-private-key-secret
 DATAPLANE_ANSIBLE_USER                           ?=
 DATAPLANE_COMPUTE_IP                             ?=192.168.122.100
@@ -597,7 +597,7 @@ edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data pla
 	DEPLOY_DIR=${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services KIND=OpenStackDataPlaneService bash scripts/gen-edpm-services-kustomize.sh
 	oc kustomize ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services | oc apply -f -
 	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
-	cp ${DATAPLANE_CR} ${DEPLOY_DIR}
+	cp ${DATAPLANE_NODESET_CR} ${DEPLOY_DIR}
 	bash scripts/gen-edpm-kustomize.sh
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
 
