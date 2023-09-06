@@ -23,7 +23,7 @@ NETWORK_IPADDRESS=${BMAAS_NETWORK_IPADDRESS:-192.168.122.1}
 BMH_CR_FILE=${BMH_CR_FILE:-bmh_deploy.yaml}
 OPERATOR_DIR=${OPERATOR_DIR:-../out/operator}
 DATAPLANE_REPO=${DATAPLANE_REPO:-https://github.com/openstack-k8s-operators/dataplane-operator.git}
-DATAPLNE_BRANCH=${DATAPLANE_BRANCH:-main}
+DATAPLANE_BRANCH=${DATAPLANE_BRANCH:-main}
 OPENSTACK_DATAPLANENODESET_BAREMETAL=${OPENSTACK_DATAPLANENODESET_BAREMETAL:-config/samples/dataplane_v1beta1_openstackdataplanenodeset_baremetal_with_ipam.yaml}
 DATAPLANE_NODESET_BAREMETAL_CR=${OPERATOR_DIR}/dataplane-operator/${OPENSTACK_DATAPLANENODESET_BAREMETAL}
 DATAPLANE_NODESET_CR_FILE=${DATAPLANE_NODESET_CR_FILE:-dataplanenodeset.yaml}
@@ -52,7 +52,7 @@ resources:
 namespace: ${NAMESPACE}
 patches:
 - target:
-    kind: OpenStackDataPlane
+    kind: OpenStackDataPlaneNodeSet
   patch: |-
 $(if [[ $NODE_COUNT -eq 1 ]]; then
 cat <<SECOND_NODE_EOF
@@ -64,7 +64,7 @@ fi)
       path: /spec/deployStrategy/deploy
       value: ${EDPM_DEPLOY_STRATEGY_DEPLOY}
     - op: add
-      path: /spec/roles/edpm-compute/services
+      path: /spec/services
       value:
         - repo-setup
         - configure-network
@@ -76,57 +76,57 @@ fi)
         - libvirt
         - nova
     - op: replace
-      path: /spec/roles/edpm-compute/baremetalSetTemplate/bmhNamespace
+      path: /spec/baremetalSetTemplate/bmhNamespace
       value: ${NAMESPACE}
     - op: replace
-      path: /spec/roles/edpm-compute/baremetalSetTemplate/ctlplaneInterface
+      path: /spec/baremetalSetTemplate/ctlplaneInterface
       value: enp1s0
     - op: add
-      path: /spec/roles/edpm-compute/baremetalSetTemplate/provisioningInterface
+      path: /spec/baremetalSetTemplate/provisioningInterface
       value: ${PROVISIONING_INTERFACE}
     - op: add
-      path: /spec/roles/edpm-compute/env/0
+      path: /spec/env/0
       value: {"name": "ANSIBLE_CALLBACKS_ENABLED", "value": "profile_tasks"}
     - op: add
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleSSHPrivateKeySecret
+      path: /spec/nodeTemplate/ansibleSSHPrivateKeySecret
       value: dataplane-ansible-ssh-private-key-secret
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_DEFAULT_transport_url
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_metadata_agent_DEFAULT_transport_url
       value: ${EDPM_OVN_METADATA_AGENT_TRANSPORT_URL}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_ovn_ovn_sb_connection
       value: ${EDPM_OVN_METADATA_AGENT_SB_CONNECTION}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_DEFAULT_nova_metadata_host
       value: ${EDPM_OVN_METADATA_AGENT_NOVA_METADATA_HOST}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_metadata_agent_metadata_agent_DEFAULT_metadata_proxy_shared_secret
       value: ${EDPM_OVN_METADATA_AGENT_PROXY_SHARED_SECRET}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_metadata_agent_DEFAULT_bind_host
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_metadata_agent_DEFAULT_bind_host
       value: ${EDPM_OVN_METADATA_AGENT_BIND_HOST}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_chrony_ntp_servers
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_chrony_ntp_servers
       value:
         - ${EDPM_CHRONY_NTP_SERVER}
     - op: add
-      path: /spec/roles/edpm-compute/nodeTemplate/networkConfig
+      path: /spec/nodeTemplate/networkConfig
       value:
         template: ${EDPM_NETWORK_CONFIG_TEMPLATE}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_ovn_dbs
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_dbs
       value: ${NETWORK_IPADDRESS}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/registry_url
+      path: /spec/nodeTemplate/ansible/ansibleVars/registry_url
       value: ${REGISTRY_URL}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/image_tag
+      path: /spec/nodeTemplate/ansible/ansibleVars/image_tag
       value: ${CONTAINER_TAG}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/edpm_sshd_allowed_ranges
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_sshd_allowed_ranges
       value: ${EDPM_SSHD_ALLOWED_RANGES}
     - op: replace
-      path: /spec/roles/edpm-compute/nodeTemplate/ansibleVars/growvols_args
+      path: /spec/nodeTemplate/ansible/ansibleVars/growvols_args
       value: '/=8GB /tmp=1GB /home=1GB /var=80%'
 
 EOF
@@ -134,7 +134,7 @@ EOF
 if [ "$EDPM_ROOT_PASSWORD_SECRET" != "" ]; then
 cat <<EOF >>kustomization.yaml
     - op: add
-      path: /spec/roles/edpm-compute/baremetalSetTemplate/passwordSecret
+      path: /spec/baremetalSetTemplate/passwordSecret
       value:
         name: ${EDPM_ROOT_PASSWORD_SECRET}
         namespace: ${NAMESPACE}
