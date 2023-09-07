@@ -18,7 +18,7 @@ set -ex
 NAMESPACE=${NAMESPACE:-"openstack"}
 DEPLOY_DIR=${DEPLOY_DIR:-"../out/edpm"}
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-NODE_COUNT=${NODE_COUNT:-2}
+NODE_COUNT=${NODE_COUNT:-1}
 NETWORK_IPADDRESS=${BMAAS_NETWORK_IPADDRESS:-192.168.122.1}
 BMH_CR_FILE=${BMH_CR_FILE:-bmh_deploy.yaml}
 OPERATOR_DIR=${OPERATOR_DIR:-../out/operator}
@@ -54,12 +54,6 @@ patches:
 - target:
     kind: OpenStackDataPlaneNodeSet
   patch: |-
-$(if [[ $NODE_COUNT -eq 1 ]]; then
-cat <<SECOND_NODE_EOF
-    - op: remove
-      path: /spec/nodes/edpm-compute-1
-SECOND_NODE_EOF
-fi)
     - op: replace
       path: /spec/deployStrategy/deploy
       value: ${EDPM_DEPLOY_STRATEGY_DEPLOY}
@@ -130,6 +124,19 @@ fi)
       value: '/=8GB /tmp=1GB /home=1GB /var=80%'
 
 EOF
+
+if [ "$NODE_COUNT" -gt 1 ]; then
+    for INDEX in $(seq 1 $((${NODE_COUNT} -1))) ; do
+ cat <<EOF >> kustomization.yaml
+     - op: copy
+      from: /spec/nodeTemplate/nodes/edpm-compute-0
+      path: /spec/nodeTemplate/nodes/edpm-compute-${INDEX}
+    - op: replace
+      path: /spec/nodeTemplate/nodes/edpm-compute-${INDEX}/hostName
+      value: edpm-compute-${INDEX}
+EOF
+    done
+fi
 
 if [ "$EDPM_ROOT_PASSWORD_SECRET" != "" ]; then
 cat <<EOF >>kustomization.yaml
