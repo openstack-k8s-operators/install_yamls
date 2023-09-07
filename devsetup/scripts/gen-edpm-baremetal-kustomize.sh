@@ -54,12 +54,6 @@ patches:
 - target:
     kind: OpenStackDataPlaneNodeSet
   patch: |-
-$(if [[ $NODE_COUNT -eq 1 ]]; then
-cat <<SECOND_NODE_EOF
-    - op: remove
-      path: /spec/nodes/edpm-compute-1
-SECOND_NODE_EOF
-fi)
     - op: replace
       path: /spec/deployStrategy/deploy
       value: ${EDPM_DEPLOY_STRATEGY_DEPLOY}
