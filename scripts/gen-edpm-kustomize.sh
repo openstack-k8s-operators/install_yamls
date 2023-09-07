@@ -73,8 +73,9 @@ patches:
     - op: replace
       path: /spec/nodeTemplate/nodes/edpm-compute-0/ansible/ansibleHost
       value: ${EDPM_COMPUTE_IP}
-    - op: remove
-      path: /spec/nodeTemplate/nodes/edpm-compute-0/ansible/ansibleVars
+    - op: replace
+      path: /spec/nodeTemplate/nodes/edpm-compute-0/ansible/ansibleVars/ctlplane_ip
+      value: ${EDPM_COMPUTE_IP}
     - op: replace
       path: /spec/nodeTemplate/nodes/edpm-compute-0/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
