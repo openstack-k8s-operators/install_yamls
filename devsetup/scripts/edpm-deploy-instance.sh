@@ -36,7 +36,7 @@ openstack compute service list
 openstack network agent list
 
 # Create an instance
-openstack server create --flavor m1.small --image cirros --nic net-id=private test
+openstack server create --flavor m1.small --image cirros --nic net-id=private test --wait
 openstack floating ip create public --floating-ip-address 192.168.122.20
 openstack server add floating ip test 192.168.122.20
 openstack server list
