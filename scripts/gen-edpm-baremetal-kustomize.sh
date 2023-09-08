@@ -107,8 +107,7 @@ patches:
         - ${EDPM_CHRONY_NTP_SERVER}
     - op: add
       path: /spec/nodeTemplate/ansible/ansibleVars/edpm_network_config_template
-      value:
-       template: ${EDPM_NETWORK_CONFIG_TEMPLATE}
+      value: ${EDPM_NETWORK_CONFIG_TEMPLATE}
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_dbs
       value: ${EDPM_OVN_DBS}
