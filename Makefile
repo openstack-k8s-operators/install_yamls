@@ -637,7 +637,7 @@ edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install th
 	DEPLOY_DIR=${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services KIND=OpenStackDataPlaneService bash scripts/gen-edpm-services-kustomize.sh
 	oc kustomize ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services | oc apply -f -
 	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
-	cp ${DATAPLANE_BAREMETAL_CR} ${DEPLOY_DIR}
+	cp ${DATAPLANE_NODESET_BAREMETAL_CR} ${DEPLOY_DIR}
 	bash scripts/gen-edpm-baremetal-kustomize.sh
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
 
