@@ -200,11 +200,11 @@ standalone_revert: ## Revert standalone snapshot
 
 .PHONY: cifmw_prepare
 cifmw_prepare: ## Clone the ci-framework repository in the ci-framework directory. That location is ignored from git.
-	git clone https://github.com/openstack-k8s-operators/ci-framework ci-framework
+	git clone https://github.com/openstack-k8s-operators/ci-framework $HOME/ci-framework
 
 .PHONY: cifmw_cleanup
 cifmw_cleanup: ## Clean ci-framework git clone
-	${CLEANUP_DIR_CMD} ci-framework
+	${CLEANUP_DIR_CMD} $HOME/ci-framework
 
 ##@ BMaaS/Ironic
 .PHONY: bmaas_network
