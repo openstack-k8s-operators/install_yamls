@@ -23,6 +23,6 @@ spec:
             pushd repo-setup-main
             python3 -m venv ./venv
             PBR_VERSION=0.0.0 ./venv/bin/pip install ./
-            ./venv/bin/repo-setup current-podified-dev
+            ./venv/bin/repo-setup current-podified -b antelope
             popd
             rm -rf repo-setup-main
