@@ -83,13 +83,13 @@ EOF
 }
 
 function cleanup {
-    oc delete osdpnodeset/openstack-edpm --ignore-not-found=true || true
-    oc delete openstackdataplaneservice --all --ignore-not-found=true || true
+    oc delete --all openstackdataplanenodeset --ignore-not-found=true || true
+    oc delete --all openstackdataplaneservice --ignore-not-found=true || true
     while oc get bmh | grep -q -e "deprovisioning" -e "provisioned"; do
         sleep 5
     done || true
     oc delete --all bmh --ignore-not-found=true || true
-    oc delete openstackprovisionserver/openstackprovisionserver --ignore-not-found=true || true
+    oc delete --all openstackprovisionserver --ignore-not-found=true || true
 }
 
 case "$1" in
