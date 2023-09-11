@@ -141,8 +141,8 @@ patches:
 EOF
 if oc get pvc ansible-ee-logs -n ${NAMESPACE} 2>&1 1>/dev/null; then
 cat <<EOF >>kustomization.yaml
-    - op: replace
-      path: /spec/nodeTemplate/extraMounts
+    - op: add
+      path: /spec/nodeTemplate/extraMounts/0
       value:
         - extraVolType: Logs
           volumes:
