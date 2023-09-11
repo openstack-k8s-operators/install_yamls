@@ -24,7 +24,7 @@ OUTPUT_DIR=${OUTPUT_DIR:-"${SCRIPTPATH}/../../out/edpm/"}
 SSH_KEY_FILE=${SSH_KEY_FILE:-"${OUTPUT_DIR}/ansibleee-ssh-key-id_rsa"}
 SSH_OPT="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $SSH_KEY_FILE"
 CMDS_FILE=${CMDS_FILE:-"/tmp/edpm_compute_repos"}
-REPO_SETUP_CMD=${REPO_SETUP_CMD:-"current-podified-dev"}
+REPO_SETUP_CMD=${REPO_SETUP_CMD:-"current-podified -b antelope"}
 CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD:-"rm -Rf"}
 
 if [[ ! -f $SSH_KEY_FILE ]]; then
