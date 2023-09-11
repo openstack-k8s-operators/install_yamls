@@ -86,6 +86,9 @@ patches:
           subnetName: subnet1
         - name: Tenant
           subnetName: subnet1
+    - op: add
+      path: /spec/services/0
+      value: repo-setup
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/edpm_ovn_metadata_agent_DEFAULT_transport_url
       value: ${EDPM_OVN_METADATA_AGENT_TRANSPORT_URL}

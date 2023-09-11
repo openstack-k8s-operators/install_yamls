@@ -67,12 +67,9 @@ oc login -u kubeadmin -p 12345678 https://api.crc.testing:6443
 make crc_attach_default_interface
 ```
 
-* create edpm node
+* create edpm nodes
 ```bash
-EDPM_COMPUTE_SUFFIX=0 make edpm_compute
-EDPM_COMPUTE_SUFFIX=1 make edpm_compute
-EDPM_COMPUTE_SUFFIX=0 make edpm_compute_repos
-EDPM_COMPUTE_SUFFIX=1 make edpm_compute_repos
+EDPM_TOTAL_NODES=2 make edpm_compute
 ```
 
 * create dependencies
@@ -141,7 +138,7 @@ oc delete pod -l service=nova-scheduler
 * deploy edpm compute
 ```bash
 # To use a NTP server other than the ntp.pool.org default one, override the DATAPLANE_CHRONY_NTP_SERVER variable
-make edpm_deploy
+DATAPLANE_TOTAL_NODES=2 make edpm_deploy
 ```
 
 * wait until finished, then can check the env

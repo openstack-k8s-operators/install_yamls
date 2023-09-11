@@ -18,6 +18,7 @@ spec:
         - name: Enable podified-repos
           become: true
           ansible.builtin.shell: |
+            set -euxo pipefail
             pushd /var/tmp
             curl -sL https://github.com/openstack-k8s-operators/repo-setup/archive/refs/heads/main.tar.gz | tar -xz
             pushd repo-setup-main
