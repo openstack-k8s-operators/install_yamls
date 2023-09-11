@@ -16,8 +16,17 @@
 set -ex
 
 # Create Image
-curl -L -o /tmp/cirros.img http://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img
-openstack image create --container-format bare --disk-format qcow2 --file /tmp/cirros.img cirros
+IMG=cirros-0.5.2-x86_64-disk.img
+URL=http://download.cirros-cloud.net/0.5.2/$IMG
+DISK_FORMAT=qcow2
+RAW=$IMG
+curl -L -# $URL > /tmp/$IMG
+if type qemu-img >/dev/null 2>&1; then
+    RAW=$(echo $IMG | sed s/img/raw/g)
+    qemu-img convert -f qcow2 -O raw /tmp/$IMG /tmp/$RAW
+    DISK_FORMAT=raw
+fi
+openstack image create --container-format bare --disk-format $DISK_FORMAT cirros < /tmp/$RAW
 
 # Create flavor
 openstack flavor create --ram 512 --vcpus 1 --disk 1 --ephemeral 1 m1.small
