@@ -73,12 +73,8 @@ patches:
     - op: replace
       path: /spec/nodeTemplate/nodes/edpm-compute-0/ansible/ansibleHost
       value: ${EDPM_COMPUTE_IP}
-    - op: replace
-      path: /spec/nodeTemplate/nodes/edpm-compute-0/ansible/ansibleVars/ctlplane_ip
-      value: ${EDPM_COMPUTE_IP}
-    - op: replace
-      path: /spec/nodeTemplate/nodes/edpm-compute-0/ansibleSSHPrivateKeySecret
-      value: ${EDPM_ANSIBLE_SECRET}
+    - op: remove
+      path: /spec/nodeTemplate/nodes/edpm-compute-0/ansible/ansibleVars
     - op: replace
       path: /spec/nodeTemplate/nodes/edpm-compute-0/networks
       value:
@@ -179,9 +175,6 @@ cat <<EOF >>kustomization.yaml
           subnetName: subnet1
         - name: Tenant
           subnetName: subnet1
-    - op: replace
-      path: /spec/nodeTemplate/nodes/edpm-compute-${INDEX}/ansibleSSHPrivateKeySecret
-      value: ${EDPM_ANSIBLE_SECRET}
 EOF
     done
 fi

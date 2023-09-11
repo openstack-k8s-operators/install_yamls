@@ -58,17 +58,8 @@ patches:
       path: /spec/deployStrategy/deploy
       value: ${EDPM_DEPLOY_STRATEGY_DEPLOY}
     - op: add
-      path: /spec/services
-      value:
-        - repo-setup
-        - configure-network
-        - validate-network
-        - install-os
-        - configure-os
-        - run-os
-        - ovn
-        - libvirt
-        - nova
+      path: /spec/services/0
+      value: repo-setup
     - op: replace
       path: /spec/baremetalSetTemplate/bmhNamespace
       value: ${NAMESPACE}
