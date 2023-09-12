@@ -144,7 +144,7 @@ GLANCE                  ?= config/samples/glance_v1beta1_glance.yaml
 GLANCE_CR               ?= ${OPERATOR_BASE_DIR}/glance-operator/${GLANCE}
 GLANCEAPI_DEPL_IMG      ?= unused
 GLANCE_KUTTL_CONF       ?= ${OPERATOR_BASE_DIR}/glance-operator/kuttl-test.yaml
-GLANCE_KUTTL_DIR        ?= ${OPERATOR_BASE_DIR}/glance-operator/tests/kuttl/tests
+GLANCE_KUTTL_DIR        ?= ${OPERATOR_BASE_DIR}/glance-operator/test/kuttl/tests
 GLANCE_KUTTL_NAMESPACE  ?= glance-kuttl-tests
 
 # Ovn
@@ -182,7 +182,7 @@ CINDER                 ?= config/samples/cinder_v1beta1_cinder.yaml
 CINDER_CR              ?= ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
 # TODO: Image customizations for all Cinder services
 CINDER_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/cinder-operator/kuttl-test.yaml
-CINDER_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/cinder-operator/tests/kuttl/tests
+CINDER_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/cinder-operator/test/kuttl/tests
 CINDER_KUTTL_NAMESPACE ?= cinder-kuttl-tests
 
 # RabbitMQ
