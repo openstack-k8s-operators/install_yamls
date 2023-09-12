@@ -1973,6 +1973,7 @@ certmanager: ## installs cert-manager operator in the cert-manager-operator name
 	while ! (oc get pod --no-headers=true -l app=cert-manager -n ${NAMESPACE} | grep "cert-manager"); do sleep 10; done
 	oc wait pod -n ${NAMESPACE} -l app=cert-manager --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
 
+.PHONY: certmanager_cleanup
 certmanager_cleanup: export NAMESPACE=$(if $(findstring 4.10,$(OCP_RELEASE)),openshift-cert-manager,cert-manager)
 certmanager_cleanup: export OPERATOR_NAMESPACE=$(if $(findstring 4.10,$(OCP_RELEASE)),openshift-cert-manager-operator,cert-manager-operator)
 certmanager_cleanup:
