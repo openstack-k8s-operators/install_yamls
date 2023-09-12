@@ -316,7 +316,7 @@ MANILA                  ?= config/samples/manila_v1beta1_manila.yaml
 MANILA_CR               ?= ${OPERATOR_BASE_DIR}/manila-operator/${MANILA}
 # TODO: Image customizations for all Manila services
 MANILA_KUTTL_CONF       ?= ${OPERATOR_BASE_DIR}/manila-operator/kuttl-test.yaml
-MANILA_KUTTL_DIR        ?= ${OPERATOR_BASE_DIR}/manila-operator/tests/kuttl/tests
+MANILA_KUTTL_DIR        ?= ${OPERATOR_BASE_DIR}/manila-operator/test/kuttl/tests
 MANILA_KUTTL_NAMESPACE  ?= manila-kuttl-tests
 
 # Ceph
