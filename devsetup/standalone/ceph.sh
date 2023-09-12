@@ -66,6 +66,7 @@ sudo openstack overcloud ceph deploy \
     --mon-ip $CEPH_IP \
     --ceph-spec $HOME/ceph_spec.yaml \
     --config $HOME/initial_ceph.conf \
+    --container-image-prepare $HOME/containers-prepare-parameters.yaml \
     --standalone \
     --single-host-defaults \
     --skip-hosts-config \
