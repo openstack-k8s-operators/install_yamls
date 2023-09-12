@@ -65,9 +65,6 @@ patches:
     kind: ${KIND}
   patch: |-
     - op: replace
-      path: /spec/deployStrategy/deploy
-      value: true
-    - op: replace
       path: /spec/preProvisioned
       value: true
     - op: replace
