@@ -120,10 +120,10 @@ if [ "$NODE_COUNT" -gt 1 ]; then
     for INDEX in $(seq 1 $((${NODE_COUNT} -1))) ; do
  cat <<EOF >> kustomization.yaml
      - op: copy
-      from: /spec/nodeTemplate/nodes/edpm-compute-0
-      path: /spec/nodeTemplate/nodes/edpm-compute-${INDEX}
+      from: /spec/nodes/edpm-compute-0
+      path: /spec/nodes/edpm-compute-${INDEX}
     - op: replace
-      path: /spec/nodeTemplate/nodes/edpm-compute-${INDEX}/hostName
+      path: /spec/nodes/edpm-compute-${INDEX}/hostName
       value: edpm-compute-${INDEX}
 EOF
     done
