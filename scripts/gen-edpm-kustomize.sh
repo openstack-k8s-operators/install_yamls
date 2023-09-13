@@ -134,6 +134,9 @@ patches:
     - op: replace
       path: /spec/nodeTemplate/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
+    - op: replace
+      path: /spec/nodeTemplate/ansible/ansibleUser
+      value: ${EDPM_ANSIBLE_USER:-"cloud-admin"}
 EOF
 if oc get pvc ansible-ee-logs -n ${NAMESPACE} 2>&1 1>/dev/null; then
 cat <<EOF >>kustomization.yaml
@@ -177,13 +180,6 @@ cat <<EOF >>kustomization.yaml
           subnetName: subnet1
 EOF
     done
-fi
-if [ ! -z "$EDPM_ANSIBLE_USER" ]; then
-cat <<EOF >>kustomization.yaml
-    - op: replace
-      path: /spec/nodeTemplate/ansible/ansibleUser
-      value: ${EDPM_ANSIBLE_USER}
-EOF
 fi
 
 kustomization_add_resources

@@ -129,6 +129,9 @@ patches:
     - op: replace
       path: /spec/nodeTemplate/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
+    - op: replace
+      path: /spec/nodeTemplate/ansible/ansibleUser
+      value: ${EDPM_ANSIBLE_USER:-"cloud-admin"}
 EOF
 if [ "$EDPM_ROOT_PASSWORD_SECRET" != "" ]; then
 cat <<EOF >>kustomization.yaml
@@ -164,13 +167,6 @@ cat <<EOF >>kustomization.yaml
       value: edpm-compute-${INDEX}
 EOF
     done
-fi
-if [ ! -z "$EDPM_ANSIBLE_USER" ]; then
-cat <<EOF >>kustomization.yaml
-    - op: replace
-      path: /spec/nodeTemplate/ansible/ansibleUser
-      value: ${EDPM_ANSIBLE_USER}
-EOF
 fi
 
 kustomization_add_resources
