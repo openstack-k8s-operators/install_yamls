@@ -71,12 +71,12 @@ patches:
       path: /spec/preProvisioned
       value: true
     - op: replace
-      path: /spec/nodeTemplate/nodes/edpm-compute-0/ansible/ansibleHost
+      path: /spec/nodes/edpm-compute-0/ansible/ansibleHost
       value: ${EDPM_COMPUTE_IP}
     - op: remove
-      path: /spec/nodeTemplate/nodes/edpm-compute-0/ansible/ansibleVars
+      path: /spec/nodes/edpm-compute-0/ansible/ansibleVars
     - op: replace
-      path: /spec/nodeTemplate/nodes/edpm-compute-0/networks
+      path: /spec/nodes/edpm-compute-0/networks
       value:
         - name: CtlPlane
           subnetName: subnet1
@@ -154,16 +154,16 @@ if [ "$EDPM_TOTAL_NODES" -gt 1 ]; then
     for INDEX in $(seq 1 $((${EDPM_TOTAL_NODES} -1))) ; do
 cat <<EOF >>kustomization.yaml
     - op: copy
-      from: /spec/nodeTemplate/nodes/edpm-compute-0
-      path: /spec/nodeTemplate/nodes/edpm-compute-${INDEX}
+      from: /spec/nodes/edpm-compute-0
+      path: /spec/nodes/edpm-compute-${INDEX}
     - op: replace
-      path: /spec/nodeTemplate/nodes/edpm-compute-${INDEX}/ansible/ansibleHost
+      path: /spec/nodes/edpm-compute-${INDEX}/ansible/ansibleHost
       value: 192.168.122.$((100+${INDEX}))
     - op: replace
-      path: /spec/nodeTemplate/nodes/edpm-compute-${INDEX}/hostName
+      path: /spec/nodes/edpm-compute-${INDEX}/hostName
       value: edpm-compute-${INDEX}
     - op: add
-      path: /spec/nodeTemplate/nodes/edpm-compute-${INDEX}/networks
+      path: /spec/nodes/edpm-compute-${INDEX}/networks
       value:
         - name: CtlPlane
           subnetName: subnet1
