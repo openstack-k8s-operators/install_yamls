@@ -7,6 +7,7 @@ PASSWORD                 ?= 12345678
 SECRET                   ?= osp-secret
 OUT                      ?= ${PWD}/out
 TIMEOUT                  ?= 300s
+BAREMETAL_TIMEOUT        ?= 20m
 DBSERVICE           ?= galera
 ifeq ($(DBSERVICE), galera)
 DBSERVICE_CONTAINER = openstack-galera-0
@@ -645,6 +646,12 @@ edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install th
 edpm_deploy_baremetal: input edpm_deploy_baremetal_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,dataplane))
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+
+.PHONY: edpm_wait_deploy_baremetal
+edpm_wait_deploy_baremetal: edpm_deploy_baremetal ## waits for dataplane readiness. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,dataplane))
+	oc kustomize ${DEPLOY_DIR} | oc wait --for condition=Ready --timeout=$(BAREMETAL_TIMEOUT) -f -
+	$(MAKE) edpm_nova_discover_hosts
 
 .PHONY: edpm_wait_deploy
 edpm_wait_deploy: edpm_deploy ## waits for dataplane readiness. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
