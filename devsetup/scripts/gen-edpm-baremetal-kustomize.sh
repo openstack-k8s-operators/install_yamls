@@ -113,6 +113,12 @@ patches:
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/growvols_args
       value: '/=8GB /tmp=1GB /home=1GB /var=80%'
+    - op: replace
+      path: /spec/nodeTemplate/ansible/ansibleUser
+      value: ${EDPM_ANSIBLE_USER:-"cloud-admin"}
+    - op: replace
+      path: /spec/baremetalSetTemplate/cloudUserName
+      value: ${EDPM_ANSIBLE_USER:-"cloud-admin"}
 
 EOF
 

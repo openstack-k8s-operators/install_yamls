@@ -132,6 +132,10 @@ patches:
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleUser
       value: ${EDPM_ANSIBLE_USER:-"cloud-admin"}
+    - op: replace
+      path: /spec/baremetalSetTemplate/cloudUserName
+      value: ${EDPM_ANSIBLE_USER:-"cloud-admin"}
+
 EOF
 if [ "$EDPM_ROOT_PASSWORD_SECRET" != "" ]; then
 cat <<EOF >>kustomization.yaml
