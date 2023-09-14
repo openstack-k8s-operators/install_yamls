@@ -130,15 +130,16 @@ Wait for the ctlplane to be up.
 
 At this point the ctlplane is deployed with the services using isolated networks as specified in the CR sample.
 
-* need to restart nova-scheduler to pick up cell1, this is a known issue
-```bash
-oc delete pod -l service=nova-scheduler
-```
-
 * deploy edpm compute
 ```bash
 # To use a NTP server other than the ntp.pool.org default one, override the DATAPLANE_CHRONY_NTP_SERVER variable
-DATAPLANE_TOTAL_NODES=2 make edpm_deploy
+DATAPLANE_TOTAL_NODES=2 make edpm_wait_deploy
+```
+Note: if you used the `edpm_deploy` target to start the deployment then after
+the compute services are visible in `openstack compute service list` you need
+to manually run host discovery:
+```bash
+make edpm_nova_discover_hosts
 ```
 
 * wait until finished, then can check the env
