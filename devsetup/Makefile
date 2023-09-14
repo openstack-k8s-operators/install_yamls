@@ -32,7 +32,7 @@ DATAPLANE_SSHD_ALLOWED_RANGES ?=['192.168.122.0/24']
 DATAPLANE_NETWORK_CONFIG_TEMPLATE ?=templates/single_nic_vlans/single_nic_vlans.j2
 DATAPLANE_DEPLOY_STRATEGY_DEPLOY ?= false
 DATAPLANE_CUSTOM_SERVICE_RUNNER_IMG ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
-
+DATAPLANE_ANSIBLE_USER     ?=
 BM_PROVISIONING_INTERFACE  ?=enp6s0
 BM_NETWORK_NAME            ?=default
 BM_NETWORK_IPADDRESS       ?=192.168.122.1
@@ -103,6 +103,7 @@ crc_attach_default_interface_cleanup: ## Detach default libvirt network from CRC
 .PHONY: edpm_baremetal
 edpm_baremetal: export PROVISIONING_INTERFACE=${BM_PROVISIONING_INTERFACE}
 edpm_baremetal: export OPERATOR_NAME=openstack
+edpm_baremetal: export EDPM_ANSIBLE_USER=${DATAPLANE_ANSIBLE_USER}
 edpm_baremetal: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
 edpm_baremetal: export BMAAS_NETWORK_IPADDRESS=${BM_NETWORK_IPADDRESS}
 edpm_baremetal: export EDPM_NETWORK_CONFIG_TEMPLATE=${DATAPLANE_NETWORK_CONFIG_TEMPLATE}
