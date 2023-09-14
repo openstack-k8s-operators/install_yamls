@@ -612,7 +612,7 @@ edpm_deploy: input edpm_deploy_prep ## installs the dataplane instance using kus
 .PHONY: edpm_deploy_baremetal_prep
 edpm_deploy_baremetal_prep: export KIND=OpenStackDataPlaneNodeSet
 edpm_deploy_baremetal_prep: export EDPM_ANSIBLE_SECRET=${DATAPLANE_ANSIBLE_SECRET}
-edpm_deploy_baremetal_prep: export EDPM_ANSIBLE_USER=cloud-admin
+edpm_deploy_baremetal_prep: export EDPM_ANSIBLE_USER=${DATAPLANE_ANSIBLE_USER}
 edpm_deploy_baremetal_prep: export EDPM_BMH_NAMESPACE=${BMH_NAMESPACE}
 edpm_deploy_baremetal_prep: export EDPM_PROVISIONING_INTERFACE=${BMO_PROVISIONING_INTERFACE}
 edpm_deploy_baremetal_prep: export EDPM_CTLPLANE_INTERFACE=${BM_CTLPLANE_INTERFACE}
