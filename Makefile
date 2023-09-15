@@ -1921,6 +1921,7 @@ telemetry_deploy_cleanup: ## cleans up the service instance, Does not affect the
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/telemetry-operator ${DEPLOY_DIR}
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/ceilometer-operator ${DEPLOY_DIR}
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "flush tables; drop database if exists aodh;" || true
 
 
 ##@ SWIFT
