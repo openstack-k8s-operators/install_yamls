@@ -24,8 +24,11 @@ OPERATOR_DIR=${OPERATOR_DIR:-../out/operator}
 DATAPLANE_REPO=${DATAPLANE_REPO:-https://github.com/openstack-k8s-operators/dataplane-operator.git}
 DATAPLANE_BRANCH=${DATAPLANE_BRANCH:-main}
 OPENSTACK_DATAPLANENODESET_BAREMETAL=${OPENSTACK_DATAPLANENODESET_BAREMETAL:-config/samples/dataplane_v1beta1_openstackdataplanenodeset_baremetal_with_ipam.yaml}
+OPENSTACK_DATAPLANEDEPLOYMENT_BAREMETAL=${OPENSTACK_DATAPLANEDEPLOYMENT_BAREMETAL:-config/samples/dataplane_v1beta1_openstackdataplanedeployment_baremetal_with_ipam.yaml}
 DATAPLANE_NODESET_BAREMETAL_CR=${OPERATOR_DIR}/dataplane-operator/${OPENSTACK_DATAPLANENODESET_BAREMETAL}
+DATAPLANE_DEPLOYMENT_BAREMETAL_CR=${OPERATOR_DIR}/dataplane-operator/${OPENSTACK_DATAPLANEDEPLOYMENT_BAREMETAL}
 DATAPLANE_NODESET_CR_FILE=${DATAPLANE_NODESET_CR_FILE:-dataplanenodeset.yaml}
+DATAPLANE_DEPLOYMENT_CR_FILE=${DATAPLANE_DEPLOYMENT_CR_FILE:-dataplanedeployment.yaml}
 GIT_CLONE_OPTS=${GIT_CLONE_OPTS:-}
 
 mkdir -p ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -38,6 +41,7 @@ NAMESPACE=${NAMESPACE} DEPLOY_DIR=${OPERATOR_DIR}/dataplane-operator/config/serv
 oc kustomize ${OPERATOR_DIR}/dataplane-operator/config/services | oc apply -f -
 oc apply -f ${SCRIPTPATH}/../edpm/config/ansible-ee-env.yaml
 cp  ${OPERATOR_DIR}/dataplane-operator/${OPENSTACK_DATAPLANENODESET_BAREMETAL} ${DEPLOY_DIR}/${DATAPLANE_NODESET_CR_FILE}
+cp  ${OPERATOR_DIR}/dataplane-operator/${OPENSTACK_DATAPLANEDEPLOYMENT_BAREMETAL} ${DEPLOY_DIR}/${DATAPLANE_DEPLOYMENT_CR_FILE}
 
 pushd ${DEPLOY_DIR}
 
@@ -48,6 +52,7 @@ kind: Kustomization
 resources:
   - ${BMH_CR_FILE}
   - ${DATAPLANE_NODESET_CR_FILE}
+  - ${DATAPLANE_DEPLOYMENT_CR_FILE}
 namespace: ${NAMESPACE}
 patches:
 - target:
