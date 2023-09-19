@@ -52,9 +52,6 @@ patches:
 - target:
     kind: ${KIND}
   patch: |-
-    - op: replace
-      path: /spec/deployStrategy/deploy
-      value: true
     - op: add
       path: /spec/baremetalSetTemplate/bmhNamespace
       value: ${EDPM_BMH_NAMESPACE}
