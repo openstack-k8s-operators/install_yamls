@@ -592,12 +592,7 @@ edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data pla
 	oc kustomize ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services | oc apply -f -
 	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
 	cp ${DATAPLANE_NODESET_CR} ${DEPLOY_DIR}
-	# ci-framework does not support multiple yaml files in the kustomize dir.
-	# edpm_kustomize expects to be able to run kustomize again, and kustomize
-	# will fail since the resources from multiple files have already been
-	# added. Just cat the 2 CR's together instead.
-	echo "---" >> ${DEPLOY_DIR}/$(shell basename ${DATAPLANE_NODESET_CR})
-	cat ${DATAPLANE_DEPLOYMENT_CR} >> ${DEPLOY_DIR}/$(shell basename ${DATAPLANE_NODESET_CR})
+	cp ${DATAPLANE_DEPLOYMENT_CR} ${DEPLOY_DIR}
 	bash scripts/gen-edpm-kustomize.sh
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
 
@@ -636,12 +631,7 @@ edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install th
 	oc kustomize ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services | oc apply -f -
 	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
 	cp ${DATAPLANE_NODESET_BAREMETAL_CR} ${DEPLOY_DIR}
-	# ci-framework does not support multiple yaml files in the kustomize dir.
-	# edpm_kustomize expects to be able to run kustomize again, and kustomize
-	# will fail since the resources from multiple files have already been
-	# added. Just cat the 2 CR's together instead.
-	echo "---" >> ${DEPLOY_DIR}/$(shell basename ${DATAPLANE_NODESET_BAREMETAL_CR})
-	cat ${DATAPLANE_DEPLOYMENT_BAREMETAL_CR} >> ${DEPLOY_DIR}/$(shell basename ${DATAPLANE_NODESET_BAREMETAL_CR})
+	cp ${DATAPLANE_DEPLOYMENT_BAREMETAL_CR} ${DEPLOY_DIR}
 	bash scripts/gen-edpm-baremetal-kustomize.sh
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
 
