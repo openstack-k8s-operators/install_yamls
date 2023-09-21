@@ -1489,14 +1489,12 @@ dataplane_kuttl_prep: dataplane_kuttl_cleanup
 
 .PHONY: dataplane_kuttl
 # dataplane must come before dataplane_kuttl_prep since dataplane creates the CRDs
-dataplane_kuttl: input ansibleee infra baremetal nova dataplane namespace dataplane_kuttl_prep operator_namespace ## runs kuttl tests for the openstack-dataplane operator. Installs openstack-dataplane operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+dataplane_kuttl: input ansibleee infra baremetal dataplane namespace dataplane_kuttl_prep operator_namespace ## runs kuttl tests for the openstack-dataplane operator. Installs openstack-dataplane operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,ansibleee))
 	make wait
 	$(eval $(call vars,$@,infra))
 	make wait
 	$(eval $(call vars,$@,openstack-baremetal))
-	make wait
-	$(eval $(call vars,$@,nova))
 	make wait
 	$(eval $(call vars,$@,dataplane))
 	make wait
