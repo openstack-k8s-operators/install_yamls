@@ -17,13 +17,13 @@ set -ex
 
 # Use os-net-config to add VLAN interfaces which connect edpm-compute-0 to the isolated networks configured by install_yamls.
 
-export GATEWAY=192.168.122.1
-export CTLPLANE_IP=192.168.122.100
-export INTERNAL_IP=$(sed -e 's/192.168.122/172.17.0/' <<<"$CTLPLANE_IP")
-export STORAGE_IP=$(sed -e 's/192.168.122/172.18.0/' <<<"$CTLPLANE_IP")
-export STORAGE_MGMT_IP=$(sed -e 's/192.168.122/172.20.0/' <<<"$CTLPLANE_IP")
-export TENANT_IP=$(sed -e 's/192.168.122/172.19.0/' <<<"$CTLPLANE_IP")
-export EXTERNAL_IP=$(sed -e 's/192.168.122/172.21.0/' <<<"$CTLPLANE_IP")
+export GATEWAY=${GATEWAY:-192.168.122.1}
+export CTLPLANE_IP=${IP:-192.168.122.100}
+export INTERNAL_IP=$(sed -e 's/192.168.12[0-9]/172.17.0/' <<<"$CTLPLANE_IP")
+export STORAGE_IP=$(sed -e 's/192.168.12[0-9]/172.18.0/' <<<"$CTLPLANE_IP")
+export STORAGE_MGMT_IP=$(sed -e 's/192.168.12[0-9]/172.20.0/' <<<"$CTLPLANE_IP")
+export TENANT_IP=$(sed -e 's/192.168.12[0-9]/172.19.0/' <<<"$CTLPLANE_IP")
+export EXTERNAL_IP=$(sed -e 's/192.168.12[0-9]/172.21.0/' <<<"$CTLPLANE_IP")
 export INTERFACE_MTU=${INTERFACE_MTU:-1500}
 
 sudo mkdir -p /etc/os-net-config

@@ -11,9 +11,9 @@ parameter_defaults:
   NodePortMap:
     standalone:
       ctlplane:
-        ip_address: 192.168.122.100
-        ip_subnet: 192.168.122.1/24
-        ip_address_uri: 192.168.122.100
+        ip_address: CTLPLANE_IP
+        ip_subnet: CTLPLANE_SUBNET.1/24
+        ip_address_uri: CTLPLANE_IP
       storage:
         ip_address: 172.18.0.100
         ip_subnet: 172.18.0.1/24
@@ -36,11 +36,11 @@ parameter_defaults:
         ip_address_uri: 172.21.0.100
   ControlPlaneVipData:
     fixed_ips:
-    - ip_address: 192.168.122.99
+    - ip_address: CTLPLANE_VIP
     name: control_virtual_ip
     network:
       tags:
-      - 192.168.122.0/24
+      - CTLPLANE_SUBNET.0/24
     subnets:
     - ip_version: 4
   VipPortMap:

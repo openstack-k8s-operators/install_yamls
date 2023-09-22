@@ -164,10 +164,10 @@ cat <<EOF >${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}.xml
 EOF
 
 # Set network variables for firstboot script
-IP="192.168.122.${IP_ADRESS_SUFFIX}"
+IP=${IP:-"192.168.122.${IP_ADRESS_SUFFIX}"}
 NETDEV=eth0
 NETSCRIPT="/etc/sysconfig/network-scripts/ifcfg-${NETDEV}"
-GATEWAY=192.168.122.1
+GATEWAY=${GATEWAY:-192.168.122.1}
 DNS=${DATAPLANE_DNS_SERVER}
 PREFIX=24
 
