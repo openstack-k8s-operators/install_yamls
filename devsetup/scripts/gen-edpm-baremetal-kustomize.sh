@@ -81,7 +81,7 @@ patches:
       value:
         - ${EDPM_CHRONY_NTP_SERVER}
     - op: add
-      path: /spec/nodeTemplate/networkConfig
+      path: /spec/nodeTemplate/ansibleVars/edpm_network_config_template
       value:
         template: ${EDPM_NETWORK_CONFIG_TEMPLATE}
     - op: replace
