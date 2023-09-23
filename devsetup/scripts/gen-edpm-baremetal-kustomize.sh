@@ -58,9 +58,6 @@ patches:
 - target:
     kind: OpenStackDataPlaneNodeSet
   patch: |-
-    - op: replace
-      path: /spec/deployStrategy/deploy
-      value: ${EDPM_DEPLOY_STRATEGY_DEPLOY}
     - op: add
       path: /spec/services/0
       value: repo-setup
