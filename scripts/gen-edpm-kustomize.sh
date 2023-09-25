@@ -76,9 +76,6 @@ patches:
       path: /spec/nodeTemplate/ansible/ansibleVars/edpm_chrony_ntp_servers
       value:
         - ${EDPM_CHRONY_NTP_SERVER}
-    - op: add
-      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_network_config_template
-      value: ${EDPM_NETWORK_CONFIG_TEMPLATE}
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/neutron_public_interface_name
       value: ${EDPM_NETWORK_INTERFACE_NAME}
