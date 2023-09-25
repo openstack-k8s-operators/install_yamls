@@ -23,10 +23,6 @@ if [ -z "$NAMESPACE" ]; then
     echo "Please set NAMESPACE"; exit 1
 fi
 
-if [ -z "$KIND" ]; then
-    echo "Please set SERVICE"; exit 1
-fi
-
 if [ -z "$DEPLOY_DIR" ]; then
     echo "Please set DEPLOY_DIR"; exit 1
 fi
@@ -34,8 +30,6 @@ fi
 if [ -z "$EDPM_BMH_NAMESPACE" ]; then
     echo "Please set EDPM_BMH_NAMESPACE"; exit 1
 fi
-
-NAME=${KIND,,}
 
 if [ ! -d ${DEPLOY_DIR} ]; then
     mkdir -p ${DEPLOY_DIR}
@@ -50,7 +44,7 @@ resources:
 namespace: ${NAMESPACE}
 patches:
 - target:
-    kind: ${KIND}
+    kind: OpenStackDataPlaneNodeSet
   patch: |-
     - op: add
       path: /spec/baremetalSetTemplate/bmhNamespace
@@ -97,6 +91,14 @@ patches:
       value: ${EDPM_ANSIBLE_USER:-"cloud-admin"}
 
 EOF
+
+if [ "$EDPM_GROWVOLS_ARGS" != "" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/nodeTemplate/ansible/ansibleVars/growvols_args
+      value: '${EDPM_GROWVOLS_ARGS}'
+EOF
+fi
 if [ "$EDPM_ROOT_PASSWORD_SECRET" != "" ]; then
 cat <<EOF >>kustomization.yaml
     - op: add
