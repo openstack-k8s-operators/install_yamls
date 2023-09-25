@@ -85,6 +85,7 @@ EOF
 function cleanup {
     oc delete --all openstackdataplanenodeset --ignore-not-found=true || true
     oc delete --all openstackdataplaneservice --ignore-not-found=true || true
+    oc delete --all openstackdataplanedeployment --ignore-not-found=true || true
     while oc get bmh | grep -q -e "deprovisioning" -e "provisioned"; do
         sleep 5
     done || true
