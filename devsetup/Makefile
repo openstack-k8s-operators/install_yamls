@@ -25,6 +25,7 @@ BMAAS_LIBVIRT_USER ?= sushyemu
 
 EDPM_REGISTRY_URL ?= quay.io/podified-antelope-centos9
 EDPM_CONTAINER_TAG ?= current-podified
+DATAPLANE_PLAYBOOK ?= osp.edpm.download_cache
 DATAPLANE_CHRONY_NTP_SERVER ?=pool.ntp.org
 DATAPLANE_SSHD_ALLOWED_RANGES ?=['192.168.122.0/24']
 DATAPLANE_NETWORK_CONFIG_TEMPLATE ?=templates/single_nic_vlans/single_nic_vlans.j2
@@ -145,6 +146,13 @@ edpm_compute: ## Create EDPM compute VM
 			scripts/gen-edpm-compute-node.sh $$INDEX ; \
 		done \
 	fi
+
+.PHONY: edpm_ansible_runner
+edpm_ansible_runner: export EDPM_PLAYBOOK=${DATAPLANE_PLAYBOOK}
+edpm_ansible_runner: export OPENSTACK_RUNNER_IMG=${DATAPLANE_CUSTOM_SERVICE_RUNNER_IMG}
+edpm_ansible_runner: ## Debug edpm-ansible playbooks
+	$(eval $(call vars))
+	scripts/edpm-ansible-runner.sh
 
 .PHONY: edpm_compute_repos
 edpm_compute_repos: ## Configure EDPM compute VM with repositories
