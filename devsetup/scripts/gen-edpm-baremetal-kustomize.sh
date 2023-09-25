@@ -80,10 +80,6 @@ patches:
       path: /spec/nodeTemplate/ansible/ansibleVars/edpm_chrony_ntp_servers
       value:
         - ${EDPM_CHRONY_NTP_SERVER}
-    - op: add
-      path: /spec/nodeTemplate/networkConfig
-      value:
-        template: ${EDPM_NETWORK_CONFIG_TEMPLATE}
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/registry_url
       value: ${REGISTRY_URL}
