@@ -44,23 +44,11 @@ resources:
 namespace: ${NAMESPACE}
 patches:
 - target:
-    kind: OpenStackDataPlaneNodeSet
+    kind: ${KIND}
   patch: |-
     - op: add
       path: /spec/baremetalSetTemplate/bmhNamespace
       value: ${EDPM_BMH_NAMESPACE}
-    - op: add
-      path: /spec/nodeTemplate/networks
-      value:
-        - name: CtlPlane
-          subnetName: subnet1
-          defaultRoute: true
-        - name: InternalApi
-          subnetName: subnet1
-        - name: Storage
-          subnetName: subnet1
-        - name: Tenant
-          subnetName: subnet1
     - op: add
       path: /spec/services/0
       value: repo-setup
