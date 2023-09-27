@@ -287,6 +287,7 @@ BMH_NAMESPACE       ?= ${NAMESPACE}
 DATAPLANE_IMG                                    ?= quay.io/openstack-k8s-operators/dataplane-operator-index:latest
 DATAPLANE_REPO                                   ?= https://github.com/openstack-k8s-operators/dataplane-operator.git
 DATAPLANE_BRANCH                                 ?= main
+DATAPLANE_TIMEOUT                                ?= 20m
 OPENSTACK_DATAPLANENODESET                       ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset.yaml
 OPENSTACK_DATAPLANENODESET_BAREMETAL             ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset_baremetal_with_ipam.yaml
 OPENSTACK_DATAPLANEDEPLOYMENT		             ?= config/samples/dataplane_v1beta1_openstackdataplanedeployment.yaml
@@ -659,7 +660,7 @@ edpm_wait_deploy_baremetal: edpm_deploy_baremetal ## waits for dataplane readine
 .PHONY: edpm_wait_deploy
 edpm_wait_deploy: edpm_deploy ## waits for dataplane readiness. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,dataplane))
-	oc kustomize ${DEPLOY_DIR} | oc wait --for condition=Ready --timeout=$(TIMEOUT) -f -
+	oc kustomize ${DEPLOY_DIR} | oc wait --for condition=Ready --timeout=$(DATAPLANE_TIMEOUT) -f -
 	$(MAKE) edpm_nova_discover_hosts
 
 .PHONY: edpm_register_dns
