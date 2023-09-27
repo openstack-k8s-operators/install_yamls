@@ -18,7 +18,7 @@ set -ex
 NAMESPACE=${NAMESPACE:-"openstack"}
 DEPLOY_DIR=${DEPLOY_DIR:-"../out/edpm"}
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-NODE_COUNT=${NODE_COUNT:-1}
+EDPM_TOTAL_NODES=${EDPM_TOTAL_NODES:-1}
 BMH_CR_FILE=${BMH_CR_FILE:-bmh_deploy.yaml}
 OPERATOR_DIR=${OPERATOR_DIR:-../out/operator}
 DATAPLANE_REPO=${DATAPLANE_REPO:-https://github.com/openstack-k8s-operators/dataplane-operator.git}
@@ -59,39 +59,30 @@ patches:
     kind: OpenStackDataPlaneNodeSet
   patch: |-
     - op: add
+      path: /spec/baremetalSetTemplate/bmhNamespace
+      value: ${EDPM_BMH_NAMESPACE}
+    - op: add
       path: /spec/services/0
       value: repo-setup
-    - op: replace
-      path: /spec/baremetalSetTemplate/bmhNamespace
-      value: ${NAMESPACE}
-    - op: replace
-      path: /spec/baremetalSetTemplate/ctlplaneInterface
-      value: enp1s0
-    - op: add
-      path: /spec/baremetalSetTemplate/provisioningInterface
-      value: ${PROVISIONING_INTERFACE}
-    - op: add
-      path: /spec/env/0
-      value: {"name": "ANSIBLE_CALLBACKS_ENABLED", "value": "profile_tasks"}
-    - op: add
-      path: /spec/nodeTemplate/ansibleSSHPrivateKeySecret
-      value: dataplane-ansible-ssh-private-key-secret
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/edpm_chrony_ntp_servers
       value:
         - ${EDPM_CHRONY_NTP_SERVER}
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/registry_url
-      value: ${REGISTRY_URL}
+      value: ${EDPM_REGISTRY_URL}
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/image_tag
-      value: ${CONTAINER_TAG}
+      value: ${EDPM_CONTAINER_TAG}
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/edpm_sshd_allowed_ranges
       value: ${EDPM_SSHD_ALLOWED_RANGES}
+    - op: add
+      path: /spec/env/0
+      value: {"name": "ANSIBLE_CALLBACKS_ENABLED", "value": "profile_tasks"}
     - op: replace
-      path: /spec/nodeTemplate/ansible/ansibleVars/growvols_args
-      value: '/=8GB /tmp=1GB /home=1GB /var=80%'
+      path: /spec/nodeTemplate/ansibleSSHPrivateKeySecret
+      value: ${EDPM_ANSIBLE_SECRET}
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleUser
       value: ${EDPM_ANSIBLE_USER:-"cloud-admin"}
@@ -101,9 +92,39 @@ patches:
 
 EOF
 
-if [ "$NODE_COUNT" -gt 1 ]; then
-    for INDEX in $(seq 1 $((${NODE_COUNT} -1))) ; do
- cat <<EOF >> kustomization.yaml
+if [ "$EDPM_GROWVOLS_ARGS" != "" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/nodeTemplate/ansible/ansibleVars/growvols_args
+      value: '${EDPM_GROWVOLS_ARGS}'
+EOF
+fi
+if [ "$EDPM_ROOT_PASSWORD_SECRET" != "" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/baremetalSetTemplate/passwordSecret
+      value:
+        name: ${EDPM_ROOT_PASSWORD_SECRET}
+        namespace: ${NAMESPACE}
+EOF
+fi
+if [ "$EDPM_PROVISIONING_INTERFACE" != "" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/baremetalSetTemplate/provisioningInterface
+      value: ${EDPM_PROVISIONING_INTERFACE}
+EOF
+fi
+if [ "$EDPM_CTLPLANE_INTERFACE" != "" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/baremetalSetTemplate/ctlplaneInterface
+      value: ${EDPM_CTLPLANE_INTERFACE}
+EOF
+fi
+if [ "$EDPM_TOTAL_NODES" -gt 1 ]; then
+    for INDEX in $(seq 1 $((${EDPM_TOTAL_NODES} -1))) ; do
+cat <<EOF >>kustomization.yaml
     - op: copy
       from: /spec/nodes/edpm-compute-0
       path: /spec/nodes/edpm-compute-${INDEX}
@@ -114,14 +135,5 @@ EOF
     done
 fi
 
-if [ "$EDPM_ROOT_PASSWORD_SECRET" != "" ]; then
-cat <<EOF >>kustomization.yaml
-    - op: add
-      path: /spec/baremetalSetTemplate/passwordSecret
-      value:
-        name: ${EDPM_ROOT_PASSWORD_SECRET}
-        namespace: ${NAMESPACE}
-EOF
-fi
 
 popd

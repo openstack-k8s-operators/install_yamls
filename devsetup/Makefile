@@ -23,20 +23,23 @@ BMAAS_REDFISH_PASSWORD ?= password
 BMAAS_SUSHY_EMULATOR_NAMESPACE ?= sushy-emulator
 BMAAS_LIBVIRT_USER ?= sushyemu
 
-EDPM_REGISTRY_URL ?= quay.io/podified-antelope-centos9
-EDPM_CONTAINER_TAG ?= current-podified
+DATAPLANE_REGISTRY_URL ?= quay.io/podified-antelope-centos9
+DATAPLANE_CONTAINER_TAG ?= current-podified
 DATAPLANE_PLAYBOOK ?= osp.edpm.download_cache
 DATAPLANE_CHRONY_NTP_SERVER ?=pool.ntp.org
 DATAPLANE_SSHD_ALLOWED_RANGES ?=['192.168.122.0/24']
-DATAPLANE_DEPLOY_STRATEGY_DEPLOY ?= false
 DATAPLANE_CUSTOM_SERVICE_RUNNER_IMG ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
-DATAPLANE_ANSIBLE_USER     ?=
+DATAPLANE_ANSIBLE_USER     ?=cloud-admin
+DATAPLANE_ANSIBLE_SECRET   ?=dataplane-ansible-ssh-private-key-secret
+DATAPLANE_GROWVOLS_ARGS    ?=/=8GB /tmp=1GB /home=1GB /var=80%
 BM_PROVISIONING_INTERFACE  ?=enp6s0
+BM_CTLPLANE_INTERFACE      ?=enp1s0
 BM_NETWORK_NAME            ?=default
 BM_NETWORK_IPADDRESS       ?=192.168.122.1
 BM_INSTANCE_NAME_PREFIX    ?=edpm-compute
 BM_NODE_COUNT              ?=1
 BM_ROOT_PASSWORD_SECRET    ?=
+BMH_NAMESPACE              ?=openstack
 
 CLEANUP_DIR_CMD ?= rm -Rf
 
@@ -99,21 +102,25 @@ crc_attach_default_interface_cleanup: ## Detach default libvirt network from CRC
 ##@ EDPM
 
 .PHONY: edpm_baremetal
-edpm_baremetal: export PROVISIONING_INTERFACE=${BM_PROVISIONING_INTERFACE}
+edpm_baremetal: export EDPM_BMH_NAMESPACE=${BMH_NAMESPACE}
+edpm_baremetal: export EDPM_PROVISIONING_INTERFACE=${BM_PROVISIONING_INTERFACE}
+edpm_baremetal: export EDPM_CTLPLANE_INTERFACE=${BM_CTLPLANE_INTERFACE}
 edpm_baremetal: export OPERATOR_NAME=openstack
+edpm_baremetal: export EDPM_ANSIBLE_SECRET=${DATAPLANE_ANSIBLE_SECRET}
 edpm_baremetal: export EDPM_ANSIBLE_USER=${DATAPLANE_ANSIBLE_USER}
 edpm_baremetal: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
 edpm_baremetal: export BMAAS_NETWORK_IPADDRESS=${BM_NETWORK_IPADDRESS}
-edpm_baremetal: export EDPM_DEPLOY_STRATEGY_DEPLOY=${DATAPLANE_DEPLOY_STRATEGY_DEPLOY}
 edpm_baremetal: export BMAAS_INSTANCE_NAME_PREFIX=${BM_INSTANCE_NAME_PREFIX}
 edpm_baremetal: export EDPM_CHRONY_NTP_SERVER=${DATAPLANE_CHRONY_NTP_SERVER}
 edpm_baremetal: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALLOWED_RANGES}
 edpm_baremetal: export EDPM_ROOT_PASSWORD_SECRET=${BM_ROOT_PASSWORD_SECRET}
 edpm_baremetal: export BMAAS_NODE_COUNT=${BM_NODE_COUNT}
 edpm_baremetal: export NODE_COUNT=${BM_NODE_COUNT}
+edpm_baremetal: export EDPM_TOTAL_NODES=${BM_NODE_COUNT}
 edpm_baremetal: export OPENSTACK_RUNNER_IMG=${DATAPLANE_CUSTOM_SERVICE_RUNNER_IMG}
-edpm_baremetal: export REGISTRY_URL=${EDPM_REGISTRY_URL}
-edpm_baremetal: export CONTAINER_TAG=${EDPM_CONTAINER_TAG}
+edpm_baremetal: export EDPM_REGISTRY_URL=${DATAPLANE_REGISTRY_URL}
+edpm_baremetal: export EDPM_CONTAINER_TAG=${DATAPLANE_CONTAINER_TAG}
+edpm_baremetal: export EDPM_GROWVOLS_ARGS=${DATAPLANE_GROWVOLS_ARGS}
 edpm_baremetal: ## Deploy only dataplane with BMAAS
 	$(eval $(call vars))
 	make bmaas_virtual_bms
