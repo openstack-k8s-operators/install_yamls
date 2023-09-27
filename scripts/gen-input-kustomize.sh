@@ -52,6 +52,8 @@ secretGenerator:
 - name: ${SECRET}
   literals:
   - AdminPassword=${PASSWORD}
+  - AodhPassword=${PASSWORD}
+  - AodhDatabasePassword=${PASSWORD}
   - CeilometerPassword=${PASSWORD}
   - DbRootPassword=${PASSWORD}
   - DatabasePassword=${PASSWORD}
