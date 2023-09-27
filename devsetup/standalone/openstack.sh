@@ -61,9 +61,12 @@ parameter_defaults:
   StandaloneHomeDir: $HOME
   InterfaceLocalMtu: ${INTERFACE_MTU}
   # Needed if running in a VM
-  NovaComputeLibvirtType: qemu
   ValidateGatewaysIcmp: false
   ValidateControllersIcmp: false
+  OctaviaAmphoraSshKeyFile: /root/.ssh/id_ecdsa.pub
+  OctaviaGenerateCerts: true
+  OctaviaLogOffload: true
+  OctaviaForwardAllLogs: true
 EOF
 
 if [ "$EDPM_COMPUTE_CEPH_ENABLED" = "true" ] ; then
@@ -81,6 +84,7 @@ sudo openstack tripleo deploy \
     -e standalone_parameters.yaml $CEPH_ARGS \
     -e /usr/share/openstack-tripleo-heat-templates/environments/deployed-network-environment.yaml \
     -e /tmp/deployed_network.yaml \
+    -e /usr/share/openstack-tripleo-heat-templates/environments/services/octavia.yaml \
     -r /usr/share/openstack-tripleo-heat-templates/roles/Standalone.yaml \
     -n /tmp/network_data.yaml \
     --local-ip=$CTLPLANE_IP/$CIDR \
