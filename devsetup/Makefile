@@ -31,7 +31,7 @@ DATAPLANE_SSHD_ALLOWED_RANGES ?=['192.168.122.0/24']
 DATAPLANE_CUSTOM_SERVICE_RUNNER_IMG ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
 DATAPLANE_ANSIBLE_USER     ?=cloud-admin
 DATAPLANE_ANSIBLE_SECRET   ?=dataplane-ansible-ssh-private-key-secret
-DATAPLANE_GROWVOLS_ARGS    ?=/=8GB /tmp=1GB /home=1GB /var=80%
+DATAPLANE_GROWVOLS_ARGS    ?=/=8GB /tmp=1GB /home=1GB /var=8GB
 BM_PROVISIONING_INTERFACE  ?=enp6s0
 BM_CTLPLANE_INTERFACE      ?=enp1s0
 BM_NETWORK_NAME            ?=default
