@@ -60,7 +60,7 @@ fi
 if [[ -e /run/systemd/resolve/resolv.conf ]]; then
     HOST_PRIMARY_RESOLV_CONF_ENTRY=$(cat /run/systemd/resolve/resolv.conf | grep ^nameserver | grep -v '192.168' | head -n1 | cut -d' ' -f2)
 else
-    HOST_PRIMARY_RESOLV_CONF_ENTRY=${GATEWAY}
+    HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY:-$GATEWAY}
 fi
 
 cat <<EOF > $CMDS_FILE
