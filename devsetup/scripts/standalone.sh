@@ -20,8 +20,9 @@ trap 'rm -rf -- "$MY_TMP_DIR"' EXIT
 
 export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-EDPM_COMPUTE_ADDITIONAL_NETWORKS=${2:-'[]'}
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
+COMPUTE_DRIVER=${2:-"libvirt"}
+EDPM_COMPUTE_ADDITIONAL_NETWORKS=${3:-'[]'}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
 EDPM_COMPUTE_NETWORK=${EDPM_COMPUTE_NETWORK:-default}
 EDPM_COMPUTE_NETWORK_IP=$(virsh net-dumpxml ${EDPM_COMPUTE_NETWORK} | xmllint - --xpath 'string(/network/ip/@address)')
@@ -89,6 +90,7 @@ export INTERFACE_MTU=${INTERFACE_MTU:-1500}
 export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
 export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml}"
+export COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
 export IP=${IP}
 export GATEWAY=${GATEWAY}
 
@@ -114,10 +116,17 @@ sudo systemctl enable network
 sudo cp /tmp/net_config.yaml /etc/os-net-config/config.yaml
 sudo os-net-config -c /etc/os-net-config/config.yaml
 
+
+#---
+## Copying files
+#---
 # Use /tmp/net_config.yaml as the network config template for Standalone
 # so that tripleo deploy don't change the config applied above.
 sudo cp /tmp/net_config.yaml \$HOME/standalone_net_config.j2
-
+sudo cp /tmp/network_data.yaml \$HOME/network_data.yaml
+sudo cp /tmp/deployed_network.yaml \$HOME/deployed_network.yaml
+sudo cp /tmp/Standalone.yaml \$HOME/Standalone.yaml
+#----
 
 [[ "\$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]] && /tmp/ceph.sh
 /tmp/openstack.sh
@@ -141,11 +150,13 @@ ip_address_suffix: ${IP_ADRESS_SUFFIX}
 interface_mtu: ${INTERFACE_MTU:-1500}
 gateway_ip: ${GATEWAY}
 dns_server: ${HOST_PRIMARY_RESOLV_CONF_ENTRY}
+compute_driver: ${COMPUTE_DRIVER}
 EOF
 
 jinja2_render standalone/network_data.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/network_data.yaml
 jinja2_render standalone/deployed_network.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/deployed_network.yaml
 jinja2_render standalone/net_config.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/net_config.yaml
+jinja2_render standalone/role.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/Standalone.yaml
 
 # Copying files
 scp $SSH_OPT $REPO_SETUP_CMDS root@$IP:/tmp/repo-setup.sh
@@ -153,6 +164,7 @@ scp $SSH_OPT $CMDS_FILE root@$IP:/tmp/standalone-deploy.sh
 scp $SSH_OPT ${MY_TMP_DIR}/net_config.yaml root@$IP:/tmp/net_config.yaml
 scp $SSH_OPT ${MY_TMP_DIR}/network_data.yaml root@$IP:/tmp/network_data.yaml
 scp $SSH_OPT ${MY_TMP_DIR}/deployed_network.yaml root@$IP:/tmp/deployed_network.yaml
+scp $SSH_OPT ${MY_TMP_DIR}/Standalone.yaml root@$IP:/tmp/Standalone.yaml
 scp $SSH_OPT standalone/ceph.sh root@$IP:/tmp/ceph.sh
 scp $SSH_OPT standalone/openstack.sh root@$IP:/tmp/openstack.sh
 [ -f $HOME/.ssh/id_ecdsa.pub ] || \

@@ -66,6 +66,8 @@ BM_NODE_COUNT              ?=1
 BM_ROOT_PASSWORD_SECRET    ?=
 BMH_NAMESPACE              ?=openstack
 
+STANDALONE_COMPUTE_DRIVER ?= libvirt
+
 CLEANUP_DIR_CMD ?= rm -Rf
 
 define vars
@@ -210,7 +212,7 @@ standalone: export STANDALONE=true
 standalone: export INTERFACE_MTU=${NETWORK_MTU}
 standalone: edpm_compute ## Create standalone VM
 	$(eval $(call vars))
-	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}'
+	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX} ${STANDALONE_COMPUTE_DRIVER} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}'
 
 .PHONY: standalone_cleanup
 standalone_cleanup: export STANDALONE=true
