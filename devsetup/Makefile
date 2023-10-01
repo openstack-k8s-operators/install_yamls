@@ -6,7 +6,26 @@ CRC_DEFAULT_NETWORK_IP ?= 192.168.122.10
 EDPM_COMPUTE_SUFFIX ?= 0
 # EDPM_COMPUTE_ADDITIONAL_NETWORKS: JSON string - list of additional networks
 # Examples:
-#   EDPM_COMPUTE_ADDITIONAL_NETWORKS='[{"type": "network", "name": "crc-bmaas"}]'
+#   cat << EOF
+#   [
+#     {
+#       "type": "network",
+#       "name": "crc-bmaas",
+#       "standalone_config": {
+#         "type": "linux_bridge",
+#         "name": "baremetal",
+#         "mtu": 1500,
+#         "ip_subnet": "172.20.1.0/24",
+#         "allocation_pools": [
+#           {
+#             "start": "172.20.1.4",
+#             "end": "172.20.1.250"
+#           }
+#         ]
+#       }
+#     }
+#   ]
+#   EOF
 #   EDPM_COMPUTE_ADDITIONAL_NETWORKS=$(jq -c addtional_nets.json)
 EDPM_COMPUTE_ADDITIONAL_NETWORKS ?= '[]'
 EDPM_TOTAL_NODES ?= 1
@@ -151,7 +170,7 @@ edpm_compute: ## Create EDPM compute VM
 	$(eval $(call vars))
 	scripts/gen-ansibleee-ssh-key.sh
 	if [ ${EDPM_TOTAL_NODES} -eq 1 ]; then \
-		scripts/gen-edpm-compute-node.sh ${EDPM_COMPUTE_SUFFIX} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}' ; \
+		scripts/gen-edpm-compute-node.sh ${EDPM_COMPUTE_SUFFIX} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}'; \
 	else \
 		for INDEX in $(shell seq 0 $$((${EDPM_TOTAL_NODES} -1))) ; do \
 			scripts/gen-edpm-compute-node.sh $$INDEX '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}' ; \
@@ -191,7 +210,7 @@ standalone: export STANDALONE=true
 standalone: export INTERFACE_MTU=${NETWORK_MTU}
 standalone: edpm_compute ## Create standalone VM
 	$(eval $(call vars))
-	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX}
+	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}'
 
 .PHONY: standalone_cleanup
 standalone_cleanup: export STANDALONE=true

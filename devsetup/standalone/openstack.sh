@@ -24,28 +24,16 @@ INTERFACE_MTU=${INTERFACE_MTU:-1500}
 export NEUTRON_INTERFACE=eth0
 export CTLPLANE_IP=${IP:-192.168.122.100}
 export CTLPLANE_VIP=$(sed -e 's/[0-9][0-9][0-9]$/99/' <<<"$CTLPLANE_IP")
-
 export CIDR=24
 export GATEWAY=${GATEWAY:-192.168.122.1}
 export BRIDGE="br-ctlplane"
-export SUBNET=$(sed -e 's/\.[0-9]*$//' <<<"$CTLPLANE_IP")
-sed -i -e "s/CTLPLANE_IP/$CTLPLANE_IP/" /tmp/deployed_network.yaml
-sed -i -e  "s/CTLPLANE_SUBNET/$SUBNET/" /tmp/deployed_network.yaml
-sed -i -e  "s/CTLPLANE_VIP/$CTLPLANE_VIP/" /tmp/deployed_network.yaml
 
 # Create standalone_parameters.yaml file and deploy standalone OpenStack using the following commands.
 cat <<EOF > standalone_parameters.yaml
 parameter_defaults:
   CloudName: $CTLPLANE_IP
-  ControlPlaneStaticRoutes:
-    - ip_netmask: 0.0.0.0/0
-      next_hop: $GATEWAY
-      default: true
   Debug: true
   DeploymentUser: $USER
-  DnsServers:
-    - $HOST_PRIMARY_RESOLV_CONF_ENTRY
-    - $GATEWAY
   NtpServer: $NTP_SERVER
   # needed for vip & pacemaker
   KernelIpNonLocalBind: 1
@@ -67,6 +55,7 @@ parameter_defaults:
   OctaviaGenerateCerts: true
   OctaviaLogOffload: true
   OctaviaForwardAllLogs: true
+  StandaloneNetworkConfigTemplate: $HOME/standalone_net_config.j2
 EOF
 
 if [ "$EDPM_COMPUTE_CEPH_ENABLED" = "true" ] ; then

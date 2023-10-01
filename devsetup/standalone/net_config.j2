@@ -1,0 +1,78 @@
+network_config:
+- type: ovs_bridge
+  name: br-ctlplane
+  mtu: {{ interface_mtu }}
+  use_dhcp: false
+  dns_servers:
+  {%- if dns_server %}
+  - {{ dns_server }}
+  {%- endif %}
+  - {{ gateway_ip }}
+  domain: []
+  addresses:
+  - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
+  - ip_netmask: {{ ctlplane_ip }}/32
+  - ip_netmask: {{ ctlplane_vip }}/32
+  routes:
+  - ip_netmask: 0.0.0.0/0
+    next_hop: {{ gateway_ip }}
+  members:
+  - type: interface
+    name: nic1
+    mtu: {{ interface_mtu }}
+    # force the MAC address of the bridge to this interface
+    primary: true
+  # external
+  - type: vlan
+    mtu: {{ interface_mtu }}
+    vlan_id: 44
+    addresses:
+    - ip_netmask: 172.21.0.{{ ip_address_suffix }}/24
+    - ip_netmask: 172.21.0.2/32
+    routes: []
+  # internal
+  - type: vlan
+    mtu: {{ interface_mtu }}
+    vlan_id: 20
+    addresses:
+    - ip_netmask: 172.17.0.{{ ip_address_suffix }}/24
+    - ip_netmask: 172.17.0.2/32
+    routes: []
+  # storage
+  - type: vlan
+    mtu: {{ interface_mtu }}
+    vlan_id: 21
+    addresses:
+    - ip_netmask: 172.18.0.{{ ip_address_suffix }}/24
+    - ip_netmask: 172.18.0.2/32
+    routes: []
+  # storage_mgmt
+  - type: vlan
+    mtu: {{ interface_mtu }}
+    vlan_id: 23
+    addresses:
+    - ip_netmask: 172.20.0.{{ ip_address_suffix }}/24
+    - ip_netmask: 172.20.0.2/32
+    routes: []
+  # tenant
+  - type: vlan
+    mtu: {{ interface_mtu }}
+    vlan_id: 22
+    addresses:
+    - ip_netmask: 172.19.0.{{ ip_address_suffix }}/24
+    routes: []
+{%- for network in additional_networks if network.standalone_config %}
+{%- set net = network.standalone_config %}
+- type: {{ net.type }}
+  name: br-{{ net.name.lower() }}
+  use_dhcp: false
+  addresses:
+  - ip_netmask: {{ net.ip_subnet.split('/')[0].split('.')[:-1] | join('.') + '.' + ip_address_suffix | string }}/{{ net.ip_subnet.split('/')[1] }}
+  routes: {{ net.host_routes | default([]) }}
+  members:
+  - type: interface
+    name: nic{{loop.index + 1}}
+    mtu: {{ net.mtu | default(1500) }}
+    # force the MAC address of the bridge to this interface
+    primary: true
+{%- endfor %}
