@@ -20,6 +20,7 @@ trap 'rm -rf -- "$MY_TMP_DIR"' EXIT
 
 export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+EDPM_COMPUTE_ADDITIONAL_NETWORKS=${2:-'[]'}
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
 EDPM_COMPUTE_NETWORK=${EDPM_COMPUTE_NETWORK:-default}
@@ -38,6 +39,9 @@ if [[ ! -f $SSH_KEY_FILE ]]; then
     echo "$SSH_KEY_FILE is missing"
     exit 1
 fi
+
+source ${SCRIPTPATH}/common.sh
+
 
 # Clock synchronization is important for both Ceph and OpenStack services, so both ceph deploy and tripleo deploy commands will make use of chrony to ensure the clock is properly in sync.
 # We'll use the NTP_SERVER environmental variable to define the NTP server to use.
@@ -98,7 +102,23 @@ else
     sed -i 's|quay.io/tripleowallaby$|quay.io/tripleowallabycentos9|' \$HOME/containers-prepare-parameters.yaml
 fi
 
-/tmp/network.sh
+# Use os-net-config to add VLAN interfaces which connect edpm-compute-0 to the isolated networks configured by install_yamls.
+sudo mkdir -p /etc/os-net-config
+
+cat << __EOF__ | sudo tee /etc/cloud/cloud.cfg.d/99-edpm-disable-network-config.cfg
+network:
+    config: disabled
+__EOF__
+
+sudo systemctl enable network
+sudo cp /tmp/net_config.yaml /etc/os-net-config/config.yaml
+sudo os-net-config -c /etc/os-net-config/config.yaml
+
+# Use /tmp/net_config.yaml as the network config template for Standalone
+# so that tripleo deploy don't change the config applied above.
+sudo cp /tmp/net_config.yaml \$HOME/standalone_net_config.j2
+
+
 [[ "\$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]] && /tmp/ceph.sh
 /tmp/openstack.sh
 EOF
@@ -108,13 +128,31 @@ while [[ $(ssh -o BatchMode=yes -o ConnectTimeout=5 $SSH_OPT root@$IP echo ok) !
     true
 done
 
+# Render Jinja2 files
+J2_VARS_FILE=$(mktemp --suffix=".yaml" --tmpdir="${MY_TMP_DIR}")
+cat << EOF > ${J2_VARS_FILE}
+---
+additional_networks: ${EDPM_COMPUTE_ADDITIONAL_NETWORKS}
+ctlplane_cidr: 24
+ctlplane_ip: ${IP}
+ctlplane_subnet: ${IP%.*}.0/24
+ctlplane_vip: ${IP%.*}.99
+ip_address_suffix: ${IP_ADRESS_SUFFIX}
+interface_mtu: ${INTERFACE_MTU:-1500}
+gateway_ip: ${GATEWAY}
+dns_server: ${HOST_PRIMARY_RESOLV_CONF_ENTRY}
+EOF
+
+jinja2_render standalone/network_data.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/network_data.yaml
+jinja2_render standalone/deployed_network.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/deployed_network.yaml
+jinja2_render standalone/net_config.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/net_config.yaml
+
 # Copying files
 scp $SSH_OPT $REPO_SETUP_CMDS root@$IP:/tmp/repo-setup.sh
 scp $SSH_OPT $CMDS_FILE root@$IP:/tmp/standalone-deploy.sh
-scp $SSH_OPT standalone/standalone.j2 root@$IP:/tmp/standalone.j2
-scp $SSH_OPT standalone/network_data.yaml root@$IP:/tmp/network_data.yaml
-scp $SSH_OPT standalone/deployed_network.yaml root@$IP:/tmp/deployed_network.yaml
-scp $SSH_OPT standalone/network.sh root@$IP:/tmp/network.sh
+scp $SSH_OPT ${MY_TMP_DIR}/net_config.yaml root@$IP:/tmp/net_config.yaml
+scp $SSH_OPT ${MY_TMP_DIR}/network_data.yaml root@$IP:/tmp/network_data.yaml
+scp $SSH_OPT ${MY_TMP_DIR}/deployed_network.yaml root@$IP:/tmp/deployed_network.yaml
 scp $SSH_OPT standalone/ceph.sh root@$IP:/tmp/ceph.sh
 scp $SSH_OPT standalone/openstack.sh root@$IP:/tmp/openstack.sh
 [ -f $HOME/.ssh/id_ecdsa.pub ] || \
