@@ -25,7 +25,7 @@ BMAAS_LIBVIRT_USER ?= sushyemu
 
 DATAPLANE_PLAYBOOK ?= osp.edpm.download_cache
 DATAPLANE_CUSTOM_SERVICE_RUNNER_IMG ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
-DATAPLANE_GROWVOLS_ARGS    ?=/=8GB /tmp=1GB /home=1GB /var=8GB
+DATAPLANE_GROWVOLS_ARGS    ?=
 BM_NETWORK_NAME            ?=default
 BM_INSTANCE_NAME_PREFIX    ?=edpm-compute
 BM_NODE_COUNT              ?=1
