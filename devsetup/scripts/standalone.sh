@@ -14,6 +14,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 set -ex
+
+MY_TMP_DIR="$(mktemp -d)"
+trap 'rm -rf -- "$MY_TMP_DIR"' EXIT
+
 export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
@@ -26,10 +30,9 @@ GATEWAY=${GATEWAY:-"${EDPM_COMPUTE_NETWORK_IP}"}
 OUTPUT_DIR=${OUTPUT_DIR:-"${SCRIPTPATH}/../../out/edpm/"}
 SSH_KEY_FILE=${SSH_KEY_FILE:-"${OUTPUT_DIR}/ansibleee-ssh-key-id_rsa"}
 SSH_OPT="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $SSH_KEY_FILE"
-REPO_SETUP_CMDS=${REPO_SETUP_CMDS:-"/tmp/standalone_repos"}
-CMDS_FILE=${CMDS_FILE:-"/tmp/standalone_cmds"}
+REPO_SETUP_CMDS=${REPO_SETUP_CMDS:-"${MY_TMP_DIR}/standalone_repos"}
+CMDS_FILE=${CMDS_FILE:-"${MY_TMP_DIR}/standalone_cmds"}
 SKIP_TRIPLEO_REPOS=${SKIP_TRIPLEO_REPOS:="false"}
-CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD:-"rm -Rf"}
 
 if [[ ! -f $SSH_KEY_FILE ]]; then
     echo "$SSH_KEY_FILE is missing"
@@ -44,7 +47,7 @@ fi
 # export NTP_SERVER=pool.ntp.org
 
 if [[ ! -f $REPO_SETUP_CMDS ]]; then
-cat <<EOF > $REPO_SETUP_CMDS
+    cat <<EOF > $REPO_SETUP_CMDS
 set -ex
 sudo dnf remove -y epel-release
 sudo dnf update -y
@@ -65,7 +68,8 @@ else
     HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY:-$GATEWAY}
 fi
 
-cat <<EOF > $CMDS_FILE
+if [[ ! -f $CMDS_FILE ]]; then
+    cat <<EOF > $CMDS_FILE
 sudo dnf install -y podman python3-tripleoclient util-linux lvm2 cephadm
 
 # Pin Podman to work around a Podman regression where env variables
@@ -98,6 +102,7 @@ fi
 [[ "\$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]] && /tmp/ceph.sh
 /tmp/openstack.sh
 EOF
+fi
 
 while [[ $(ssh -o BatchMode=yes -o ConnectTimeout=5 $SSH_OPT root@$IP echo ok) != "ok" ]]; do
     true
@@ -128,6 +133,3 @@ if [[ -z ${SKIP_TRIPLEO_REPOS} || ${SKIP_TRIPLEO_REPOS} == "false" ]]; then
 fi
 ssh $SSH_OPT root@$IP "bash /tmp/standalone-deploy.sh"
 ssh $SSH_OPT root@$IP "rm -f /tmp/standalone-deploy.sh"
-
-${CLEANUP_DIR_CMD} $CMDS_FILE
-${CLEANUP_DIR_CMD} $REPO_SETUP_CMDS
