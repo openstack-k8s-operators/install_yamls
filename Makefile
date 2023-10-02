@@ -1955,7 +1955,7 @@ swift_deploy_cleanup: ## cleans up the service instance, Does not affect the ope
 .PHONY: certmanager
 certmanager: export NAMESPACE=$(if $(findstring 4.10,$(OCP_RELEASE)),openshift-cert-manager,cert-manager)
 certmanager: export OPERATOR_NAMESPACE=$(if $(findstring 4.10,$(OCP_RELEASE)),openshift-cert-manager-operator,cert-manager-operator)
-certmanager: export CHANNEL=$(if $(findstring 4.10,$(OCP_RELEASE)),tech-preview,stable-v1)
+certmanager: export CHANNEL=$(if $(findstring 4.10,$(OCP_RELEASE)),tech-preview,stable-v1.11)
 certmanager: ## installs cert-manager operator in the cert-manager-operator namespace, cert-manager runs it cert-manager namespace
 	$(eval $(call vars,$@,cert-manager))
 	$(MAKE) operator_namespace
