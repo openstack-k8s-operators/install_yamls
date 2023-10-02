@@ -18,9 +18,11 @@ export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
+EDPM_COMPUTE_NETWORK=${EDPM_COMPUTE_NETWORK:-default}
+EDPM_COMPUTE_NETWORK_IP=$(virsh net-dumpxml ${EDPM_COMPUTE_NETWORK} | xmllint - --xpath 'string(/network/ip/@address)')
 IP_ADRESS_SUFFIX=${IP_ADRESS_SUFFIX:-"$((100+${EDPM_COMPUTE_SUFFIX}))"}
-IP=${IP:-"192.168.122.${IP_ADRESS_SUFFIX}"}
-GATEWAY=${GATEWAY:-192.168.122.1}
+IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADRESS_SUFFIX}"}
+GATEWAY=${GATEWAY:-"${EDPM_COMPUTE_NETWORK_IP}"}
 OUTPUT_DIR=${OUTPUT_DIR:-"${SCRIPTPATH}/../../out/edpm/"}
 SSH_KEY_FILE=${SSH_KEY_FILE:-"${OUTPUT_DIR}/ansibleee-ssh-key-id_rsa"}
 SSH_OPT="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $SSH_KEY_FILE"
@@ -58,7 +60,7 @@ EOF
 fi
 
 if [[ -e /run/systemd/resolve/resolv.conf ]]; then
-    HOST_PRIMARY_RESOLV_CONF_ENTRY=$(cat /run/systemd/resolve/resolv.conf | grep ^nameserver | grep -v '192.168' | head -n1 | cut -d' ' -f2)
+    HOST_PRIMARY_RESOLV_CONF_ENTRY=$(cat /run/systemd/resolve/resolv.conf | grep ^nameserver | grep -v "${EDPM_COMPUTE_NETWORK_IP%.*}" | head -n1 | cut -d' ' -f2)
 else
     HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY:-$GATEWAY}
 fi
@@ -80,7 +82,7 @@ export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
 export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml}"
 export IP=${IP}
-export GATEWAY=${GATEWAY:-192.168.122.1}
+export GATEWAY=${GATEWAY}
 
 if [[ -f \$HOME/containers-prepare-parameters.yaml ]]; then
     echo "Using existing containers-prepare-parameters.yaml - contents:"
