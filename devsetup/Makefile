@@ -223,6 +223,7 @@ cifmw_cleanup: ## Clean ci-framework git clone
 bmaas_network: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
 bmaas_network: export NETWORK_IPADDRESS = ${BMAAS_NETWORK_IPADDRESS}
 bmaas_network: export NETWORK_NETMASK = ${BMAAS_NETWORK_NETMASK}
+bmaas_network: export CRC_NETWORK_IP = ${CRC_DEFAULT_NETWORK_IP}
 bmaas_network: ## Create libvirt BMaaS network
 	scripts/network-setup.sh --create
 
@@ -230,6 +231,7 @@ bmaas_network: ## Create libvirt BMaaS network
 bmaas_network_cleanup: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
 bmaas_network_cleanup: export NETWORK_IPADDRESS = ${BMAAS_NETWORK_IPADDRESS}
 bmaas_network_cleanup: export NETWORK_NETMASK = ${BMAAS_NETWORK_NETMASK}
+bmaas_network_cleanup: export CRC_NETWORK_IP = ${CRC_DEFAULT_NETWORK_IP}
 bmaas_network_cleanup: ## Delete libvirt BMaaS network
 	scripts/network-setup.sh --cleanup
 
