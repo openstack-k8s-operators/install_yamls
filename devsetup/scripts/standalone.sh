@@ -112,6 +112,9 @@ scp $SSH_OPT standalone/deployed_network.yaml root@$IP:/tmp/deployed_network.yam
 scp $SSH_OPT standalone/network.sh root@$IP:/tmp/network.sh
 scp $SSH_OPT standalone/ceph.sh root@$IP:/tmp/ceph.sh
 scp $SSH_OPT standalone/openstack.sh root@$IP:/tmp/openstack.sh
+[ -f $HOME/.ssh/id_ecdsa.pub ] || \
+    ssh-keygen -t ecdsa -f $HOME/.ssh/id_ecdsa -q -N ""
+scp $SSH_OPT $HOME/.ssh/id_ecdsa.pub root@$IP:/root/.ssh/id_ecdsa.pub
 if [[ -f $HOME/containers-prepare-parameters.yaml ]]; then
     scp $SSH_OPT $HOME/containers-prepare-parameters.yaml root@$IP:/root/containers-prepare-parameters.yaml
 fi
