@@ -1,4 +1,5 @@
-CRC_URL ?= 'https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz'
+CRC_VERSION ?= latest
+CRC_URL ?= 'https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/$(CRC_VERSION)/crc-linux-amd64.tar.xz'
 KUBEADMIN_PWD ?= 12345678
 PULL_SECRET  ?= ${PWD}/pull-secret.txt
 CRC_DEFAULT_NETWORK_IP ?= 192.168.122.10
