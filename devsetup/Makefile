@@ -4,6 +4,11 @@ KUBEADMIN_PWD ?= 12345678
 PULL_SECRET  ?= ${PWD}/pull-secret.txt
 CRC_DEFAULT_NETWORK_IP ?= 192.168.122.10
 EDPM_COMPUTE_SUFFIX ?= 0
+# EDPM_COMPUTE_ADDITIONAL_NETWORKS: JSON string - list of additional networks
+# Examples:
+#   EDPM_COMPUTE_ADDITIONAL_NETWORKS='[{"type": "network", "name": "crc-bmaas"}]'
+#   EDPM_COMPUTE_ADDITIONAL_NETWORKS=$(jq -c addtional_nets.json)
+EDPM_COMPUTE_ADDITIONAL_NETWORKS ?= '[]'
 EDPM_TOTAL_NODES ?= 1
 NETWORK_MTU	?= 1500
 
@@ -146,10 +151,10 @@ edpm_compute: ## Create EDPM compute VM
 	$(eval $(call vars))
 	scripts/gen-ansibleee-ssh-key.sh
 	if [ ${EDPM_TOTAL_NODES} -eq 1 ]; then \
-		scripts/gen-edpm-compute-node.sh ${EDPM_COMPUTE_SUFFIX}; \
+		scripts/gen-edpm-compute-node.sh ${EDPM_COMPUTE_SUFFIX} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}' ; \
 	else \
 		for INDEX in $(shell seq 0 $$((${EDPM_TOTAL_NODES} -1))) ; do \
-			scripts/gen-edpm-compute-node.sh $$INDEX ; \
+			scripts/gen-edpm-compute-node.sh $$INDEX '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}' ; \
 		done \
 	fi
 
