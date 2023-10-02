@@ -216,7 +216,7 @@ make namespace
 #### Create the BMaaS LAB
 ```commandline
 cd <install_yamls_root_path>/devsetup
-make bmaas BMAAS_NODE_COUNT=4  # Default node count is: 2
+make bmaas BMAAS_NODE_COUNT=4  # Default node count is: 1
 ```
 
 #### Cleanup

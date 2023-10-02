@@ -19,6 +19,8 @@ export LIBVIRT_DEFAULT_URI=qemu:///system
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 CRC_POOL=${CRC_POOL:-"$HOME/.crc/machines/crc"}
 OUTPUT_DIR=${OUTPUT_DIR:-"../out/edpm"}
+MY_TMP_DIR="$(mktemp -d)"
+trap 'rm -rf -- "$MY_TMP_DIR"' EXIT
 
 STANDALONE=${STANDALONE:-false}
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
@@ -33,6 +35,9 @@ EDPM_COMPUTE_RAM=${EDPM_COMPUTE_RAM:-4}
 EDPM_COMPUTE_DISK_SIZE=${EDPM_COMPUTE_DISK_SIZE:-20}
 EDPM_COMPUTE_NETWORK=${EDPM_COMPUTE_NETWORK:-default}
 EDPM_COMPUTE_NETWORK_TYPE=${EDPM_COMPUTE_NETWORK_TYPE:-network}
+# Use a json string to add additonal networks:
+# '[{"type": "network", "name": "crc-bmaas"}, {"type": "network", "name": "other-net"}]'
+EDPM_COMPUTE_ADDITIONAL_NETWORKS=${2:-'[]'}
 DATAPLANE_DNS_SERVER=${DATAPLANE_DNS_SERVER:-192.168.122.1}
 CENTOS_9_STREAM_URL=${CENTOS_9_STREAM_URL:-"https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-latest.x86_64.qcow2"}
 BASE_DISK_FILENAME=${BASE_DISK_FILENAME:-"centos-9-stream-base.qcow2"}
@@ -162,6 +167,31 @@ cat <<EOF >${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}.xml
   </devices>
 </domain>
 EOF
+
+# Add additional networks to the domain XML
+PCI_BUS_OFFSET=6
+for (( idx=0; idx<$(echo "${EDPM_COMPUTE_ADDITIONAL_NETWORKS}" | jq --raw-output '. | length'); idx++ )); do
+    mac_address=$(echo -n 52:54:00; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':')
+    net_type=$(echo $EDPM_COMPUTE_ADDITIONAL_NETWORKS | jq --raw-output ".[$idx].type")
+    net_name=$(echo $EDPM_COMPUTE_ADDITIONAL_NETWORKS | jq --raw-output ".[$idx].name")
+    pci_bus=$(printf "0x%02x" $((${idx}+${PCI_BUS_OFFSET})))
+    ADD_INTERFACES+="
+        <interface type='${net_type}'>
+            <mac address='${mac_address}'/>
+            <source ${net_type}='${net_name}'/>
+            <model type='virtio'/>
+            <address type='pci' domain='0x0000' bus='${pci_bus}' slot='0x00' function='0x0'/>
+        </interface>"
+done
+if [ ! -z "${ADD_INTERFACES}" ]; then
+    if [ ! -e /usr/bin/xmlstarlet ]; then
+        sudo dnf -y install /usr/bin/xmlstarlet
+    fi
+    mv ${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}.xml ${MY_TMP_DIR}/${EDPM_COMPUTE_NAME}.xml
+    xmlstarlet edit --subnode '/domain/devices' --type text --name '' --value "${ADD_INTERFACES}" ${MY_TMP_DIR}/${EDPM_COMPUTE_NAME}.xml \
+    | xmlstarlet unescape | xmlstarlet format --omit-decl \
+    | tee ${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}.xml
+fi
 
 # Set network variables for firstboot script
 IP=${IP:-"192.168.122.${IP_ADRESS_SUFFIX}"}
