@@ -38,7 +38,8 @@ EDPM_COMPUTE_NETWORK_TYPE=${EDPM_COMPUTE_NETWORK_TYPE:-network}
 # Use a json string to add additonal networks:
 # '[{"type": "network", "name": "crc-bmaas"}, {"type": "network", "name": "other-net"}]'
 EDPM_COMPUTE_ADDITIONAL_NETWORKS=${2:-'[]'}
-DATAPLANE_DNS_SERVER=${DATAPLANE_DNS_SERVER:-192.168.122.1}
+EDPM_COMPUTE_NETWORK_IP=$(virsh net-dumpxml ${EDPM_COMPUTE_NETWORK} | xmllint - --xpath 'string(/network/ip/@address)')
+DATAPLANE_DNS_SERVER=${DATAPLANE_DNS_SERVER:-${EDPM_COMPUTE_NETWORK_IP}}
 CENTOS_9_STREAM_URL=${CENTOS_9_STREAM_URL:-"https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-latest.x86_64.qcow2"}
 BASE_DISK_FILENAME=${BASE_DISK_FILENAME:-"centos-9-stream-base.qcow2"}
 
@@ -194,10 +195,10 @@ if [ ! -z "${ADD_INTERFACES}" ]; then
 fi
 
 # Set network variables for firstboot script
-IP=${IP:-"192.168.122.${IP_ADRESS_SUFFIX}"}
+IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADRESS_SUFFIX}"}
 NETDEV=eth0
 NETSCRIPT="/etc/sysconfig/network-scripts/ifcfg-${NETDEV}"
-GATEWAY=${GATEWAY:-192.168.122.1}
+GATEWAY=${GATEWAY:-"${EDPM_COMPUTE_NETWORK_IP}"}
 DNS=${DATAPLANE_DNS_SERVER}
 PREFIX=24
 
