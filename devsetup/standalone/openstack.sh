@@ -16,6 +16,7 @@
 set -ex
 
 EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
+COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
 INTERFACE_MTU=${INTERFACE_MTU:-1500}
 
 # Use the files created in the previous steps including the network_data.yaml file and thw deployed_network.yaml file.
@@ -23,29 +24,17 @@ INTERFACE_MTU=${INTERFACE_MTU:-1500}
 
 export NEUTRON_INTERFACE=eth0
 export CTLPLANE_IP=${IP:-192.168.122.100}
-export CTLPLANE_VIP=$(sed -e 's/[0-9][0-9][0-9]$/99/' <<<"$CTLPLANE_IP")
-
+export CTLPLANE_VIP=${CTLPLANE_IP%.*}.99
 export CIDR=24
 export GATEWAY=${GATEWAY:-192.168.122.1}
 export BRIDGE="br-ctlplane"
-export SUBNET=$(sed -e 's/\.[0-9]*$//' <<<"$CTLPLANE_IP")
-sed -i -e "s/CTLPLANE_IP/$CTLPLANE_IP/" /tmp/deployed_network.yaml
-sed -i -e  "s/CTLPLANE_SUBNET/$SUBNET/" /tmp/deployed_network.yaml
-sed -i -e  "s/CTLPLANE_VIP/$CTLPLANE_VIP/" /tmp/deployed_network.yaml
 
 # Create standalone_parameters.yaml file and deploy standalone OpenStack using the following commands.
 cat <<EOF > standalone_parameters.yaml
 parameter_defaults:
   CloudName: $CTLPLANE_IP
-  ControlPlaneStaticRoutes:
-    - ip_netmask: 0.0.0.0/0
-      next_hop: $GATEWAY
-      default: true
   Debug: true
   DeploymentUser: $USER
-  DnsServers:
-    - $HOST_PRIMARY_RESOLV_CONF_ENTRY
-    - $GATEWAY
   NtpServer: $NTP_SERVER
   # needed for vip & pacemaker
   KernelIpNonLocalBind: 1
@@ -67,26 +56,32 @@ parameter_defaults:
   OctaviaGenerateCerts: true
   OctaviaLogOffload: true
   OctaviaForwardAllLogs: true
+  StandaloneNetworkConfigTemplate: $HOME/standalone_net_config.j2
 EOF
 
+CMD="openstack tripleo deploy"
+
+CMD_ARGS+=" --templates /usr/share/openstack-tripleo-heat-templates"
+CMD_ARGS+=" --local-ip=$CTLPLANE_IP/$CIDR"
+CMD_ARGS+=" --control-virtual-ip=$CTLPLANE_VIP"
+CMD_ARGS+=" --output-dir $HOME"
+CMD_ARGS+=" --standalone-role Standalone"
+CMD_ARGS+=" -r $HOME/Standalone.yaml"
+CMD_ARGS+=" -n $HOME/network_data.yaml"
+
+ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/standalone/standalone-tripleo.yaml"
+ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml"
+ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/deployed-network-environment.yaml"
+if [ "$COMPUTE_DRIVER" = "ironic" ]; then
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/ironic-overcloud.yaml"
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/ironic-inspector.yaml"
+fi
+ENV_ARGS+=" -e $HOME/standalone_parameters.yaml"
 if [ "$EDPM_COMPUTE_CEPH_ENABLED" = "true" ] ; then
     CEPH_ARGS=${CEPH_ARGS:-"-e ~/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml"}
-else
-    CEPH_ARGS=""
+    ENV_ARGS+=" ${CEPH_ARGS}"
 fi
+ENV_ARGS+=" -e $HOME/containers-prepare-parameters.yaml"
+ENV_ARGS+=" -e $HOME/deployed_network.yaml"
 
-sudo openstack tripleo deploy \
-    --templates /usr/share/openstack-tripleo-heat-templates \
-    --standalone-role Standalone \
-    -e /usr/share/openstack-tripleo-heat-templates/environments/standalone/standalone-tripleo.yaml \
-    -e /usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml \
-    -e ~/containers-prepare-parameters.yaml \
-    -e standalone_parameters.yaml $CEPH_ARGS \
-    -e /usr/share/openstack-tripleo-heat-templates/environments/deployed-network-environment.yaml \
-    -e /tmp/deployed_network.yaml \
-    -e /usr/share/openstack-tripleo-heat-templates/environments/services/octavia.yaml \
-    -r /usr/share/openstack-tripleo-heat-templates/roles/Standalone.yaml \
-    -n /tmp/network_data.yaml \
-    --local-ip=$CTLPLANE_IP/$CIDR \
-    --control-virtual-ip=$CTLPLANE_VIP \
-    --output-dir $HOME
+sudo ${CMD} ${CMD_ARGS} ${ENV_ARGS}
