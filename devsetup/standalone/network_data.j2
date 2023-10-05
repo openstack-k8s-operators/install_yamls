@@ -58,3 +58,22 @@
     external_subnet:
       ip_subnet: '172.21.0.0/24'
       allocation_pools: [{'start': '172.21.0.4', 'end': '172.21.0.250'}]
+
+{% for network in additional_networks if network.standalone_config -%}
+{%- set net = network.standalone_config -%}
+- name: {{ net.name }}
+  mtu: {{ net.mtu | default(1500) }}
+  vip: {{ net.vip | default('false') }}
+  name_lower: {{ net.name.lower() }}
+{%- if net.vlan | default(false) %}
+  vlan: {{ net.vlan }}
+{%- endif %}
+  dns_domain: {{ net.name.lower() }}.mydomain.tld.
+  subnets:
+    {{ net.name.lower() }}_subnet:
+      ip_subnet: '{{ net.ip_subnet }}'
+      allocation_pools:
+{%- for pool in net.allocation_pools %}
+        - {'start': '{{ pool.start }}', 'end': '{{ pool.end }}'}
+{%- endfor %}
+{% endfor -%}

@@ -11,36 +11,43 @@ parameter_defaults:
   NodePortMap:
     standalone:
       ctlplane:
-        ip_address: CTLPLANE_IP
-        ip_subnet: CTLPLANE_SUBNET.1/24
-        ip_address_uri: CTLPLANE_IP
+        ip_address: {{ ctlplane_ip }}
+        ip_subnet: {{ ctlplane_subnet }}
+        ip_address_uri: {{ ctlplane_ip }}
       storage:
-        ip_address: 172.18.0.100
+        ip_address: 172.18.0.{{ ip_address_suffix }}
         ip_subnet: 172.18.0.1/24
-        ip_address_uri: 172.18.0.100
+        ip_address_uri: 172.18.0.{{ ip_address_suffix }}
       storage_mgmt:
-        ip_address: 172.20.0.100
+        ip_address: 172.20.0.{{ ip_address_suffix }}
         ip_subnet: 172.20.0.1/24
-        ip_address_uri: 172.20.0.100
+        ip_address_uri: 172.20.0.{{ ip_address_suffix }}
       internal_api:
-        ip_address: 172.17.0.100
+        ip_address: 172.17.0.{{ ip_address_suffix }}
         ip_subnet: 172.17.0.1/24
-        ip_address_uri: 172.17.0.100
+        ip_address_uri: 172.17.0.{{ ip_address_suffix }}
       tenant:
-        ip_address: 172.19.0.100
+        ip_address: 172.19.0.{{ ip_address_suffix }}
         ip_subnet: 172.19.0.1/24
-        ip_address_uri: 172.19.0.100
+        ip_address_uri: 172.19.0.{{ ip_address_suffix }}
       external:
-        ip_address: 172.21.0.100
+        ip_address: 172.21.0.{{ ip_address_suffix }}
         ip_subnet: 172.21.0.1/24
-        ip_address_uri: 172.21.0.100
+        ip_address_uri: 172.21.0.{{ ip_address_suffix }}
+  {%- for network in additional_networks if network.standalone_config %}
+  {%- set net = network.standalone_config %}
+      {{ net.name.lower() }}:
+        ip_address: {{ net.ip_subnet.split('/')[0].split('.')[:-1] | join('.') + '.' + ip_address_suffix | string }}
+        ip_subnet: {{ net.ip_subnet }}
+        ip_address_uri: {{ net.ip_subnet.split('/')[0].split('.')[:-1] | join('.') + '.' + ip_address_suffix | string }}
+  {%- endfor %}
   ControlPlaneVipData:
     fixed_ips:
-    - ip_address: CTLPLANE_VIP
+    - ip_address: {{ ctlplane_vip }}
     name: control_virtual_ip
     network:
       tags:
-      - CTLPLANE_SUBNET.0/24
+      - {{ ctlplane_subnet }}
     subnets:
     - ip_version: 4
   VipPortMap:
@@ -64,6 +71,13 @@ parameter_defaults:
       ip_address: 172.21.0.2
       ip_address_uri: 172.21.0.2
       ip_subnet: 172.21.0.2/24
+{%- for network in additional_networks if network.standalone_config and network.standalone_config.vip %}
+{%- set net = network.standalone_config %}
+    {{ net.name.lower() }}:
+      ip_address: {{ net.ip_subnet.split('/')[0].split('.')[:-1] | join('.') + '.2' }}
+      ip_address_uri: {{ net.ip_subnet.split('/')[0].split('.')[:-1] | join('.') + '.2' }}
+      ip_subnet: {{ net.ip_subnet }}
+{%- endfor %}
   DeployedNetworkEnvironment:
     net_cidr_map:
       storage:
@@ -76,12 +90,21 @@ parameter_defaults:
       - 172.19.0.0/24
       external:
       - 172.21.0.0/24
+{%- for network in additional_networks if network.standalone_config %}
+{%- set net = network.standalone_config %}
+      {{ net.name.lower() }}:
+      - {{ net.ip_subnet }}
+{%- endfor %}
     net_ip_version_map:
       storage: 4
       storage_mgmt: 4
       internal_api: 4
       tenant: 4
       external: 4
+{%- for network in additional_networks if network.standalone_config %}
+{%- set net = network.standalone_config %}
+      {{ net.name.lower() }}: 4
+{%- endfor %}
     net_attributes_map:
       storage:
         network:
@@ -173,3 +196,23 @@ parameter_defaults:
             host_routes: []
             ip_version: 4
             name: external_subnet
+{%- for network in additional_networks if network.standalone_config %}
+{%- set net = network.standalone_config %}
+      {{ net.name.lower() }}:
+        network:
+          dns_domain: {{ net.name.lower() }}.mydomain.tld.
+          mtu: {{ net.mtu | default(1500) }}
+          name: {{ net.name.lower() }}
+          tags:
+          - tripleo_network_name={{ net.name }}
+          - tripleo_net_idx=0
+          - tripleo_vip={{ net.vip | string | lower }}
+        subnets:
+          {{ net.name.lower() }}_subnet:
+            cidr: {{ net.ip_subnet }}
+            dns_nameservers: {{ net.dns_nameservers | default([]) }}
+            gateway_ip: {{ net.gateway_ip | default('null') }}
+            host_routes: {{ net.host_routes | default([]) }}
+            ip_version: 4
+            name: {{ net.name.lower() }}_subnet
+{%- endfor %}
