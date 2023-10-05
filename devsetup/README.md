@@ -98,11 +98,6 @@ Deploy a compute node VM:
 make edpm_compute
 ```
 
-Enable repositories:
-```
-make edpm_compute_repos
-```
-
 Execute the edpm_deploy step:
 ```
 cd ..

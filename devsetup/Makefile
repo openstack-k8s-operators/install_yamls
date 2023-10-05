@@ -174,8 +174,7 @@ edpm_ansible_runner: ## Debug edpm-ansible playbooks
 
 .PHONY: edpm_compute_repos
 edpm_compute_repos: ## Configure EDPM compute VM with repositories
-	$(eval $(call vars))
-	scripts/edpm-compute-repos.sh ${EDPM_COMPUTE_SUFFIX}
+	@echo "DEPRECATED: this target has no effect and will be removed. Repo setup is done by the 'repo-setup' ansible service"
 
 .PHONY: edpm_compute_cleanup
 edpm_compute_cleanup: ## Delete EDPM compute VM
