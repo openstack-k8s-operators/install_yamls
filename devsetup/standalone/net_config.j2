@@ -68,6 +68,9 @@ network_config:
   use_dhcp: false
   addresses:
   - ip_netmask: {{ net.ip_subnet.split('/')[0].split('.')[:-1] | join('.') + '.' + ip_address_suffix | string }}/{{ net.ip_subnet.split('/')[1] }}
+{%- if net.vip %}
+  - ip_netmask: {{ net.ip_subnet.split('/')[0].split('.')[:-1] | join('.') + '.' + 2 | string }}/32
+{%- endif %}
   routes: {{ net.host_routes | default([]) }}
   members:
   - type: interface
