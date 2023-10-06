@@ -138,6 +138,13 @@ while [[ $(ssh -o BatchMode=yes -o ConnectTimeout=5 $SSH_OPT root@$IP echo ok) !
 done
 
 # Render Jinja2 files
+if [ ${COMPUTE_DRIVER} == 'ironic' ]; then
+    PRIMARY_RESOLV_CONF_ENTRY="192.168.130.11"  # Use crc for dns to enable resolving apps-crc.testing
+    # Add a hosts entry for the network address to speed up iptables
+    ssh $SSH_OPT root@$IP "echo ${IP%.*}.0 .localdomain >> /etc/hosts"
+else
+    PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
+fi
 J2_VARS_FILE=$(mktemp --suffix=".yaml" --tmpdir="${MY_TMP_DIR}")
 cat << EOF > ${J2_VARS_FILE}
 ---
@@ -149,7 +156,7 @@ ctlplane_vip: ${IP%.*}.99
 ip_address_suffix: ${IP_ADRESS_SUFFIX}
 interface_mtu: ${INTERFACE_MTU:-1500}
 gateway_ip: ${GATEWAY}
-dns_server: ${HOST_PRIMARY_RESOLV_CONF_ENTRY}
+dns_server: ${PRIMARY_RESOLV_CONF_ENTRY}
 compute_driver: ${COMPUTE_DRIVER}
 EOF
 
