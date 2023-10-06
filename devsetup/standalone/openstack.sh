@@ -65,6 +65,9 @@ parameter_defaults:
   OctaviaLogOffload: true
   OctaviaForwardAllLogs: true
   StandaloneNetworkConfigTemplate: $HOME/standalone_net_config.j2
+  ServiceNetMap:
+    IronicNetwork: baremetal
+    IronicInspectorNetwork: baremetal
 EOF
 
 CMD="openstack tripleo deploy"
