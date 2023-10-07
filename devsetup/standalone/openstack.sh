@@ -30,8 +30,10 @@ export GATEWAY=${GATEWAY:-192.168.122.1}
 export BRIDGE="br-ctlplane"
 if [ "$COMPUTE_DRIVER" = "ironic" ]; then
     BRIDGE_MAPPINGS=${BRIDGE_MAPPINGS:-"datacentre:${BRIDGE},baremetal:br-baremetal"}
+    NEUTRON_FLAT_NETWORKS=${NEUTRON_FLAT_NETWORKS:-"datacentre,baremetal"}
 else
     BRIDGE_MAPPINGS=${BRIDGE_MAPPINGS:-"datacentre:${BRIDGE}"}
+    NEUTRON_FLAT_NETWORKS=${NEUTRON_FLAT_NETWORKS:-"datacentre"}
 fi
 
 # Create standalone_parameters.yaml file and deploy standalone OpenStack using the following commands.
@@ -51,6 +53,7 @@ parameter_defaults:
   # re-use ctlplane bridge for public net
   NeutronBridgeMappings: $BRIDGE_MAPPINGS
   NeutronPhysicalBridge: $BRIDGE
+  NeutronFlatNetworks: $NEUTRON_FLAT_NETWORKS
   StandaloneEnableRoutedNetworks: false
   StandaloneHomeDir: $HOME
   InterfaceLocalMtu: ${INTERFACE_MTU}
