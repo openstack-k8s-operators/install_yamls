@@ -68,6 +68,12 @@ parameter_defaults:
   ServiceNetMap:
     IronicNetwork: baremetal
     IronicInspectorNetwork: baremetal
+  IronicInspectorSubnets:
+  - ip_range: 172.20.1.190,172.20.1.199
+    netmask: 255.255.255.0
+    gateway: 172.20.1.1
+    tag: baremetal
+  IronicInspectorInterface: br-baremetal
 EOF
 
 CMD="openstack tripleo deploy"
