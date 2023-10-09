@@ -28,6 +28,13 @@ export CTLPLANE_VIP=${CTLPLANE_IP%.*}.99
 export CIDR=24
 export GATEWAY=${GATEWAY:-192.168.122.1}
 export BRIDGE="br-ctlplane"
+if [ "$COMPUTE_DRIVER" = "ironic" ]; then
+    BRIDGE_MAPPINGS=${BRIDGE_MAPPINGS:-"datacentre:${BRIDGE},baremetal:br-baremetal"}
+    NEUTRON_FLAT_NETWORKS=${NEUTRON_FLAT_NETWORKS:-"datacentre,baremetal"}
+else
+    BRIDGE_MAPPINGS=${BRIDGE_MAPPINGS:-"datacentre:${BRIDGE}"}
+    NEUTRON_FLAT_NETWORKS=${NEUTRON_FLAT_NETWORKS:-"datacentre"}
+fi
 
 # Create standalone_parameters.yaml file and deploy standalone OpenStack using the following commands.
 cat <<EOF > standalone_parameters.yaml
@@ -44,8 +51,9 @@ parameter_defaults:
   # domain name used by the host
   NeutronDnsDomain: localdomain
   # re-use ctlplane bridge for public net
-  NeutronBridgeMappings: datacentre:$BRIDGE
+  NeutronBridgeMappings: $BRIDGE_MAPPINGS
   NeutronPhysicalBridge: $BRIDGE
+  NeutronFlatNetworks: $NEUTRON_FLAT_NETWORKS
   StandaloneEnableRoutedNetworks: false
   StandaloneHomeDir: $HOME
   InterfaceLocalMtu: ${INTERFACE_MTU}
@@ -57,6 +65,9 @@ parameter_defaults:
   OctaviaLogOffload: true
   OctaviaForwardAllLogs: true
   StandaloneNetworkConfigTemplate: $HOME/standalone_net_config.j2
+  ServiceNetMap:
+    IronicNetwork: baremetal
+    IronicInspectorNetwork: baremetal
 EOF
 
 CMD="openstack tripleo deploy"
