@@ -46,6 +46,7 @@ if [[ ! -f $SSH_KEY_FILE ]]; then
     exit 1
 fi
 
+sudo dnf install -y python-jinja2
 source ${SCRIPTPATH}/common.sh
 
 
@@ -59,6 +60,7 @@ source ${SCRIPTPATH}/common.sh
 if [[ ! -f $REPO_SETUP_CMDS ]]; then
     cat <<EOF > $REPO_SETUP_CMDS
 set -ex
+rm -f /etc/yum.repos.d/delorean*.repo
 sudo dnf remove -y epel-release
 sudo dnf update -y
 sudo dnf install -y vim git curl util-linux lvm2 tmux wget
@@ -87,8 +89,13 @@ sudo dnf install -y podman python3-tripleoclient util-linux lvm2 cephadm
 # STEP_CONFIG in container-puppet-* containers.
 sudo dnf install -y https://kojihub.stream.centos.org/kojifiles/packages/podman/4.6.0/1.el9/x86_64/podman-4.6.0-1.el9.x86_64.rpm
 
-sudo hostnamectl set-hostname standalone.localdomain
-sudo hostnamectl set-hostname standalone.localdomain --transient
+if [[ "$EDPM_COMPUTE_SUFFIX" == "0" ]]; then
+    sudo hostnamectl set-hostname standalone.localdomain
+    sudo hostnamectl set-hostname standalone.localdomain --transient
+else
+    sudo hostnamectl set-hostname ${EDPM_COMPUTE_NAME}.localdomain
+    sudo hostnamectl set-hostname ${EDPM_COMPUTE_NAME}.localdomain --transient
+fi
 
 export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
 export INTERFACE_MTU=${INTERFACE_MTU:-1500}
@@ -96,6 +103,8 @@ export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
 export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml}"
 export COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
+export EDPM_COMPUTE_SUFFIX=${1:-"0"}
+export EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
 export IP=${IP}
 export GATEWAY=${GATEWAY}
 
@@ -185,6 +194,18 @@ scp $SSH_OPT standalone/openstack.sh root@$IP:/tmp/openstack.sh
 scp $SSH_OPT $HOME/.ssh/id_ecdsa.pub root@$IP:/root/.ssh/id_ecdsa.pub
 if [[ -f $HOME/containers-prepare-parameters.yaml ]]; then
     scp $SSH_OPT $HOME/containers-prepare-parameters.yaml root@$IP:/root/containers-prepare-parameters.yaml
+fi
+# For multi-stack deployment, get extracted data from main node index 0 and copy to the target node
+if [[ "$EDPM_COMPUTE_SUFFIX" != "0"  ]]; then
+    IP0=${EDPM_COMPUTE_NETWORK_IP%.*}.100
+    EDGE0="edge0"
+    EDGE="edge${EDPM_COMPUTE_SUFFIX}"
+    for f in oslo.json services.yaml net-ip-map.json endpoint-map.json all-nodes-extra-map-data.json extra-host-file-entries.json; do
+        scp $SSH_OPT root@$IP0:${EDGE0}_$f $HOME/${EDGE}_$f
+        scp $SSH_OPT $HOME/${EDGE}_$f root@$IP:${EDGE}_$f
+    done
+    scp $SSH_OPT root@$IP0:tripleo-standalone-passwords.yaml ${EDGE}_passwords.yaml
+    scp $SSH_OPT ${EDGE}_passwords.yaml root@$IP:tripleo-standalone-passwords.yaml
 fi
 
 # Running

@@ -16,6 +16,8 @@
 set -ex
 
 EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
+EDPM_COMPUTE_SUFFIX=${1:-"0"}
+EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
 COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
 INTERFACE_MTU=${INTERFACE_MTU:-1500}
 
@@ -72,6 +74,9 @@ EOF
 
 CMD="openstack tripleo deploy"
 
+if [[ "$EDPM_COMPUTE_SUFFIX" == "0"  ]]; then
+    CMD_ARGS+=" --keep-running"
+fi
 CMD_ARGS+=" --templates /usr/share/openstack-tripleo-heat-templates"
 CMD_ARGS+=" --local-ip=$CTLPLANE_IP/$CIDR"
 CMD_ARGS+=" --control-virtual-ip=$CTLPLANE_VIP"
@@ -92,7 +97,103 @@ if [ "$EDPM_COMPUTE_CEPH_ENABLED" = "true" ] ; then
     CEPH_ARGS=${CEPH_ARGS:-"-e ~/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml"}
     ENV_ARGS+=" ${CEPH_ARGS}"
 fi
+
+# NOTE: For other nodes than node0, deploy it as extra Heat stacks,
+# by using env files prepared after the standalone node0.
+# See https://docs.openstack.org/project-deploy-guide/tripleo-docs/wallaby/deployment/standalone.html#deploy-the-remote-compute-node
+EDGE="$HOME/edge${EDPM_COMPUTE_SUFFIX}"
+if [[ "$EDPM_COMPUTE_SUFFIX" != "0"  ]]; then
+    sed -ir "s/edge0/edge${EDPM_COMPUTE_SUFFIX}/g" ${EDGE}_services.yaml
+    ENV_ARGS+=" -e ${EDGE}_services.yaml"
+    ENV_ARGS+=" -e ${EDGE}_endpoint-map.json"
+    ENV_ARGS+=" -e ${EDGE}_all-nodes-extra-map-data.json"
+    ENV_ARGS+=" -e ${EDGE}_extra-host-file-entries.json"
+    ENV_ARGS+=" -e ${EDGE}_oslo.json"
+fi
 ENV_ARGS+=" -e $HOME/containers-prepare-parameters.yaml"
 ENV_ARGS+=" -e $HOME/deployed_network.yaml"
 
 sudo ${CMD} ${CMD_ARGS} ${ENV_ARGS}
+
+# NOTE: after node0 deployed, extract env files for multi-stack standalone deployments
+if [[ "$EDPM_COMPUTE_SUFFIX" == "0"  ]]; then
+    unset OS_CLOUD
+    export OS_AUTH_TYPE=none
+    export OS_ENDPOINT=http://127.0.0.1:8006/v1/admin
+    export OS_CLOUDNAME=heat
+    STANDALONE_LATEST=$(find ~/standalone-ansible-* -type d -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1)
+    set +e
+    openstack stack output show standalone EndpointMap --format json
+    if [ $? -ne 0 ]; then
+        set -e
+        HEAT_LATEST=$(find ~/heat_launcher* -type d -printf "%T@ %p\n" | sort -n | cut -d' ' -f 2- | tail -n 1)
+        pkill -f /usr/bin/heat-all
+        openstack tripleo launch heat --restore-db --heat-dir="$HEAT_LATEST" --heat-type=native
+        cd $HEAT_LATEST
+    fi
+
+    openstack stack output show standalone EndpointMap --format json \
+    | jq '{"parameter_defaults": {"EndpointMapOverride": .output_value}}' \
+    > ${EDGE}_endpoint-map.json
+
+    openstack stack output show standalone HostsEntry -f json \
+    | jq -r '{"parameter_defaults":{"ExtraHostFileEntries": .output_value}}' \
+    > ${EDGE}_extra-host-file-entries.json
+
+    jq '.' $STANDALONE_LATEST/group_vars/overcloud.json \
+    | jq -n '.parameter_defaults.AllNodesExtraMapData=inputs' - \
+    > ${EDGE}_all-nodes-extra-map-data.json
+
+    cat <<EOF > ${EDGE}_services.yaml
+resource_registry:
+    OS::TripleO::Services::CACerts: OS::Heat::None
+    OS::TripleO::Services::CinderApi: OS::Heat::None
+    OS::TripleO::Services::CinderScheduler: OS::Heat::None
+    OS::TripleO::Services::Clustercheck: OS::Heat::None
+    OS::TripleO::Services::HAproxy: OS::Heat::None
+    OS::TripleO::Services::Horizon: OS::Heat::None
+    OS::TripleO::Services::Keystone: OS::Heat::None
+    OS::TripleO::Services::Memcached: OS::Heat::None
+    OS::TripleO::Services::MySQL: OS::Heat::None
+    OS::TripleO::Services::NeutronApi: OS::Heat::None
+    OS::TripleO::Services::NeutronDhcpAgent: OS::Heat::None
+    OS::TripleO::Services::NovaApi: OS::Heat::None
+    OS::TripleO::Services::NovaConductor: OS::Heat::None
+    OS::TripleO::Services::NovaConsoleauth: OS::Heat::None
+    OS::TripleO::Services::NovaIronic: OS::Heat::None
+    OS::TripleO::Services::NovaMetadata: OS::Heat::None
+    OS::TripleO::Services::NovaPlacement: OS::Heat::None
+    OS::TripleO::Services::NovaScheduler: OS::Heat::None
+    OS::TripleO::Services::NovaVncProxy: OS::Heat::None
+    OS::TripleO::Services::OsloMessagingNotify: OS::Heat::None
+    OS::TripleO::Services::OsloMessagingRpc: OS::Heat::None
+    OS::TripleO::Services::Redis: OS::Heat::None
+    OS::TripleO::Services::SwiftProxy: OS::Heat::None
+    OS::TripleO::Services::SwiftStorage: OS::Heat::None
+    OS::TripleO::Services::SwiftRingBuilder: OS::Heat::None
+
+parameter_defaults:
+    CinderRbdAvailabilityZone: edge${EDPM_COMPUTE_SUFFIX}
+    GlanceBackend: swift
+    GlanceCacheEnabled: true
+EOF
+
+    cat <<EOF > ${EDGE}_oslo.json
+{
+    "parameter_defaults": {
+        "StandaloneExtraConfig": {
+            "oslo_messaging_notify_use_ssl": false,
+            "oslo_messaging_rpc_use_ssl": false
+        }
+    }
+}
+EOF
+
+    sudo jq ".parameter_defaults.StandaloneExtraConfig.oslo_messaging_notify_password=\
+    \"$(jq -r '.oslo_messaging_notify_password' /etc/puppet/hieradata/service_configs.json)\"" \
+    ${EDGE}_oslo.json \
+    | jq ".parameter_defaults.StandaloneExtraConfig.oslo_messaging_rpc_password=\
+    \"$(jq -r '.oslo_messaging_rpc_password' /etc/puppet/hieradata/service_configs.json)\"" \
+    > ${EDGE}_oslo_.json
+    mv -f ${EDGE}_oslo_.json ${EDGE}_oslo.json
+fi
