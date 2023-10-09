@@ -130,6 +130,7 @@ sudo cp /tmp/Standalone.yaml \$HOME/Standalone.yaml
 
 [[ "\$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]] && /tmp/ceph.sh
 /tmp/openstack.sh
+[[ "\$COMPUTE_DRIVER" == "ironic" ]] && /tmp/ironic_post.sh
 EOF
 fi
 
@@ -174,6 +175,7 @@ scp $SSH_OPT ${MY_TMP_DIR}/deployed_network.yaml root@$IP:/tmp/deployed_network.
 scp $SSH_OPT ${MY_TMP_DIR}/Standalone.yaml root@$IP:/tmp/Standalone.yaml
 scp $SSH_OPT standalone/ceph.sh root@$IP:/tmp/ceph.sh
 scp $SSH_OPT standalone/openstack.sh root@$IP:/tmp/openstack.sh
+scp $SSH_OPT standalone/post_config/ironic.sh root@$IP:/tmp/ironic_post.sh
 [ -f $HOME/.ssh/id_ecdsa.pub ] || \
     ssh-keygen -t ecdsa -f $HOME/.ssh/id_ecdsa -q -N ""
 scp $SSH_OPT $HOME/.ssh/id_ecdsa.pub root@$IP:/root/.ssh/id_ecdsa.pub
