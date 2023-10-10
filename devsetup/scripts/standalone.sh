@@ -131,6 +131,11 @@ sudo cp /tmp/Standalone.yaml \$HOME/Standalone.yaml
 [[ "\$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]] && /tmp/ceph.sh
 /tmp/openstack.sh
 [[ "\$COMPUTE_DRIVER" == "ironic" ]] && /tmp/ironic_post.sh
+
+# explicitely return exit code 0 when we reach the end of the script
+# if the script ends with a test chained to a command with an '&&' and the test
+# is not true, the script will return 0 and cause an error in CI
+exit 0
 EOF
 fi
 
