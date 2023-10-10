@@ -15,11 +15,7 @@
 # under the License.
 set -ex
 
-EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
-EDPM_COMPUTE_SUFFIX=${1:-"0"}
-EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
-COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
-INTERFACE_MTU=${INTERFACE_MTU:-1500}
+. $HOME/.standalone_env_file
 
 # Use the files created in the previous steps including the network_data.yaml file and thw deployed_network.yaml file.
 # The deployed_network.yaml file hard codes the IPs and VIPs configured from the network.sh

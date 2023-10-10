@@ -81,7 +81,21 @@ else
 fi
 
 if [[ ! -f $CMDS_FILE ]]; then
+    cat <<EOF > $MY_TMP_DIR/.standalone_env_file
+export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
+export INTERFACE_MTU=${INTERFACE_MTU:-1500}
+export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
+export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
+export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml}"
+export COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
+export EDPM_COMPUTE_SUFFIX=${1:-"0"}
+export EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
+export IP=${IP}
+export GATEWAY=${GATEWAY}
+EOF
     cat <<EOF > $CMDS_FILE
+. \$HOME/.standalone_env_file
+
 sudo dnf install -y podman python3-tripleoclient util-linux lvm2 cephadm
 
 # Pin Podman to work around a Podman regression where env variables
@@ -96,17 +110,6 @@ else
     sudo hostnamectl set-hostname ${EDPM_COMPUTE_NAME}.localdomain
     sudo hostnamectl set-hostname ${EDPM_COMPUTE_NAME}.localdomain --transient
 fi
-
-export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
-export INTERFACE_MTU=${INTERFACE_MTU:-1500}
-export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
-export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
-export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml}"
-export COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
-export EDPM_COMPUTE_SUFFIX=${1:-"0"}
-export EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
-export IP=${IP}
-export GATEWAY=${GATEWAY}
 
 if [[ -f \$HOME/containers-prepare-parameters.yaml ]]; then
     echo "Using existing containers-prepare-parameters.yaml - contents:"
@@ -190,6 +193,7 @@ jinja2_render standalone/net_config.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/net_con
 jinja2_render standalone/role.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/Standalone.yaml
 
 # Copying files
+scp $SSH_OPT $MY_TMP_DIR/.standalone_env_file root@$IP:.standalone_env_file
 scp $SSH_OPT $REPO_SETUP_CMDS root@$IP:/tmp/repo-setup.sh
 scp $SSH_OPT $CMDS_FILE root@$IP:/tmp/standalone-deploy.sh
 scp $SSH_OPT ${MY_TMP_DIR}/net_config.yaml root@$IP:/tmp/net_config.yaml
