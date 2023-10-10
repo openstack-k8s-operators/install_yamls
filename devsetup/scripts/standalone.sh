@@ -167,13 +167,22 @@ additional_networks: ${EDPM_COMPUTE_ADDITIONAL_NETWORKS}
 ctlplane_cidr: 24
 ctlplane_ip: ${IP}
 ctlplane_subnet: ${IP%.*}.0/24
-ctlplane_vip: ${IP%.*}.99
 ip_address_suffix: ${IP_ADRESS_SUFFIX}
 interface_mtu: ${INTERFACE_MTU:-1500}
 gateway_ip: ${GATEWAY}
 dns_server: ${PRIMARY_RESOLV_CONF_ENTRY}
 compute_driver: ${COMPUTE_DRIVER}
 EOF
+# Additional computes do not require VIPs applied by network config
+if [[ "$EDPM_COMPUTE_SUFFIX" == "0"  ]]; then
+cat << EOF >> ${J2_VARS_FILE}
+ctlplane_vip: ${IP%.*}.99
+external_vip: 172.21.0.2
+internalapi_vip: 172.17.0.2
+storage_vip: 172.18.0.2
+storagemgmt_vip: 172.20.0.2
+EOF
+fi
 
 jinja2_render standalone/network_data.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/network_data.yaml
 jinja2_render standalone/deployed_network.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/deployed_network.yaml

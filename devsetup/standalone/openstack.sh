@@ -106,6 +106,7 @@ if [[ "$EDPM_COMPUTE_SUFFIX" != "0"  ]]; then
     sed -ir "s/edge0/edge${EDPM_COMPUTE_SUFFIX}/g" ${EDGE}_services.yaml
     ENV_ARGS+=" -e ${EDGE}_services.yaml"
     ENV_ARGS+=" -e ${EDGE}_endpoint-map.json"
+    ENV_ARGS+=" -e ${EDGE}_net-ip-map.json"
     ENV_ARGS+=" -e ${EDGE}_all-nodes-extra-map-data.json"
     ENV_ARGS+=" -e ${EDGE}_extra-host-file-entries.json"
     ENV_ARGS+=" -e ${EDGE}_oslo.json"
@@ -135,6 +136,10 @@ if [[ "$EDPM_COMPUTE_SUFFIX" == "0"  ]]; then
     openstack stack output show standalone EndpointMap --format json \
     | jq '{"parameter_defaults": {"EndpointMapOverride": .output_value}}' \
     > ${EDGE}_endpoint-map.json
+
+    openstack stack output show standalone EndpointMap --format json \
+    | jq '{"parameter_defaults": {"RoleNetIpMap": .output_value}}' \
+    > ${EDGE}_net-ip-map.json
 
     openstack stack output show standalone HostsEntry -f json \
     | jq -r '{"parameter_defaults":{"ExtraHostFileEntries": .output_value}}' \
