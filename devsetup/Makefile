@@ -47,6 +47,7 @@ BMAAS_REDFISH_USERNAME ?= admin
 BMAAS_REDFISH_PASSWORD ?= password
 BMAAS_SUSHY_EMULATOR_NAMESPACE ?= sushy-emulator
 BMAAS_LIBVIRT_USER ?= sushyemu
+BMAAS_ROUTE_LIBVIRT_NETWORKS ?= ${BMAAS_NETWORK_NAME},crc,default
 
 DATAPLANE_PLAYBOOK ?= osp.edpm.download_cache
 DATAPLANE_CUSTOM_SERVICE_RUNNER_IMG ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
@@ -239,6 +240,15 @@ bmaas_network_cleanup: export NETWORK_NETMASK = ${BMAAS_NETWORK_NETMASK}
 bmaas_network_cleanup: ## Delete libvirt BMaaS network
 	scripts/network-setup.sh --cleanup
 
+.PHONY: bmaas_route_crc_and_crc_bmaas_networks
+bmaas_route_crc_and_crc_bmaas_networks: export ROUTE_LIBVIRT_NETWORKS = ${BMAAS_ROUTE_LIBVIRT_NETWORKS}
+bmaas_route_crc_and_crc_bmaas_networks:
+	scripts/libvirt-network-routing.sh --create
+
+.PHONY: bmaas_route_crc_and_crc_bmaas_networks_cleanup
+bmaas_route_crc_and_crc_bmaas_networks_cleanup:
+	scripts/libvirt-network-routing.sh --cleanup
+
 .PHONY: bmaas_crc_attach_network
 bmaas_crc_attach_network: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
 bmaas_crc_attach_network: ## Attach BMaaS network to CRC
@@ -324,6 +334,7 @@ bmaas_generate_nodes_yaml:
 bmaas: bmaas_cleanup
 	pushd .. && make input nmstate && popd
 	make bmaas_network
+	make bmaas_route_crc_and_crc_bmaas_networks
 	make bmaas_crc_attach_network
 	make bmaas_crc_baremetal_bridge
 	make bmaas_baremetal_net_nad
@@ -338,4 +349,5 @@ bmaas_cleanup:
 	make bmaas_baremetal_net_nad_cleanup
 	make bmaas_crc_baremetal_bridge_cleanup
 	make bmaas_crc_attach_network_cleanup
+	make bmaas_route_crc_and_crc_bmaas_networks_cleanup
 	make bmaas_network_cleanup

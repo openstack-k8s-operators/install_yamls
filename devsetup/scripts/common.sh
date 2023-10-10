@@ -40,3 +40,45 @@ j2_template = jinja2.Template(template)
 print(j2_template.render(**vars))
 "
 }
+
+
+#---
+## Get libvirt network ip subnet (CIDR)
+# Parameter #1 is the libvirt network name
+#---
+function get_libvirt_net_ip_subnet {
+    local libvirt_net
+    local ip
+    local prefix
+    libvirt_net=$1
+    ip=$(sudo virsh net-dumpxml $libvirt_net | xmllint - --xpath 'string(/network/ip/@address)')
+    prefix=$(sudo virsh net-dumpxml $libvirt_net | xmllint - --xpath 'string(/network/ip/@prefix)')
+    if [ -z "${prefix}" ]; then
+        prefix=$(sudo virsh net-dumpxml $libvirt_net | xmllint - --xpath 'string(/network/ip/@netmask)')
+    fi
+    ip_version=$(/usr/bin/python3 -c "import ipaddress; print(ipaddress.ip_address('${ip}').version)")
+    if [[ ${ip_version} == 4 ]]; then
+        ip_subnet=$(/usr/bin/python3 -c "import ipaddress; print(ipaddress.IPv4Network('${ip}/${prefix}', strict=False))")
+    elif [[ ${ip_version} == 6 ]]; then
+        ip_subnet=$(/usr/bin/python3 -c "import ipaddress; print(ipaddress.IPv6Network('${ip}/${prefix}', strict=False))")
+    else
+        echo "Invalid ip version: '${ip_version}'"
+        exit 1
+    fi
+
+    echo ${ip_subnet}
+}
+
+
+#---
+## Get libvirt network bridge name
+# Parameter #1 is the libvirt network name
+#---
+function get_libvirt_net_bridge {
+    local libvirt_net
+    libvirt_net=$1
+
+    bridge_name=$(sudo virsh net-dumpxml ${libvirt_net} | xmllint - --xpath 'string(/network/bridge/@name)')
+
+    echo ${bridge_name}
+}
