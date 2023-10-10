@@ -103,7 +103,7 @@ if [ -z "$ACTION" ]; then
 fi
 
 if [ "$ACTION" == "CREATE" ]; then
-    create ${ROUTE_LIBVIRT_NETWORKS}
+    create $(deduplicate_string_list ${ROUTE_LIBVIRT_NETWORKS} ",")
 elif [ "$ACTION" == "CLEANUP" ]; then
     cleanup
 fi
