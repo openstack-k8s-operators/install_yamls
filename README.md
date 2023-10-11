@@ -132,7 +132,7 @@ At this point the ctlplane is deployed with the services using isolated networks
 
 * deploy edpm compute
 ```bash
-# To use a NTP server other than the ntp.pool.org default one, override the DATAPLANE_CHRONY_NTP_SERVER variable
+# To use a NTP server other than the ntp.pool.org default one, override the DATAPLANE_NTP_SERVER variable
 DATAPLANE_TOTAL_NODES=2 make edpm_wait_deploy
 ```
 Note: if you used the `edpm_deploy` target to start the deployment then after
