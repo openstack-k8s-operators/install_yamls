@@ -51,10 +51,10 @@ function get_libvirt_net_ip_subnet {
     local ip
     local prefix
     libvirt_net=$1
-    ip=$(sudo virsh net-dumpxml $libvirt_net | xmllint - --xpath 'string(/network/ip/@address)')
-    prefix=$(sudo virsh net-dumpxml $libvirt_net | xmllint - --xpath 'string(/network/ip/@prefix)')
+    ip=$(sudo virsh net-dumpxml $libvirt_net | xmllint --xpath 'string(/network/ip/@address)' -)
+    prefix=$(sudo virsh net-dumpxml $libvirt_net | xmllint --xpath 'string(/network/ip/@prefix)' -)
     if [ -z "${prefix}" ]; then
-        prefix=$(sudo virsh net-dumpxml $libvirt_net | xmllint - --xpath 'string(/network/ip/@netmask)')
+        prefix=$(sudo virsh net-dumpxml $libvirt_net | xmllint --xpath 'string(/network/ip/@netmask)' -)
     fi
     ip_version=$(/usr/bin/python3 -c "import ipaddress; print(ipaddress.ip_address('${ip}').version)")
     if [[ ${ip_version} == 4 ]]; then
@@ -78,7 +78,7 @@ function get_libvirt_net_bridge {
     local libvirt_net
     libvirt_net=$1
 
-    bridge_name=$(sudo virsh net-dumpxml ${libvirt_net} | xmllint - --xpath 'string(/network/bridge/@name)')
+    bridge_name=$(sudo virsh net-dumpxml ${libvirt_net} | xmllint --xpath 'string(/network/bridge/@name)' -)
 
     echo ${bridge_name}
 }
