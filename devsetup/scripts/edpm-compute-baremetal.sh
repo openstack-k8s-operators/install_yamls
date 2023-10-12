@@ -34,6 +34,7 @@ BMH_CR_FILE=${BMH_CR_FILE:-bmh_deploy.yaml}
 
 function create {
     mkdir -p ${DEPLOY_DIR}
+    pushd ${DEPLOY_DIR}
     NODE_INDEX=0
     while IFS= read -r instance; do
         export uuid_${NODE_INDEX}="${instance% *}"
@@ -43,11 +44,11 @@ function create {
         NODE_INDEX=$((NODE_INDEX+1))
     done <<< "$(virsh --connect=qemu:///system list --all --uuid --name | grep "${NODE_NAME_PREFIX}")"
 
-    rm ${DEPLOY_DIR}/${BMH_CR_FILE} || true
+    rm ${BMH_CR_FILE} || true
     for (( i=0; i<${NODE_COUNT}; i++ )); do
         mac_var=mac_address_${i}
         uuid_var=uuid_${i}
-        cat <<EOF >>${DEPLOY_DIR}/${BMH_CR_FILE}
+        cat <<EOF >>${BMH_CR_FILE}
 ---
 # This is the secret with the BMC credentials (Redfish in this case).
 apiVersion: v1
@@ -78,14 +79,19 @@ spec:
     deviceName: /dev/vda
 EOF
     done
-    /bin/bash ${SCRIPTPATH}/gen-edpm-baremetal-kustomize.sh
+    cat <<EOF >kustomization.yaml
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ${NAMESPACE}
+resources:
+  - ${BMH_CR_FILE}
+EOF
+    popd
     /bin/bash ../scripts/operator-deploy-resources.sh
 }
 
 function cleanup {
-    oc delete --all openstackdataplanenodeset --ignore-not-found=true || true
-    oc delete --all openstackdataplaneservice --ignore-not-found=true || true
-    oc delete --all openstackdataplanedeployment --ignore-not-found=true || true
     while oc get bmh | grep -q -e "deprovisioning" -e "provisioned"; do
         sleep 5
     done || true

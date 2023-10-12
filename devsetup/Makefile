@@ -6,7 +6,26 @@ CRC_DEFAULT_NETWORK_IP ?= 192.168.122.10
 EDPM_COMPUTE_SUFFIX ?= 0
 # EDPM_COMPUTE_ADDITIONAL_NETWORKS: JSON string - list of additional networks
 # Examples:
-#   EDPM_COMPUTE_ADDITIONAL_NETWORKS='[{"type": "network", "name": "crc-bmaas"}]'
+#   cat << EOF
+#   [
+#     {
+#       "type": "network",
+#       "name": "crc-bmaas",
+#       "standalone_config": {
+#         "type": "linux_bridge",
+#         "name": "baremetal",
+#         "mtu": 1500,
+#         "ip_subnet": "172.20.1.0/24",
+#         "allocation_pools": [
+#           {
+#             "start": "172.20.1.4",
+#             "end": "172.20.1.250"
+#           }
+#         ]
+#       }
+#     }
+#   ]
+#   EOF
 #   EDPM_COMPUTE_ADDITIONAL_NETWORKS=$(jq -c addtional_nets.json)
 EDPM_COMPUTE_ADDITIONAL_NETWORKS ?= '[]'
 EDPM_TOTAL_NODES ?= 1
@@ -28,24 +47,18 @@ BMAAS_REDFISH_USERNAME ?= admin
 BMAAS_REDFISH_PASSWORD ?= password
 BMAAS_SUSHY_EMULATOR_NAMESPACE ?= sushy-emulator
 BMAAS_LIBVIRT_USER ?= sushyemu
+BMAAS_ROUTE_LIBVIRT_NETWORKS ?= ${BMAAS_NETWORK_NAME},crc,default
 
-DATAPLANE_REGISTRY_URL ?= quay.io/podified-antelope-centos9
-DATAPLANE_CONTAINER_TAG ?= current-podified
 DATAPLANE_PLAYBOOK ?= osp.edpm.download_cache
-DATAPLANE_CHRONY_NTP_SERVER ?=pool.ntp.org
-DATAPLANE_SSHD_ALLOWED_RANGES ?=['192.168.122.0/24']
 DATAPLANE_CUSTOM_SERVICE_RUNNER_IMG ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
-DATAPLANE_ANSIBLE_USER     ?=cloud-admin
-DATAPLANE_ANSIBLE_SECRET   ?=dataplane-ansible-ssh-private-key-secret
-DATAPLANE_GROWVOLS_ARGS    ?=/=8GB /tmp=1GB /home=1GB /var=8GB
-BM_PROVISIONING_INTERFACE  ?=enp6s0
-BM_CTLPLANE_INTERFACE      ?=enp1s0
+DATAPLANE_GROWVOLS_ARGS    ?=
 BM_NETWORK_NAME            ?=default
-BM_NETWORK_IPADDRESS       ?=192.168.122.1
 BM_INSTANCE_NAME_PREFIX    ?=edpm-compute
 BM_NODE_COUNT              ?=1
 BM_ROOT_PASSWORD_SECRET    ?=
 BMH_NAMESPACE              ?=openstack
+
+STANDALONE_COMPUTE_DRIVER ?= libvirt
 
 CLEANUP_DIR_CMD ?= rm -Rf
 
@@ -108,38 +121,33 @@ crc_attach_default_interface_cleanup: ## Detach default libvirt network from CRC
 ##@ EDPM
 
 .PHONY: edpm_baremetal
-edpm_baremetal: export EDPM_BMH_NAMESPACE=${BMH_NAMESPACE}
-edpm_baremetal: export EDPM_PROVISIONING_INTERFACE=${BM_PROVISIONING_INTERFACE}
-edpm_baremetal: export EDPM_CTLPLANE_INTERFACE=${BM_CTLPLANE_INTERFACE}
-edpm_baremetal: export OPERATOR_NAME=openstack
-edpm_baremetal: export EDPM_ANSIBLE_SECRET=${DATAPLANE_ANSIBLE_SECRET}
-edpm_baremetal: export EDPM_ANSIBLE_USER=${DATAPLANE_ANSIBLE_USER}
-edpm_baremetal: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
-edpm_baremetal: export BMAAS_NETWORK_IPADDRESS=${BM_NETWORK_IPADDRESS}
-edpm_baremetal: export BMAAS_INSTANCE_NAME_PREFIX=${BM_INSTANCE_NAME_PREFIX}
-edpm_baremetal: export EDPM_CHRONY_NTP_SERVER=${DATAPLANE_CHRONY_NTP_SERVER}
-edpm_baremetal: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALLOWED_RANGES}
-edpm_baremetal: export EDPM_ROOT_PASSWORD_SECRET=${BM_ROOT_PASSWORD_SECRET}
-edpm_baremetal: export BMAAS_NODE_COUNT=${BM_NODE_COUNT}
-edpm_baremetal: export NODE_COUNT=${BM_NODE_COUNT}
-edpm_baremetal: export EDPM_TOTAL_NODES=${BM_NODE_COUNT}
-edpm_baremetal: export OPENSTACK_RUNNER_IMG=${DATAPLANE_CUSTOM_SERVICE_RUNNER_IMG}
-edpm_baremetal: export EDPM_REGISTRY_URL=${DATAPLANE_REGISTRY_URL}
-edpm_baremetal: export EDPM_CONTAINER_TAG=${DATAPLANE_CONTAINER_TAG}
+edpm_baremetal: export DATAPLANE_TOTAL_NODES=${BM_NODE_COUNT}
 edpm_baremetal: export EDPM_GROWVOLS_ARGS=${DATAPLANE_GROWVOLS_ARGS}
-edpm_baremetal: ## Deploy only dataplane with BMAAS
+edpm_baremetal: edpm_baremetal_compute
+	make -C .. edpm_deploy_baremetal
+
+.PHONY: edpm_baremetal_compute
+edpm_baremetal_compute: export OPERATOR_NAME=openstack
+edpm_baremetal_compute: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
+edpm_baremetal_compute: export BMAAS_INSTANCE_NAME_PREFIX=${BM_INSTANCE_NAME_PREFIX}
+edpm_baremetal_compute: export BMAAS_NODE_COUNT=${BM_NODE_COUNT}
+edpm_baremetal_compute: export NODE_COUNT=${BM_NODE_COUNT}
+edpm_baremetal_compute: export DEPLOY_DIR=../out/bmaas
+edpm_baremetal_compute: ## Create virtual baremetal for the dataplane
 	$(eval $(call vars))
 	make bmaas_virtual_bms
 	make bmaas_sushy_emulator
-	scripts/gen-ansibleee-ssh-key.sh
-	scripts/edpm-compute-baremetal.sh --create
+	bash scripts/edpm-compute-baremetal.sh --create
 
 .PHONY: edpm_baremetal_cleanup
-edpm_baremetal_cleanup: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
-edpm_baremetal_cleanup: export BMAAS_INSTANCE_NAME_PREFIX=${BM_INSTANCE_NAME_PREFIX}
-edpm_baremetal_cleanup: export BMAAS_NODE_COUNT=${BM_NODE_COUNT}
-edpm_baremetal_cleanup: export NODE_COUNT=${BM_NODE_COUNT}
-edpm_baremetal_cleanup:  ## Cleanup dataplane with BMAAS
+edpm_baremetal_cleanup: edpm_baremetal_compute_cleanup
+	make -C .. edpm_deploy_cleanup
+
+edpm_baremetal_compute_cleanup: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
+edpm_baremetal_compute_cleanup: export BMAAS_INSTANCE_NAME_PREFIX=${BM_INSTANCE_NAME_PREFIX}
+edpm_baremetal_compute_cleanup: export BMAAS_NODE_COUNT=${BM_NODE_COUNT}
+edpm_baremetal_compute_cleanup: export NODE_COUNT=${BM_NODE_COUNT}
+edpm_baremetal_compute_cleanup:  ## Cleanup dataplane with BMAAS
 	$(eval $(call vars))
 	scripts/edpm-compute-baremetal.sh --cleanup
 	pushd .. && rm -Rf out/edpm || true && popd
@@ -151,7 +159,7 @@ edpm_compute: ## Create EDPM compute VM
 	$(eval $(call vars))
 	scripts/gen-ansibleee-ssh-key.sh
 	if [ ${EDPM_TOTAL_NODES} -eq 1 ]; then \
-		scripts/gen-edpm-compute-node.sh ${EDPM_COMPUTE_SUFFIX} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}' ; \
+		scripts/gen-edpm-compute-node.sh ${EDPM_COMPUTE_SUFFIX} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}'; \
 	else \
 		for INDEX in $(shell seq 0 $$((${EDPM_TOTAL_NODES} -1))) ; do \
 			scripts/gen-edpm-compute-node.sh $$INDEX '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}' ; \
@@ -167,8 +175,7 @@ edpm_ansible_runner: ## Debug edpm-ansible playbooks
 
 .PHONY: edpm_compute_repos
 edpm_compute_repos: ## Configure EDPM compute VM with repositories
-	$(eval $(call vars))
-	scripts/edpm-compute-repos.sh ${EDPM_COMPUTE_SUFFIX}
+	@echo "DEPRECATED: this target has no effect and will be removed. Repo setup is done by the 'repo-setup' ansible service"
 
 .PHONY: edpm_compute_cleanup
 edpm_compute_cleanup: ## Delete EDPM compute VM
@@ -191,7 +198,7 @@ standalone: export STANDALONE=true
 standalone: export INTERFACE_MTU=${NETWORK_MTU}
 standalone: edpm_compute ## Create standalone VM
 	$(eval $(call vars))
-	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX}
+	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX} ${STANDALONE_COMPUTE_DRIVER} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}'
 
 .PHONY: standalone_cleanup
 standalone_cleanup: export STANDALONE=true
@@ -232,6 +239,15 @@ bmaas_network_cleanup: export NETWORK_IPADDRESS = ${BMAAS_NETWORK_IPADDRESS}
 bmaas_network_cleanup: export NETWORK_NETMASK = ${BMAAS_NETWORK_NETMASK}
 bmaas_network_cleanup: ## Delete libvirt BMaaS network
 	scripts/network-setup.sh --cleanup
+
+.PHONY: bmaas_route_crc_and_crc_bmaas_networks
+bmaas_route_crc_and_crc_bmaas_networks: export ROUTE_LIBVIRT_NETWORKS = ${BMAAS_ROUTE_LIBVIRT_NETWORKS}
+bmaas_route_crc_and_crc_bmaas_networks:
+	scripts/libvirt-network-routing.sh --create
+
+.PHONY: bmaas_route_crc_and_crc_bmaas_networks_cleanup
+bmaas_route_crc_and_crc_bmaas_networks_cleanup:
+	scripts/libvirt-network-routing.sh --cleanup
 
 .PHONY: bmaas_crc_attach_network
 bmaas_crc_attach_network: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
@@ -318,6 +334,7 @@ bmaas_generate_nodes_yaml:
 bmaas: bmaas_cleanup
 	pushd .. && make input nmstate && popd
 	make bmaas_network
+	make bmaas_route_crc_and_crc_bmaas_networks
 	make bmaas_crc_attach_network
 	make bmaas_crc_baremetal_bridge
 	make bmaas_baremetal_net_nad
@@ -332,4 +349,5 @@ bmaas_cleanup:
 	make bmaas_baremetal_net_nad_cleanup
 	make bmaas_crc_baremetal_bridge_cleanup
 	make bmaas_crc_attach_network_cleanup
+	make bmaas_route_crc_and_crc_bmaas_networks_cleanup
 	make bmaas_network_cleanup

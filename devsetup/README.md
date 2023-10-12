@@ -98,11 +98,6 @@ Deploy a compute node VM:
 make edpm_compute
 ```
 
-Enable repositories:
-```
-make edpm_compute_repos
-```
-
 Execute the edpm_deploy step:
 ```
 cd ..
@@ -129,6 +124,40 @@ make edpm_compute_cleanup
 In case additional compute node VMs are deployed, run:
 ```
 make edpm_compute_cleanup EDPM_COMPUTE_SUFFIX=1
+```
+
+### EDPM virtual baremetal deployment
+
+The EDPM virtual machines can be managed by the openstack-baremetal-operator and
+metal3, which interact with a virtual Redfish BMC provided by sushy-tools.
+
+This requires a running baremetal-operator, and dataplane-operator:
+```
+pushd ..
+make openstack
+popd
+```
+
+Create and manage the virtual machines:
+```
+BM_NODE_COUNT=1 make edpm_baremetal_compute
+```
+
+The dataplane can then be deployed on these nodes as for other baremetal
+dataplane deployments:
+```
+pushd ..
+DATAPLANE_TOTAL_NODES=1 make edpm_deploy_baremetal
+popd
+```
+
+Cleanup:
+```
+pushd ..
+make edpm_deploy_cleanup
+popd
+# Will delete VM's!:
+BM_NODE_COUNT=1 make edpm_baremetal_compute_cleanup
 ```
 
 ### BMaaS LAB

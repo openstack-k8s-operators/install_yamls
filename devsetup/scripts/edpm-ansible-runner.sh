@@ -30,6 +30,8 @@ oc get secret ${EDPM_INVENTORY_SECRET} -n ${NAMESPACE} -o json | jq '.data | map
 podman run --rm -ti \
             -e "ANSIBLE_ENABLE_TASK_DEBUGGER=true" \
             -e "ANSIBLE_FORCE_COLOR=true" \
+            -e "ANSIBLE_VERBOSITY=2" \
+            -e "ANSIBLE_CALLBACKS_ENABLED=profile_tasks" \
             -e "ANSIBLE_SSH_ARGS=-C -o ControlMaster=auto -o ControlPersist=80s" \
             --volume "$(pwd)/inventory":/runner/inventory/hosts:Z \
             --volume "$(pwd)/ansibleee-ssh-key-id_rsa":/runner/env/ssh_key:Z \
