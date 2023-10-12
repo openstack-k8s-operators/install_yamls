@@ -1474,6 +1474,8 @@ dataplane_kuttl_prep: dataplane_kuttl_cleanup
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
+	DEPLOY_DIR=${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services KIND=OpenStackDataPlaneService bash scripts/gen-edpm-services-kustomize.sh
+	oc kustomize ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services | oc apply -f -
 
 .PHONY: dataplane_kuttl
 # dataplane must come before dataplane_kuttl_prep since dataplane creates the CRDs
