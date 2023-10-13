@@ -19,7 +19,7 @@ The steps it runs are the following:
 
 * install crc
 mkdir -p ~/bin
-curl -L https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz | tar -U --strip-components=1 -C ~/bin -xJf - crc
+curl -L https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz | tar -U --strip-components=1 -C ~/bin -xJf - --no-anchored crc
 
 # config CRC
 crc config set consent-telemetry no
