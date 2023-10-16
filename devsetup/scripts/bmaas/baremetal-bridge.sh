@@ -34,12 +34,6 @@ spec:
       type: linux-bridge
       state: up
       mtu: 1500
-      ipv4:
-        dhcp: false
-        address:
-        - ip: $BMAAS_BRIDGE_IPADDRESS
-          prefix-length: 24
-        enabled: true
       bridge:
         options:
           stp:
