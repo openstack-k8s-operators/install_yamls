@@ -167,10 +167,10 @@ used as virtual baremetal nodes managed by Ironic deployed on CRC.
 
 The VM's are attached to a separate libvirt network `crc-bmaas`, this network
 is attached to the CRC instance and a linux-bridge, `crc-bmaas`, is
-configured on the CRC with a NetworkAttachmentDefinition `baremetal-net`.
+configured on the CRC with a NetworkAttachmentDefinition `baremetal`.
 
 When deploying ironic, set up the `networkAttachments`, `provisionNetwork` and
-`inspectionNetwork` to use the `baremetal-net` NetworkAttachmentDefinition.
+`inspectionNetwork` to use the `baremetal` NetworkAttachmentDefinition.
 
 Example:
 ```yaml
@@ -184,8 +184,8 @@ Example:
     < --- snip --->
     ironicConductors:
     - networkAttachments:
-      - baremetal-net
-      provisionNetwork: baremetal-net
+      - baremetal
+      provisionNetwork: baremetal
       dhcpRanges:
       - name: netA
         cidr: 172.20.1.0/24
@@ -194,8 +194,8 @@ Example:
         gateway: 172.20.1.1
     ironicInspector:
       networkAttachments:
-      - baremetal-net
-      inspectionNetwork: baremetal-net
+      - baremetal
+      inspectionNetwork: baremetal
       dhcpRanges:
       - name: netA
         cidr: 172.20.1.0/24
