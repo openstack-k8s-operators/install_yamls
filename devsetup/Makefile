@@ -87,8 +87,9 @@ help: ## Display this help.
 ##@ Download required tools and versions
 .PHONY: download_tools
 download_tools: ## Runs an ansible playbook to install required tools with the versions to develop the service operators. The tools get installed in ~/bin and go in /usr/local/go (alternatives get used to set it as the system wide go version)
-	ANSIBLE_FORCE_COLOR=true ansible-playbook \
+	ANSIBLE_FORCE_COLOR=true ANSIBLE_PIPELINING=true ansible-playbook \
 	-v -i hosts \
+	-c local \
 	download_tools.yaml
 
 ##@ CRC
