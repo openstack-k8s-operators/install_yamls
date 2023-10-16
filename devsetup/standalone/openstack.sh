@@ -74,6 +74,7 @@ parameter_defaults:
     gateway: 172.20.1.1
     tag: baremetal
   IronicInspectorInterface: br-baremetal
+  IronicCleaningDiskErase: metadata
 EOF
 
 CMD="openstack tripleo deploy"
