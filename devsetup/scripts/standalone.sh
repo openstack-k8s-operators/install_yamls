@@ -41,13 +41,28 @@ EDPM_COMPUTE_RAM=${COMPUTE_RAM:-20}
 EDPM_COMPUTE_DISK_SIZE=${COMPUTE_DISK_SIZE:-70}
 EDPM_COMPUTE_CEPH_ENABLED=${COMPUTE_CEPH_ENABLED:-true}
 
+
+if [[ -e /run/systemd/resolve/resolv.conf ]]; then
+    HOST_PRIMARY_RESOLV_CONF_ENTRY=$(cat /run/systemd/resolve/resolv.conf | grep ^nameserver | grep -v "${EDPM_COMPUTE_NETWORK_IP%.*}" | head -n1 | cut -d' ' -f2)
+else
+    HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY:-$GATEWAY}
+fi
+
+# check that the vm can reach the dns server, this is
+# needed as a workaround for the extracted crc adoption job, while the proper
+# cause is investigated
+CHECK_CONNECTIVITY_CMD=""
+if [[ ${CHECK_CONNECTIVITY} == "true" ]]; then
+    LOOP_CMD="while true; do if ping -c4 ${HOST_PRIMARY_RESOLV_CONF_ENTRY}; then echo 'up'; break; fi; done"
+    CHECK_CONNECTIVITY_CMD="timeout 300 bash -c \"${LOOP_CMD}\""
+fi
+
 if [[ ! -f $SSH_KEY_FILE ]]; then
     echo "$SSH_KEY_FILE is missing"
     exit 1
 fi
 
 source ${SCRIPTPATH}/common.sh
-
 
 # Clock synchronization is important for both Ceph and OpenStack services, so both ceph deploy and tripleo deploy commands will make use of chrony to ensure the clock is properly in sync.
 # We'll use the NTP_SERVER environmental variable to define the NTP server to use.
@@ -59,6 +74,7 @@ source ${SCRIPTPATH}/common.sh
 if [[ ! -f $REPO_SETUP_CMDS ]]; then
     cat <<EOF > $REPO_SETUP_CMDS
 set -ex
+${CHECK_CONNECTIVITY_CMD}
 sudo dnf remove -y epel-release
 sudo dnf update -y
 sudo dnf install -y vim git curl util-linux lvm2 tmux wget
@@ -70,12 +86,6 @@ sudo -E tripleo-repos -b wallaby current-tripleo-dev ceph --stream
 sudo dnf repolist
 sudo dnf update -y
 EOF
-fi
-
-if [[ -e /run/systemd/resolve/resolv.conf ]]; then
-    HOST_PRIMARY_RESOLV_CONF_ENTRY=$(cat /run/systemd/resolve/resolv.conf | grep ^nameserver | grep -v "${EDPM_COMPUTE_NETWORK_IP%.*}" | head -n1 | cut -d' ' -f2)
-else
-    HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY:-$GATEWAY}
 fi
 
 if [[ ! -f $CMDS_FILE ]]; then
