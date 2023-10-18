@@ -23,15 +23,9 @@ if [ -z "$NAMESPACE" ]; then
     echo "Please set NAMESPACE"; exit 1
 fi
 
-if [ -z "$KIND" ]; then
-    echo "Please set SERVICE"; exit 1
-fi
-
 if [ -z "$DEPLOY_DIR" ]; then
     echo "Please set DEPLOY_DIR"; exit 1
 fi
-
-NAME=${KIND,,}
 
 if [ ! -d ${DEPLOY_DIR} ]; then
     mkdir -p ${DEPLOY_DIR}
@@ -46,7 +40,33 @@ resources:
 namespace: ${NAMESPACE}
 patches:
 - target:
-    kind: ${KIND}
+    kind: OpenStackDataPlaneDeployment
+  patch: |-
+    - op: add
+      path: /spec/services/0
+      value: repo-setup
+    - op: add
+      path: /spec/env/0
+      value: {"name": "ANSIBLE_CALLBACKS_ENABLED", "value": "profile_tasks"}
+EOF
+if oc get pvc ansible-ee-logs -n ${NAMESPACE} 2>&1 1>/dev/null; then
+cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/nodeTemplate/extraMounts
+      value:
+        - extraVolType: Logs
+          volumes:
+          - name: ansible-logs
+            persistentVolumeClaim:
+              claimName: ansible-ee-logs
+          mounts:
+          - name: ansible-logs
+            mountPath: "/runner/artifacts"
+EOF
+fi
+cat <<EOF >>kustomization.yaml
+- target:
+    kind: OpenStackDataPlaneNodeSet
   patch: |-
     - op: replace
       path: /spec/preProvisioned
@@ -69,9 +89,6 @@ patches:
           subnetName: subnet1
         - name: Tenant
           subnetName: subnet1
-    - op: add
-      path: /spec/services/0
-      value: repo-setup
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/edpm_chrony_ntp_servers
       value:
@@ -88,9 +105,6 @@ patches:
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/edpm_sshd_allowed_ranges
       value: ${EDPM_SSHD_ALLOWED_RANGES}
-    - op: add
-      path: /spec/env/0
-      value: {"name": "ANSIBLE_CALLBACKS_ENABLED", "value": "profile_tasks"}
     - op: replace
       path: /spec/nodeTemplate/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
@@ -98,21 +112,6 @@ patches:
       path: /spec/nodeTemplate/ansible/ansibleUser
       value: ${EDPM_ANSIBLE_USER:-"cloud-admin"}
 EOF
-if oc get pvc ansible-ee-logs -n ${NAMESPACE} 2>&1 1>/dev/null; then
-cat <<EOF >>kustomization.yaml
-    - op: replace
-      path: /spec/nodeTemplate/extraMounts
-      value:
-        - extraVolType: Logs
-          volumes:
-          - name: ansible-logs
-            persistentVolumeClaim:
-              claimName: ansible-ee-logs
-          mounts:
-          - name: ansible-logs
-            mountPath: "/runner/artifacts"
-EOF
-fi
 if [ "$EDPM_TOTAL_NODES" -gt 1 ]; then
     for INDEX in $(seq 1 $((${EDPM_TOTAL_NODES} -1))) ; do
 cat <<EOF >>kustomization.yaml

@@ -44,14 +44,20 @@ resources:
 namespace: ${NAMESPACE}
 patches:
 - target:
-    kind: ${KIND}
+    kind: OpenStackDataPlaneDeployment
+  patch: |-
+    - op: add
+      path: /spec/services/0
+      value: repo-setup
+    - op: add
+      path: /spec/env/0
+      value: {"name": "ANSIBLE_CALLBACKS_ENABLED", "value": "profile_tasks"}
+- target:
+    kind: OpenStackDataPlaneNodeSet
   patch: |-
     - op: add
       path: /spec/baremetalSetTemplate/bmhNamespace
       value: ${EDPM_BMH_NAMESPACE}
-    - op: add
-      path: /spec/services/0
-      value: repo-setup
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/edpm_chrony_ntp_servers
       value:
@@ -65,9 +71,6 @@ patches:
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/edpm_sshd_allowed_ranges
       value: ${EDPM_SSHD_ALLOWED_RANGES}
-    - op: add
-      path: /spec/env/0
-      value: {"name": "ANSIBLE_CALLBACKS_ENABLED", "value": "profile_tasks"}
     - op: replace
       path: /spec/nodeTemplate/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
