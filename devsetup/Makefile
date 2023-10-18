@@ -31,6 +31,7 @@ EDPM_COMPUTE_ADDITIONAL_NETWORKS ?= '[]'
 EDPM_TOTAL_NODES ?= 1
 EDPM_COMPUTE_CEPH_ENABLED ?= true
 NETWORK_MTU	?= 1500
+TIMEOUT_VALUE ?= 120
 
 BMAAS_INSTANCE_NAME_PREFIX ?= crc-bmaas
 BMAAS_INSTANCE_MEMORY ?= 4096
@@ -62,6 +63,8 @@ BMH_NAMESPACE              ?=openstack
 STANDALONE_COMPUTE_DRIVER ?= libvirt
 
 CLEANUP_DIR_CMD ?= rm -Rf
+
+STATIC_MAC_PREFIX ?=52:54:00
 
 define vars
 ${1}: export CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD}
@@ -103,9 +106,20 @@ crc_cleanup: ## Destroys the CRC env, but does NOT clear ( --clear-cache ) the c
 	sudo ${CLEANUP_DIR_CMD} /etc/pki/ca-trust/source/anchors/crc-router-ca.pem
 	sudo update-ca-trust
 
+.PHONY: crc_add_multi_interfaces
+crc_add_multi_interfaces: export TIMEOUT=${TIMEOUT_VALUE}
+crc_add_multi_interfaces: export MAC_PREFIX=${STATIC_MAC_PREFIX}
+crc_add_multi_interfaces: crc_remove_multi_interfaces
+	bash scripts/crc_add_multi_interfaces.sh
+
+.PHONY: crc_remove_multi_interfaces
+crc_remove_multi_interfaces: export TIMEOUT=${TIMEOUT_VALUE}
+crc_remove_multi_interfaces:
+	bash scripts/crc_del_multi_interfaces.sh
+
 .PHONY: crc_attach_default_interface
 crc_attach_default_interface: crc_attach_default_interface_cleanup ## Attach default libvirt network to CRC
-	MAC_ADDRESS=$(shell echo -n 52:54:00; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':'); \
+	MAC_ADDRESS=$(shell echo -n ${STATIC_MAC_PREFIX}; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':'); \
 	virsh --connect=qemu:///system net-update default add-last ip-dhcp-host --xml "<host mac='$$MAC_ADDRESS' name='crc' ip='${CRC_DEFAULT_NETWORK_IP}'/>" --config --live; \
 	virsh --connect=qemu:///system attach-interface crc --source default --type network --model virtio --mac $$MAC_ADDRESS --config --persistent; \
 	sleep 10; \
@@ -156,6 +170,7 @@ edpm_baremetal_compute_cleanup:  ## Cleanup dataplane with BMAAS
 	make bmaas_virtual_bms_cleanup || true
 
 .PHONY: edpm_compute
+edpm_compute: export MAC_PREFIX = ${STATIC_MAC_PREFIX}
 edpm_compute: ## Create EDPM compute VM
 	$(eval $(call vars))
 	scripts/gen-ansibleee-ssh-key.sh
@@ -253,6 +268,7 @@ bmaas_route_crc_and_crc_bmaas_networks_cleanup:
 
 .PHONY: bmaas_crc_attach_network
 bmaas_crc_attach_network: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
+bmaas_crc_attach_network: export MAC_PREFIX = ${STATIC_MAC_PREFIX}
 bmaas_crc_attach_network: ## Attach BMaaS network to CRC
 	scripts/bmaas/attach-network.sh --create
 

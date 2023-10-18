@@ -15,40 +15,51 @@
 # under the License.
 set -ex
 
-if [ -z "${DEPLOY_DIR}" ]; then
-    echo "Please set DEPLOY_DIR"; exit 1
-fi
+function check_var_setted () {
+  if [[ ! -v $1 ]]; then
+    echo "Please set $1"; exit 1
+  fi
+}
+
+check_var_setted DEPLOY_DIR
 
 if [ ! -d ${DEPLOY_DIR} ]; then
     mkdir -p ${DEPLOY_DIR}
 fi
 
-if [ -z "${WORKERS}" ]; then
-    echo "Please set WORKERS"; exit 1
-fi
+check_var_setted WORKERS
+check_var_setted GATEWAY
+check_var_setted INTERFACE
+check_var_setted INTERFACE_DATA
+check_var_setted INTERFACE_MANAGEMENT
+check_var_setted INTERFACE_EXTERNAL
+check_var_setted INTERFACE_MTU
+check_var_setted INTERNALAPI_VLAN
+check_var_setted STORAGE_VLAN
+check_var_setted TENANT_VLAN
+check_var_setted INTERNALAPI_NET
+check_var_setted STORAGE_NET
+check_var_setted TENANT_NET
+check_var_setted DATA_NET
 
-if [ -z "${INTERFACE}" ]; then
-    echo "Please set INTERFACE"; exit 1
-fi
-
-if [ -z "${INTERFACE_MTU}" ]; then
-    echo "Please set INTERFACE_MTU"; exit 1
-fi
-
-if [ -z "${VLAN_START}" ]; then
-    echo "Please set VLAN_START"; exit 1
-fi
-
-if [ -z "${VLAN_STEP}" ]; then
-    echo "Please set VLAN_STEP"; exit 1
+if [ -z "${DATA_NET}" ]; then
+    echo "Please set DATA_NET"; exit 1
 fi
 
 echo DEPLOY_DIR ${DEPLOY_DIR}
 echo WORKERS ${WORKERS}
 echo INTERFACE ${INTERFACE}
+echo INTERFACE_DATA ${INTERFACE_DATA}
+echo INTERFACE_MANAGEMENT ${INTERFACE_MANAGEMENT}
+echo INTERFACE_EXTERNAL ${INTERFACE_EXTERNAL}
 echo INTERFACE_MTU ${INTERFACE_MTU}
-echo VLAN_START ${VLAN_START}
-echo VLAN_STEP ${VLAN_STEP}
+echo INTERNALAPI_VLAN ${INTERNALAPI_VLAN}
+echo STORAGE_VLAN ${STORAGE_VLAN}
+echo TENANT_VLAN ${TENANT_VLAN}
+echo INTERNALAPI_NET ${INTERNALAPI_NET}
+echo STORAGE_NET ${STORAGE_NET}
+echo TENANT_NET ${TENANT_NET}
+echo NNCP_DATA_NET ${DATA_NET}
 
 # Use different suffix for other networks as the sample netconfig
 # we use starts with .10
@@ -62,6 +73,9 @@ metadata:
     osp/interface: ${INTERFACE}
   name: ${INTERFACE}-${WORKER}
 spec:
+  nodeSelector:
+    kubernetes.io/hostname: ${WORKER}
+    node-role.kubernetes.io/worker: ""
   desiredState:
     dns-resolver:
       config:
@@ -77,48 +91,48 @@ spec:
     - description: internalapi vlan interface
       ipv4:
         address:
-        - ip: 172.17.0.${IP_ADDRESS_SUFFIX}
+        - ip: ${INTERNALAPI_NET}.${IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
         dhcp: false
       ipv6:
         enabled: false
-      name: ${INTERFACE}.${VLAN_START}
+      name: ${INTERFACE_DATA}.${INTERNALAPI_VLAN}
       state: up
       type: vlan
       vlan:
-        base-iface: ${INTERFACE}
-        id: ${VLAN_START}
+        base-iface: ${INTERFACE_DATA}
+        id: ${INTERNALAPI_VLAN}
     - description: storage vlan interface
       ipv4:
         address:
-        - ip: 172.18.0.${IP_ADDRESS_SUFFIX}
+        - ip: ${STORAGE_NET}.${IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
         dhcp: false
       ipv6:
         enabled: false
-      name: ${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}))
+      name: ${INTERFACE_MANAGEMENT}.${STORAGE_VLAN}
       state: up
       type: vlan
       vlan:
-        base-iface: ${INTERFACE}
-        id: $((${VLAN_START}+${VLAN_STEP}))
+        base-iface: ${INTERFACE_MANAGEMENT}
+        id: ${STORAGE_VLAN}
     - description: tenant vlan interface
       ipv4:
         address:
-        - ip: 172.19.0.${IP_ADDRESS_SUFFIX}
+        - ip: ${TENANT_NET}.${IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
         dhcp: false
       ipv6:
         enabled: false
-      name: ${INTERFACE}.$((${VLAN_START}+$((${VLAN_STEP}*2))))
+      name: ${INTERFACE_MANAGEMENT}.${TENANT_VLAN}
       state: up
       type: vlan
       vlan:
-        base-iface: ${INTERFACE}
-        id: $((${VLAN_START}+$((${VLAN_STEP}*2))))
+        base-iface: ${INTERFACE_MANAGEMENT}
+        id: ${TENANT_VLAN}
     - description: Configuring ${INTERFACE}
       ipv4:
         address:
@@ -132,10 +146,31 @@ spec:
       name: ${INTERFACE}
       state: up
       type: ethernet
-  nodeSelector:
-    kubernetes.io/hostname: ${WORKER}
-    node-role.kubernetes.io/worker: ""
 EOF_CAT
+
+#TODO Regarding configuring interface data
+#Look if it has an IP range which is not used
+if [ $INTERFACE != $INTERFACE_DATA ]; then
+  # I'm assuming that the data network on wallaby
+  # deployment doesn't have DHCP enabled, which is the
+  # case that I encountered.
+  cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+    - description: Configuring ${INTERFACE_DATA}
+      ipv4:
+        address:
+        - ip: ${DATA_NET}.${CTLPLANE_IP_ADDRESS_SUFFIX}
+          prefix-length: 24
+        enabled: true
+        dhcp: false
+      ipv6:
+        enabled: false
+      mtu: ${INTERFACE_MTU}
+      name: ${INTERFACE_DATA}
+      state: up
+      type: ethernet
+EOF_CAT
+fi
+
 
     IP_ADDRESS_SUFFIX=$((${IP_ADDRESS_SUFFIX}+1))
     CTLPLANE_IP_ADDRESS_SUFFIX=$((${CTLPLANE_IP_ADDRESS_SUFFIX}+1))

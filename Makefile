@@ -17,6 +17,48 @@ endif
 METADATA_SHARED_SECRET   ?= 1234567842
 HEAT_AUTH_ENCRYPTION_KEY ?= 767c3ed056cbaa3b9dfedb8c6f825bf0
 
+# POD networks
+POD_INTERNALAPI_VLAN ?= 20
+POD_STORAGE_VLAN ?= 21
+POD_TENANT_VLAN ?= 22
+POD_INTERNALAPI_NET ?= 172.17.0
+POD_STORAGE_NET ?= 172.18.0
+POD_TENANT_NET ?= 172.19.0
+POD_INTERNALAPI_IP_START ?= 30
+POD_INTERNALAPI_IP_END ?= 70
+POD_STORAGE_IP_START ?= 30
+POD_STORAGE_IP_END ?= 70
+POD_TENANT_IP_START ?= 30
+POD_TENANT_IP_END ?= 70
+POD_METALLB_INTERNALAPI_IP_START ?= 80
+POD_METALLB_INTERNALAPI_IP_END ?= 90
+POD_METALLB_STORAGE_IP_START ?= 80
+POD_METALLB_STORAGE_IP_END ?= 90
+POD_METALLB_TENANT_IP_START ?= 80
+POD_METALLB_TENANT_IP_END ?= 90
+
+# multiple controller deployment (MCD)
+MCD_ENABLED 	?= false
+MCD_INTERNALAPI_VLAN ?= 20
+MCD_STORAGE_VLAN ?= 30
+MCD_TENANT_VLAN ?= 50
+MCD_INTERNALAPI_NET ?= 172.17.1
+MCD_STORAGE_NET ?= 172.17.3
+MCD_TENANT_NET ?= 172.17.2
+MCD_DATA_NET ?= 192.168.24
+MCD_INTERNALAPI_IP_START ?= 150
+MCD_INTERNALAPI_IP_END ?= 190
+MCD_STORAGE_IP_START ?= 150
+MCD_STORAGE_IP_END ?= 190
+MCD_TENANT_IP_START ?= 150
+MCD_TENANT_IP_END ?= 190
+MCD_METALLB_INTERNALAPI_IP_START ?= 191
+MCD_METALLB_INTERNALAPI_IP_END ?= 201
+MCD_METALLB_STORAGE_IP_START ?= 191
+MCD_METALLB_STORAGE_IP_END ?= 201
+MCD_METALLB_TENANT_IP_START ?= 191
+MCD_METALLB_TENANT_IP_END ?= 201
+
 # Allows overriding the cleanup command used in *_cleanup targets.
 # Useful in CI, to allow injectin kustomization in each operator CR directory
 # before the resource gets deployed. If it's not possible to inject Kustomizations/CRs
@@ -327,13 +369,43 @@ MANILA_KUTTL_NAMESPACE  ?= manila-kuttl-tests
 CEPH_IMG            ?= quay.io/ceph/demo:latest-reef
 
 # NNCP
-NNCP_INTERFACE      ?= enp6s0
+## Interfaces
+NNCP_INTERFACE ?= enp6s0
+NNCP_INTERFACE_DATA ?= $(if $(findstring true, $(MCD_ENABLED)),enp7s0,$(NNCP_INTERFACE))
+NNCP_INTERFACE_MANAGEMENT ?= $(if $(findstring true, $(MCD_ENABLED)),enp8s0,$(NNCP_INTERFACE))
+NNCP_INTERFACE_EXTERNAL ?= $(if $(findstring true, $(MCD_ENABLED)),enp9s0,$(NNCP_INTERFACE))
+## API
+NNCP_INTERNALAPI_VLAN ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_INTERNALAPI_VLAN),$(POD_INTERNALAPI_VLAN))
+NNCP_STORAGE_VLAN ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_STORAGE_VLAN),$(POD_STORAGE_VLAN))
+NNCP_TENANT_VLAN ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_TENANT_VLAN),$(POD_TENANT_VLAN))
+## Networks
+NNCP_INTERNALAPI_NET ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_INTERNALAPI_NET),$(POD_INTERNALAPI_NET))
+NNCP_STORAGE_NET ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_STORAGE_NET),$(POD_STORAGE_NET))
+NNCP_TENANT_NET ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_TENANT_NET),$(POD_TENANT_NET))
+NNCP_DATA_NET ?= $(MCD_DATA_NET)
+## Others
 NNCP_TIMEOUT		?= 240s
 NNCP_CLEANUP_TIMEOUT	?= 120s
 NNCP_CTLPLANE_IP_ADDRESS_PREFIX     ?=192.168.122
 NNCP_CTLPLANE_IP_ADDRESS_SUFFIX     ?=10
 NNCP_GATEWAY                        ?=192.168.122.1
 NNCP_DNS_SERVER                     ?=192.168.122.1
+
+# netattach
+NETATTACH_INTERNALIP_IP_START ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_INTERNALAPI_IP_START),$(POD_INTERNALAPI_IP_START))
+NETATTACH_INTERNALIP_IP_END ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_INTERNALAPI_IP_END),$(POD_INTERNALAPI_IP_END))
+NETATTACH_STORAGE_IP_START ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_STORAGE_IP_START),$(POD_STORAGE_IP_START))
+NETATTACH_STORAGE_IP_END ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_STORAGE_IP_END),$(POD_STORAGE_IP_END))
+NETATTACH_TENANT_IP_START ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_TENANT_IP_START),$(POD_TENANT_IP_START))
+NETATTACH_TENANT_IP_END ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_TENANT_IP_END),$(POD_TENANT_IP_END))
+
+# metallb
+METALLB_INTERNALIP_IP_START ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_METALLB_INTERNALAPI_IP_START),$(POD_METALLB_INTERNALAPI_IP_START))
+METALLB_INTERNALIP_IP_END ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_METALLB_INTERNALAPI_IP_END),$(POD_METALLB_INTERNALAPI_IP_END))
+METALLB_STORAGE_IP_START ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_METALLB_STORAGE_IP_START),$(POD_METALLB_STORAGE_IP_START))
+METALLB_STORAGE_IP_END ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_METALLB_STORAGE_IP_END),$(POD_METALLB_STORAGE_IP_END))
+METALLB_STORAGE_IP_START ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_METALLB_TENANT_IP_START),$(POD_METALLB_TENANT_IP_START))
+METALLB_STORAGE_IP_END ?= $(if $(findstring true, $(MCD_ENABLED)),$(MCD_METALLB_TENANT_IP_END),$(POD_METALLB_TENANT_IP_END))
 
 # Telemetry
 TELEMETRY_IMG                    ?= quay.io/openstack-k8s-operators/telemetry-operator-index:latest
@@ -1750,13 +1822,21 @@ nmstate: ## installs nmstate operator in the openshift-nmstate namespace
 
 .PHONY: nncp
 nncp: export INTERFACE=${NNCP_INTERFACE}
+nncp: export INTERFACE_DATA=${NNCP_INTERFACE_DATA}
+nncp: export INTERFACE_MANAGEMENT=${NNCP_INTERFACE_MANAGEMENT}
+nncp: export INTERFACE_EXTERNAL=${NNCP_INTERFACE_EXTERNAL}
+nncp: export INTERNALAPI_VLAN=${NNCP_INTERNALAPI_VLAN}
+nncp: export STORAGE_VLAN=${NNCP_STORAGE_VLAN}
+nncp: export TENANT_VLAN=${NNCP_TENANT_VLAN}
+nncp: export INTERNALAPI_NET=${NNCP_INTERNALAPI_NET}
+nncp: export STORAGE_NET=${NNCP_STORAGE_NET}
+nncp: export TENANT_NET=${NNCP_TENANT_NET}
+nncp: export DATA_NET=${NNCP_DATA_NET}
 nncp: export CTLPLANE_IP_ADDRESS_PREFIX=${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}
 nncp: export CTLPLANE_IP_ADDRESS_SUFFIX=${NNCP_CTLPLANE_IP_ADDRESS_SUFFIX}
 nncp: export GATEWAY=${NNCP_GATEWAY}
 nncp: export DNS_SERVER=${NNCP_DNS_SERVER}
 nncp: export INTERFACE_MTU=${NETWORK_MTU}
-nncp: export VLAN_START=${NETWORK_VLAN_START}
-nncp: export VLAN_STEP=${NETWORK_VLAN_STEP}
 nncp: ## installs the nncp resources to configure the interface connected to the edpm node, right now only single nic vlan. Interface referenced via NNCP_INTERFACE
 	$(eval $(call vars,$@,nncp))
 	WORKERS='$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}")' \
@@ -1776,8 +1856,21 @@ nncp_cleanup: ## unconfigured nncp configuration on worker node and deletes the 
 
 .PHONY: netattach
 netattach: export INTERFACE=${NNCP_INTERFACE}
-netattach: export VLAN_START=${NETWORK_VLAN_START}
-netattach: export VLAN_STEP=${NETWORK_VLAN_STEP}
+netattach: export INTERFACE_DATA=${NNCP_INTERFACE_DATA}
+netattach: export INTERFACE_MANAGEMENT=${NNCP_INTERFACE_MANAGEMENT}
+netattach: export INTERFACE_EXTERNAL=${NNCP_INTERFACE_EXTERNAL}
+netattach: export INTERNALAPI_VLAN=${NNCP_INTERNALAPI_VLAN}
+netattach: export STORAGE_VLAN=${NNCP_STORAGE_VLAN}
+netattach: export TENANT_VLAN=${NNCP_TENANT_VLAN}
+netattach: export INTERNALAPI_NET=${NNCP_INTERNALAPI_NET}
+netattach: export STORAGE_NET=${NNCP_STORAGE_NET}
+netattach: export TENANT_NET=${NNCP_TENANT_NET}
+netattach: export INTERNALAPI_IP_START=${NETATTACH_INTERNALIP_IP_START}
+netattach: export INTERNALAPI_IP_END=${NETATTACH_INTERNALIP_IP_END}
+netattach: export STORAGE_IP_START=${NETATTACH_STORAGE_IP_START}
+netattach: export STORAGE_IP_END=${NETATTACH_STORAGE_IP_END}
+netattach: export TENANT_IP_START=${NETATTACH_TENANT_IP_START}
+netattach: export TENANT_IP_END=${NETATTACH_TENANT_IP_END}
 netattach: namespace ## Creates network-attachment-definitions for the networks the workers are attached via nncp
 	$(eval $(call vars,$@,netattach))
 	bash scripts/gen-netatt.sh
@@ -1793,6 +1886,21 @@ netattach_cleanup: ## Deletes the network-attachment-definitions
 .PHONY: metallb
 metallb: export NAMESPACE=metallb-system
 metallb: export INTERFACE=${NNCP_INTERFACE}
+metallb: export INTERFACE_DATA=${NNCP_INTERFACE_DATA}
+metallb: export INTERFACE_MANAGEMENT=${NNCP_INTERFACE_MANAGEMENT}
+metallb: export INTERFACE_EXTERNAL=${NNCP_INTERFACE_EXTERNAL}
+metallb: export INTERNALAPI_VLAN=${NNCP_INTERNALAPI_VLAN}
+metallb: export STORAGE_VLAN=${NNCP_STORAGE_VLAN}
+metallb: export TENANT_VLAN=${NNCP_TENANT_VLAN}
+metallb: export INTERNALAPI_NET=${NNCP_INTERNALAPI_NET}
+metallb: export STORAGE_NET=${NNCP_STORAGE_NET}
+metallb: export TENANT_NET=${NNCP_TENANT_NET}
+metallb: export INTERNALAPI_IP_START=${METALLB_INTERNALIP_IP_START}
+metallb: export INTERNALAPI_IP_END=${METALLB_INTERNALIP_IP_END}
+metallb: export STORAGE_IP_START=${METALLB_STORAGE_IP_START}
+metallb: export STORAGE_IP_END=${METALLB_STORAGE_IP_END}
+metallb: export TENANT_IP_START=${METALLB_TENANT_IP_START}
+metallb: export TENANT_IP_END=${METALLB_TENANT_IP_END}
 metallb: ## installs metallb operator in the metallb-system namespace
 	$(eval $(call vars,$@,metallb))
 	bash scripts/gen-namespace.sh
@@ -1812,6 +1920,21 @@ metallb: ## installs metallb operator in the metallb-system namespace
 metallb_config: export NAMESPACE=metallb-system
 metallb_config: export CTLPLANE_METALLB_POOL=${METALLB_POOL}
 metallb_config: export INTERFACE=${NNCP_INTERFACE}
+metallb_config: export INTERFACE_DATA=${NNCP_INTERFACE_DATA}
+metallb_config: export INTERFACE_MANAGEMENT=${NNCP_INTERFACE_MANAGEMENT}
+metallb_config: export INTERFACE_EXTERNAL=${NNCP_INTERFACE_EXTERNAL}
+metallb_config: export INTERNALAPI_VLAN=${NNCP_INTERNALAPI_VLAN}
+metallb_config: export STORAGE_VLAN=${NNCP_STORAGE_VLAN}
+metallb_config: export TENANT_VLAN=${NNCP_TENANT_VLAN}
+metallb_config: export INTERNALAPI_NET=${NNCP_INTERNALAPI_NET}
+metallb_config: export STORAGE_NET=${NNCP_STORAGE_NET}
+metallb_config: export TENANT_NET=${NNCP_TENANT_NET}
+metallb_config: export INTERNALAPI_IP_START=${METALLB_INTERNALIP_IP_START}
+metallb_config: export INTERNALAPI_IP_END=${METALLB_INTERNALIP_IP_END}
+metallb_config: export STORAGE_IP_START=${METALLB_STORAGE_IP_START}
+metallb_config: export STORAGE_IP_END=${METALLB_STORAGE_IP_END}
+metallb_config: export TENANT_IP_START=${METALLB_STORAGE_IP_START}
+metallb_config: export TENANT_IP_END=${METALLB_STORAGE_IP_END}
 metallb_config: metallb_config_cleanup ## creates the IPAddressPools and l2advertisement resources
 	$(eval $(call vars,$@,metallb))
 	bash scripts/gen-olm-metallb.sh
