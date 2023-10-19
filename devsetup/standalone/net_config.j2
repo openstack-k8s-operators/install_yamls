@@ -1,24 +1,27 @@
+#jinja2: trim_blocks:False
 network_config:
 - type: ovs_bridge
   name: br-ctlplane
   mtu: {{ interface_mtu }}
   use_dhcp: false
   dns_servers:
-  {%- if dns_server %}
+  {% if dns_server %}
   - {{ dns_server }}
-  {%- endif %}
+  {% endif %}
   - {{ gateway_ip }}
   domain: []
   addresses:
   - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
   - ip_netmask: {{ ctlplane_ip }}/32
   - ip_netmask: {{ ctlplane_vip }}/32
+  {% if standalone_vm|default(true) %}
   routes:
   - ip_netmask: 0.0.0.0/0
     next_hop: {{ gateway_ip }}
+  {% endif %}
   members:
   - type: interface
-    name: nic1
+    name: {{ os_net_config_iface | default(nic1) }}
     mtu: {{ interface_mtu }}
     # force the MAC address of the bridge to this interface
     primary: true
