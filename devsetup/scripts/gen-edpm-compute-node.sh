@@ -265,7 +265,7 @@ if [ ! -f ${DISK_FILEPATH} ]; then
         --hostname ${EDPM_COMPUTE_NAME} \
         --firstboot ${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}-firstboot.sh \
         --run-command "systemctl disable cloud-init cloud-config cloud-final cloud-init-local" \
-        --run-command "echo 'PermitRootLogin yes' > /etc/ssh/sshd_config.d/99-root-login.conf" \
+        --run-command "mkdir -p /etc/ssh/sshd_config.d; echo 'PermitRootLogin yes' > /etc/ssh/sshd_config.d/99-root-login.conf" \
         --run-command "mkdir -p /root/.ssh; chmod 0700 /root/.ssh" \
         --run-command "ssh-keygen -f /root/.ssh/id_rsa -N ''" \
         --ssh-inject root:string:"$(cat $SSH_PUBLIC_KEY)" \
