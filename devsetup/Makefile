@@ -42,6 +42,7 @@ BMAAS_INSTANCE_NET_MODEL ?= virtio
 BMAAS_NETWORK_NAME ?= crc-bmaas
 BMAAS_NETWORK_IPADDRESS ?= 172.20.1.1
 BMAAS_NETWORK_NETMASK ?= 255.255.255.0
+BMAAS_BRIDGE_IP_PREFIX ?= 172.20.1.2/24
 BMAAS_METALLB_POOL_NAME ?= baremetal
 BMAAS_METALLB_ADDRESS_POOL ?= 172.20.1.64/26
 BMAAS_NODE_COUNT ?= 1
@@ -265,6 +266,7 @@ bmaas_crc_attach_network_cleanup: ## Detach BMaaS network from CRC
 .PHONY: bmaas_crc_baremetal_bridge
 bmaas_crc_baremetal_bridge: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
 bmaas_crc_baremetal_bridge: export INTERFACE_MTU = ${NETWORK_MTU}
+bmaas_crc_baremetal_bridge: export BRIDGE_IP_PREFIX = ${BMAAS_BRIDGE_IP_PREFIX}
 bmaas_crc_baremetal_bridge:
 	pushd .. && make nmstate && popd
 	scripts/bmaas/baremetal-bridge.sh --create

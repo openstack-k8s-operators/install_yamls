@@ -7,6 +7,7 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 NETWORK_NAME=${NETWORK_NAME:-"crc-bmaas"}
+BRIDGE_IP_PREFIX=${BRIDGE_IP_PREFIX:-"172.20.1.2/24"}
 
 function usage {
     echo
@@ -36,6 +37,12 @@ spec:
       type: linux-bridge
       state: up
       mtu: 1500
+      ipv4:
+        dhcp: false
+        address:
+        - ip: ${BRIDGE_IP_PREFIX%%/*}
+          prefix-length: ${BRIDGE_IP_PREFIX##*/}
+        enabled: true
       bridge:
         options:
           stp:
