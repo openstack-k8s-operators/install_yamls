@@ -172,6 +172,18 @@ configured on the CRC with a NetworkAttachmentDefinition `baremetal`.
 When deploying ironic, set up the `networkAttachments`, `provisionNetwork` and
 `inspectionNetwork` to use the `baremetal` NetworkAttachmentDefinition.
 
+The MetalLB load-balancer is also configured with an address pool and L2
+advertisment for the `baremetal` network.
+
+The 172.20.1.0/24 subnet is split into pools as shown in the table below.
+| Address pool      | Reservation                                      |
+| :---------------- | :----------------------------------------------- |
+| `172.20.1.1/32`   | Router address                                   |
+| `172.20.1.0/26`   | Whearabouts IPAM (addresses for pods)            |
+| `172.20.1.64/26`  | MetalLB IPAddressPool                            |
+| `172.20.1.128/25` | Available for ironic provisioning and inspection |
+
+
 Example:
 ```yaml
   ---
@@ -189,8 +201,8 @@ Example:
       dhcpRanges:
       - name: netA
         cidr: 172.20.1.0/24
-        start: 172.20.1.100
-        end: 172.20.1.150
+        start: 172.20.1.130
+        end: 172.20.1.200
         gateway: 172.20.1.1
     ironicInspector:
       networkAttachments:
@@ -199,8 +211,8 @@ Example:
       dhcpRanges:
       - name: netA
         cidr: 172.20.1.0/24
-        start: 172.20.1.70
-        end: 172.20.1.90
+        start: 172.20.1.201
+        end: 172.20.1.220
         gateway: 172.20.1.1
     < --- snip --->
 ```
