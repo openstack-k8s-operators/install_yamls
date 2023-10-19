@@ -42,6 +42,8 @@ BMAAS_INSTANCE_NET_MODEL ?= virtio
 BMAAS_NETWORK_NAME ?= crc-bmaas
 BMAAS_NETWORK_IPADDRESS ?= 172.20.1.1
 BMAAS_NETWORK_NETMASK ?= 255.255.255.0
+BMAAS_METALLB_POOL_NAME ?= baremetal
+BMAAS_METALLB_ADDRESS_POOL ?= 172.20.1.64/26
 BMAAS_NODE_COUNT ?= 1
 BMAAS_REDFISH_USERNAME ?= admin
 BMAAS_REDFISH_PASSWORD ?= password
@@ -264,6 +266,7 @@ bmaas_crc_attach_network_cleanup: ## Detach BMaaS network from CRC
 bmaas_crc_baremetal_bridge: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
 bmaas_crc_baremetal_bridge: export INTERFACE_MTU = ${NETWORK_MTU}
 bmaas_crc_baremetal_bridge:
+	pushd .. && make nmstate && popd
 	scripts/bmaas/baremetal-bridge.sh --create
 
 .PHONY: bmaas_crc_baremetal_bridge_cleanup
@@ -273,11 +276,25 @@ bmaas_crc_baremetal_bridge_cleanup:
 
 .PHONY: bmaas_baremetal_net_nad
 bmaas_baremetal_net_nad:
+	pushd .. && make namespace && popd
 	scripts/bmaas/network-attachement-definition.sh --create
 
 .PHONY: bmaas_baremetal_net_nad_cleanup
 bmaas_baremetal_net_nad_cleanup:
 	scripts/bmaas/network-attachement-definition.sh --cleanup
+
+.PHONY: bmaas_metallb
+bmaas_metallb: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
+bmaas_metallb: export POOL_NAME = ${BMAAS_METALLB_POOL_NAME}
+bmaas_metallb: export ADDRESS_POOL = ${BMAAS_METALLB_ADDRESS_POOL}
+bmaas_metallb:
+	pushd .. && make metallb && popd
+	scripts/bmaas/metallb.sh --create
+
+.PHONY: bmaas_metallb_cleanup
+bmaas_metallb_cleanup: export POOL_NAME = ${BMAAS_METALLB_POOL_NAME}
+bmaas_metallb_cleanup:
+	scripts/bmaas/metallb.sh --cleanup
 
 .PHONY: bmaas_virtual_bms
 bmaas_virtual_bms: export NODE_COUNT = ${BMAAS_NODE_COUNT}
@@ -333,12 +350,12 @@ bmaas_generate_nodes_yaml:
 
 .PHONY: bmaas
 bmaas: bmaas_cleanup
-	pushd .. && make input nmstate && popd
 	make bmaas_network
 	make bmaas_route_crc_and_crc_bmaas_networks
 	make bmaas_crc_attach_network
 	make bmaas_crc_baremetal_bridge
 	make bmaas_baremetal_net_nad
+	make bmaas_metallb
 	make bmaas_virtual_bms
 	make bmaas_sushy_emulator
 	make bmaas_generate_nodes_yaml
@@ -347,6 +364,7 @@ bmaas: bmaas_cleanup
 bmaas_cleanup:
 	make bmaas_sushy_emulator_cleanup
 	make bmaas_virtual_bms_cleanup
+	make bmaas_metallb_cleanup
 	make bmaas_baremetal_net_nad_cleanup
 	make bmaas_crc_baremetal_bridge_cleanup
 	make bmaas_crc_attach_network_cleanup
