@@ -254,13 +254,17 @@ edpm_deploy_instance: ## Spin a instance on edpm node
 	-oc cp scripts/edpm-deploy-instance.sh openstackclient:/tmp/
 	-oc rsh openstackclient bash /tmp/edpm-deploy-instance.sh
 
-.PHONY: standalone
-standalone: export COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED}
-standalone: export STANDALONE=true
-standalone: export INTERFACE_MTU=${NETWORK_MTU}
-standalone: edpm_compute ## Create standalone VM
+.PHONY: standalone_deploy
+standalone_deploy: export COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED}
+standalone_deploy: export STANDALONE=true
+standalone_deploy: export INTERFACE_MTU=${NETWORK_MTU}
+standalone_deploy:
 	$(eval $(call vars))
 	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX} ${STANDALONE_COMPUTE_DRIVER} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}'
+
+.PHONY: standalone
+standalone: edpm_compute standalone_deploy ## Create vm and deploy tripleo standalone
+	$(eval $(call vars))
 
 .PHONY: standalone_cleanup
 standalone_cleanup: export STANDALONE=true
