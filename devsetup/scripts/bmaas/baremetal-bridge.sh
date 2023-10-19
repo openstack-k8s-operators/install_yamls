@@ -27,6 +27,8 @@ apiVersion: nmstate.io/v1
 kind: NodeNetworkConfigurationPolicy
 metadata:
   name: $NETWORK_NAME
+  labels:
+    osp/interface: ${IFACE}
 spec:
   desiredState:
     interfaces:
