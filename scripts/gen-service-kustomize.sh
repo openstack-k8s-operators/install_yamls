@@ -89,6 +89,147 @@ if [ -n "$NAME" ]; then
 EOF
 fi
 
+if [ -n "$BGP" ]; then
+    cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/networks/0
+      value:
+          name: BgpNet1
+          dnsDomain: bgpnet1.example.com
+          subnets:
+          - name: subnet1
+            allocationRanges:
+            - end: 100.65.1.6
+              start: 100.65.1.5
+            cidr: 100.65.1.4/30
+            gateway: 100.65.1.5
+            routes:
+            - destination: 0.0.0.0/0
+              nexthop: 100.65.1.5
+          - name: subnet2
+            allocationRanges:
+            - end: 100.65.2.6
+              start: 100.65.2.5
+            cidr: 100.65.2.4/30
+            gateway: 100.65.2.5
+            routes:
+            - destination: 0.0.0.0/0
+              nexthop: 100.65.2.5
+          - name: subnet3
+            allocationRanges:
+            - end: 100.65.3.6
+              start: 100.65.3.5
+            cidr: 100.65.3.4/30
+            gateway: 100.65.3.5
+            routes:
+            - destination: 0.0.0.0/0
+              nexthop: 100.65.3.5
+          - name: subnet4
+            allocationRanges:
+            - end: 100.65.4.6
+              start: 100.65.4.5
+            cidr: 100.65.4.4/30
+            gateway: 100.65.4.5
+            routes:
+            - destination: 0.0.0.0/0
+              nexthop: 100.65.4.5
+    - op: add
+      path: /spec/networks/1
+      value:
+          name: BgpNet2
+          dnsDomain: bgpnet2.example.com
+          subnets:
+          - name: subnet1
+            allocationRanges:
+            - end: 100.64.1.6
+              start: 100.64.1.5
+            cidr: 100.64.1.4/30
+            gateway: 100.64.1.5
+            routes:
+            - destination: 0.0.0.0/0
+              nexthop: 100.64.1.5
+          - name: subnet2
+            allocationRanges:
+            - end: 100.64.2.6
+              start: 100.64.2.5
+            cidr: 100.64.2.4/30
+            gateway: 100.64.2.5
+            routes:
+            - destination: 0.0.0.0/0
+              nexthop: 100.64.2.5
+          - name: subnet3
+            allocationRanges:
+            - end: 100.64.3.6
+              start: 100.64.3.5
+            cidr: 100.64.3.4/30
+            gateway: 100.64.3.5
+            routes:
+            - destination: 0.0.0.0/0
+              nexthop: 100.64.3.5
+          - name: subnet4
+            allocationRanges:
+            - end: 100.64.4.6
+              start: 100.64.4.5
+            cidr: 100.64.4.4/30
+            gateway: 100.64.4.5
+            routes:
+            - destination: 0.0.0.0/0
+              nexthop: 100.64.4.5
+    - op: add
+      path: /spec/networks/2
+      value:
+          name: BgpMainNet
+          dnsDomain: bgpmainnet.example.com
+          subnets:
+          - name: subnet1
+            cidr: 172.30.1.0/28
+            allocationRanges:
+            - end: 172.30.1.14
+              start: 172.30.1.2
+          - name: subnet2
+            cidr: 172.30.2.0/28
+            allocationRanges:
+            - end: 172.30.2.14
+              start: 172.30.2.2
+          - name: subnet3
+            cidr: 172.30.3.0/28
+            allocationRanges:
+            - end: 172.30.3.14
+              start: 172.30.3.2
+          - name: subnet4
+            cidr: 172.30.4.0/28
+            allocationRanges:
+            - end: 172.30.4.14
+              start: 172.30.4.2
+    - op: add
+      path: /spec/networks/3
+      value:
+          name: BgpMainNet6
+          dnsDomain: bgpmainnet6.example.com
+          subnets:
+          - name: subnet1
+            cidr: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0010/124
+            allocationRanges:
+            - end: f00d:f00d:f00d:f00d:f00d:f00d:f00d:001e
+              start: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0012
+          - name: subnet2
+            cidr: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0020/124
+            allocationRanges:
+            - end: f00d:f00d:f00d:f00d:f00d:f00d:f00d:002e
+              start: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0022
+          - name: subnet3
+            cidr: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0030/124
+            allocationRanges:
+            - end: f00d:f00d:f00d:f00d:f00d:f00d:f00d:003e
+              start: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0032
+          - name: subnet4
+            cidr: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0040/124
+            allocationRanges:
+            - end: f00d:f00d:f00d:f00d:f00d:f00d:f00d:004e
+              start: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0042
+EOF
+fi
+
 kustomization_add_resources
 
 popd

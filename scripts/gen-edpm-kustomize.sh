@@ -69,6 +69,26 @@ patches:
           subnetName: subnet1
         - name: Tenant
           subnetName: subnet1
+EOF
+
+if [ -n "$BGP" ]; then
+cat <<EOF >>kustomization.yaml
+        - name: BgpNet1
+          subnetName: subnet1
+          fixedIP: 100.65.1.6
+        - name: BgpNet2
+          subnetName: subnet1
+          fixedIP: 100.64.1.6
+        - name: BgpMainNet
+          subnetName: subnet1
+          fixedIP: 172.30.1.2
+        - name: BgpMainNet6
+          subnetName: subnet1
+          fixedIP: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0012
+EOF
+fi
+
+cat <<EOF >>kustomization.yaml
     - op: add
       path: /spec/services/0
       value: repo-setup
@@ -98,6 +118,7 @@ patches:
       path: /spec/nodeTemplate/ansible/ansibleUser
       value: ${EDPM_ANSIBLE_USER:-"cloud-admin"}
 EOF
+
 if oc get pvc ansible-ee-logs -n ${NAMESPACE} 2>&1 1>/dev/null; then
 cat <<EOF >>kustomization.yaml
     - op: replace
@@ -139,6 +160,23 @@ cat <<EOF >>kustomization.yaml
         - name: Tenant
           subnetName: subnet1
 EOF
+if [ -n "$BGP" ]; then
+cat <<EOF >>kustomization.yaml
+        - name: BgpNet1
+          subnetName: subnet$((1+${INDEX}))
+          fixedIP: 100.65.$((1+${INDEX})).6
+        - name: BgpNet2
+          subnetName: subnet$((1+${INDEX}))
+          fixedIP: 100.64.$((1+${INDEX})).6
+        - name: BgpMainNet
+          subnetName: subnet$((1+${INDEX}))
+          fixedIP: 172.30.$((1+${INDEX})).2
+        - name: BgpMainNet6
+          subnetName: subnet$((1+${INDEX}))
+          fixedIP: 172.30.$((1+${INDEX})).2
+          fixedIP: f00d:f00d:f00d:f00d:f00d:f00d:f00d:00$((1+${INDEX}))2
+EOF
+fi
     done
 fi
 
