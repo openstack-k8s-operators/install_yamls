@@ -135,3 +135,55 @@ spec:
       }
     }
 EOF_CAT
+
+if [ -n "$INTERFACE_BGP_1" ]; then
+    cat > ${DEPLOY_DIR}/bgpnet1.yaml <<EOF_CAT
+    apiVersion: k8s.cni.cncf.io/v1
+    kind: NetworkAttachmentDefinition
+    metadata:
+      labels:
+        osp/net: bgpnet1
+      name: bgpnet1
+      namespace: openstack
+    spec:
+      config: |
+        {
+          "cniVersion": "0.3.1",
+          "name": "bgpnet1",
+          "type": "interface",
+          "master": "${INTERFACE_BGP_1}",
+          "ipam": {
+            "type": "whereabouts",
+            "range": "100.65.4.0/30",
+            "range_start": "100.65.4.1",
+            "range_end": "100.65.4.2"
+          }
+        }
+EOF_CAT
+fi
+
+if [ -n "$INTERFACE_BGP_2" ]; then
+    cat > ${DEPLOY_DIR}/bgpnet2.yaml <<EOF_CAT
+    apiVersion: k8s.cni.cncf.io/v1
+    kind: NetworkAttachmentDefinition
+    metadata:
+      labels:
+        osp/net: bgpnet2
+      name: bgpnet2
+      namespace: openstack
+    spec:
+      config: |
+        {
+          "cniVersion": "0.3.1",
+          "name": "bgpnet2",
+          "type": "interface",
+          "master": "${INTERFACE_BGP_2}",
+          "ipam": {
+            "type": "whereabouts",
+            "range": "100.64.4.0/30",
+            "range_start": "100.64.4.1",
+            "range_end": "100.64.4.2"
+          }
+        }
+EOF_CAT
+fi

@@ -35,6 +35,18 @@ if [ -z "${INTERFACE}" ]; then
     echo "Please set INTERFACE"; exit 1
 fi
 
+if [ -z "${ASN}" ]; then
+    echo "Please set ASN"; exit 1
+fi
+
+if [ -z "${LEAF_1}" ]; then
+    echo "Please set LEAF_1"; exit 1
+fi
+
+if [ -z "${LEAF_2}" ]; then
+    echo "Please set LEAF_2"; exit 1
+fi
+
 echo OPERATOR_DIR ${OPERATOR_DIR}
 echo DEPLOY_DIR ${DEPLOY_DIR}
 echo INTERFACE ${INTERFACE}
@@ -156,4 +168,45 @@ spec:
   - tenant
   interfaces:
   - ${INTERFACE}.22
+EOF_CAT
+cat > ${DEPLOY_DIR}/bgppeers.yaml <<EOF_CAT
+---
+apiVersion: metallb.io/v1beta2
+kind: BGPPeer
+metadata:
+  name: bgp-peer
+  namespace: metallb-system
+spec:
+  myASN: ${ASN}
+  peerASN: ${ASN}
+  peerAddress: ${LEAF_1}
+  password: f00barZ
+---
+apiVersion: metallb.io/v1beta2
+kind: BGPPeer
+metadata:
+  name: bgp-peer-2
+  namespace: metallb-system
+spec:
+  myASN: ${ASN}
+  peerASN: ${ASN}
+  peerAddress: ${LEAF_2}
+  password: f00barZ
+EOF_CAT
+cat > ${DEPLOY_DIR}/bgpadvertisement.yaml <<EOF_CAT
+---
+apiVersion: metallb.io/v1beta1
+kind: BGPAdvertisement
+metadata:
+  name: bgpadvertisement
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+  - ctlplane
+  - internalapi
+  - storage
+  - tenant
+  peers:
+  - bgp-peer
+  - bgp-peer-2
 EOF_CAT
