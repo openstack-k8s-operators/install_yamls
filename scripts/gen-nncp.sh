@@ -187,6 +187,22 @@ if [ -n "$BGP" ]; then
       name: ${INTERFACE_BGP_2}
       state: up
       type: ethernet
+    - description: Configuring lo
+      ipv4:
+        address:
+          - ip: ${LO_IP_ADDRESS}
+            prefix-length: 32
+        enabled: true
+        dhcp: false
+      ipv6:
+        address:
+          - ip: ${LO_IP6_ADDRESS}
+            prefix-length: 128
+        enabled: true
+        dhcp: false
+      name: lo
+      mtu: 65536
+      state: unknown
 EOF_CAT
 fi
   cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
