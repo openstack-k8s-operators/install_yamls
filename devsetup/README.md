@@ -179,6 +179,7 @@ The 172.20.1.0/24 subnet is split into pools as shown in the table below.
 | Address pool      | Reservation                                      |
 | :---------------- | :----------------------------------------------- |
 | `172.20.1.1/32`   | Router address                                   |
+| `172.20.1.2/32`   | CRC bridge (`crc-bmaas`) address                 |
 | `172.20.1.0/26`   | Whearabouts IPAM (addresses for pods)            |
 | `172.20.1.64/26`  | MetalLB IPAddressPool                            |
 | `172.20.1.128/25` | Available for ironic provisioning and inspection |
