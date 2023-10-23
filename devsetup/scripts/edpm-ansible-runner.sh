@@ -22,8 +22,15 @@ OUTPUT_DIR=${OUTPUT_DIR:-"../../out/edpm"}
 SSH_KEY_FILE=${SSH_KEY_FILE:-"ansibleee-ssh-key-id_rsa"}
 EDPM_INVENTORY_SECRET=${EDPM_INVENTORY_SECRET:-"dataplanenodeset-openstack-edpm"}
 EDPM_PLAYBOOK=${EDPM_PLAYBOOK:-"osp.edpm.download_cache"}
+EDPM_ANSIBLE_PATH=${EDPM_ANSIBLE_PATH:-"../../out/edpm-ansible"}
 
 pushd ${SCRIPTPATH}
+
+if [ ! -d ${EDPM_ANSIBLE_PATH} ]; then
+    git clone https://github.com/openstack-k8s-operators/edpm-ansible.git ${EDPM_ANSIBLE_PATH}
+    echo "${EDPM_ANSIBLE_PATH} will be mounted into ${OPENSTACK_RUNNER_IMG}"
+fi
+
 pushd ${OUTPUT_DIR}
 
 oc get secret ${EDPM_INVENTORY_SECRET} -n ${NAMESPACE} -o json | jq '.data | map_values(@base64d)' | jq -r .inventory > inventory
@@ -33,6 +40,7 @@ podman run --rm -ti \
             -e "ANSIBLE_VERBOSITY=2" \
             -e "ANSIBLE_CALLBACKS_ENABLED=profile_tasks" \
             -e "ANSIBLE_SSH_ARGS=-C -o ControlMaster=auto -o ControlPersist=80s" \
+            --volume "${EDPM_ANSIBLE_PATH}":/usr/share/ansible/collections/ansible_collections/osp/edpm:Z \
             --volume "$(pwd)/inventory":/runner/inventory/hosts:Z \
             --volume "$(pwd)/ansibleee-ssh-key-id_rsa":/runner/env/ssh_key:Z \
             ${OPENSTACK_RUNNER_IMG} \
