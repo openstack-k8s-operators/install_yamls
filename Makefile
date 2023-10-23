@@ -362,7 +362,7 @@ SG_CORE_DEPL_IMG                 ?= unused
 
 # BMO
 BMO_REPO                         ?= https://github.com/metal3-io/baremetal-operator
-BMO_BRANCH                       ?= main
+BMO_BRANCH                       ?= ${OPENSTACK_K8S_BRANCH}
 BMO_PROVISIONING_INTERFACE       ?= enp6s0
 BMO_IRONIC_HOST                  ?= 192.168.122.10
 BMO_ROOT_PASSWORD_SECRET         ?=
