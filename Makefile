@@ -113,6 +113,17 @@ KEYSTONE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.ya
 KEYSTONE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
 KEYSTONE_KUTTL_NAMESPACE ?= keystone-kuttl-tests
 
+# Barbican
+BARBICAN_IMG             ?= quay.io/openstack-k8s-operators/barbican-operator-index:latest
+BARBICAN_REPO            ?= https://github.com/openstack-k8s-operators/barbican-operator.git
+BARBICAN_BRANCH          ?= main
+BARBICAN                 ?= config/samples/barbican_v1beta1_barbican.yaml
+BARBICAN_CR              ?= ${OPERATOR_BASE_DIR}/barbican-operator/${BARBICAN}
+BARBICAN_DEPL_IMG        ?= unused
+BARBICAN_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/barbican-operator/kuttl-test.yaml
+BARBICAN_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/barbican-operator/tests/kuttl/tests
+BARBICAN_KUTTL_NAMESPACE ?= barbican-kuttl-tests
+
 # Mariadb
 MARIADB_IMG             ?= quay.io/openstack-k8s-operators/mariadb-operator-index:${OPENSTACK_K8S_TAG}
 MARIADB_REPO            ?= https://github.com/openstack-k8s-operators/mariadb-operator.git
@@ -419,11 +430,10 @@ help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 .PHONY: cleanup
-
-cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup designate_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup swift_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup dataplane_cleanup ansibleee_cleanup rabbitmq_cleanup infra_cleanup ## Delete all operators
+cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup designate_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup swift_cleanup barbican_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup dataplane_cleanup ansibleee_cleanup rabbitmq_cleanup infra_cleanup ## Delete all operators
 
 .PHONY: deploy_cleanup
-deploy_cleanup: manila_deploy_cleanup heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup designate_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup swift_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
+deploy_cleanup: manila_deploy_cleanup heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup designate_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup swift_deploy_cleanup barbican_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
 
 .PHONY: wait
 wait: ## wait for an operator's controller-manager pod to be ready (requires OPERATOR_NAME to be explicitly passed!)
@@ -816,6 +826,49 @@ keystone_deploy_cleanup: namespace ## cleans up the service instance, Does not a
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/keystone-operator ${DEPLOY_DIR}
 	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "flush tables; drop database if exists keystone;" || true
+
+##@ BARBICAN
+.PHONY: barbican_prep
+barbican_prep: export IMAGE=${BARBICAN_IMG}
+barbican_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,barbican))
+	bash scripts/gen-olm.sh
+
+.PHONY: barbican
+barbican: namespace barbican_prep ## installs the operator, also runs the prep step. Set BARBICAN_IMG for custom image.
+	$(eval $(call vars,$@,barbican))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: barbican_cleanup
+barbican_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,barbican))
+	bash scripts/operator-cleanup.sh
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
+
+.PHONY: barbican_deploy_prep
+barbican_deploy_prep: export KIND=Barbican
+barbican_deploy_prep: barbican_deploy_cleanup ## prepares the CR to install the service based on the service sample file BARBICAN
+	$(eval $(call vars,$@,barbican))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(BARBICAN_BRANCH),-b ${BARBICAN_BRANCH}) ${BARBICAN_REPO} "${OPERATOR_NAME}-operator" && popd
+	cp ${BARBICAN_CR} ${DEPLOY_DIR}
+	bash scripts/gen-service-kustomize.sh
+
+.PHONY: barbican_deploy
+barbican_deploy: input barbican_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set BARBICAN_REPO and BARBICAN_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,barbican))
+	bash scripts/operator-deploy-resources.sh
+
+.PHONY: barbican_deploy_validate
+barbican_deploy_validate: input namespace ## checks that barbican was properly deployed. Set BARBICAN_KUTTL_DIR to use assert file from custom repo.
+	kubectl-kuttl assert -n ${NAMESPACE} ${BARBICAN_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
+
+.PHONY: barbican_deploy_cleanup
+barbican_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,barbican))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/barbican-operator ${DEPLOY_DIR}
+	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database barbican;" || true
 
 ##@ MARIADB
 mariadb_prep: export IMAGE=${MARIADB_IMG}
@@ -1312,6 +1365,21 @@ keystone_kuttl: kuttl_db_prep keystone keystone_deploy_prep ## runs kuttl tests 
 	make deploy_cleanup
 	make keystone_cleanup
 	make kuttl_db_cleanup
+	bash scripts/restore-namespace.sh
+
+.PHONY: barbican_kuttl_run
+barbican_kuttl_run: ## runs kuttl tests for the barbican operator, assumes that everything needed for running the test was deployed beforehand.
+	BARBICAN_KUTTL_DIR=${BARBICAN_KUTTL_DIR} kubectl-kuttl test --config ${BARBICAN_KUTTL_CONF} ${BARBICAN_KUTTL_DIR} --namespace ${NAMESPACE}
+
+.PHONY: barbican_kuttl
+barbican_kuttl: export NAMESPACE = ${BARBICAN_KUTTL_NAMESPACE}
+barbican_kuttl: kuttl_common_prep barbican barbican_deploy_prep ## runs kuttl tests for the barbican operator. Installs barbican operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+	$(eval $(call vars,$@,barbican))
+	make wait
+	make barbican_kuttl_run
+	make deploy_cleanup
+	make barbican_cleanup
+	make kuttl_common_cleanup
 	bash scripts/restore-namespace.sh
 
 .PHONY: placement_kuttl_run
