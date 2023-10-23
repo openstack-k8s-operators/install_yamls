@@ -10,6 +10,7 @@
       - httpd-tools
       - virt-install
       - gcc
+      - python3-jinja2
 
 - name: Set opm download url suffix
   ansible.builtin.set_fact:

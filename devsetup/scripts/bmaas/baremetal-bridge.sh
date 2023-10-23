@@ -7,6 +7,7 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 NETWORK_NAME=${NETWORK_NAME:-"crc-bmaas"}
+BRIDGE_IP_PREFIX=${BRIDGE_IP_PREFIX:-"172.20.1.2/24"}
 
 function usage {
     echo
@@ -27,6 +28,8 @@ apiVersion: nmstate.io/v1
 kind: NodeNetworkConfigurationPolicy
 metadata:
   name: $NETWORK_NAME
+  labels:
+    osp/interface: ${IFACE}
 spec:
   desiredState:
     interfaces:
@@ -37,8 +40,8 @@ spec:
       ipv4:
         dhcp: false
         address:
-        - ip: $BMAAS_BRIDGE_IPADDRESS
-          prefix-length: 24
+        - ip: ${BRIDGE_IP_PREFIX%%/*}
+          prefix-length: ${BRIDGE_IP_PREFIX##*/}
         enabled: true
       bridge:
         options:

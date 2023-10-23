@@ -12,8 +12,8 @@ NETWORK_NAME=${NETWORK_NAME:-"$DEFAULT_NETWORK_NAME"}
 function usage {
     echo
     echo "options:"
-    echo "  --create        Create baremetal-net NetworkAttachmentDefinition"
-    echo "  --cleanup       Delete baremetal-net NetworkAttachmentDefinition"
+    echo "  --create        Create barametal NetworkAttachmentDefinition"
+    echo "  --cleanup       Delete barametal NetworkAttachmentDefinition"
     echo
 }
 
@@ -29,13 +29,13 @@ function create {
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
-  name: baremetal-net
+  name: baremetal
   namespace: openstack
 spec:
   config: |-
     {
       "cniVersion": "0.3.1",
-      "name": "baremetal-net",
+      "name": "baremetal",
       "type": "macvlan",
       "master": "$NETWORK_NAME",
       "ipam": {
@@ -43,6 +43,7 @@ spec:
         "range": "172.20.1.0/24",
         "exclude": [
           "172.20.1.1/32",
+          "172.20.1.2/32",
           "172.20.1.64/26",
           "172.20.1.128/25"
         ]
@@ -54,7 +55,7 @@ EOF
 }
 
 function cleanup {
-    oc delete -n openstack network-attachment-definitions.k8s.cni.cncf.io/baremetal-net --wait=true --ignore-not-found
+    oc delete -n openstack network-attachment-definitions.k8s.cni.cncf.io/baremetal --wait=true --ignore-not-found
 }
 
 case "$1" in

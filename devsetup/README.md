@@ -19,7 +19,7 @@ The steps it runs are the following:
 
 * install crc
 mkdir -p ~/bin
-curl -L https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz | tar -U --strip-components=1 -C ~/bin -xJf - crc
+curl -L https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz | tar -U --strip-components=1 -C ~/bin -xJf - --no-anchored crc
 
 # config CRC
 crc config set consent-telemetry no
@@ -167,10 +167,23 @@ used as virtual baremetal nodes managed by Ironic deployed on CRC.
 
 The VM's are attached to a separate libvirt network `crc-bmaas`, this network
 is attached to the CRC instance and a linux-bridge, `crc-bmaas`, is
-configured on the CRC with a NetworkAttachmentDefinition `baremetal-net`.
+configured on the CRC with a NetworkAttachmentDefinition `baremetal`.
 
 When deploying ironic, set up the `networkAttachments`, `provisionNetwork` and
-`inspectionNetwork` to use the `baremetal-net` NetworkAttachmentDefinition.
+`inspectionNetwork` to use the `baremetal` NetworkAttachmentDefinition.
+
+The MetalLB load-balancer is also configured with an address pool and L2
+advertisment for the `baremetal` network.
+
+The 172.20.1.0/24 subnet is split into pools as shown in the table below.
+| Address pool      | Reservation                                      |
+| :---------------- | :----------------------------------------------- |
+| `172.20.1.1/32`   | Router address                                   |
+| `172.20.1.2/32`   | CRC bridge (`crc-bmaas`) address                 |
+| `172.20.1.0/26`   | Whearabouts IPAM (addresses for pods)            |
+| `172.20.1.64/26`  | MetalLB IPAddressPool                            |
+| `172.20.1.128/25` | Available for ironic provisioning and inspection |
+
 
 Example:
 ```yaml
@@ -184,23 +197,23 @@ Example:
     < --- snip --->
     ironicConductors:
     - networkAttachments:
-      - baremetal-net
-      provisionNetwork: baremetal-net
+      - baremetal
+      provisionNetwork: baremetal
       dhcpRanges:
       - name: netA
         cidr: 172.20.1.0/24
-        start: 172.20.1.100
-        end: 172.20.1.150
+        start: 172.20.1.130
+        end: 172.20.1.200
         gateway: 172.20.1.1
     ironicInspector:
       networkAttachments:
-      - baremetal-net
-      inspectionNetwork: baremetal-net
+      - baremetal
+      inspectionNetwork: baremetal
       dhcpRanges:
       - name: netA
         cidr: 172.20.1.0/24
-        start: 172.20.1.70
-        end: 172.20.1.90
+        start: 172.20.1.201
+        end: 172.20.1.220
         gateway: 172.20.1.1
     < --- snip --->
 ```

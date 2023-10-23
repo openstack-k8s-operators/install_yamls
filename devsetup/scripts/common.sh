@@ -82,3 +82,25 @@ function get_libvirt_net_bridge {
 
     echo ${bridge_name}
 }
+
+
+## Deduplicate a separated string
+# Parameter #1 is the string to deduplicate
+# Parameter #2 is the delimiter/field separator
+#
+# Example:
+#   deduplicate_string_list "foo,bar,foo,baz,bar,foo" ","
+# Result:
+#   foo,bar,baz
+#
+#---
+function deduplicate_string_list {
+    local cs_list
+    local field_separator
+    local result
+    cs_list=$1
+    field_separator=${2:-" "}
+
+    result=$(echo -n "${cs_list}" | awk --field-separator="${field_separator}" '{for (i=1;i<=NF;i++) if (!a[$i]++) printf("%s%s",$i,FS)}')
+    echo ${result%%"${field_separator}"}
+}

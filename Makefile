@@ -16,6 +16,7 @@ DBSERVICE_CONTAINER = mariadb-openstack
 endif
 METADATA_SHARED_SECRET   ?= 1234567842
 HEAT_AUTH_ENCRYPTION_KEY ?= 767c3ed056cbaa3b9dfedb8c6f825bf0
+OPENSTACK_K8S_BRANCH     ?= main
 
 # Allows overriding the cleanup command used in *_cleanup targets.
 # Useful in CI, to allow injectin kustomization in each operator CR directory
@@ -49,7 +50,7 @@ GALERA_REPLICAS         ?=
 # OpenStack Operator
 OPENSTACK_IMG                ?= quay.io/openstack-k8s-operators/openstack-operator-index:latest
 OPENSTACK_REPO               ?= https://github.com/openstack-k8s-operators/openstack-operator.git
-OPENSTACK_BRANCH             ?= main
+OPENSTACK_BRANCH             ?= ${OPENSTACK_K8S_BRANCH}
 
 ifeq ($(NETWORK_ISOLATION), true)
 ifeq ($(DBSERVICE), galera)
@@ -76,7 +77,7 @@ OPENSTACK_KUTTL_NAMESPACE ?= openstack-kuttl-tests
 # Infra Operator
 INFRA_IMG             ?= quay.io/openstack-k8s-operators/infra-operator-index:latest
 INFRA_REPO            ?= https://github.com/openstack-k8s-operators/infra-operator.git
-INFRA_BRANCH          ?= main
+INFRA_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 INFRA_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/infra-operator/kuttl-test.yaml
 INFRA_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/infra-operator/tests/kuttl/tests
 INFRA_KUTTL_NAMESPACE ?= infra-kuttl-tests
@@ -103,7 +104,7 @@ MEMCACHED_DEPL_IMG  ?= unused
 # Keystone
 KEYSTONE_IMG             ?= quay.io/openstack-k8s-operators/keystone-operator-index:latest
 KEYSTONE_REPO            ?= https://github.com/openstack-k8s-operators/keystone-operator.git
-KEYSTONE_BRANCH          ?= main
+KEYSTONE_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 KEYSTONEAPI              ?= config/samples/keystone_v1beta1_keystoneapi.yaml
 KEYSTONEAPI_CR           ?= ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
 KEYSTONEAPI_DEPL_IMG     ?= unused
@@ -114,7 +115,7 @@ KEYSTONE_KUTTL_NAMESPACE ?= keystone-kuttl-tests
 # Mariadb
 MARIADB_IMG             ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
 MARIADB_REPO            ?= https://github.com/openstack-k8s-operators/mariadb-operator.git
-MARIADB_BRANCH          ?= main
+MARIADB_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 ifeq ($(DBSERVICE), galera)
 MARIADB                 ?= config/samples/mariadb_v1beta1_galera.yaml
 else
@@ -129,7 +130,7 @@ MARIADB_KUTTL_NAMESPACE ?= mariadb-kuttl-tests
 # Placement
 PLACEMENT_IMG             ?= quay.io/openstack-k8s-operators/placement-operator-index:latest
 PLACEMENT_REPO            ?= https://github.com/openstack-k8s-operators/placement-operator.git
-PLACEMENT_BRANCH          ?= main
+PLACEMENT_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 PLACEMENTAPI              ?= config/samples/placement_v1beta1_placementapi.yaml
 PLACEMENTAPI_CR           ?= ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI}
 PLACEMENTAPI_DEPL_IMG     ?= unused
@@ -140,7 +141,7 @@ PLACEMENT_KUTTL_NAMESPACE ?= placement-kuttl-tests
 # Sir Glancealot
 GLANCE_IMG              ?= quay.io/openstack-k8s-operators/glance-operator-index:latest
 GLANCE_REPO             ?= https://github.com/openstack-k8s-operators/glance-operator.git
-GLANCE_BRANCH           ?= main
+GLANCE_BRANCH           ?= ${OPENSTACK_K8S_BRANCH}
 GLANCE                  ?= config/samples/glance_v1beta1_glance.yaml
 GLANCE_CR               ?= ${OPERATOR_BASE_DIR}/glance-operator/${GLANCE}
 GLANCEAPI_DEPL_IMG      ?= unused
@@ -151,7 +152,7 @@ GLANCE_KUTTL_NAMESPACE  ?= glance-kuttl-tests
 # Ovn
 OVN_IMG             ?= quay.io/openstack-k8s-operators/ovn-operator-index:latest
 OVN_REPO            ?= https://github.com/openstack-k8s-operators/ovn-operator.git
-OVN_BRANCH          ?= main
+OVN_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 OVNDBS              ?= config/samples/ovn_v1beta1_ovndbcluster.yaml
 OVNDBS_CR           ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNDBS}
 OVNNORTHD           ?= config/samples/ovn_v1beta1_ovnnorthd.yaml
@@ -166,7 +167,7 @@ OVN_KUTTL_NAMESPACE ?= ovn-kuttl-tests
 # Neutron
 NEUTRON_IMG             ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
 NEUTRON_REPO            ?= https://github.com/openstack-k8s-operators/neutron-operator.git
-NEUTRON_BRANCH          ?= main
+NEUTRON_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 NEUTRONAPI              ?= config/samples/neutron_v1beta1_neutronapi.yaml
 NEUTRONAPI_CR           ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
 NEUTRONAPI_DEPL_IMG     ?= unused
@@ -175,10 +176,20 @@ NEUTRON_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/neutron-operator/kuttl-test.yaml
 NEUTRON_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/neutron-operator/test/kuttl/tests
 NEUTRON_KUTTL_NAMESPACE ?= neutron-kuttl-tests
 
+# BGP
+NETWORK_BGP           ?= false
+BGP_ASN               ?= 64999
+BGP_LEAF_1            ?= 100.65.4.1
+BGP_LEAF_2            ?= 100.64.4.1
+NNCP_BGP_1_INTERFACE  ?= enp7s0
+NNCP_BGP_2_INTERFACE  ?= enp8s0
+NNCP_BGP_1_IP_ADDRESS ?= 100.65.4.2
+NNCP_BGP_2_IP_ADDRESS ?= 100.64.4.2
+
 # Cinder
 CINDER_IMG             ?= quay.io/openstack-k8s-operators/cinder-operator-index:latest
 CINDER_REPO            ?= https://github.com/openstack-k8s-operators/cinder-operator.git
-CINDER_BRANCH          ?= main
+CINDER_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 CINDER                 ?= config/samples/cinder_v1beta1_cinder.yaml
 CINDER_CR              ?= ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
 # TODO: Image customizations for all Cinder services
@@ -197,7 +208,7 @@ RABBITMQ_DEPL_IMG   ?= unused
 # Ironic
 IRONIC_IMG             ?= quay.io/openstack-k8s-operators/ironic-operator-index:latest
 IRONIC_REPO            ?= https://github.com/openstack-k8s-operators/ironic-operator.git
-IRONIC_BRANCH          ?= main
+IRONIC_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 IRONIC                 ?= config/samples/ironic_v1beta1_ironic.yaml
 IRONIC_CR              ?= ${OPERATOR_BASE_DIR}/ironic-operator/${IRONIC}
 IRONICAPI_DEPL_IMG     ?= unused
@@ -212,7 +223,7 @@ IRONIC_KUTTL_NAMESPACE ?= ironic-kuttl-tests
 # Octavia
 OCTAVIA_IMG             ?= quay.io/openstack-k8s-operators/octavia-operator-index:latest
 OCTAVIA_REPO            ?= https://github.com/openstack-k8s-operators/octavia-operator.git
-OCTAVIA_BRANCH          ?= main
+OCTAVIA_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 OCTAVIA                 ?= config/samples/octavia_v1beta1_octavia.yaml
 OCTAVIA_CR              ?= ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIA}
 # TODO: Image custom    izations for all Octavia services
@@ -223,7 +234,7 @@ OCTAVIA_KUTTL_NAMESPACE ?= octavia-kuttl-tests
 # Designate
 DESIGNATE_IMG             ?= quay.io/openstack-k8s-operators/designate-operator-index:latest
 DESIGNATE_REPO            ?= https://github.com/openstack-k8s-operators/designate-operator.git
-DESIGNATE_BRANCH          ?= main
+DESIGNATE_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 DESIGNATE                 ?= config/samples/designate_v1beta1_designate.yaml
 DESIGNATE_CR              ?= ${OPERATOR_BASE_DIR}/designate-operator/${DESIGNATE}
 DESIGNATE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/designate-operator/kuttl-test.yaml
@@ -233,7 +244,7 @@ DESIGNATE_KUTTL_NAMESPACE ?= designate-kuttl-tests
 # Nova
 NOVA_IMG            ?= quay.io/openstack-k8s-operators/nova-operator-index:latest
 NOVA_REPO           ?= https://github.com/openstack-k8s-operators/nova-operator.git
-NOVA_BRANCH         ?= main
+NOVA_BRANCH         ?= ${OPENSTACK_K8S_BRANCH}
 # NOTE(gibi): We intentionally not using the default nova sample here
 # as that would require two RabbitMQCluster to be deployed which a) is not what
 # the make rabbitmq_deploy target does ii) required extra resource in the dev
@@ -245,7 +256,7 @@ NOVA_CR             ?= ${OPERATOR_BASE_DIR}/nova-operator/${NOVA}
 # Horizon
 HORIZON_IMG             ?= quay.io/openstack-k8s-operators/horizon-operator-index:latest
 HORIZON_REPO            ?= https://github.com/openstack-k8s-operators/horizon-operator.git
-HORIZON_BRANCH          ?= main
+HORIZON_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 HORIZON                 ?= config/samples/horizon_v1beta1_horizon.yaml
 HORIZON_CR              ?= ${OPERATOR_BASE_DIR}/horizon-operator/${HORIZON}
 HORIZON_DEPL_IMG        ?= unused
@@ -256,7 +267,7 @@ HORIZON_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/horizon-operator/tests/kuttl/tes
 # Heat
 HEAT_IMG             ?= quay.io/openstack-k8s-operators/heat-operator-index:latest
 HEAT_REPO            ?= https://github.com/openstack-k8s-operators/heat-operator.git
-HEAT_BRANCH          ?= main
+HEAT_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 HEAT                 ?= config/samples/heat_v1beta1_heat.yaml
 HEAT_CR              ?= ${OPERATOR_BASE_DIR}/heat-operator/${HEAT}
 HEATAPI_DEPL_IMG     ?= unused
@@ -269,7 +280,7 @@ HEAT_KUTTL_NAMESPACE ?= heat-kuttl-tests
 # AnsibleEE
 ANSIBLEEE_IMG        ?= quay.io/openstack-k8s-operators/openstack-ansibleee-operator-index:latest
 ANSIBLEEE_REPO       ?= https://github.com/openstack-k8s-operators/openstack-ansibleee-operator
-ANSIBLEEE_BRANCH          ?= main
+ANSIBLEEE_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 ANSIBLEEE                 ?= config/samples/_v1alpha1_ansibleee.yaml
 ANSIBLEEE_CR              ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/${ANSIBLEEE}
 ANSIBLEEE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/kuttl-test.yaml
@@ -280,15 +291,19 @@ ANSIBLEEE_KUTTL_NAMESPACE ?= ansibleee-kuttl-tests
 # Baremetal Operator
 BAREMETAL_IMG       ?= quay.io/openstack-k8s-operators/openstack-baremetal-operator-index:latest
 BAREMETAL_REPO      ?= https://github.com/openstack-k8s-operators/openstack-baremetal-operator.git
-BAREMETAL_BRANCH    ?= main
+BAREMETAL_BRANCH    ?= ${OPENSTACK_K8S_BRANCH}
 BMH_NAMESPACE       ?= ${NAMESPACE}
 
 # Dataplane Operator
 DATAPLANE_IMG                                    ?= quay.io/openstack-k8s-operators/dataplane-operator-index:latest
 DATAPLANE_REPO                                   ?= https://github.com/openstack-k8s-operators/dataplane-operator.git
-DATAPLANE_BRANCH                                 ?= main
+DATAPLANE_BRANCH                                 ?= ${OPENSTACK_K8S_BRANCH}
 DATAPLANE_TIMEOUT                                ?= 20m
+ifeq ($(NETWORK_BGP), true)
+OPENSTACK_DATAPLANENODESET                       ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset_bgp.yaml
+else
 OPENSTACK_DATAPLANENODESET                       ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset.yaml
+endif
 OPENSTACK_DATAPLANENODESET_BAREMETAL             ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset_baremetal_with_ipam.yaml
 OPENSTACK_DATAPLANEDEPLOYMENT		             ?= config/samples/dataplane_v1beta1_openstackdataplanedeployment.yaml
 OPENSTACK_DATAPLANEDEPLOYMENT_BAREMETAL		 	 ?= config/samples/dataplane_v1beta1_openstackdataplanedeployment_baremetal_with_ipam.yaml
@@ -315,7 +330,7 @@ BM_CTLPLANE_INTERFACE                            ?= enp1s0
 # Manila
 MANILA_IMG              ?= quay.io/openstack-k8s-operators/manila-operator-index:latest
 MANILA_REPO             ?= https://github.com/openstack-k8s-operators/manila-operator.git
-MANILA_BRANCH           ?= main
+MANILA_BRANCH           ?= ${OPENSTACK_K8S_BRANCH}
 MANILA                  ?= config/samples/manila_v1beta1_manila.yaml
 MANILA_CR               ?= ${OPERATOR_BASE_DIR}/manila-operator/${MANILA}
 # TODO: Image customizations for all Manila services
@@ -338,7 +353,7 @@ NNCP_DNS_SERVER                     ?=192.168.122.1
 # Telemetry
 TELEMETRY_IMG                    ?= quay.io/openstack-k8s-operators/telemetry-operator-index:latest
 TELEMETRY_REPO                   ?= https://github.com/openstack-k8s-operators/telemetry-operator.git
-TELEMETRY_BRANCH                 ?= main
+TELEMETRY_BRANCH                 ?= ${OPENSTACK_K8S_BRANCH}
 TELEMETRY                        ?= config/samples/telemetry_v1beta1_telemetry.yaml
 TELEMETRY_CR                     ?= ${OPERATOR_BASE_DIR}/telemetry-operator/${TELEMETRY}
 CEILOMETER_CENTRAL_DEPL_IMG      ?= unused
@@ -355,7 +370,7 @@ BMO_ROOT_PASSWORD_SECRET         ?=
 # Swift
 SWIFT_IMG        ?= quay.io/openstack-k8s-operators/swift-operator-index:latest
 SWIFT_REPO       ?= https://github.com/openstack-k8s-operators/swift-operator.git
-SWIFT_BRANCH     ?= main
+SWIFT_BRANCH     ?= ${OPENSTACK_K8S_BRANCH}
 SWIFT            ?= config/samples/swift_v1beta1_swift.yaml
 SWIFT_CR         ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFT}
 SWIFT_KUTTL_CONF   ?= ${OPERATOR_BASE_DIR}/swift-operator/kuttl-test.yaml
@@ -520,6 +535,7 @@ endif
 ##@ OPENSTACK
 .PHONY: openstack_prep
 openstack_prep: export IMAGE=${OPENSTACK_IMG}
+openstack_prep: $(if $(findstring true,$(NETWORK_BGP)), nmstate nncp netattach metallb metallb_config)
 openstack_prep: $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config)
 openstack_prep: $(if $(findstring true,$(BMO_SETUP)), crc_bmo_setup) ## creates the files to install the operator using olm
 	$(eval $(call vars,$@,openstack))
@@ -582,6 +598,9 @@ edpm_deploy_prep: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALLOWED_RANGE
 edpm_deploy_prep: export EDPM_CHRONY_NTP_SERVER=${DATAPLANE_CHRONY_NTP_SERVER}
 edpm_deploy_prep: export EDPM_REGISTRY_URL=${DATAPLANE_REGISTRY_URL}
 edpm_deploy_prep: export EDPM_CONTAINER_TAG=${DATAPLANE_CONTAINER_TAG}
+ifeq ($(NETWORK_BGP), true)
+edpm_deploy_prep: export BGP=enabled
+endif
 edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -594,6 +613,7 @@ edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data pla
 	cp ${DATAPLANE_DEPLOYMENT_CR} ${DEPLOY_DIR}
 	bash scripts/gen-edpm-kustomize.sh
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
+	bash scripts/gen-edpm-nova-migration-ssh-key.sh
 
 .PHONY: edpm_deploy_cleanup
 edpm_deploy_cleanup: namespace ## cleans up the edpm instance, Does not affect the operator.
@@ -632,6 +652,7 @@ edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install th
 	cp ${DATAPLANE_DEPLOYMENT_BAREMETAL_CR} ${DEPLOY_DIR}
 	bash scripts/gen-edpm-baremetal-kustomize.sh
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
+	bash scripts/gen-edpm-nova-migration-ssh-key.sh
 
 .PHONY: edpm_deploy_baremetal
 edpm_deploy_baremetal: input edpm_deploy_baremetal_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
@@ -707,6 +728,9 @@ dns_deploy_cleanup: ## cleans up the service instance, Does not affect the opera
 ##@ NETCONFIG
 .PHONY: netconfig_deploy_prep
 netconfig_deploy_prep: export KIND=NetConfig
+ifeq ($(NETWORK_BGP), true)
+netconfig_deploy_prep: export BGP=enabled
+endif
 netconfig_deploy_prep: export IMAGE=${NETCONFIG_DEPL_IMG}
 netconfig_deploy_prep: netconfig_deploy_cleanup ## prepares the CR to install the service based on the service sample file DNSMASQ and DNSDATA
 	$(eval $(call vars,$@,infra))
@@ -1750,6 +1774,13 @@ nmstate: ## installs nmstate operator in the openshift-nmstate namespace
 
 .PHONY: nncp
 nncp: export INTERFACE=${NNCP_INTERFACE}
+ifeq ($(NETWORK_BGP), true)
+nncp: export BGP=enabled
+nncp: export INTERFACE_BGP_1=${NNCP_BGP_1_INTERFACE}
+nncp: export INTERFACE_BGP_2=${NNCP_BGP_2_INTERFACE}
+nncp: export BGP_1_IP_ADDRESS=${NNCP_BGP_1_IP_ADDRESS}
+nncp: export BGP_2_IP_ADDRESS=${NNCP_BGP_2_IP_ADDRESS}
+endif
 nncp: export CTLPLANE_IP_ADDRESS_PREFIX=${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}
 nncp: export CTLPLANE_IP_ADDRESS_SUFFIX=${NNCP_CTLPLANE_IP_ADDRESS_SUFFIX}
 nncp: export GATEWAY=${NNCP_GATEWAY}
@@ -1764,6 +1795,7 @@ nncp: ## installs the nncp resources to configure the interface connected to the
 	oc apply -f ${DEPLOY_DIR}/
 	oc wait nncp -l osp/interface=${NNCP_INTERFACE} --for condition=available --timeout=$(NNCP_TIMEOUT)
 
+
 .PHONY: nncp_cleanup
 nncp_cleanup: export INTERFACE=${NNCP_INTERFACE}
 nncp_cleanup: ## unconfigured nncp configuration on worker node and deletes the nncp resource
@@ -1776,6 +1808,10 @@ nncp_cleanup: ## unconfigured nncp configuration on worker node and deletes the 
 
 .PHONY: netattach
 netattach: export INTERFACE=${NNCP_INTERFACE}
+ifeq ($(NETWORK_BGP), true)
+netattach: export INTERFACE_BGP_1=${NNCP_BGP_1_INTERFACE}
+netattach: export INTERFACE_BGP_2=${NNCP_BGP_2_INTERFACE}
+endif
 netattach: export VLAN_START=${NETWORK_VLAN_START}
 netattach: export VLAN_STEP=${NETWORK_VLAN_STEP}
 netattach: namespace ## Creates network-attachment-definitions for the networks the workers are attached via nncp
@@ -1793,6 +1829,9 @@ netattach_cleanup: ## Deletes the network-attachment-definitions
 .PHONY: metallb
 metallb: export NAMESPACE=metallb-system
 metallb: export INTERFACE=${NNCP_INTERFACE}
+metallb: export ASN=${BGP_ASN}
+metallb: export LEAF_1=${BGP_LEAF_1}
+metallb: export LEAF_2=${BGP_LEAF_2}
 metallb: ## installs metallb operator in the metallb-system namespace
 	$(eval $(call vars,$@,metallb))
 	bash scripts/gen-namespace.sh
@@ -1812,11 +1851,18 @@ metallb: ## installs metallb operator in the metallb-system namespace
 metallb_config: export NAMESPACE=metallb-system
 metallb_config: export CTLPLANE_METALLB_POOL=${METALLB_POOL}
 metallb_config: export INTERFACE=${NNCP_INTERFACE}
+metallb_config: export ASN=${BGP_ASN}
+metallb_config: export LEAF_1=${BGP_LEAF_1}
+metallb_config: export LEAF_2=${BGP_LEAF_2}
 metallb_config: metallb_config_cleanup ## creates the IPAddressPools and l2advertisement resources
 	$(eval $(call vars,$@,metallb))
 	bash scripts/gen-olm-metallb.sh
 	oc apply -f ${DEPLOY_DIR}/ipaddresspools.yaml
 	oc apply -f ${DEPLOY_DIR}/l2advertisement.yaml
+ifeq ($(NETWORK_BGP), true)
+	oc apply -f ${DEPLOY_DIR}/bgppeers.yaml
+	oc apply -f ${DEPLOY_DIR}/bgpadvertisement.yaml
+endif
 
 .PHONY: metallb_config_cleanup
 metallb_config_cleanup: export NAMESPACE=metallb-system
@@ -1824,7 +1870,9 @@ metallb_config_cleanup: ## deletes the IPAddressPools and l2advertisement resour
 	$(eval $(call vars,$@,metallb))
 	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/ipaddresspools.yaml
 	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/l2advertisement.yaml
-	${CLEANUP_DIR_CMD} ${DEPLOY_DIR}/ipaddresspools.yaml ${DEPLOY_DIR}/l2advertisement.yaml
+	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/bgppeers.yaml
+	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/bgpadvertisement.yaml
+	${CLEANUP_DIR_CMD} ${DEPLOY_DIR}/ipaddresspools.yaml ${DEPLOY_DIR}/l2advertisement.yaml ${DEPLOY_DIR}/bgppeers.yaml ${DEPLOY_DIR}/bgpadvertisement.yaml
 
 ##@ MANILA
 .PHONY: manila_prep
