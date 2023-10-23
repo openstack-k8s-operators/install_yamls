@@ -8,3 +8,4 @@
             dependencies:
               - openstack-k8s-operators-content-provider
         - podified-multinode-edpm-deployment-crc: *content_provider
+        - data-plane-adoption-github-rdo-centos-9-crc-single-node: *content_provider

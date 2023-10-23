@@ -29,7 +29,12 @@ EDPM_COMPUTE_SUFFIX ?= 0
 #   EDPM_COMPUTE_ADDITIONAL_NETWORKS=$(jq -c addtional_nets.json)
 EDPM_COMPUTE_ADDITIONAL_NETWORKS ?= '[]'
 EDPM_TOTAL_NODES ?= 1
+EDPM_COMPUTE_CEPH_ENABLED ?= true
 NETWORK_MTU	?= 1500
+
+NETWORK_BGP ?= false
+CRC_BGP_NIC_1_MAC ?= 52:54:00:11:11:11
+CRC_BGP_NIC_2_MAC ?= 52:54:00:11:11:12
 
 BMAAS_INSTANCE_NAME_PREFIX ?= crc-bmaas
 BMAAS_INSTANCE_MEMORY ?= 4096
@@ -39,9 +44,11 @@ BMAAS_INSTANCE_OS_VARIANT ?= centos-stream9
 BMAAS_INSTANCE_VIRT_TYPE ?= kvm
 BMAAS_INSTANCE_NET_MODEL ?= virtio
 BMAAS_NETWORK_NAME ?= crc-bmaas
-BMAAS_BRIDGE_IPADDRESS ?= 172.20.1.2
 BMAAS_NETWORK_IPADDRESS ?= 172.20.1.1
 BMAAS_NETWORK_NETMASK ?= 255.255.255.0
+BMAAS_BRIDGE_IP_PREFIX ?= 172.20.1.2/24
+BMAAS_METALLB_POOL_NAME ?= baremetal
+BMAAS_METALLB_ADDRESS_POOL ?= 172.20.1.64/26
 BMAAS_NODE_COUNT ?= 1
 BMAAS_REDFISH_USERNAME ?= admin
 BMAAS_REDFISH_PASSWORD ?= password
@@ -103,20 +110,23 @@ crc_cleanup: ## Destroys the CRC env, but does NOT clear ( --clear-cache ) the c
 	sudo update-ca-trust
 
 .PHONY: crc_attach_default_interface
+ifeq ($(NETWORK_BGP), true)
+crc_attach_default_interface: export BGP=enabled
+crc_attach_default_interface: export BGP_NIC_1_MAC=${CRC_BGP_NIC_1_MAC}
+crc_attach_default_interface: export BGP_NIC_2_MAC=${CRC_BGP_NIC_2_MAC}
+endif
+crc_attach_default_interface: export DEFAULT_NETWORK_IP=${CRC_DEFAULT_NETWORK_IP}
 crc_attach_default_interface: crc_attach_default_interface_cleanup ## Attach default libvirt network to CRC
-	MAC_ADDRESS=$(shell echo -n 52:54:00; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':'); \
-	virsh --connect=qemu:///system net-update default add-last ip-dhcp-host --xml "<host mac='$$MAC_ADDRESS' name='crc' ip='${CRC_DEFAULT_NETWORK_IP}'/>" --config --live; \
-	virsh --connect=qemu:///system attach-interface crc --source default --type network --model virtio --mac $$MAC_ADDRESS --config --persistent; \
-	sleep 10; \
-	WORKER=$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}"); \
-	oc debug node/$$WORKER -- ip -o link | awk 'toupper($$0) ~ /ETHER $$MAC_ADDRESS/{print $$2}'  | awk -F: '{print $$1}'
+	bash scripts/interfaces-setup.sh
 
 .PHONY: crc_attach_default_interface_cleanup
+ifeq ($(NETWORK_BGP), true)
+crc_attach_default_interface_cleanup: export BGP=enabled
+crc_attach_default_interface_cleanup: export BGP_NIC_1_MAC=${CRC_BGP_NIC_1_MAC}
+crc_attach_default_interface_cleanup: export BGP_NIC_2_MAC=${CRC_BGP_NIC_2_MAC}
+endif
 crc_attach_default_interface_cleanup: ## Detach default libvirt network from CRC
-	-MAC_ADDRESS=$(shell virsh --connect=qemu:///system net-dumpxml default | grep crc | sed -e "s/.*mac='\(.*\)' name.*/\1/"); \
-	virsh --connect=qemu:///system detach-interface crc network --mac "$$MAC_ADDRESS"
-	-virsh --connect=qemu:///system net-update default delete ip-dhcp-host "<host name='crc'/>" --config --live
-	sleep 5
+	bash scripts/interfaces-setup-cleanup.sh
 
 ##@ EDPM
 
@@ -173,6 +183,12 @@ edpm_ansible_runner: ## Debug edpm-ansible playbooks
 	$(eval $(call vars))
 	scripts/edpm-ansible-runner.sh
 
+.PHONY: edpm_computes_bgp
+edpm_computes_bgp: #
+	$(eval $(call vars))
+	scripts/gen-ansibleee-ssh-key.sh
+	scripts/gen-edpm-compute-node-bgp.sh
+
 .PHONY: edpm_compute_repos
 edpm_compute_repos: ## Configure EDPM compute VM with repositories
 	@echo "DEPRECATED: this target has no effect and will be removed. Repo setup is done by the 'repo-setup' ansible service"
@@ -194,6 +210,7 @@ edpm_deploy_instance: ## Spin a instance on edpm node
 	-oc rsh openstackclient bash /tmp/edpm-deploy-instance.sh
 
 .PHONY: standalone
+standalone: export COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED}
 standalone: export STANDALONE=true
 standalone: export INTERFACE_MTU=${NETWORK_MTU}
 standalone: edpm_compute ## Create standalone VM
@@ -262,7 +279,9 @@ bmaas_crc_attach_network_cleanup: ## Detach BMaaS network from CRC
 .PHONY: bmaas_crc_baremetal_bridge
 bmaas_crc_baremetal_bridge: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
 bmaas_crc_baremetal_bridge: export INTERFACE_MTU = ${NETWORK_MTU}
+bmaas_crc_baremetal_bridge: export BRIDGE_IP_PREFIX = ${BMAAS_BRIDGE_IP_PREFIX}
 bmaas_crc_baremetal_bridge:
+	pushd .. && make nmstate && popd
 	scripts/bmaas/baremetal-bridge.sh --create
 
 .PHONY: bmaas_crc_baremetal_bridge_cleanup
@@ -272,11 +291,25 @@ bmaas_crc_baremetal_bridge_cleanup:
 
 .PHONY: bmaas_baremetal_net_nad
 bmaas_baremetal_net_nad:
+	pushd .. && make namespace && popd
 	scripts/bmaas/network-attachement-definition.sh --create
 
 .PHONY: bmaas_baremetal_net_nad_cleanup
 bmaas_baremetal_net_nad_cleanup:
 	scripts/bmaas/network-attachement-definition.sh --cleanup
+
+.PHONY: bmaas_metallb
+bmaas_metallb: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
+bmaas_metallb: export POOL_NAME = ${BMAAS_METALLB_POOL_NAME}
+bmaas_metallb: export ADDRESS_POOL = ${BMAAS_METALLB_ADDRESS_POOL}
+bmaas_metallb:
+	pushd .. && make metallb && popd
+	scripts/bmaas/metallb.sh --create
+
+.PHONY: bmaas_metallb_cleanup
+bmaas_metallb_cleanup: export POOL_NAME = ${BMAAS_METALLB_POOL_NAME}
+bmaas_metallb_cleanup:
+	scripts/bmaas/metallb.sh --cleanup
 
 .PHONY: bmaas_virtual_bms
 bmaas_virtual_bms: export NODE_COUNT = ${BMAAS_NODE_COUNT}
@@ -332,12 +365,12 @@ bmaas_generate_nodes_yaml:
 
 .PHONY: bmaas
 bmaas: bmaas_cleanup
-	pushd .. && make input nmstate && popd
 	make bmaas_network
 	make bmaas_route_crc_and_crc_bmaas_networks
 	make bmaas_crc_attach_network
 	make bmaas_crc_baremetal_bridge
 	make bmaas_baremetal_net_nad
+	make bmaas_metallb
 	make bmaas_virtual_bms
 	make bmaas_sushy_emulator
 	make bmaas_generate_nodes_yaml
@@ -346,6 +379,7 @@ bmaas: bmaas_cleanup
 bmaas_cleanup:
 	make bmaas_sushy_emulator_cleanup
 	make bmaas_virtual_bms_cleanup
+	make bmaas_metallb_cleanup
 	make bmaas_baremetal_net_nad_cleanup
 	make bmaas_crc_baremetal_bridge_cleanup
 	make bmaas_crc_attach_network_cleanup

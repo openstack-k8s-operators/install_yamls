@@ -35,6 +35,11 @@ SSH_OPT="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $SSH_KEY
 REPO_SETUP_CMDS=${REPO_SETUP_CMDS:-"${MY_TMP_DIR}/standalone_repos"}
 CMDS_FILE=${CMDS_FILE:-"${MY_TMP_DIR}/standalone_cmds"}
 SKIP_TRIPLEO_REPOS=${SKIP_TRIPLEO_REPOS:="false"}
+CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD:-"rm -Rf"}
+EDPM_COMPUTE_VCPUS=${COMPUTE_VCPUS:-8}
+EDPM_COMPUTE_RAM=${COMPUTE_RAM:-20}
+EDPM_COMPUTE_DISK_SIZE=${COMPUTE_DISK_SIZE:-70}
+EDPM_COMPUTE_CEPH_ENABLED=${COMPUTE_CEPH_ENABLED:-true}
 
 if [[ ! -f $SSH_KEY_FILE ]]; then
     echo "$SSH_KEY_FILE is missing"
@@ -140,6 +145,7 @@ EOF
 fi
 
 while [[ $(ssh -o BatchMode=yes -o ConnectTimeout=5 $SSH_OPT root@$IP echo ok) != "ok" ]]; do
+    sleep 5
     true
 done
 
@@ -178,7 +184,7 @@ scp $SSH_OPT ${MY_TMP_DIR}/net_config.yaml root@$IP:/tmp/net_config.yaml
 scp $SSH_OPT ${MY_TMP_DIR}/network_data.yaml root@$IP:/tmp/network_data.yaml
 scp $SSH_OPT ${MY_TMP_DIR}/deployed_network.yaml root@$IP:/tmp/deployed_network.yaml
 scp $SSH_OPT ${MY_TMP_DIR}/Standalone.yaml root@$IP:/tmp/Standalone.yaml
-scp $SSH_OPT standalone/ceph.sh root@$IP:/tmp/ceph.sh
+[[ "$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]] && scp $SSH_OPT standalone/ceph.sh root@$IP:/tmp/ceph.sh
 scp $SSH_OPT standalone/openstack.sh root@$IP:/tmp/openstack.sh
 scp $SSH_OPT standalone/post_config/ironic.sh root@$IP:/tmp/ironic_post.sh
 [ -f $HOME/.ssh/id_ecdsa.pub ] || \

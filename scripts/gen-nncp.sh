@@ -43,12 +43,38 @@ if [ -z "${VLAN_STEP}" ]; then
     echo "Please set VLAN_STEP"; exit 1
 fi
 
+if [ -n "$BGP" ]; then
+if [ -z "${INTERFACE_BGP_1}" ]; then
+    echo "Please set INTERFACE_BGP_1"; exit 1
+fi
+
+if [ -z "${INTERFACE_BGP_2}" ]; then
+    echo "Please set INTERFACE_BGP_2"; exit 1
+fi
+
+if [ -z "${BGP_1_IP_ADDRESS}" ]; then
+    echo "Please set BGP_1_IP_ADDRESS"; exit 1
+fi
+
+if [ -z "${BGP_2_IP_ADDRESS}" ]; then
+    echo "Please set BGP_2_IP_ADDRESS"; exit 1
+fi
+fi
+
 echo DEPLOY_DIR ${DEPLOY_DIR}
 echo WORKERS ${WORKERS}
 echo INTERFACE ${INTERFACE}
+echo INTERFACE_BGP_1 ${INTERFACE_BGP_1}
+echo INTERFACE_BGP_2 ${INTERFACE_BGP_2}
 echo INTERFACE_MTU ${INTERFACE_MTU}
 echo VLAN_START ${VLAN_START}
 echo VLAN_STEP ${VLAN_STEP}
+if [ -n "$BGP" ]; then
+echo INTERFACE_BGP_1 ${INTERFACE_BGP_1}
+echo INTERFACE_BGP_2 ${INTERFACE_BGP_2}
+echo BGP_1_IP_ADDRESS ${BGP_1_IP_ADDRESS}
+echo BGP_2_IP_ADDRESS ${BGP_2_IP_ADDRESS}
+fi
 
 # Use different suffix for other networks as the sample netconfig
 # we use starts with .10
@@ -132,6 +158,38 @@ spec:
       name: ${INTERFACE}
       state: up
       type: ethernet
+EOF_CAT
+if [ -n "$BGP" ]; then
+  cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+    - description: Configuring ${INTERFACE_BGP_1}
+      ipv4:
+        address:
+        - ip: ${BGP_1_IP_ADDRESS}
+          prefix-length: 30
+        enabled: true
+        dhcp: false
+      ipv6:
+        enabled: false
+      mtu: ${INTERFACE_MTU}
+      name: ${INTERFACE_BGP_1}
+      state: up
+      type: ethernet
+    - description: Configuring ${INTERFACE_BGP_2}
+      ipv4:
+        address:
+        - ip:  ${BGP_2_IP_ADDRESS}
+          prefix-length: 30
+        enabled: true
+        dhcp: false
+      ipv6:
+        enabled: false
+      mtu: ${INTERFACE_MTU}
+      name: ${INTERFACE_BGP_2}
+      state: up
+      type: ethernet
+EOF_CAT
+fi
+  cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
   nodeSelector:
     kubernetes.io/hostname: ${WORKER}
     node-role.kubernetes.io/worker: ""
