@@ -54,6 +54,8 @@ secretGenerator:
   - AdminPassword=${PASSWORD}
   - AodhPassword=${PASSWORD}
   - AodhDatabasePassword=${PASSWORD}
+  - BarbicanPassword=${PASSWORD}
+  - BarbicanDatabasePassword=${PASSWORD}
   - CeilometerPassword=${PASSWORD}
   - DbRootPassword=${PASSWORD}
   - DatabasePassword=${PASSWORD}
