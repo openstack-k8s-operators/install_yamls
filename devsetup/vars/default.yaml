@@ -1,6 +1,6 @@
 ---
 # Released version of the opm package (can be set to 'latest')
-opm_version: latest
+opm_version: v1.30.0
 
 # operator-sdk version to use (must be specific version)
 sdk_version: v1.31.0
