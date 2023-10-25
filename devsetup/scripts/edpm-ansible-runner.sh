@@ -33,7 +33,13 @@ fi
 
 pushd ${OUTPUT_DIR}
 
-oc get secret ${EDPM_INVENTORY_SECRET} -n ${NAMESPACE} -o json | jq '.data | map_values(@base64d)' | jq -r .inventory > inventory
+if oc get secret ${EDPM_INVENTORY_SECRET} -n ${NAMESPACE} 2>&1 1>/dev/null; then
+    oc get secret ${EDPM_INVENTORY_SECRET} -n ${NAMESPACE} -o json | jq '.data | map_values(@base64d)' | jq -r .inventory > inventory
+else
+    echo "Secret ${EDPM_INVENTORY_SECRET} not found! Please use EDPM_INVENTORY_SECRET to provide the correct secret name"
+    exit 1
+fi
+
 podman run --rm -ti \
             -e "ANSIBLE_ENABLE_TASK_DEBUGGER=true" \
             -e "ANSIBLE_FORCE_COLOR=true" \
