@@ -130,12 +130,6 @@ crc_attach_default_interface_cleanup: ## Detach default libvirt network from CRC
 
 ##@ EDPM
 
-.PHONY: edpm_baremetal
-edpm_baremetal: export DATAPLANE_TOTAL_NODES=${BM_NODE_COUNT}
-edpm_baremetal: export EDPM_GROWVOLS_ARGS=${DATAPLANE_GROWVOLS_ARGS}
-edpm_baremetal: edpm_baremetal_compute
-	make -C .. edpm_deploy_baremetal
-
 .PHONY: edpm_baremetal_compute
 edpm_baremetal_compute: export OPERATOR_NAME=openstack
 edpm_baremetal_compute: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
@@ -148,10 +142,6 @@ edpm_baremetal_compute: ## Create virtual baremetal for the dataplane
 	make bmaas_virtual_bms
 	make bmaas_sushy_emulator
 	bash scripts/edpm-compute-baremetal.sh --create
-
-.PHONY: edpm_baremetal_cleanup
-edpm_baremetal_cleanup: edpm_baremetal_compute_cleanup
-	make -C .. edpm_deploy_cleanup
 
 edpm_baremetal_compute_cleanup: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
 edpm_baremetal_compute_cleanup: export BMAAS_INSTANCE_NAME_PREFIX=${BM_INSTANCE_NAME_PREFIX}
