@@ -333,6 +333,7 @@ DATAPLANE_SSHD_ALLOWED_RANGES                    ?=['192.168.122.0/24']
 DATAPLANE_CHRONY_NTP_SERVER                      ?=pool.ntp.org
 DATAPLANE_REGISTRY_URL                           ?=quay.io/podified-antelope-centos9
 DATAPLANE_CONTAINER_TAG                          ?=current-podified
+DATAPLANE_CONTAINER_PREFIX			 ?=openstack
 DATAPLANE_KUTTL_CONF                             ?= ${OPERATOR_BASE_DIR}/dataplane-operator/kuttl-test.yaml
 DATAPLANE_KUTTL_DIR                              ?= ${OPERATOR_BASE_DIR}/dataplane-operator/tests/kuttl/tests
 DATAPLANE_KUTTL_NAMESPACE                        ?= dataplane-kuttl-tests
@@ -609,6 +610,7 @@ edpm_deploy_prep: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALLOWED_RANGE
 edpm_deploy_prep: export EDPM_CHRONY_NTP_SERVER=${DATAPLANE_CHRONY_NTP_SERVER}
 edpm_deploy_prep: export EDPM_REGISTRY_URL=${DATAPLANE_REGISTRY_URL}
 edpm_deploy_prep: export EDPM_CONTAINER_TAG=${DATAPLANE_CONTAINER_TAG}
+edpm_deploy_prep: export EDPM_CONTAINER_PREFIX=${DATAPLANE_CONTAINER_PREFIX}
 ifeq ($(NETWORK_BGP), true)
 edpm_deploy_prep: export BGP=enabled
 endif
@@ -650,6 +652,7 @@ edpm_deploy_baremetal_prep: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALL
 edpm_deploy_baremetal_prep: export EDPM_CHRONY_NTP_SERVER=${DATAPLANE_CHRONY_NTP_SERVER}
 edpm_deploy_baremetal_prep: export EDPM_REGISTRY_URL=${DATAPLANE_REGISTRY_URL}
 edpm_deploy_baremetal_prep: export EDPM_CONTAINER_TAG=${DATAPLANE_CONTAINER_TAG}
+edpm_deploy_baremetal_prep: export EDPM_CONTAINER_PREFIX=${DATAPLANE_CONTAINER_PREFIX}
 edpm_deploy_baremetal_prep: export EDPM_ROOT_PASSWORD_SECRET=${BMO_ROOT_PASSWORD_SECRET}
 edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
