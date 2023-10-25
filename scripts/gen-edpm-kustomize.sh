@@ -103,6 +103,9 @@ cat <<EOF >>kustomization.yaml
       path: /spec/nodeTemplate/ansible/ansibleVars/registry_url
       value: ${EDPM_REGISTRY_URL}
     - op: replace
+      path: /spec/nodeTemplate/ansible/ansibleVars/image_prefix
+      value: ${EDPM_CONTAINER_PREFIX}
+    - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/image_tag
       value: ${EDPM_CONTAINER_TAG}
     - op: replace
