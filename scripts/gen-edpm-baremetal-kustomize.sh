@@ -63,6 +63,9 @@ patches:
       path: /spec/nodeTemplate/ansible/ansibleVars/image_tag
       value: ${EDPM_CONTAINER_TAG}
     - op: replace
+      path: /spec/nodeTemplate/ansible/ansibleVars/image_prefix
+      value: ${EDPM_CONTAINER_PREFIX}
+    - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/edpm_sshd_allowed_ranges
       value: ${EDPM_SSHD_ALLOWED_RANGES}
     - op: add
