@@ -371,6 +371,10 @@ TELEMETRY_CR                     ?= ${OPERATOR_BASE_DIR}/telemetry-operator/${TE
 CEILOMETER_CENTRAL_DEPL_IMG      ?= unused
 CEILOMETER_NOTIFICATION_DEPL_IMG ?= unused
 SG_CORE_DEPL_IMG                 ?= unused
+TELEMETRY_KUTTL_BASEDIR   ?= ${OPERATOR_BASE_DIR}/telemetry-operator
+TELEMETRY_KUTTL_RELPATH   ?= tests/kuttl/suites
+TELEMETRY_KUTTL_CONF      ?= ${TELEMETRY_KUTTL_BASEDIR}/kuttl-test.yaml
+TELEMETRY_KUTTL_NAMESPACE ?= telemetry-kuttl-tests
 
 # BMO
 BMO_REPO                         ?= https://github.com/metal3-io/baremetal-operator
@@ -2026,6 +2030,24 @@ telemetry_deploy_cleanup: ## cleans up the service instance, Does not affect the
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/ceilometer-operator ${DEPLOY_DIR}
 	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "flush tables; drop database if exists aodh;" || true
 
+.PHONY: telemetry_kuttl_run
+telemetry_kuttl_run: ## runs kuttl tests for the telemetry operator, assumes that everything needed for running the test was deployed beforehand.
+	kubectl-kuttl test --config ${TELEMETRY_KUTTL_CONF} --namespace ${NAMESPACE}
+
+.PHONY: telemetry_kuttl
+telemetry_kuttl: export NAMESPACE = ${TELEMETRY_KUTTL_NAMESPACE}
+# Set the value of $TELEMETRY_KUTTL_NAMESPACE if you want to run the telemetry
+# kuttl tests in a namespace different than the default (telemetry-kuttl-tests)
+telemetry_kuttl: kuttl_common_prep heat heat_deploy telemetry telemetry_deploy_prep
+	$(eval $(call vars,$@,telemetry))
+	sed -i "s#- ${TELEMETRY_KUTTL_RELPATH}#- ${TELEMETRY_KUTTL_BASEDIR}/${TELEMETRY_KUTTL_RELPATH}#g" ${TELEMETRY_KUTTL_CONF}
+	make wait
+	make telemetry_kuttl_run
+	make deploy_cleanup
+	make telemetry_cleanup
+	make heat_cleanup
+	make kuttl_common_cleanup
+	bash scripts/restore-namespace.sh
 
 ##@ SWIFT
 .PHONY: swift_prep
