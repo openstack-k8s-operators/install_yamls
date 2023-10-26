@@ -136,6 +136,30 @@ spec:
     }
 EOF_CAT
 
+cat > ${DEPLOY_DIR}/designate.yaml <<EOF_CAT
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  labels:
+    osp/net: designate
+  name: designate
+  namespace: ${NAMESPACE}
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "designate",
+      "type": "macvlan",
+      "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}))",
+      "ipam": {
+        "type": "whereabouts",
+        "range": "172.30.0.0/24",
+        "range_start": "172.30.0.30",
+        "range_end": "172.30.0.70"
+      }
+    }
+EOF_CAT
+
 if [ -n "$INTERFACE_BGP_1" ]; then
     cat > ${DEPLOY_DIR}/bgpnet1.yaml <<EOF_CAT
     apiVersion: k8s.cni.cncf.io/v1
