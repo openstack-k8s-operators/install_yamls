@@ -1,5 +1,5 @@
 #!/bin/bash
-# set -x
+set -x
 
 if [ "$EUID" -eq 0 ]; then
     echo "Please do not run as root."
@@ -12,6 +12,7 @@ if ! which virt-install > /dev/null; then
     exit 1
 fi
 
+SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 NETWORK_NAME=${NETWORK_NAME:-"crc-bmaas"}
 NODE_NAME_PREFIX=${NODE_NAME_PREFIX:-"crc-bmaas"}
 NODE_COUNT=${NODE_COUNT:-"1"}
@@ -24,6 +25,9 @@ DISK_SIZE=${DISK_SIZE:-20}
 OS_VARIANT=${OS_VARIANT:-"centos-stream9"}
 VIRT_TYPE=${VIRT_TYPE:-"kvm"}
 NET_MODEL=${NET_MODEL:-"virtio"}
+CONSOLE_LOG_DIR=${CONSOLE_LOG_DIR:-/var/log/bmaas_console_logs}
+CLEANUP_DELETE_ARCHIVED_LOGS=${CLEANUP_DELETE_ARCHIVED_LOGS:-"false"}
+LIBVIRT_HOOKS_PATH=${LIBVIRT_HOOKS_PATH:-/etc/libvirt/hooks}
 
 MY_TMP_DIR="$(mktemp -d)"
 trap 'rm -rf -- "$MY_TMP_DIR"' EXIT
@@ -35,6 +39,58 @@ function usage {
     echo "  --cleanup     Cleanup, delete BMaaS virtual baremteal VMs"
     echo "  --num-nodes   Number of BMaaS virtual baremetal VMs to create (default: 1)"
     echo
+}
+
+function create_libvirt_logging {
+    # Make sure the log directory exists
+    sudo mkdir -p "$CONSOLE_LOG_DIR"
+    # Set selinux context type to "virt_log_t"
+    sudo chcon -t virt_log_t "$CONSOLE_LOG_DIR"
+    echo "This directory contains the serial console log files from the virtual BMaaS
+bare-metal nodes. The *_console_* log files are the original log files and
+include ANSI control codes which can make the output difficult to read. The
+*_no_ansi_* log files have had ANSI control codes removed from the file and are
+easier to read.
+
+On some occasions there won't be a corresponding *_no_ansi_* log file. You may
+see a log file without a date/time in the file name. In that case you can
+display the logfile in your console by doing:
+    $ curl URL_TO_LOGFILE
+
+This will have your terminal process the ANSI escape codes.
+
+Another option, if you have the 'pv' executable installed, is to simulate a
+low-speed connection.  In this example simulate a 300 Bytes/second connection.
+    $ curl URL_TO_LOGFILE | pv -q -L 300
+
+This can allow you to see some of the content before the screen is cleared by
+an ANSI escape sequence.
+" | sudo tee ${CONSOLE_LOG_DIR}/README
+
+
+    # Make sure the libvirt hooks directory exist
+    sudo mkdir -p $LIBVIRT_HOOKS_PATH
+    # Copy the qemu hook to the right directory
+    if ! sudo test -f "$LIBVIRT_HOOKS_PATH/qemu"; then
+        sudo curl -L -o $LIBVIRT_HOOKS_PATH/qemu https://opendev.org/openstack/ironic/raw/branch/master/devstack/files/hooks/qemu.py
+    fi
+    sudo chmod -v +x $LIBVIRT_HOOKS_PATH/qemu
+    sudo sed -e "s|%LOG_DIR%|$CONSOLE_LOG_DIR|g;" -i $LIBVIRT_HOOKS_PATH/qemu
+    sudo systemctl restart libvirtd.service
+}
+
+function cleanup_libvirt_logging {
+    if [ $CLEANUP_DELETE_ARCHIVED_LOGS = "true" ]; then
+        if [ -n $CONSOLE_LOG_DIR ] && [ -d $CONSOLE_LOG_DIR ]; then
+            sudo rm -f $CONSOLE_LOG_DIR/*_console.log
+            sudo rm -f $CONSOLE_LOG_DIR/*_console_*.log
+            sudo rm -f $CONSOLE_LOG_DIR/*_no_ansi_*.log
+        fi
+    fi
+    if sudo test -f "$LIBVIRT_HOOKS_PATH/qemu"; then
+        sudo chmod -v -x $LIBVIRT_HOOKS_PATH/qemu
+    fi
+    sudo systemctl restart libvirtd.service
 }
 
 function create_vm {
@@ -53,6 +109,7 @@ function create_vm {
         --network network="$NETWORK_NAME",model="$NET_MODEL" \
         --graphics vnc \
         --virt-type "$VIRT_TYPE" \
+        --serial file,path="${CONSOLE_LOG_DIR}/${name}_console.log" \
         --print-xml \
         > "$temp_file"
     virsh --connect=qemu:///system define "$temp_file"
@@ -117,7 +174,9 @@ if [ -z "$ACTION" ]; then
 fi
 
 if [ "$ACTION" == "CREATE" ]; then
+    create_libvirt_logging
     create
 elif [ "$ACTION" == "CLEANUP" ]; then
     cleanup
+    cleanup_libvirt_logging
 fi
