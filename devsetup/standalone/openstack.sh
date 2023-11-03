@@ -18,6 +18,7 @@ set -ex
 EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
 COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
 INTERFACE_MTU=${INTERFACE_MTU:-1500}
+MANILA_ENABLED=${MANILA_ENABLED:-true}
 
 # Use the files created in the previous steps including the network_data.yaml file and thw deployed_network.yaml file.
 # The deployed_network.yaml file hard codes the IPs and VIPs configured from the network.sh
@@ -94,9 +95,13 @@ if [ "$COMPUTE_DRIVER" = "ironic" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/ironic-overcloud.yaml"
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/ironic-inspector.yaml"
 fi
+if [ "$MANILA_ENABLED" = "true"]; then
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/manila-cephfsnative-config.yaml"
+fi
 ENV_ARGS+=" -e $HOME/standalone_parameters.yaml"
 if [ "$EDPM_COMPUTE_CEPH_ENABLED" = "true" ] ; then
     CEPH_ARGS=${CEPH_ARGS:-"-e ~/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml"}
+    [[ "$MANILA_ENABLED" == "true" ]] && CEPH_ARGS+=' -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/ceph-mds.yaml'
     ENV_ARGS+=" ${CEPH_ARGS}"
 fi
 ENV_ARGS+=" -e $HOME/containers-prepare-parameters.yaml"
