@@ -39,12 +39,20 @@ if [ -z "${ASN}" ]; then
     echo "Please set ASN"; exit 1
 fi
 
+if [ -z "${PEER_ASN}" ]; then
+    echo "Please set PEER_ASN"; exit 1
+fi
+
 if [ -z "${LEAF_1}" ]; then
     echo "Please set LEAF_1"; exit 1
 fi
 
 if [ -z "${LEAF_2}" ]; then
     echo "Please set LEAF_2"; exit 1
+fi
+
+if [ -z "${SOURCE_IP}" ]; then
+    echo "Please set SOURCE_IP"; exit 1
 fi
 
 echo OPERATOR_DIR ${OPERATOR_DIR}
@@ -178,9 +186,10 @@ metadata:
   namespace: metallb-system
 spec:
   myASN: ${ASN}
-  peerASN: ${ASN}
+  peerASN: ${PEER_ASN}
   peerAddress: ${LEAF_1}
   password: f00barZ
+  routerID: ${SOURCE_IP}
 ---
 apiVersion: metallb.io/v1beta2
 kind: BGPPeer
@@ -189,9 +198,10 @@ metadata:
   namespace: metallb-system
 spec:
   myASN: ${ASN}
-  peerASN: ${ASN}
+  peerASN: ${PEER_ASN}
   peerAddress: ${LEAF_2}
   password: f00barZ
+  routerID: ${SOURCE_IP}
 EOF_CAT
 cat > ${DEPLOY_DIR}/bgpadvertisement.yaml <<EOF_CAT
 ---
@@ -209,4 +219,34 @@ spec:
   peers:
   - bgp-peer
   - bgp-peer-2
+EOF_CAT
+cat > ${DEPLOY_DIR}/bgpextras.yaml << EOF_CAT
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: metallb-system
+  name: bgpextras
+data:
+  extras: |
+    router bgp ${ASN}
+      network ${SOURCE_IP}/32
+      neighbor ${LEAF_1} allowas-in origin
+      neighbor ${LEAF_2} allowas-in origin
+
+    ! ip prefix-list osp permit 172.16.0.0/16 le 32
+    route-map ${LEAF_1}-in permit 20
+      ! match ip address prefix-list osp
+      set src ${SOURCE_IP}
+    route-map ${LEAF_2}-in permit 20
+      ! match ip address prefix-list osp
+      set src ${SOURCE_IP}
+    ip protocol bgp route-map ${LEAF_1}-in
+    ip protocol bgp route-map ${LEAF_2}-in
+
+    ip prefix-list ocp-lo permit ${SOURCE_IP}/32
+    route-map ${LEAF_1}-out permit 1
+      match ip address prefix-list ocp-lo
+    route-map ${LEAF_2}-out permit 1
+      match ip address prefix-list ocp-lo
 EOF_CAT
