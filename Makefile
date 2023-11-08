@@ -207,7 +207,10 @@ CINDER_REPO            ?= https://github.com/openstack-k8s-operators/cinder-oper
 CINDER_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 CINDER                 ?= config/samples/cinder_v1beta1_cinder.yaml
 CINDER_CR              ?= ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
-# TODO: Image customizations for all Cinder services
+CINDERAPI_DEPL_IMG     ?= unused
+CINDERBKP_DEPL_IMG     ?= unused
+CINDERSCH_DEPL_IMG     ?= unused
+CINDERVOL_DEPL_IMG     ?= unused
 CINDER_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/cinder-operator/kuttl-test.yaml
 CINDER_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/cinder-operator/test/kuttl/tests
 CINDER_KUTTL_NAMESPACE ?= cinder-kuttl-tests
@@ -1098,6 +1101,8 @@ cinder_cleanup: ## deletes the operator, but does not cleanup the service resour
 
 .PHONY: cinder_deploy_prep
 cinder_deploy_prep: export KIND=Cinder
+cinder_deploy_prep: export IMAGE=${CINDERAPI_DEPL_IMG},${CINDERBKP_DEPL_IMG},${CINDERSCH_DEPL_IMG},${CINDERVOL_DEPL_IMG}
+cinder_deploy_prep: export IMAGE_PATH=cinderAPI/containerImage,cinderBackup/containerImage,cinderScheduler/containerImage,cinderVolumes/volume1/containerImage
 cinder_deploy_prep: cinder_deploy_cleanup ## prepares the CR to install the service based on the service sample file CINDER
 	$(eval $(call vars,$@,cinder))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
