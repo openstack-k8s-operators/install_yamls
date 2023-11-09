@@ -16,6 +16,8 @@ DBSERVICE_CONTAINER = mariadb-openstack
 endif
 METADATA_SHARED_SECRET   ?= 1234567842
 HEAT_AUTH_ENCRYPTION_KEY ?= 767c3ed056cbaa3b9dfedb8c6f825bf0
+OPENSTACK_K8S_BRANCH     ?= main
+OPENSTACK_K8S_TAG        ?= latest
 
 # Allows overriding the cleanup command used in *_cleanup targets.
 # Useful in CI, to allow injectin kustomization in each operator CR directory
@@ -47,9 +49,9 @@ GIT_CLONE_OPTS      ?=
 GALERA_REPLICAS         ?=
 
 # OpenStack Operator
-OPENSTACK_IMG                ?= quay.io/openstack-k8s-operators/openstack-operator-index:latest
+OPENSTACK_IMG                ?= quay.io/openstack-k8s-operators/openstack-operator-index:${OPENSTACK_K8S_TAG}
 OPENSTACK_REPO               ?= https://github.com/openstack-k8s-operators/openstack-operator.git
-OPENSTACK_BRANCH             ?= main
+OPENSTACK_BRANCH             ?= ${OPENSTACK_K8S_BRANCH}
 
 ifeq ($(NETWORK_ISOLATION), true)
 ifeq ($(DBSERVICE), galera)
@@ -66,17 +68,17 @@ endif
 endif
 
 OPENSTACK_CR                 ?= ${OPERATOR_BASE_DIR}/openstack-operator/${OPENSTACK_CTLPLANE}
-OPENSTACK_BUNDLE_IMG         ?= quay.io/openstack-k8s-operators/openstack-operator-bundle:latest
-OPENSTACK_STORAGE_BUNDLE_IMG ?= quay.io/openstack-k8s-operators/openstack-operator-storage-bundle:latest
+OPENSTACK_BUNDLE_IMG         ?= quay.io/openstack-k8s-operators/openstack-operator-bundle:${OPENSTACK_K8S_TAG}
+OPENSTACK_STORAGE_BUNDLE_IMG ?= quay.io/openstack-k8s-operators/openstack-operator-storage-bundle:${OPENSTACK_K8S_TAG}
 OPENSTACK_CRDS_DIR           ?= openstack_crds
 OPENSTACK_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/openstack-operator/kuttl-test.yaml
 OPENSTACK_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/openstack-operator/tests/kuttl/tests
 OPENSTACK_KUTTL_NAMESPACE ?= openstack-kuttl-tests
 
 # Infra Operator
-INFRA_IMG             ?= quay.io/openstack-k8s-operators/infra-operator-index:latest
+INFRA_IMG             ?= quay.io/openstack-k8s-operators/infra-operator-index:${OPENSTACK_K8S_TAG}
 INFRA_REPO            ?= https://github.com/openstack-k8s-operators/infra-operator.git
-INFRA_BRANCH          ?= main
+INFRA_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 INFRA_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/infra-operator/kuttl-test.yaml
 INFRA_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/infra-operator/tests/kuttl/tests
 INFRA_KUTTL_NAMESPACE ?= infra-kuttl-tests
@@ -101,9 +103,9 @@ MEMCACHED_CR        ?= ${OPERATOR_BASE_DIR}/infra-operator/${MEMCACHED}
 MEMCACHED_DEPL_IMG  ?= unused
 
 # Keystone
-KEYSTONE_IMG             ?= quay.io/openstack-k8s-operators/keystone-operator-index:latest
+KEYSTONE_IMG             ?= quay.io/openstack-k8s-operators/keystone-operator-index:${OPENSTACK_K8S_TAG}
 KEYSTONE_REPO            ?= https://github.com/openstack-k8s-operators/keystone-operator.git
-KEYSTONE_BRANCH          ?= main
+KEYSTONE_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 KEYSTONEAPI              ?= config/samples/keystone_v1beta1_keystoneapi.yaml
 KEYSTONEAPI_CR           ?= ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
 KEYSTONEAPI_DEPL_IMG     ?= unused
@@ -112,9 +114,9 @@ KEYSTONE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/t
 KEYSTONE_KUTTL_NAMESPACE ?= keystone-kuttl-tests
 
 # Mariadb
-MARIADB_IMG             ?= quay.io/openstack-k8s-operators/mariadb-operator-index:latest
+MARIADB_IMG             ?= quay.io/openstack-k8s-operators/mariadb-operator-index:${OPENSTACK_K8S_TAG}
 MARIADB_REPO            ?= https://github.com/openstack-k8s-operators/mariadb-operator.git
-MARIADB_BRANCH          ?= main
+MARIADB_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 ifeq ($(DBSERVICE), galera)
 MARIADB                 ?= config/samples/mariadb_v1beta1_galera.yaml
 else
@@ -127,9 +129,9 @@ MARIADB_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tes
 MARIADB_KUTTL_NAMESPACE ?= mariadb-kuttl-tests
 
 # Placement
-PLACEMENT_IMG             ?= quay.io/openstack-k8s-operators/placement-operator-index:latest
+PLACEMENT_IMG             ?= quay.io/openstack-k8s-operators/placement-operator-index:${OPENSTACK_K8S_TAG}
 PLACEMENT_REPO            ?= https://github.com/openstack-k8s-operators/placement-operator.git
-PLACEMENT_BRANCH          ?= main
+PLACEMENT_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 PLACEMENTAPI              ?= config/samples/placement_v1beta1_placementapi.yaml
 PLACEMENTAPI_CR           ?= ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI}
 PLACEMENTAPI_DEPL_IMG     ?= unused
@@ -138,9 +140,9 @@ PLACEMENT_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/placement-operator/tests/kuttl
 PLACEMENT_KUTTL_NAMESPACE ?= placement-kuttl-tests
 
 # Sir Glancealot
-GLANCE_IMG              ?= quay.io/openstack-k8s-operators/glance-operator-index:latest
+GLANCE_IMG              ?= quay.io/openstack-k8s-operators/glance-operator-index:${OPENSTACK_K8S_TAG}
 GLANCE_REPO             ?= https://github.com/openstack-k8s-operators/glance-operator.git
-GLANCE_BRANCH           ?= main
+GLANCE_BRANCH           ?= ${OPENSTACK_K8S_BRANCH}
 GLANCE                  ?= config/samples/glance_v1beta1_glance.yaml
 GLANCE_CR               ?= ${OPERATOR_BASE_DIR}/glance-operator/${GLANCE}
 GLANCEAPI_DEPL_IMG      ?= unused
@@ -149,9 +151,9 @@ GLANCE_KUTTL_DIR        ?= ${OPERATOR_BASE_DIR}/glance-operator/test/kuttl/tests
 GLANCE_KUTTL_NAMESPACE  ?= glance-kuttl-tests
 
 # Ovn
-OVN_IMG             ?= quay.io/openstack-k8s-operators/ovn-operator-index:latest
+OVN_IMG             ?= quay.io/openstack-k8s-operators/ovn-operator-index:${OPENSTACK_K8S_TAG}
 OVN_REPO            ?= https://github.com/openstack-k8s-operators/ovn-operator.git
-OVN_BRANCH          ?= main
+OVN_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 OVNDBS              ?= config/samples/ovn_v1beta1_ovndbcluster.yaml
 OVNDBS_CR           ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNDBS}
 OVNNORTHD           ?= config/samples/ovn_v1beta1_ovnnorthd.yaml
@@ -164,9 +166,9 @@ OVN_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovn-operator/tests/kuttl/tests
 OVN_KUTTL_NAMESPACE ?= ovn-kuttl-tests
 
 # Neutron
-NEUTRON_IMG             ?= quay.io/openstack-k8s-operators/neutron-operator-index:latest
+NEUTRON_IMG             ?= quay.io/openstack-k8s-operators/neutron-operator-index:${OPENSTACK_K8S_TAG}
 NEUTRON_REPO            ?= https://github.com/openstack-k8s-operators/neutron-operator.git
-NEUTRON_BRANCH          ?= main
+NEUTRON_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 NEUTRONAPI              ?= config/samples/neutron_v1beta1_neutronapi.yaml
 NEUTRONAPI_CR           ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
 NEUTRONAPI_DEPL_IMG     ?= unused
@@ -176,9 +178,9 @@ NEUTRON_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/neutron-operator/test/kuttl/test
 NEUTRON_KUTTL_NAMESPACE ?= neutron-kuttl-tests
 
 # Cinder
-CINDER_IMG             ?= quay.io/openstack-k8s-operators/cinder-operator-index:latest
+CINDER_IMG             ?= quay.io/openstack-k8s-operators/cinder-operator-index:${OPENSTACK_K8S_TAG}
 CINDER_REPO            ?= https://github.com/openstack-k8s-operators/cinder-operator.git
-CINDER_BRANCH          ?= main
+CINDER_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 CINDER                 ?= config/samples/cinder_v1beta1_cinder.yaml
 CINDER_CR              ?= ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
 # TODO: Image customizations for all Cinder services
@@ -187,7 +189,7 @@ CINDER_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/cinder-operator/test/kuttl/tests
 CINDER_KUTTL_NAMESPACE ?= cinder-kuttl-tests
 
 # RabbitMQ
-RABBITMQ_IMG        ?= quay.io/openstack-k8s-operators/rabbitmq-cluster-operator-index:latest
+RABBITMQ_IMG        ?= quay.io/openstack-k8s-operators/rabbitmq-cluster-operator-index:${OPENSTACK_K8S_TAG}
 RABBITMQ_REPO       ?= https://github.com/openstack-k8s-operators/rabbitmq-cluster-operator.git
 RABBITMQ_BRANCH     ?= patches
 RABBITMQ            ?= docs/examples/default-security-context/rabbitmq.yaml
@@ -195,9 +197,9 @@ RABBITMQ_CR         ?= ${OPERATOR_BASE_DIR}/rabbitmq-operator/${RABBITMQ}
 RABBITMQ_DEPL_IMG   ?= unused
 
 # Ironic
-IRONIC_IMG             ?= quay.io/openstack-k8s-operators/ironic-operator-index:latest
+IRONIC_IMG             ?= quay.io/openstack-k8s-operators/ironic-operator-index:${OPENSTACK_K8S_TAG}
 IRONIC_REPO            ?= https://github.com/openstack-k8s-operators/ironic-operator.git
-IRONIC_BRANCH          ?= main
+IRONIC_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 IRONIC                 ?= config/samples/ironic_v1beta1_ironic.yaml
 IRONIC_CR              ?= ${OPERATOR_BASE_DIR}/ironic-operator/${IRONIC}
 IRONICAPI_DEPL_IMG     ?= unused
@@ -210,9 +212,9 @@ IRONIC_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ironic-operator/tests/kuttl/tests
 IRONIC_KUTTL_NAMESPACE ?= ironic-kuttl-tests
 
 # Octavia
-OCTAVIA_IMG             ?= quay.io/openstack-k8s-operators/octavia-operator-index:latest
+OCTAVIA_IMG             ?= quay.io/openstack-k8s-operators/octavia-operator-index:${OPENSTACK_K8S_TAG}
 OCTAVIA_REPO            ?= https://github.com/openstack-k8s-operators/octavia-operator.git
-OCTAVIA_BRANCH          ?= main
+OCTAVIA_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 OCTAVIA                 ?= config/samples/octavia_v1beta1_octavia.yaml
 OCTAVIA_CR              ?= ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIA}
 # TODO: Image custom    izations for all Octavia services
@@ -221,9 +223,9 @@ OCTAVIA_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/octavia-operator/tests/kuttl/tes
 OCTAVIA_KUTTL_NAMESPACE ?= octavia-kuttl-tests
 
 # Designate
-DESIGNATE_IMG             ?= quay.io/openstack-k8s-operators/designate-operator-index:latest
+DESIGNATE_IMG             ?= quay.io/openstack-k8s-operators/designate-operator-index:${OPENSTACK_K8S_TAG}
 DESIGNATE_REPO            ?= https://github.com/openstack-k8s-operators/designate-operator.git
-DESIGNATE_BRANCH          ?= main
+DESIGNATE_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 DESIGNATE                 ?= config/samples/designate_v1beta1_designate.yaml
 DESIGNATE_CR              ?= ${OPERATOR_BASE_DIR}/designate-operator/${DESIGNATE}
 DESIGNATE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/designate-operator/kuttl-test.yaml
@@ -231,9 +233,9 @@ DESIGNATE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/designate-operator/tests/kuttl
 DESIGNATE_KUTTL_NAMESPACE ?= designate-kuttl-tests
 
 # Nova
-NOVA_IMG            ?= quay.io/openstack-k8s-operators/nova-operator-index:latest
+NOVA_IMG            ?= quay.io/openstack-k8s-operators/nova-operator-index:${OPENSTACK_K8S_TAG}
 NOVA_REPO           ?= https://github.com/openstack-k8s-operators/nova-operator.git
-NOVA_BRANCH         ?= main
+NOVA_BRANCH         ?= ${OPENSTACK_K8S_BRANCH}
 # NOTE(gibi): We intentionally not using the default nova sample here
 # as that would require two RabbitMQCluster to be deployed which a) is not what
 # the make rabbitmq_deploy target does ii) required extra resource in the dev
@@ -243,9 +245,9 @@ NOVA_CR             ?= ${OPERATOR_BASE_DIR}/nova-operator/${NOVA}
 # TODO: Image customizations for all Nova services
 
 # Horizon
-HORIZON_IMG             ?= quay.io/openstack-k8s-operators/horizon-operator-index:latest
+HORIZON_IMG             ?= quay.io/openstack-k8s-operators/horizon-operator-index:${OPENSTACK_K8S_TAG}
 HORIZON_REPO            ?= https://github.com/openstack-k8s-operators/horizon-operator.git
-HORIZON_BRANCH          ?= main
+HORIZON_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 HORIZON                 ?= config/samples/horizon_v1beta1_horizon.yaml
 HORIZON_CR              ?= ${OPERATOR_BASE_DIR}/horizon-operator/${HORIZON}
 HORIZON_DEPL_IMG        ?= unused
@@ -254,9 +256,9 @@ HORIZON_KUTTL_NAMESPACE ?= horizon-kuttl-tests
 HORIZON_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/horizon-operator/tests/kuttl/tests
 
 # Heat
-HEAT_IMG             ?= quay.io/openstack-k8s-operators/heat-operator-index:latest
+HEAT_IMG             ?= quay.io/openstack-k8s-operators/heat-operator-index:${OPENSTACK_K8S_TAG}
 HEAT_REPO            ?= https://github.com/openstack-k8s-operators/heat-operator.git
-HEAT_BRANCH          ?= main
+HEAT_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 HEAT                 ?= config/samples/heat_v1beta1_heat.yaml
 HEAT_CR              ?= ${OPERATOR_BASE_DIR}/heat-operator/${HEAT}
 HEATAPI_DEPL_IMG     ?= unused
@@ -267,9 +269,9 @@ HEAT_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/heat-operator/tests/kuttl/tests
 HEAT_KUTTL_NAMESPACE ?= heat-kuttl-tests
 
 # AnsibleEE
-ANSIBLEEE_IMG        ?= quay.io/openstack-k8s-operators/openstack-ansibleee-operator-index:latest
+ANSIBLEEE_IMG        ?= quay.io/openstack-k8s-operators/openstack-ansibleee-operator-index:${OPENSTACK_K8S_TAG}
 ANSIBLEEE_REPO       ?= https://github.com/openstack-k8s-operators/openstack-ansibleee-operator
-ANSIBLEEE_BRANCH          ?= main
+ANSIBLEEE_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 ANSIBLEEE                 ?= config/samples/_v1alpha1_ansibleee.yaml
 ANSIBLEEE_CR              ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/${ANSIBLEEE}
 ANSIBLEEE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/kuttl-test.yaml
@@ -278,15 +280,15 @@ ANSIBLEEE_KUTTL_NAMESPACE ?= ansibleee-kuttl-tests
 
 
 # Baremetal Operator
-BAREMETAL_IMG       ?= quay.io/openstack-k8s-operators/openstack-baremetal-operator-index:latest
+BAREMETAL_IMG       ?= quay.io/openstack-k8s-operators/openstack-baremetal-operator-index:${OPENSTACK_K8S_TAG}
 BAREMETAL_REPO      ?= https://github.com/openstack-k8s-operators/openstack-baremetal-operator.git
-BAREMETAL_BRANCH    ?= main
+BAREMETAL_BRANCH    ?= ${OPENSTACK_K8S_BRANCH}
 BMH_NAMESPACE       ?= ${NAMESPACE}
 
 # Dataplane Operator
-DATAPLANE_IMG                                    ?= quay.io/openstack-k8s-operators/dataplane-operator-index:latest
+DATAPLANE_IMG                                    ?= quay.io/openstack-k8s-operators/dataplane-operator-index:${OPENSTACK_K8S_TAG}
 DATAPLANE_REPO                                   ?= https://github.com/openstack-k8s-operators/dataplane-operator.git
-DATAPLANE_BRANCH                                 ?= main
+DATAPLANE_BRANCH                                 ?= ${OPENSTACK_K8S_BRANCH}
 DATAPLANE_TIMEOUT                                ?= 20m
 OPENSTACK_DATAPLANENODESET                       ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset.yaml
 OPENSTACK_DATAPLANENODESET_BAREMETAL             ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset_baremetal_with_ipam.yaml
@@ -300,7 +302,7 @@ DATAPLANE_ANSIBLE_SECRET                         ?=dataplane-ansible-ssh-private
 DATAPLANE_ANSIBLE_USER                           ?=
 DATAPLANE_COMPUTE_IP                             ?=192.168.122.100
 DATAPLANE_TOTAL_NODES                            ?=1
-DATAPLANE_RUNNER_IMG                             ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
+DATAPLANE_RUNNER_IMG                             ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:${OPENSTACK_K8S_TAG}
 DATAPLANE_NETWORK_INTERFACE_NAME                 ?=eth0
 DATAPLANE_SSHD_ALLOWED_RANGES                    ?=['192.168.122.0/24']
 DATAPLANE_CHRONY_NTP_SERVER                      ?=pool.ntp.org
@@ -313,9 +315,9 @@ DATAPLANE_DEFAULT_GW                             ?= 192.168.122.1
 BM_CTLPLANE_INTERFACE                            ?= enp1s0
 
 # Manila
-MANILA_IMG              ?= quay.io/openstack-k8s-operators/manila-operator-index:latest
+MANILA_IMG              ?= quay.io/openstack-k8s-operators/manila-operator-index:${OPENSTACK_K8S_TAG}
 MANILA_REPO             ?= https://github.com/openstack-k8s-operators/manila-operator.git
-MANILA_BRANCH           ?= main
+MANILA_BRANCH           ?= ${OPENSTACK_K8S_BRANCH}
 MANILA                  ?= config/samples/manila_v1beta1_manila.yaml
 MANILA_CR               ?= ${OPERATOR_BASE_DIR}/manila-operator/${MANILA}
 # TODO: Image customizations for all Manila services
@@ -336,9 +338,9 @@ NNCP_GATEWAY                        ?=192.168.122.1
 NNCP_DNS_SERVER                     ?=192.168.122.1
 
 # Telemetry
-TELEMETRY_IMG                    ?= quay.io/openstack-k8s-operators/telemetry-operator-index:latest
+TELEMETRY_IMG                    ?= quay.io/openstack-k8s-operators/telemetry-operator-index:${OPENSTACK_K8S_TAG}
 TELEMETRY_REPO                   ?= https://github.com/openstack-k8s-operators/telemetry-operator.git
-TELEMETRY_BRANCH                 ?= main
+TELEMETRY_BRANCH                 ?= ${OPENSTACK_K8S_BRANCH}
 TELEMETRY                        ?= config/samples/telemetry_v1beta1_telemetry.yaml
 TELEMETRY_CR                     ?= ${OPERATOR_BASE_DIR}/telemetry-operator/${TELEMETRY}
 CEILOMETER_CENTRAL_DEPL_IMG      ?= unused
@@ -353,9 +355,9 @@ BMO_IRONIC_HOST                  ?= 192.168.122.10
 BMO_ROOT_PASSWORD_SECRET         ?=
 
 # Swift
-SWIFT_IMG        ?= quay.io/openstack-k8s-operators/swift-operator-index:latest
+SWIFT_IMG        ?= quay.io/openstack-k8s-operators/swift-operator-index:${OPENSTACK_K8S_TAG}
 SWIFT_REPO       ?= https://github.com/openstack-k8s-operators/swift-operator.git
-SWIFT_BRANCH     ?= main
+SWIFT_BRANCH     ?= ${OPENSTACK_K8S_BRANCH}
 SWIFT            ?= config/samples/swift_v1beta1_swift.yaml
 SWIFT_CR         ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFT}
 SWIFT_KUTTL_CONF   ?= ${OPERATOR_BASE_DIR}/swift-operator/kuttl-test.yaml
