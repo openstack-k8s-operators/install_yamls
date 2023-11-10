@@ -8,7 +8,7 @@ fi
 
 if [ -n "$BGP" ]; then
     # We cannot add PCI slots with the VM running
-    sudo virsh destroy crc
+    sudo virsh destroy $INSTANCE_NAME
 
     cat << EOF > /tmp/pci1.xml
 <controller type='pci' index='7' model='pcie-root-port'>
@@ -28,29 +28,29 @@ EOF
 </controller>
 EOF
 
-    sudo virsh detach-device crc --file /tmp/pci1.xml --persistent || true
+    sudo virsh detach-device $INSTANCE_NAME --file /tmp/pci1.xml --persistent || true
     sleep 1
-    sudo virsh detach-device crc --file /tmp/pci2.xml --persistent || true
+    sudo virsh detach-device $INSTANCE_NAME --file /tmp/pci2.xml --persistent || true
     sleep 10
 
-    sudo virsh attach-device crc --file /tmp/pci1.xml --persistent
+    sudo virsh attach-device $INSTANCE_NAME --file /tmp/pci1.xml --persistent
     sleep 1
-    sudo virsh attach-device crc --file /tmp/pci2.xml --persistent
+    sudo virsh attach-device $INSTANCE_NAME --file /tmp/pci2.xml --persistent
     sleep 10
 
-    sudo virsh start crc
+    sudo virsh start $INSTANCE_NAME
     # wait for the VM to be up
     sleep 240
 fi
 
+virsh --connect=qemu:///system net-update default add-last ip-dhcp-host --xml "<host name='$INSTANCE_NAME' ip='$IP_ADDRESS'/>" --config --live
 MAC_ADDRESS=$(echo -n 52:54:00; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':')
-virsh --connect=qemu:///system net-update default add-last ip-dhcp-host --xml "<host mac='$MAC_ADDRESS' name='crc' ip='$DEFAULT_NETWORK_IP'/>" --config --live
-virsh --connect=qemu:///system attach-interface crc --source default --type network --model virtio --mac $MAC_ADDRESS --config --persistent
+virsh --connect=qemu:///system attach-interface $INSTANCE_NAME --source $NETWORK_NAME --type network --model virtio --mac $MAC_ADDRESS --config --persistent
 
 sleep 5
 if [ -n "$BGP" ]; then
-    virsh --connect=qemu:///system attach-interface crc --source l41-host-1 --type network --model virtio --mac $BGP_NIC_1_MAC --config --persistent
+    virsh --connect=qemu:///system attach-interface $INSTANCE_NAME --source l41-host-1 --type network --model virtio --mac $BGP_NIC_1_MAC --config --persistent
     sleep 5
-    virsh --connect=qemu:///system attach-interface crc --source l42-host-1 --type network --model virtio --mac $BGP_NIC_2_MAC --config --persistent
+    virsh --connect=qemu:///system attach-interface $INSTANCE_NAME --source l42-host-1 --type network --model virtio --mac $BGP_NIC_2_MAC --config --persistent
     sleep 5
 fi
