@@ -245,8 +245,8 @@ data:
     ip protocol bgp route-map ${LEAF_2}-in
 
     ip prefix-list ocp-lo permit ${SOURCE_IP}/32
-    route-map ${LEAF_1}-out permit 1
+    route-map ${LEAF_1}-out permit 3
       match ip address prefix-list ocp-lo
-    route-map ${LEAF_2}-out permit 1
+    route-map ${LEAF_2}-out permit 3
       match ip address prefix-list ocp-lo
 EOF_CAT
