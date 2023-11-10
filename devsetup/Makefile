@@ -2,7 +2,9 @@ CRC_VERSION ?= latest
 CRC_URL ?= 'https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/$(CRC_VERSION)/crc-linux-amd64.tar.xz'
 KUBEADMIN_PWD ?= 12345678
 PULL_SECRET  ?= ${PWD}/pull-secret.txt
-CRC_DEFAULT_NETWORK_IP ?= 192.168.122.10
+NETWORK_ISOLATION_IP_ADDRESS ?= 192.168.122.10
+NETWORK_ISOLATION_NET_NAME ?= default
+NETWORK_ISOLATION_INSTANCE_NAME ?= crc
 EDPM_COMPUTE_SUFFIX ?= 0
 # EDPM_COMPUTE_ADDITIONAL_NETWORKS: JSON string - list of additional networks
 # Examples:
@@ -110,22 +112,37 @@ crc_cleanup: ## Destroys the CRC env, but does NOT clear ( --clear-cache ) the c
 	sudo update-ca-trust
 
 .PHONY: crc_attach_default_interface
-ifeq ($(NETWORK_BGP), true)
-crc_attach_default_interface: export BGP=enabled
-crc_attach_default_interface: export BGP_NIC_1_MAC=${CRC_BGP_NIC_1_MAC}
-crc_attach_default_interface: export BGP_NIC_2_MAC=${CRC_BGP_NIC_2_MAC}
-endif
-crc_attach_default_interface: export DEFAULT_NETWORK_IP=${CRC_DEFAULT_NETWORK_IP}
-crc_attach_default_interface: crc_attach_default_interface_cleanup ## Attach default libvirt network to CRC
-	bash scripts/interfaces-setup.sh
+crc_attach_default_interface:
+	make attach_default_interface
 
 .PHONY: crc_attach_default_interface_cleanup
+crc_attach_default_interface_cleanup:
+	make attach_default_interface_cleanup
+
+
+##@ Attach interface
+
+.PHONY: attach_default_interface
 ifeq ($(NETWORK_BGP), true)
-crc_attach_default_interface_cleanup: export BGP=enabled
-crc_attach_default_interface_cleanup: export BGP_NIC_1_MAC=${CRC_BGP_NIC_1_MAC}
-crc_attach_default_interface_cleanup: export BGP_NIC_2_MAC=${CRC_BGP_NIC_2_MAC}
+attach_default_interface: export BGP=enabled
+attach_default_interface: export BGP_NIC_1_MAC=${CRC_BGP_NIC_1_MAC}
+attach_default_interface: export BGP_NIC_2_MAC=${CRC_BGP_NIC_2_MAC}
 endif
-crc_attach_default_interface_cleanup: ## Detach default libvirt network from CRC
+attach_default_interface: export IP_ADDRESS=${NETWORK_ISOLATION_IP_ADDRESS}
+attach_default_interface: export NETWORK_NAME=${NETWORK_ISOLATION_NET_NAME}
+attach_default_interface: export INSTANCE_NAME=${NETWORK_ISOLATION_INSTANCE_NAME}
+attach_default_interface: attach_default_interface_cleanup ## Attach default libvirt network to CRC
+	bash scripts/interfaces-setup.sh
+
+.PHONY: attach_default_interface_cleanup
+ifeq ($(NETWORK_BGP), true)
+attach_default_interface_cleanup: export BGP=enabled
+attach_default_interface_cleanup: export BGP_NIC_1_MAC=${CRC_BGP_NIC_1_MAC}
+attach_default_interface_cleanup: export BGP_NIC_2_MAC=${CRC_BGP_NIC_2_MAC}
+endif
+attach_default_interface_cleanup: export INSTANCE_NAME=${NETWORK_ISOLATION_INSTANCE_NAME}
+attach_default_interface_cleanup: export NETWORK_NAME=${NETWORK_ISOLATION_NET_NAME}
+attach_default_interface_cleanup: ## Detach default libvirt network from CRC
 	bash scripts/interfaces-setup-cleanup.sh
 
 ##@ EDPM
