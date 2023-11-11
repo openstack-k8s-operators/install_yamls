@@ -462,6 +462,11 @@ crc_storage_cleanup: namespace ## cleanup local storage PVs in CRC vm
 	if oc get sc ${STORAGE_CLASS}; then oc delete sc ${STORAGE_CLASS}; fi
 	bash scripts/delete-pv.sh
 
+.PHONY: crc_storage_release
+crc_storage_release: namespace ## make available the "Released" local storage PVs in CRC vm
+	$(eval $(call vars,$@))
+	bash scripts/release-crc-pv.sh
+
 .PHONY: crc_storage_with_retries
 crc_storage_with_retries: ## initialize local storage PVs with retries
 	 $(eval $(call vars,$@))
