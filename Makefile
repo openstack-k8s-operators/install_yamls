@@ -352,7 +352,9 @@ MANILA_REPO             ?= https://github.com/openstack-k8s-operators/manila-ope
 MANILA_BRANCH           ?= ${OPENSTACK_K8S_BRANCH}
 MANILA                  ?= config/samples/manila_v1beta1_manila.yaml
 MANILA_CR               ?= ${OPERATOR_BASE_DIR}/manila-operator/${MANILA}
-# TODO: Image customizations for all Manila services
+MANILAAPI_DEPL_IMG      ?= unused
+MANILASCH_DEPL_IMG      ?= unused
+MANILASHARE_DEPL_IMG    ?= unused
 MANILA_KUTTL_CONF       ?= ${OPERATOR_BASE_DIR}/manila-operator/kuttl-test.yaml
 MANILA_KUTTL_DIR        ?= ${OPERATOR_BASE_DIR}/manila-operator/test/kuttl/tests
 MANILA_KUTTL_NAMESPACE  ?= manila-kuttl-tests
@@ -1989,6 +1991,8 @@ manila_cleanup: ## deletes the operator, but does not cleanup the service resour
 
 .PHONY: manila_deploy_prep
 manila_deploy_prep: export KIND=Manila
+manila_deploy_prep: export IMAGE=${MANILAAPI_DEPL_IMG},${MANILASCH_DEPL_IMG},${MANILASHARE_DEPL_IMG}
+manila_deploy_prep: export IMAGE_PATH=manilaAPI/containerImage,manilaScheduler/containerImage,manilaShares/share1/containerImage
 manila_deploy_prep: manila_deploy_cleanup ## prepares the CR to install the service based on the service sample file MANILA
 	$(eval $(call vars,$@,manila))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
