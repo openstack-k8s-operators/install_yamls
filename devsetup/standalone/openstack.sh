@@ -95,7 +95,7 @@ if [ "$COMPUTE_DRIVER" = "ironic" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/ironic-overcloud.yaml"
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/ironic-inspector.yaml"
 fi
-if [ "$MANILA_ENABLED" = "true"]; then
+if [ "$MANILA_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/manila-cephfsnative-config.yaml"
 fi
 ENV_ARGS+=" -e $HOME/standalone_parameters.yaml"
