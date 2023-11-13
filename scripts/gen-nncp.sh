@@ -202,7 +202,7 @@ if [ -n "$BGP" ]; then
         dhcp: false
       name: lo
       mtu: 65536
-      state: unknown
+      state: up
 EOF_CAT
 fi
   cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
