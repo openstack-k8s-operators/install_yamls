@@ -53,9 +53,9 @@ patches:
       path: /spec/services/0
       value: repo-setup
     - op: replace
-      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_chrony_ntp_servers
+      path: /spec/nodeTemplate/ansible/ansibleVars/timesync_ntp_servers
       value:
-        - ${EDPM_CHRONY_NTP_SERVER}
+        - {hostname: ${EDPM_NTP_SERVER}}
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/registry_url
       value: ${EDPM_REGISTRY_URL}
