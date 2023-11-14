@@ -69,6 +69,18 @@ function get_libvirt_net_ip_subnet {
     echo ${ip_subnet}
 }
 
+#---
+## Get libvirt network ip subnet (CIDR)
+# Parameter #1 is the libvirt network name
+#---
+function get_libvirt_net_ip_address {
+    local libvirt_net
+    local ip
+    libvirt_net=$1
+    ip=$(sudo virsh net-dumpxml $libvirt_net | xmllint --xpath 'string(/network/ip/@address)' -)
+
+    echo ${ip}
+}
 
 #---
 ## Get libvirt network bridge name
