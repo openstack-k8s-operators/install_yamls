@@ -8,6 +8,8 @@ fi
 
 NETWORK_NAME=${NETWORK_NAME:-"crc-bmaas"}
 BRIDGE_IP_PREFIX=${BRIDGE_IP_PREFIX:-"172.20.1.2/24"}
+INSTANCE_NAME=${INSTANCE_NAME:-crc}
+
 
 function usage {
     echo
@@ -102,7 +104,7 @@ if [ -z "$ACTION" ]; then
 fi
 
 WORKER=$(oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}")
-MAC_ADDRESS=$(virsh --connect=qemu:///system domiflist crc | grep "${NETWORK_NAME}" | awk '{print $5}')
+MAC_ADDRESS=$(virsh --connect=qemu:///system domiflist ${INSTANCE_NAME} | grep "${NETWORK_NAME}" | awk '{print $5}')
 if [ -n "$MAC_ADDRESS" ]; then
     IFACE=$(oc debug node/"$WORKER" -- ip -o link | grep "link/ether ${MAC_ADDRESS,,}" | awk '{ print $2 }' | awk -F: '{ print $1 }')
 fi

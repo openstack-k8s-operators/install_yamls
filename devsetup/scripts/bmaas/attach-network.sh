@@ -6,7 +6,11 @@ if [ "$EUID" -eq 0 ]; then
     exit
 fi
 
+LIBVIRT_URL=${LIBVIRT_URL:-qemu:///system}
+VIRSH_CMD=${VIRSH_CMD:-virsh --connect=$LIBVIRT_URL}
+
 NETWORK_NAME=${NETWORK_NAME:-$DEFAULT_NETWORK_NAME}
+INSTANCE_NAME=${INSTANCE_NAME:-crc}
 
 function usage {
     echo
@@ -23,8 +27,8 @@ trap 'rm -rf -- "$MY_TMP_DIR"' EXIT
 function attach_network {
     local mac_address
     mac_address=$(echo -n 52:54:00; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':')
-    virsh --connect=qemu:///system \
-        attach-interface crc \
+    $VIRSH_CMD \
+        attach-interface ${INSTANCE_NAME} \
         --source "${NETWORK_NAME}" \
         --type network \
         --model virtio \
@@ -36,9 +40,9 @@ function attach_network {
 
 function detach_network {
     local mac_address
-    mac_address=$(virsh --connect=qemu:///system domiflist crc | grep "${NETWORK_NAME}" | awk '{print $5}')
+    mac_address=$($VIRSH_CMD domiflist ${INSTANCE_NAME} | grep "${NETWORK_NAME}" | awk '{print $5}')
     if [ -n "$mac_address" ]; then
-        virsh --connect=qemu:///system detach-interface crc network --mac "$mac_address"
+        $VIRSH_CMD detach-interface ${INSTANCE_NAME} network --mac "$mac_address"
         sleep 5
     fi
 }

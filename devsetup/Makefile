@@ -38,6 +38,7 @@ NETWORK_BGP ?= false
 CRC_BGP_NIC_1_MAC ?= 52:54:00:11:11:11
 CRC_BGP_NIC_2_MAC ?= 52:54:00:11:11:12
 
+BMAAS_OCP_INSTANCE_NAME ?= crc
 BMAAS_INSTANCE_NAME_PREFIX ?= crc-bmaas
 BMAAS_INSTANCE_MEMORY ?= 4096
 BMAAS_INSTANCE_VCPUS ?= 2
@@ -275,18 +276,21 @@ bmaas_route_crc_and_crc_bmaas_networks_cleanup:
 
 .PHONY: bmaas_crc_attach_network
 bmaas_crc_attach_network: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
-bmaas_crc_attach_network: ## Attach BMaaS network to CRC
+bmaas_crc_attach_network: export INSTANCE_NAME = ${BMAAS_OCP_INSTANCE_NAME}
+bmaas_crc_attach_network: ## Attach BMaaS network to OCP VM ($INSTANCE_NAME)
 	scripts/bmaas/attach-network.sh --create
 
 .PHONY: bmaas_crc_attach_network_cleanup
 bmaas_crc_attach_network_cleanup: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
-bmaas_crc_attach_network_cleanup: ## Detach BMaaS network from CRC
+bmaas_crc_attach_network_cleanup: export INSTANCE_NAME = ${BMAAS_OCP_INSTANCE_NAME}
+bmaas_crc_attach_network_cleanup: ## Detach BMaaS network from OCP VM ($INSTANCE_NAME)
 	scripts/bmaas/attach-network.sh --cleanup
 
 .PHONY: bmaas_crc_baremetal_bridge
 bmaas_crc_baremetal_bridge: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
 bmaas_crc_baremetal_bridge: export INTERFACE_MTU = ${NETWORK_MTU}
 bmaas_crc_baremetal_bridge: export BRIDGE_IP_PREFIX = ${BMAAS_BRIDGE_IP_PREFIX}
+bmaas_crc_baremetal_bridge: export INSTANCE_NAME = ${BMAAS_OCP_INSTANCE_NAME}
 bmaas_crc_baremetal_bridge:
 	pushd .. && make nmstate && popd
 	scripts/bmaas/baremetal-bridge.sh --create
