@@ -76,7 +76,11 @@ an ANSI escape sequence.
     fi
     sudo chmod -v +x $LIBVIRT_HOOKS_PATH/qemu
     sudo sed -e "s|%LOG_DIR%|$CONSOLE_LOG_DIR|g;" -i $LIBVIRT_HOOKS_PATH/qemu
-    sudo systemctl restart libvirtd.service
+    if sudo systemctl is-enabled libvirtd.service; then
+        sudo systemctl restart libvirtd.service
+    elif sudo systemctl is-enabled virtqemud.service; then
+        sudo systemctl restart virtqemud.service
+    fi
 }
 
 function cleanup_libvirt_logging {
@@ -90,7 +94,11 @@ function cleanup_libvirt_logging {
     if sudo test -f "$LIBVIRT_HOOKS_PATH/qemu"; then
         sudo chmod -v -x $LIBVIRT_HOOKS_PATH/qemu
     fi
-    sudo systemctl restart libvirtd.service
+    if sudo systemctl is-enabled libvirtd.service; then
+        sudo systemctl restart libvirtd.service
+    elif sudo systemctl is-enabled virtqemud.service; then
+        sudo systemctl restart virtqemud.service
+    fi
 }
 
 function create_vm {
