@@ -6,13 +6,15 @@ if [ "$EUID" -eq 0 ]; then
     exit
 fi
 
-DEFAULT_NETWORK_NAME=crc-net-iso
-DEFAULT_IPADDRESS=172.16.0.1
-DEFAULT_NETMASK=255.255.255.0
+LIBVIRT_URL=${LIBVIRT_URL:-qemu:///system}
+VIRSH_CMD=${VIRSH_CMD:-virsh --connect=$LIBVIRT_URL}
+
+DEFAULT_NETWORK_NAME=net-iso
 
 NETWORK_NAME=${NETWORK_NAME:-$DEFAULT_NETWORK_NAME}
-IPADDRESS=${NETWORK_IPADDRESS:-$DEFAULT_IPADDRESS}
-NETMASK=${NETWORK_NETMASK:-$DEFAULT_NETMASK}
+IPV4_ADDRESS=${IPV4_ADDRESS:-""}
+IPV4_NAT=${IPV4_NAT:-true}
+IPV6_ADDRESS=${IPV6_ADDRESS:-""}
 
 MY_TMP_DIR="$(mktemp -d)"
 trap 'rm -rf -- "$MY_TMP_DIR"' EXIT
@@ -23,8 +25,9 @@ function usage {
     echo "  --create        Define and start the libvirt network"
     echo "  --cleanup       Destroy and undefine the libvirt network"
     echo "  --network-name  Libvirt network name (Default: $DEFAULT_NETWORK_NAME)"
-    echo "  --ip-address    IP Address for libvirt network bridge (Default: $DEFAULT_IPADDRESS)"
-    echo "  --netmask       Netmask for the libvirt network bridge (Default: $DEFAULT_NETMASK)"
+    echo "  --ipv4-address  IPv4 Address for libvirt network bridge"
+    echo "  --ipv6-address  IPv6 Address for libvirt network bridge"
+    echo "  --ipv4-nat      When specified IPv4 NAT is enabled. (Default: true)"
     echo
 }
 
@@ -34,18 +37,30 @@ function create {
     cat << EOF > "$temp_file"
 <network>
   <name>$NETWORK_NAME</name>
-  <forward mode='nat'>
-    <nat>
-      <port start='1024' end='65535'/>
-    </nat>
-  </forward>
   <bridge name='$NETWORK_NAME' stp='on' delay='0'/>
-  <ip address='$IPADDRESS' netmask='$NETMASK'/>
 </network>
 EOF
-    virsh --connect=qemu:///system net-define "$temp_file"
-    virsh --connect=qemu:///system net-autostart "$NETWORK_NAME"
-    virsh --connect=qemu:///system net-start "$NETWORK_NAME"
+
+    if [ -n "${IPV4_ADDRESS}" ]; then
+        cat $temp_file | xmlstarlet edit --omit-decl --pf --subnode '/network' --type text --name '' \
+            --value "<ip family='ipv4' address='${IPV4_ADDRESS%%/*}' prefix='${IPV4_ADDRESS##*/}'/>" \
+            | tee ${temp_file}
+        if [ "${IPV4_NAT}" = "true" ]; then
+            cat $temp_file | xmlstarlet edit --omit-decl --pf --subnode '/network' --type text --name '' \
+                --value "<forward mode='nat'><nat><port start='1024' end='65535'/></nat></forward>" \
+                | tee ${temp_file}
+        fi
+    fi
+    if [ -n "${IPV6_ADDRESS}" ]; then
+        cat $temp_file | xmlstarlet edit --omit-decl --pf --subnode '/network' --type text --name '' \
+            --value "<ip family='ipv6' address='${IPV6_ADDRESS%%/*}' prefix='${IPV6_ADDRESS##*/}'/>" \
+            | tee ${temp_file}
+    fi
+    cat "$temp_file" | xmlstarlet unescape | tee ${temp_file}
+
+    $VIRSH_CMD net-define "$temp_file"
+    $VIRSH_CMD net-autostart "$NETWORK_NAME"
+    $VIRSH_CMD net-start "$NETWORK_NAME"
 }
 
 function cleanup {
@@ -66,13 +81,16 @@ case "$1" in
         NETWORK_NAME="$2";
         shift
     ;;
-    "--ip-address")
-        IPADDRESS="$2";
+    "--ipv4-address")
+        IPV4_ADDRESS="$2";
         shift
     ;;
-    "--netmask")
-        NETMASK="$2";
+    "--ipv6-address")
+        IPV6_ADDRESS="$2";
         shift
+    ;;
+    "--ipv4-nat")
+        IPV4_NAT=true
     ;;
     *)
         echo >&2 "Invalid option: $*";
