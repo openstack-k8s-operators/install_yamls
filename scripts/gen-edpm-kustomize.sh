@@ -93,9 +93,9 @@ cat <<EOF >>kustomization.yaml
       path: /spec/services/0
       value: repo-setup
     - op: replace
-      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_chrony_ntp_servers
+      path: /spec/nodeTemplate/ansible/ansibleVars/timesync_ntp_servers
       value:
-        - ${EDPM_CHRONY_NTP_SERVER}
+        - {hostname: ${EDPM_NTP_SERVER}}
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/neutron_public_interface_name
       value: ${EDPM_NETWORK_INTERFACE_NAME}
