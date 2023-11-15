@@ -9,7 +9,7 @@ fi
 MAC_ADDRESS=$(virsh --connect=qemu:///system dumpxml $INSTANCE_NAME | xmllint --xpath "string(/domain/devices/interface/source[@network=\"$NETWORK_NAME\"]/../mac/@address)" -)
 if [ -n "${MAC_ADDRESS}" ]; then
     virsh --connect=qemu:///system detach-interface $INSTANCE_NAME network --mac $MAC_ADDRESS
-    virsh --connect=qemu:///system net-update $NETWORK_NAME delete ip-dhcp-host "<host name='$INSTANCE_NAME'/>" --config --live
+    virsh --connect=qemu:///system net-update $NETWORK_NAME delete ip-dhcp-host "<host name='$INSTANCE_NAME' mac='$MAC_ADDRESS'/>" --config --live
     sleep 5
 fi
 

@@ -7,6 +7,7 @@
       - ^devsetup/Makefile
       - ^devsetup/edpm/config/*
       - ^devsetup/edpm/services/*
+      - ^devsetup/scripts/*
       - ^devsetup/scripts/bmaas/*
       - ^devsetup/scripts/edpm-compute-bmaas.sh
       - ^devsetup/scripts/gen-ansibleee-ssh-key.sh
