@@ -47,17 +47,27 @@ BMAAS_INSTANCE_OS_VARIANT ?= centos-stream9
 BMAAS_INSTANCE_VIRT_TYPE ?= kvm
 BMAAS_INSTANCE_NET_MODEL ?= virtio
 BMAAS_NETWORK_NAME ?= crc-bmaas
-BMAAS_NETWORK_IPADDRESS ?= 172.20.1.1
-BMAAS_NETWORK_NETMASK ?= 255.255.255.0
-BMAAS_BRIDGE_IP_PREFIX ?= 172.20.1.2/24
+BMAAS_IPV4 ?= true
+BMAAS_IPV6 ?= false
+BMAAS_NETWORK_IPV4_PREFIX ?= 172.20.1.1/24
+BMAAS_BRIDGE_IPV4_PREFIX ?= 172.20.1.2/24
 BMAAS_METALLB_POOL_NAME ?= baremetal
 BMAAS_METALLB_ADDRESS_POOL ?= 172.20.1.64/26
+BMAAS_NETWORK_IPV6_PREFIX ?= fd00:bbbb::1/64
+BMAAS_BRIDGE_IPV6_PREFIX ?= fd00:bbbb::2/64
 BMAAS_NODE_COUNT ?= 1
 BMAAS_REDFISH_USERNAME ?= admin
 BMAAS_REDFISH_PASSWORD ?= password
 BMAAS_SUSHY_EMULATOR_NAMESPACE ?= sushy-emulator
 BMAAS_LIBVIRT_USER ?= sushyemu
 BMAAS_ROUTE_LIBVIRT_NETWORKS ?= ${BMAAS_NETWORK_NAME},crc,default
+
+NETWORK_ISOLATION_NETWORK_NAME ?= net-iso
+NETWORK_ISOLATION_IPV4 ?= true
+NETWORK_ISOLATION_IPV6 ?= false
+NETWORK_ISOLATION_IPV4_ADDRESS ?= 172.16.1.1/24
+NETWORK_ISOLATION_IPV4_NAT ?= true
+NETWORK_ISOLATION_IPV6_ADDRESS ?= fd00:aaaa::1/64
 
 DATAPLANE_PLAYBOOK ?= osp.edpm.download_cache
 DATAPLANE_CUSTOM_SERVICE_RUNNER_IMG ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
@@ -145,6 +155,25 @@ attach_default_interface_cleanup: export INSTANCE_NAME=${NETWORK_ISOLATION_INSTA
 attach_default_interface_cleanup: export NETWORK_NAME=${NETWORK_ISOLATION_NET_NAME}
 attach_default_interface_cleanup: ## Detach default libvirt network from CRC
 	bash scripts/interfaces-setup-cleanup.sh
+
+##@ Network-Isolation
+
+.PHONY: network_isolation_bridge
+network_isolation_bridge: export NETWORK_NAME=${NETWORK_ISOLATION_NETWORK_NAME}
+ifeq ($(NETWORK_ISOLATION_IPV4), true)
+network_isolation_bridge: export IPV4_ADDRESS=${NETWORK_ISOLATION_IPV4_ADDRESS}
+network_isolation_bridge: export IPV4_NAT=${NETWORK_ISOLATION_IPV4_NAT}
+endif
+ifeq ($(NETWORK_ISOLATION_IPV6), true)
+network_isolation_bridge: export IPV6_ADDRESS=${NETWORK_ISOLATION_IPV6_ADDRESS}
+endif
+network_isolation_bridge: ## Create libvirt network isolation network
+	scripts/network-setup.sh --create
+
+.PHONY: network_isolation_bridge_cleanup
+network_isolation_bridge_cleanup: export NETWORK_NAME=${NETWORK_ISOLATION_NETWORK_NAME}
+network_isolation_bridge_cleanup: ## Cleanup libvirt network isolation network
+	scripts/network-setup.sh --cleanup
 
 ##@ EDPM
 
@@ -253,15 +282,17 @@ cifmw_cleanup: ## Clean ci-framework git clone
 ##@ BMaaS/Ironic
 .PHONY: bmaas_network
 bmaas_network: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
-bmaas_network: export NETWORK_IPADDRESS = ${BMAAS_NETWORK_IPADDRESS}
-bmaas_network: export NETWORK_NETMASK = ${BMAAS_NETWORK_NETMASK}
+ifeq ($(BMAAS_IPV4), true)
+bmaas_network: export IPV4_ADDRESS = ${BMAAS_NETWORK_IPV4_PREFIX}
+endif
+ifeq ($(BMAAS_IPV6), true)
+bmaas_network: export IPV6_ADDRESS = ${BMAAS_NETWORK_IPV6_PREFIX}
+endif
 bmaas_network: ## Create libvirt BMaaS network
 	scripts/network-setup.sh --create
 
 .PHONY: bmaas_network_cleanup
 bmaas_network_cleanup: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
-bmaas_network_cleanup: export NETWORK_IPADDRESS = ${BMAAS_NETWORK_IPADDRESS}
-bmaas_network_cleanup: export NETWORK_NETMASK = ${BMAAS_NETWORK_NETMASK}
 bmaas_network_cleanup: ## Delete libvirt BMaaS network
 	scripts/network-setup.sh --cleanup
 
@@ -291,6 +322,12 @@ bmaas_crc_baremetal_bridge: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
 bmaas_crc_baremetal_bridge: export INTERFACE_MTU = ${NETWORK_MTU}
 bmaas_crc_baremetal_bridge: export BRIDGE_IP_PREFIX = ${BMAAS_BRIDGE_IP_PREFIX}
 bmaas_crc_baremetal_bridge: export INSTANCE_NAME = ${BMAAS_OCP_INSTANCE_NAME}
+ifeq ($(BMAAS_IPV4), true)
+bmaas_crc_baremetal_bridge: export BRIDGE_IPV4_PREFIX = ${BMAAS_BRIDGE_IPV4_PREFIX}
+endif
+ifeq ($(BMAAS_IPV6), true)
+bmaas_crc_baremetal_bridge: export BRIDGE_IPV6_PREFIX = ${BMAAS_BRIDGE_IPV6_PREFIX}
+endif
 bmaas_crc_baremetal_bridge:
 	pushd .. && make nmstate && popd
 	scripts/bmaas/baremetal-bridge.sh --create
