@@ -6,10 +6,10 @@ if [ "$EUID" -eq 0 ]; then
     exit 1
 fi
 
-NETWORK_NAME=${NETWORK_NAME:-"crc-bmaas"}
-BRIDGE_IP_PREFIX=${BRIDGE_IP_PREFIX:-"172.20.1.2/24"}
 INSTANCE_NAME=${INSTANCE_NAME:-crc}
-
+NETWORK_NAME=${NETWORK_NAME:-crc-bmaas}
+BRIDGE_IPV4_PREFIX=${BRIDGE_IPV4_PREFIX:-""}
+BRIDGE_IPV6_PREFIX=${BRIDGE_IPV6_PREFIX:-""}
 
 function usage {
     echo
@@ -39,12 +39,6 @@ spec:
       type: linux-bridge
       state: up
       mtu: 1500
-      ipv4:
-        dhcp: false
-        address:
-        - ip: ${BRIDGE_IP_PREFIX%%/*}
-          prefix-length: ${BRIDGE_IP_PREFIX##*/}
-        enabled: true
       bridge:
         options:
           stp:
@@ -52,6 +46,29 @@ spec:
         port:
         - name: $IFACE
 EOF
+
+if [ -n "${BRIDGE_IPV4_PREFIX}" ]; then
+    cat << EOF >> "$temp_file"
+      ipv4:
+        dhcp: false
+        address:
+        - ip: ${BRIDGE_IPV4_PREFIX%%/*}
+          prefix-length: ${BRIDGE_IPV4_PREFIX##*/}
+        enabled: true
+EOF
+fi
+
+if [ -n "${BRIDGE_IPV6_PREFIX}" ]; then
+    cat << EOF >> "$temp_file"
+      ipv6:
+        dhcp: false
+        address:
+        - ip: ${BRIDGE_IPV6_PREFIX%%/*}
+          prefix-length: ${BRIDGE_IPV6_PREFIX##*/}
+        enabled: true
+EOF
+fi
+
     # cat "$temp_file"
     oc -n openshift-nmstate apply -f "$temp_file"
 }
