@@ -44,7 +44,7 @@ EOF
 fi
 
 MAC_ADDRESS=$(echo -n 52:54:00; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':')
-virsh --connect=qemu:///system net-update default add-last ip-dhcp-host --xml "<host name='$INSTANCE_NAME' mac='$MAC_ADDRESS' ip='$IP_ADDRESS'/>" --config --live
+virsh --connect=qemu:///system net-update default add-last ip-dhcp-host --xml "<host name='$INSTANCE_NAME' ip='$IP_ADDRESS'/>" --config --live
 virsh --connect=qemu:///system attach-interface $INSTANCE_NAME --source $NETWORK_NAME --type network --model virtio --mac $MAC_ADDRESS --config --persistent
 
 sleep 5

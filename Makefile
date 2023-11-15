@@ -564,9 +564,9 @@ endif
 ##@ OPENSTACK
 .PHONY: openstack_prep
 openstack_prep: export IMAGE=${OPENSTACK_IMG}
+openstack_prep: $(if $(findstring true,$(BMO_SETUP)), crc_bmo_setup) ## creates the files to install the operator using olm
 openstack_prep: $(if $(findstring true,$(NETWORK_BGP)), nmstate nncp netattach metallb metallb_config)
 openstack_prep: $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config)
-openstack_prep: $(if $(findstring true,$(BMO_SETUP)), crc_bmo_setup) ## creates the files to install the operator using olm
 	$(eval $(call vars,$@,openstack))
 	bash scripts/gen-olm.sh
 
