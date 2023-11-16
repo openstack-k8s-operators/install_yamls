@@ -27,7 +27,7 @@ VIRT_TYPE=${VIRT_TYPE:-"kvm"}
 NET_MODEL=${NET_MODEL:-"virtio"}
 CONSOLE_LOG_DIR=${CONSOLE_LOG_DIR:-/var/log/bmaas_console_logs}
 CLEANUP_DELETE_ARCHIVED_LOGS=${CLEANUP_DELETE_ARCHIVED_LOGS:-"false"}
-LIBVIRT_HOOKS_PATH=${LIBVIRT_HOOKS_PATH:-/etc/libvirt/hooks}
+LIBVIRT_HOOKS_PATH=${LIBVIRT_HOOKS_PATH:-/etc/libvirt/hooks/qemu.d}
 
 MY_TMP_DIR="$(mktemp -d)"
 trap 'rm -rf -- "$MY_TMP_DIR"' EXIT
@@ -71,11 +71,11 @@ an ANSI escape sequence.
     # Make sure the libvirt hooks directory exist
     sudo mkdir -p $LIBVIRT_HOOKS_PATH
     # Copy the qemu hook to the right directory
-    if ! sudo test -f "$LIBVIRT_HOOKS_PATH/qemu"; then
-        sudo curl -L -o $LIBVIRT_HOOKS_PATH/qemu https://opendev.org/openstack/ironic/raw/branch/master/devstack/files/hooks/qemu.py
+    if ! sudo test -f "$LIBVIRT_HOOKS_PATH/10-logrotate.py"; then
+        sudo cp -v "$SCRIPTPATH/files/logrotate_hook.py" "$LIBVIRT_HOOKS_PATH/10-logrotate.py"
     fi
-    sudo chmod -v +x $LIBVIRT_HOOKS_PATH/qemu
-    sudo sed -e "s|%LOG_DIR%|$CONSOLE_LOG_DIR|g;" -i $LIBVIRT_HOOKS_PATH/qemu
+    sudo chmod -v +x $LIBVIRT_HOOKS_PATH/10-logrotate.py
+    sudo sed -e "s|%LOG_DIR%|$CONSOLE_LOG_DIR|g;" -i "$LIBVIRT_HOOKS_PATH/10-logrotate.py"
     if sudo systemctl is-enabled libvirtd.service; then
         sudo systemctl restart libvirtd.service
     elif sudo systemctl is-enabled virtqemud.service; then
@@ -91,8 +91,8 @@ function cleanup_libvirt_logging {
             sudo rm -f $CONSOLE_LOG_DIR/*_no_ansi_*.log
         fi
     fi
-    if sudo test -f "$LIBVIRT_HOOKS_PATH/qemu"; then
-        sudo chmod -v -x $LIBVIRT_HOOKS_PATH/qemu
+    if sudo test -f "$LIBVIRT_HOOKS_PATH/10-logrotate.py"; then
+        sudo chmod -v -x $LIBVIRT_HOOKS_PATH/10-logrotate.py
     fi
     if sudo systemctl is-enabled libvirtd.service; then
         sudo systemctl restart libvirtd.service
