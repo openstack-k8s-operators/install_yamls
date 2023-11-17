@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/created-by: install_yamls
   name: repo-setup
 spec:
-  label: dataplane-deployment-repo-setup
+  label: repo-setup
   play: |
     - hosts: all
       strategy: linear
