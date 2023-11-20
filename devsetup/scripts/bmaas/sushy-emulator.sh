@@ -27,6 +27,11 @@ CRC_NETWORK_NAME=crc
 INGRESS_DOMAIN=$(oc get ingresses.config/cluster -o jsonpath={.spec.domain})
 REDFISH_USERNAME=${REDFISH_USERNAME:-"admin"}
 REDFISH_PASSWORD=${REDFISH_PASSWORD:-"password"}
+if sudo systemctl is-active libvirtd.service; then
+    LIBVIRT_SOCKET="?socket=/var/run/libvirt/libvirt-sock"
+else
+    LIBVIRT_SOCKET=""
+fi
 
 # TODO: Make CRC_NETWORK_NAME a parameter so that this script can be used on
 # separate hypervisor, against any OCP.
@@ -105,7 +110,7 @@ $(htpasswd -nbB "${REDFISH_USERNAME}" "${REDFISH_PASSWORD}" | sed 's/^/    /')
     SUSHY_EMULATOR_OS_CLOUD = None
 
     # The libvirt URI to use. This option enables libvirt driver.
-    SUSHY_EMULATOR_LIBVIRT_URI = u'qemu+ssh://${LIBVIRT_USER}@${LIBVIRT_IP_ADDRESS}/system?socket=/var/run/libvirt/libvirt-sock'
+    SUSHY_EMULATOR_LIBVIRT_URI = u'qemu+ssh://${LIBVIRT_USER}@${LIBVIRT_IP_ADDRESS}/system${LIBVIRT_SOCKET}'
 
     # Instruct the libvirt driver to ignore any instructions to
     # set the boot device. Allowing the UEFI firmware to instead
