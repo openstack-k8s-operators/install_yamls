@@ -41,7 +41,6 @@ else
 fi
 
 podman run --rm -ti \
-            -e "ANSIBLE_ENABLE_TASK_DEBUGGER=true" \
             -e "ANSIBLE_FORCE_COLOR=true" \
             -e "ANSIBLE_VERBOSITY=2" \
             -e "ANSIBLE_CALLBACKS_ENABLED=profile_tasks" \
