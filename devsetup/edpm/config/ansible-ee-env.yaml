@@ -6,6 +6,5 @@ metadata:
 data:
   ANSIBLE_CALLBACKS_ENABLED: profile_tasks
   ANSIBLE_VERBOSITY: "1"
-  ANSIBLE_ENABLE_TASK_DEBUGGER: "True"
   ANSIBLE_FORCE_COLOR: "True"
   ANSIBLE_SSH_ARGS: "-C -o ControlMaster=auto -o ControlPersist=80s"
