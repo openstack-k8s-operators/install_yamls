@@ -345,6 +345,7 @@ DATAPLANE_KUTTL_DIR                              ?= ${OPERATOR_BASE_DIR}/datapla
 DATAPLANE_KUTTL_NAMESPACE                        ?= dataplane-kuttl-tests
 DATAPLANE_DEFAULT_GW                             ?= 192.168.122.1
 BM_CTLPLANE_INTERFACE                            ?= enp1s0
+BM_ROOT_PASSWORD_SECRET                          ?=
 
 # Manila
 MANILA_IMG              ?= quay.io/openstack-k8s-operators/manila-operator-index:${OPENSTACK_K8S_TAG}
@@ -390,7 +391,6 @@ BMO_REPO                         ?= https://github.com/metal3-io/baremetal-opera
 BMO_BRANCH                       ?= main
 BMO_PROVISIONING_INTERFACE       ?= enp6s0
 BMO_IRONIC_HOST                  ?= 192.168.122.10
-BMO_ROOT_PASSWORD_SECRET         ?=
 
 # Swift
 SWIFT_IMG        ?= quay.io/openstack-k8s-operators/swift-operator-index:${OPENSTACK_K8S_TAG}
@@ -670,7 +670,7 @@ edpm_deploy_baremetal_prep: export EDPM_NTP_SERVER=${DATAPLANE_NTP_SERVER}
 edpm_deploy_baremetal_prep: export EDPM_REGISTRY_URL=${DATAPLANE_REGISTRY_URL}
 edpm_deploy_baremetal_prep: export EDPM_CONTAINER_TAG=${DATAPLANE_CONTAINER_TAG}
 edpm_deploy_baremetal_prep: export EDPM_CONTAINER_PREFIX=${DATAPLANE_CONTAINER_PREFIX}
-edpm_deploy_baremetal_prep: export EDPM_ROOT_PASSWORD_SECRET=${BMO_ROOT_PASSWORD_SECRET}
+edpm_deploy_baremetal_prep: export EDPM_ROOT_PASSWORD_SECRET=${BM_ROOT_PASSWORD_SECRET}
 edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
