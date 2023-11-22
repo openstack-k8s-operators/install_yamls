@@ -36,6 +36,7 @@ trap 'rm -rf -- "${MY_TMP_DIR}"' EXIT
 LIBVIRT_URL="${LIBVIRT_URL:-"qemu:///system"}"
 VIRSH_CMD="virsh --connect=$LIBVIRT_URL"
 NETWORK_NAME="${NETWORK_NAME:-nat64}"
+MANAGE_FIREWALLD=${MANAGE_FIREWALLD:-true}
 IPV6_NETWORK_IPADDRESS=${IPV6_NETWORK_IPADDRESS:-fd00:abcd:abcd:fc00::1/64}
 IPV4_NETWORK_IPADDRESS=${IPV4_NETWORK_IPADDRESS:-172.30.0.1/24}
 
@@ -64,6 +65,11 @@ function create_network {
 </network>
 EOF
 
+        if [ "${MANAGE_FIREWALLD}" = "true" ]; then
+            xmlstarlet edit --omit-decl --inplace \
+                --subnode '/network/bridge' --type attr --name zone \
+                --value "${NETWORK_NAME}" "${MY_TMP_DIR}/network.xml"
+        fi
         ${VIRSH_CMD} net-define "${MY_TMP_DIR}/network.xml"
     fi
     if ! ${VIRSH_CMD} net-list --autostart --name | grep --silent "^${NETWORK_NAME}\$"; then
@@ -200,7 +206,35 @@ function cleanup_network {
     fi
 }
 
+function create_firewalld_config {
+    if ! sudo systemctl is-active firewalld.service; then
+        echo "firewalld.service not active, enable it or disable firewalld managment (MANAGE_FIREWALLD=false)"
+        exit 1
+    fi
+    sudo firewall-cmd --permanent --new-zone=${NETWORK_NAME}
+    sudo firewall-cmd --permanent --zone=${NETWORK_NAME} \
+        --add-rich-rule="rule priority=\"32767\" reject"
+    sudo firewall-cmd --permanent --zone=${NETWORK_NAME} --set-target="ACCEPT"
+    sudo firewall-cmd --permanent --zone=${NETWORK_NAME} \
+        --add-protocol=icmp --add-protocol=ipv6-icmp
+    sudo firewall-cmd --permanent --zone=${NETWORK_NAME} \
+        --add-service=http --add-service=https --add-service=dns \
+        --add-service=ssh --add-service=dhcp --add-service=dhcpv6
+    sudo firewall-cmd --reload
+}
+
+function cleanup_firewalld_config {
+    if ! sudo systemctl is-active firewalld.service; then
+        echo "firewalld.service not active, enable it or disable firewalld managment (MANAGE_FIREWALLD=false)"
+        exit 1
+    fi
+    sudo firewall-cmd --permanent --delete-zone=${NETWORK_NAME}
+}
+
 function create {
+    if [ "${MANAGE_FIREWALLD}" = "true" ]; then
+        create_firewalld_config
+    fi
     create_network
     create_dnsmasq
 }
@@ -208,6 +242,9 @@ function create {
 function cleanup {
     cleanup_dnsmasq
     cleanup_network
+    if [ "${MANAGE_FIREWALLD}" = "true" ]; then
+        cleanup_firewalld_config
+    fi
 }
 
 case "$1" in
