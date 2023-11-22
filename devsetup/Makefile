@@ -90,6 +90,7 @@ IPV6_LAB_WORK_DIR                 ?= ${HOME}/.ipv6lab
 IPV6_LAB_SSH_PUB_KEY              ?= ${HOME}/.ssh/id_rsa.pub
 IPV6_LAB_LIBVIRT_STORAGE_POOL     ?= default
 IPV6_LAB_NETWORK_NAME             ?= nat64
+IPV6_LAB_MANAGE_FIREWALLD         ?= true
 IPV6_LAB_IPV6_NETWORK_IPADDRESS   ?= fd00:abcd:abcd:fc00::1/64
 IPV6_LAB_IPV4_NETWORK_IPADDRESS   ?= 172.30.0.1/24
 IPV6_LAB_NAT64_INSTANCE_NAME      ?= nat64-router
@@ -166,6 +167,7 @@ crc_attach_default_interface_cleanup:
 ##@ IPv6 Lab
 .PHONY: ipv6_lab_network
 ipv6_lab_network: export NETWORK_NAME = ${IPV6_LAB_NETWORK_NAME}
+ipv6_lab_network: export MANAGE_FIREWALLD = ${IPV6_LAB_MANAGE_FIREWALLD}
 ipv6_lab_network: export IPV6_NETWORK_IPADDRESS = ${IPV6_LAB_IPV6_NETWORK_IPADDRESS}
 ipv6_lab_network: export IPV4_NETWORK_IPADDRESS = ${IPV6_LAB_IPV4_NETWORK_IPADDRESS}
 ipv6_lab_network: export NAT64_HOST_IPV6 = ${IPV6_LAB_NAT64_HOST_IPV6}
@@ -174,6 +176,7 @@ ipv6_lab_network: ## Deploys libvirt network for IPv6 lab
 
 .PHONY: ipv6_lab_network_cleanup
 ipv6_lab_network_cleanup: export NETWORK_NAME = ${IPV6_LAB_NETWORK_NAME}
+ipv6_lab_network_cleanup: export MANAGE_FIREWALLD = ${IPV6_LAB_MANAGE_FIREWALLD}
 ipv6_lab_network_cleanup: ## Deploys libvirt network for IPv6 lab
 	bash scripts/ipv6-nat64/network.sh --cleanup
 
