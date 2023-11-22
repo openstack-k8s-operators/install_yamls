@@ -208,9 +208,14 @@ function destroy_sno_instance {
 
 function create_dnsmasq_config {
     cat << EOF > ${MY_TMP_DIR}/sno.conf
+log-queries
 dhcp-range=${SNO_MACHINE_NETWORK%%/*},static,${SNO_MACHINE_NETWORK##*/}
 address=/sno.testing.example.com/${SNO_HOST_IP}
 address=/apps.sno.testing.example.com/${SNO_HOST_IP}
+# Make sure we return NODATA-IPv4. Without this A queries are forwarded,
+# and cause lookup delay.
+address=/sno.testing.example.com/
+address=/apps.sno.testing.example.com/
 host-record=api.sno.testing.example.com,${SNO_HOST_IP}
 host-record=api-int.sno.testing.example.com,${SNO_HOST_IP}
 dhcp-host=${SNO_HOST_MAC},[${SNO_HOST_IP}],2m
