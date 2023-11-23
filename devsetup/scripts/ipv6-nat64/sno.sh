@@ -239,7 +239,14 @@ function cleanup_dnsmasq_config {
 }
 
 function wait_for_install_complete {
-    echo "Waiting for OCP installation to complete"
+    echo
+    echo "Waiting for OCP cluster bootstrapping to complete:"
+    echo "${WORK_DIR}/openshift-install --dir=${WORK_DIR}/ocp wait-for bootstrap-complete"
+    ${WORK_DIR}/openshift-install --dir=${WORK_DIR}/ocp wait-for bootstrap-complete
+    echo
+    echo "Waiting for OCP cluster installation to complete:"
+    sleep 60
+    echo "${WORK_DIR}/openshift-install --dir=${WORK_DIR}/ocp wait-for install-complete"
     ${WORK_DIR}/openshift-install --dir=${WORK_DIR}/ocp wait-for install-complete
 }
 
