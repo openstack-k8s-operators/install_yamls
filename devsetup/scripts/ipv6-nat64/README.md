@@ -85,8 +85,8 @@ options:
   ```
 * DNS entries for Openshift is also added to the v6 DNS service
   ```conf
-  address=/sno.testing.example.com/fd00:abcd:abcd:fc00::11
-  address=/apps.sno.testing.example.com/fd00:abcd:abcd:fc00::11
-  host-record=api.sno.testing.example.com,fd00:abcd:abcd:fc00::11
-  host-record=api-int.sno.testing.example.com,fd00:abcd:abcd:fc00::11
+  address=/sno.lab.example.com/fd00:abcd:abcd:fc00::11
+  address=/apps.sno.lab.example.com/fd00:abcd:abcd:fc00::11
+  host-record=api.sno.lab.example.com,fd00:abcd:abcd:fc00::11
+  host-record=api-int.sno.lab.example.com,fd00:abcd:abcd:fc00::11
   ```
