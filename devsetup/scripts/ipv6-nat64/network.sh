@@ -33,6 +33,8 @@ function usage {
 MY_TMP_DIR="$(mktemp -d)"
 trap 'rm -rf -- "${MY_TMP_DIR}"' EXIT
 
+WORK_DIR="${WORK_DIR:-$HOME/.nat64-network-workdir}"
+
 LIBVIRT_URL="${LIBVIRT_URL:-"qemu:///system"}"
 VIRSH_CMD="virsh --connect=$LIBVIRT_URL"
 NETWORK_NAME="${NETWORK_NAME:-nat64}"
@@ -51,6 +53,13 @@ NAT64_IPV6_DNSMASQ_SERVICE_NAME=${NAT64_IPV6_DNSMASQ_SERVICE_NAME:-${NETWORK_NAM
 NAT64_IPV6_DNSMASQ_SERVICE_CONF_FILE=${NAT64_IPV6_DNSMASQ_SERVICE_CONF_FILE:-${NAT64_IPV6_DNSMASQ_CONF_DIR}/dnsmasq.conf}
 
 NAT64_HOST_IPV6=${NAT64_HOST_IPV6:-fd00:abcd:abcd:fc00::2/64}
+if ! /usr/sbin/dnsmasq --test --filter-A; then
+    DNSMASQ_BIN=${WORK_DIR}/sbin/dnsmasq
+else
+    DNSMASQ_BIN=/usr/sbin/dnsmasq
+fi
+
+mkdir -p "${WORK_DIR}"
 
 function create_network {
     if ! ${VIRSH_CMD} net-list --all --name | grep --silent "^${NETWORK_NAME}\$"; then
@@ -79,6 +88,28 @@ EOF
         ${VIRSH_CMD} net-start "${NETWORK_NAME}"
     fi
     echo "Network ${NETWORK_NAME} created"
+}
+
+function build_dnsmasq {
+    if [ ! -f ${WORK_DIR}/sbin/dnsmasq ]; then
+        echo "Building DNSMASQ from source ..."
+        pushd ${MY_TMP_DIR}
+
+        # Install build dependencies
+        sudo dnf install git gcc make -y
+
+        git clone http://thekelleys.org.uk/git/dnsmasq.git
+        pushd ./dnsmasq
+        make
+        sudo make install PREFIX=${WORK_DIR}
+        # Set selinux context to bin_t
+        sudo chcon -t bin_t ${WORK_DIR}/sbin/dnsmasq
+        popd
+
+        popd
+    else
+        echo "Skipping DNSMASQ build - binary already present in workdir ..."
+    fi
 }
 
 function create_dnsmasq {
@@ -124,7 +155,7 @@ After=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/sbin/dnsmasq --keep-in-foreground --conf-file=${NAT64_IPV4_DNSMASQ_SERVICE_CONF_FILE}
+ExecStart=${DNSMASQ_BIN} --keep-in-foreground --conf-file=${NAT64_IPV4_DNSMASQ_SERVICE_CONF_FILE}
 StandardError=null
 
 [Install]
@@ -140,7 +171,7 @@ After=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/sbin/dnsmasq --keep-in-foreground --conf-file=${NAT64_IPV6_DNSMASQ_SERVICE_CONF_FILE}
+ExecStart=${DNSMASQ_BIN} --keep-in-foreground --conf-file=${NAT64_IPV6_DNSMASQ_SERVICE_CONF_FILE}
 StandardError=null
 
 [Install]
@@ -236,6 +267,9 @@ function create {
         create_firewalld_config
     fi
     create_network
+    if ! /usr/sbin/dnsmasq --test --filter-A; then
+        build_dnsmasq
+    fi
     create_dnsmasq
 }
 
