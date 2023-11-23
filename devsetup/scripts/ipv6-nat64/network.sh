@@ -157,8 +157,8 @@ EOF
     sudo systemctl enable ${NAT64_IPV6_DNSMASQ_SERVICE_NAME}
     sudo systemctl start ${NAT64_IPV6_DNSMASQ_SERVICE_NAME}
 
-    sudo resolvectl dns nat64 ${IPV6_NETWORK_IPADDRESS%%/*}#testing.example.com
-    sudo resolvectl domain nat64 testing.example.com
+    sudo resolvectl dns nat64 ${IPV6_NETWORK_IPADDRESS%%/*}#lab.example.com
+    sudo resolvectl domain nat64 lab.example.com
 
     popd
 }

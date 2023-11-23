@@ -136,7 +136,7 @@ function create_install_iso {
     # intall-config.yaml
     cat << EOF > ./ocp/install-config.yaml
 apiVersion: v1
-baseDomain: testing.example.com
+baseDomain: lab.example.com
 compute:
 - name: worker
   replicas: 0
@@ -210,14 +210,14 @@ function create_dnsmasq_config {
     cat << EOF > ${MY_TMP_DIR}/sno.conf
 log-queries
 dhcp-range=${SNO_MACHINE_NETWORK%%/*},static,${SNO_MACHINE_NETWORK##*/}
-address=/sno.testing.example.com/${SNO_HOST_IP}
-address=/apps.sno.testing.example.com/${SNO_HOST_IP}
+address=/sno.lab.example.com/${SNO_HOST_IP}
+address=/apps.sno.lab.example.com/${SNO_HOST_IP}
 # Make sure we return NODATA-IPv4. Without this A queries are forwarded,
 # and cause lookup delay.
-address=/sno.testing.example.com/
-address=/apps.sno.testing.example.com/
-host-record=api.sno.testing.example.com,${SNO_HOST_IP}
-host-record=api-int.sno.testing.example.com,${SNO_HOST_IP}
+address=/sno.lab.example.com/
+address=/apps.sno.lab.example.com/
+host-record=api.sno.lab.example.com,${SNO_HOST_IP}
+host-record=api-int.sno.lab.example.com,${SNO_HOST_IP}
 dhcp-host=${SNO_HOST_MAC},[${SNO_HOST_IP}],2m
 EOF
     mkdir -p ${NAT64_IPV6_DNSMASQ_CONF_DIR}/conf.d
@@ -299,7 +299,7 @@ EOF
 }
 
 function print_cluster_info {
-    API_URL="https://api.sno.testing.example.com:6443"
+    API_URL="https://api.sno.lab.example.com:6443"
     echo
     echo "Login command (admin):"
     echo "      oc login -u admin -p ${OCP_ADMIN_PASSWD} ${API_URL}"
