@@ -166,6 +166,7 @@ crc_attach_default_interface_cleanup:
 
 ##@ IPv6 Lab
 .PHONY: ipv6_lab_network
+ipv6_lab_network: export WORK_DIR = ${IPV6_LAB_WORK_DIR}
 ipv6_lab_network: export NETWORK_NAME = ${IPV6_LAB_NETWORK_NAME}
 ipv6_lab_network: export MANAGE_FIREWALLD = ${IPV6_LAB_MANAGE_FIREWALLD}
 ipv6_lab_network: export IPV6_NETWORK_IPADDRESS = ${IPV6_LAB_IPV6_NETWORK_IPADDRESS}
@@ -175,6 +176,7 @@ ipv6_lab_network: ## Deploys libvirt network for IPv6 lab
 	bash scripts/ipv6-nat64/network.sh --create
 
 .PHONY: ipv6_lab_network_cleanup
+ipv6_lab_network_cleanup: export WORK_DIR = ${IPV6_LAB_WORK_DIR}
 ipv6_lab_network_cleanup: export NETWORK_NAME = ${IPV6_LAB_NETWORK_NAME}
 ipv6_lab_network_cleanup: export MANAGE_FIREWALLD = ${IPV6_LAB_MANAGE_FIREWALLD}
 ipv6_lab_network_cleanup: ## Deploys libvirt network for IPv6 lab
