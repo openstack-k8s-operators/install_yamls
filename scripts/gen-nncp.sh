@@ -69,6 +69,18 @@ echo INTERFACE_BGP_2 ${INTERFACE_BGP_2}
 echo INTERFACE_MTU ${INTERFACE_MTU}
 echo VLAN_START ${VLAN_START}
 echo VLAN_STEP ${VLAN_STEP}
+if [ -n "$IPV4_ENABLED" ]; then
+echo CTLPLANE_IP_ADDRESS_PREFIX ${CTLPLANE_IP_ADDRESS_PREFIX}
+echo CTLPLANE_IP_ADDRESS_SUFFIX ${CTLPLANE_IP_ADDRESS_SUFFIX}
+echo GATEWAY ${GATEWAY}
+echo DNS_SERVER ${DNS_SERVER}
+fi
+if [ -n "$IPV6_ENABLED" ]; then
+echo CTLPLANE_IPV6_ADDRESS_PREFIX ${CTLPLANE_IPV6_ADDRESS_PREFIX}
+echo CTLPLANE_IPV6_ADDRESS_SUFFIX ${CTLPLANE_IPV6_ADDRESS_SUFFIX}
+echo GATEWAY_IPV6 ${GATEWAY_IPV6}
+echo DNS_SERVER_IPV6 ${DNS_SERVER_IPV6}
+fi
 if [ -n "$BGP" ]; then
 echo INTERFACE_BGP_1 ${INTERFACE_BGP_1}
 echo INTERFACE_BGP_2 ${INTERFACE_BGP_2}
@@ -79,6 +91,7 @@ fi
 # Use different suffix for other networks as the sample netconfig
 # we use starts with .10
 IP_ADDRESS_SUFFIX=5
+IPV6_ADDRESS_SUFFIX=5
 for WORKER in ${WORKERS}; do
   cat > ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
 apiVersion: nmstate.io/v1
@@ -89,78 +102,228 @@ metadata:
   name: ${INTERFACE}-${WORKER}
 spec:
   desiredState:
+EOF_CAT
+
+    #
+    # DNS Resolver
+    #
+    cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     dns-resolver:
       config:
         search: []
         server:
+EOF_CAT
+    if [ -n "$IPV4_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
         - ${DNS_SERVER}
+EOF_CAT
+    fi
+    if [ -n "$IPV6_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+        - ${DNS_SERVER_IPV6}
+EOF_CAT
+    fi
+
+    #
+    # Routes
+    #
+    cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     routes:
       config:
+EOF_CAT
+    if [ -n "$IPV4_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       - destination: 0.0.0.0/0
         next-hop-address: ${GATEWAY}
         next-hop-interface: ${INTERFACE}
+EOF_CAT
+    fi
+    if [ -n "$IPV6_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      - destination: ::/0
+        next-hop-address: ${GATEWAY_IPV6}
+        next-hop-interface: ${INTERFACE}
+EOF_CAT
+    fi
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     interfaces:
+EOF_CAT
+
+    #
+    # internalapi VLAN interface
+    #
+    cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: internalapi vlan interface
-      ipv4:
-        address:
-        - ip: 172.17.0.${IP_ADDRESS_SUFFIX}
-          prefix-length: 24
-        enabled: true
-        dhcp: false
-      ipv6:
-        enabled: false
       name: ${INTERFACE}.${VLAN_START}
       state: up
       type: vlan
       vlan:
         base-iface: ${INTERFACE}
         id: ${VLAN_START}
-    - description: storage vlan interface
+EOF_CAT
+    if [ -n "$IPV4_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv4:
         address:
-        - ip: 172.18.0.${IP_ADDRESS_SUFFIX}
+        - ip: 172.17.0.${IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
         dhcp: false
+EOF_CAT
+    else
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv4:
+        enabled: false
+EOF_CAT
+    fi
+    if [ -n "$IPV6_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv6:
+        address:
+        - ip: fd00:bbbb::${IPV6_ADDRESS_SUFFIX}
+          prefix-length: 64
+        enabled: true
+        dhcp: false
+        autoconf: false
+EOF_CAT
+    else
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv6:
         enabled: false
+EOF_CAT
+    fi
+
+    #
+    # storage VLAN interface
+    #
+    cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+    - description: storage vlan interface
       name: ${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}))
       state: up
       type: vlan
       vlan:
         base-iface: ${INTERFACE}
         id: $((${VLAN_START}+${VLAN_STEP}))
-    - description: tenant vlan interface
+EOF_CAT
+    if [ -n "$IPV4_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv4:
         address:
-        - ip: 172.19.0.${IP_ADDRESS_SUFFIX}
+        - ip: 172.18.0.${IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
         dhcp: false
+EOF_CAT
+    else
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv4:
+        enabled: false
+EOF_CAT
+    fi
+    if [ -n "$IPV6_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv6:
+        address:
+        - ip: fd00:cccc::${IPV6_ADDRESS_SUFFIX}
+          prefix-length: 64
+        enabled: true
+        dhcp: false
+        autoconf: false
+EOF_CAT
+    else
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv6:
         enabled: false
+EOF_CAT
+    fi
+
+    #
+    # tenant VLAN interface
+    #
+    cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+    - description: tenant vlan interface
       name: ${INTERFACE}.$((${VLAN_START}+$((${VLAN_STEP}*2))))
       state: up
       type: vlan
       vlan:
         base-iface: ${INTERFACE}
         id: $((${VLAN_START}+$((${VLAN_STEP}*2))))
+EOF_CAT
+    if [ -n "$IPV4_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv4:
+        address:
+        - ip: 172.19.0.${IP_ADDRESS_SUFFIX}
+          prefix-length: 24
+        enabled: true
+        dhcp: false
+EOF_CAT
+    else
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv4:
+        enabled: false
+EOF_CAT
+    fi
+    if [ -n "$IPV6_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv6:
+        address:
+        - ip: fd00:dddd::${IPV6_ADDRESS_SUFFIX}
+          prefix-length: 64
+        enabled: true
+        dhcp: false
+        autoconf: false
+EOF_CAT
+    else
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv6:
+        enabled: false
+EOF_CAT
+    fi
+
+    #
+    # ctlplane interface (untagged)
+    #
+    cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: Configuring ${INTERFACE}
+      mtu: ${INTERFACE_MTU}
+      name: ${INTERFACE}
+      state: up
+      type: ethernet
+EOF_CAT
+    if [ -n "$IPV4_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv4:
         address:
         - ip: ${CTLPLANE_IP_ADDRESS_PREFIX}.${CTLPLANE_IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
         dhcp: false
+EOF_CAT
+    else
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv4:
+        enabled: false
+EOF_CAT
+    fi
+    if [ -n "$IPV6_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv6:
+        address:
+        - ip: ${CTLPLANE_IPV6_ADDRESS_PREFIX}${CTLPLANE_IPV6_ADDRESS_SUFFIX}
+          prefix-length: 64
+        enabled: true
+        dhcp: false
+        autoconf: false
+EOF_CAT
+    else
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv6:
         enabled: false
-      mtu: ${INTERFACE_MTU}
-      name: ${INTERFACE}
-      state: up
-      type: ethernet
 EOF_CAT
-if [ -n "$BGP" ]; then
-  cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+    fi
+    if [ -n "$BGP" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: Configuring ${INTERFACE_BGP_1}
       ipv4:
         address:
@@ -204,13 +367,15 @@ if [ -n "$BGP" ]; then
       mtu: 65536
       state: up
 EOF_CAT
-fi
-  cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+    fi
+    cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
   nodeSelector:
     kubernetes.io/hostname: ${WORKER}
     node-role.kubernetes.io/worker: ""
 EOF_CAT
 
     IP_ADDRESS_SUFFIX=$((${IP_ADDRESS_SUFFIX}+1))
+    IPV6_ADDRESS_SUFFIX=$((${IPV6_ADDRESS_SUFFIX}+1))
     CTLPLANE_IP_ADDRESS_SUFFIX=$((${CTLPLANE_IP_ADDRESS_SUFFIX}+1))
+    CTLPLANE_IPV6_ADDRESS_SUFFIX=$((${CTLPLANE_IPV6_ADDRESS_SUFFIX}+1))
 done
