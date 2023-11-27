@@ -25,7 +25,18 @@ OPENSTACK_K8S_TAG        ?= latest
 # in the CR dir if a call to each deploy target cleans the CR dir.
 CLEANUP_DIR_CMD					 ?= rm -Rf
 
+# network isolation
+NETWORK_ISOLATION   ?= true
+NETWORK_ISOLATION_USE_DEFAULT_NETWORK ?= true
+NETWORK_MTU         ?= 1500
+NETWORK_VLAN_START  ?= 20
+NETWORK_VLAN_STEP   ?= 1
+
+ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
 METALLB_POOL			 ?=192.168.122.80-192.168.122.90
+else
+METALLB_POOL			 ?=172.16.1.80-172.16.1.90
+endif
 # are we deploying to microshift
 MICROSHIFT ?= 0
 
@@ -35,12 +46,6 @@ OPERATOR_BASE_DIR   ?= ${OUT}/operator
 # storage (used by some operators)
 STORAGE_CLASS       ?= "local-storage"
 CRC_STORAGE_RETRIES ?= 3
-
-# network isolation
-NETWORK_ISOLATION   ?= true
-NETWORK_MTU         ?= 1500
-NETWORK_VLAN_START  ?= 20
-NETWORK_VLAN_STEP   ?= 1
 
 # options to pass in all targets that use git clone
 GIT_CLONE_OPTS      ?=
@@ -336,11 +341,18 @@ DATAPLANE_DEPLOYMENT_CR                          ?= ${OPERATOR_BASE_DIR}/datapla
 DATAPLANE_DEPLOYMENT_BAREMETAL_CR				 ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANEDEPLOYMENT_BAREMETAL}
 DATAPLANE_ANSIBLE_SECRET                         ?=dataplane-ansible-ssh-private-key-secret
 DATAPLANE_ANSIBLE_USER                           ?=
+ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
 DATAPLANE_COMPUTE_IP                             ?=192.168.122.100
+DATAPLANE_SSHD_ALLOWED_RANGES                    ?=['192.168.122.0/24']
+DATAPLANE_DEFAULT_GW                             ?= 192.168.122.1
+else
+DATAPLANE_COMPUTE_IP                             ?=172.16.1.100
+DATAPLANE_SSHD_ALLOWED_RANGES                    ?=['172.16.1.0/24']
+DATAPLANE_DEFAULT_GW                             ?= 172.16.1.1
+endif
 DATAPLANE_TOTAL_NODES                            ?=1
 DATAPLANE_RUNNER_IMG                             ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:${OPENSTACK_K8S_TAG}
 DATAPLANE_NETWORK_INTERFACE_NAME                 ?=eth0
-DATAPLANE_SSHD_ALLOWED_RANGES                    ?=['192.168.122.0/24']
 DATAPLANE_NTP_SERVER                             ?=pool.ntp.org
 DATAPLANE_REGISTRY_URL                           ?=quay.io/podified-antelope-centos9
 DATAPLANE_CONTAINER_TAG                          ?=current-podified
@@ -348,7 +360,6 @@ DATAPLANE_CONTAINER_PREFIX			 ?=openstack
 DATAPLANE_KUTTL_CONF                             ?= ${OPERATOR_BASE_DIR}/dataplane-operator/kuttl-test.yaml
 DATAPLANE_KUTTL_DIR                              ?= ${OPERATOR_BASE_DIR}/dataplane-operator/tests/kuttl/tests
 DATAPLANE_KUTTL_NAMESPACE                        ?= dataplane-kuttl-tests
-DATAPLANE_DEFAULT_GW                             ?= 192.168.122.1
 BM_CTLPLANE_INTERFACE                            ?= enp1s0
 BM_ROOT_PASSWORD_SECRET                          ?=
 
@@ -372,10 +383,16 @@ CEPH_IMG            ?= quay.io/ceph/demo:latest-reef
 NNCP_INTERFACE      ?= enp6s0
 NNCP_TIMEOUT		?= 240s
 NNCP_CLEANUP_TIMEOUT	?= 120s
-NNCP_CTLPLANE_IP_ADDRESS_PREFIX     ?=192.168.122
 NNCP_CTLPLANE_IP_ADDRESS_SUFFIX     ?=10
+ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
+NNCP_CTLPLANE_IP_ADDRESS_PREFIX     ?=192.168.122
 NNCP_GATEWAY                        ?=192.168.122.1
 NNCP_DNS_SERVER                     ?=192.168.122.1
+else
+NNCP_CTLPLANE_IP_ADDRESS_PREFIX     ?=172.16.1
+NNCP_GATEWAY                        ?=172.16.1.1
+NNCP_DNS_SERVER                     ?=172.16.1.1
+endif
 
 # Telemetry
 TELEMETRY_IMG                    ?= quay.io/openstack-k8s-operators/telemetry-operator-index:${OPENSTACK_K8S_TAG}
@@ -395,7 +412,11 @@ TELEMETRY_KUTTL_NAMESPACE ?= telemetry-kuttl-tests
 BMO_REPO                         ?= https://github.com/metal3-io/baremetal-operator
 BMO_BRANCH                       ?= main
 BMO_PROVISIONING_INTERFACE       ?= enp6s0
+ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
 BMO_IRONIC_HOST                  ?= 192.168.122.10
+else
+BMO_IRONIC_HOST                  ?= 172.16.1.10
+endif
 
 # Swift
 SWIFT_IMG        ?= quay.io/openstack-k8s-operators/swift-operator-index:${OPENSTACK_K8S_TAG}
@@ -548,9 +569,9 @@ crc_bmo_setup: $(if $(findstring true,$(INSTALL_CERT_MANAGER)), certmanager)
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(BMO_BRANCH),-b ${BMO_BRANCH}) ${BMO_REPO} "baremetal-operator" && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/eth2/${BMO_PROVISIONING_INTERFACE}/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/ENDPOINT\=http/ENDPOINT\=https/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
-	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0.2\:/192.168.122.10\:/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
-	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0.1\:/192.168.122.11\:/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
-	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0./192.168.122./g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0.2\:/${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}.10\:/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0.1\:/${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}.11\:/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0./${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}./g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && make generate manifests && bash tools/deploy.sh -bitm && popd
 	## Hack to add required scc
 	oc adm policy add-scc-to-user privileged system:serviceaccount:baremetal-operator-system:baremetal-operator-controller-manager
@@ -607,6 +628,9 @@ openstack_deploy_prep: openstack_deploy_cleanup ## prepares the CR to install th
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(OPENSTACK_BRANCH),-b ${OPENSTACK_BRANCH}) ${OPENSTACK_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp ${OPENSTACK_CR} ${DEPLOY_DIR}
+ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), false)
+	sed -i 's/192.168.122/${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}/g' ${DEPLOY_DIR}/$(notdir ${OPENSTACK_CR})
+endif
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: openstack_deploy
@@ -634,6 +658,7 @@ edpm_deploy_prep: export EDPM_COMPUTE_IP=${DATAPLANE_COMPUTE_IP}
 edpm_deploy_prep: export EDPM_TOTAL_NODES=${DATAPLANE_TOTAL_NODES}
 edpm_deploy_prep: export OPENSTACK_RUNNER_IMG=${DATAPLANE_RUNNER_IMG}
 edpm_deploy_prep: export EDPM_NETWORK_INTERFACE_NAME=${DATAPLANE_NETWORK_INTERFACE_NAME}
+edpm_deploy_prep: export CTLPLANE_IP_ADDRESS_PREFIX=${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}
 edpm_deploy_prep: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALLOWED_RANGES}
 edpm_deploy_prep: export EDPM_NTP_SERVER=${DATAPLANE_NTP_SERVER}
 edpm_deploy_prep: export EDPM_REGISTRY_URL=${DATAPLANE_REGISTRY_URL}
@@ -757,6 +782,10 @@ dns_deploy_prep: dns_deploy_cleanup ## prepares the CR to install the service ba
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${INFRA_BRANCH} ${INFRA_REPO} && popd
 	cp ${DNSMASQ_CR} ${DNSDATA_CR} ${DEPLOY_DIR}
+ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), false)
+	sed -i 's/192.168.122/${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}/g' ${DEPLOY_DIR}/$(notdir ${DNSMASQ_CR})
+	sed -i 's/192.168.122/${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}/g' ${DEPLOY_DIR}/$(notdir ${DNSDATA_CR})
+endif
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: dns_deploy
@@ -783,6 +812,9 @@ netconfig_deploy_prep: netconfig_deploy_cleanup ## prepares the CR to install th
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone -b ${INFRA_BRANCH} ${INFRA_REPO} && popd
 	cp ${NETCONFIG_CR} ${DEPLOY_DIR}
+ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), false)
+	sed -i 's/192.168.122/${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}/g' ${DEPLOY_DIR}/$(notdir ${NETCONFIG_CR})
+endif
 	bash scripts/gen-service-kustomize.sh
 
 .PHONY: netconfig_deploy
@@ -1922,6 +1954,7 @@ netattach: export INTERFACE_BGP_2=${NNCP_BGP_2_INTERFACE}
 endif
 netattach: export VLAN_START=${NETWORK_VLAN_START}
 netattach: export VLAN_STEP=${NETWORK_VLAN_STEP}
+netattach: export CTLPLANE_IP_ADDRESS_PREFIX=${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}
 netattach: namespace ## Creates network-attachment-definitions for the networks the workers are attached via nncp
 	$(eval $(call vars,$@,netattach))
 	bash scripts/gen-netatt.sh

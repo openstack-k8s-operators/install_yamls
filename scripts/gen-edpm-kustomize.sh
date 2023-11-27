@@ -145,7 +145,7 @@ cat <<EOF >>kustomization.yaml
       path: /spec/nodes/edpm-compute-${INDEX}
     - op: replace
       path: /spec/nodes/edpm-compute-${INDEX}/ansible/ansibleHost
-      value: 192.168.122.$((100+${INDEX}))
+      value: ${CTLPLANE_IP_ADDRESS_PREFIX}.$((100+${INDEX}))
     - op: replace
       path: /spec/nodes/edpm-compute-${INDEX}/hostName
       value: edpm-compute-${INDEX}
@@ -166,7 +166,7 @@ cat <<EOF >>kustomization.yaml
         - name: CtlPlane
           subnetName: subnet1
           defaultRoute: true
-          fixedIP: 192.168.122.$((100+${INDEX}))
+          fixedIP: ${CTLPLANE_IP_ADDRESS_PREFIX}.$((100+${INDEX}))
         - name: InternalApi
           subnetName: subnet1
         - name: Storage

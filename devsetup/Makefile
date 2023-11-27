@@ -2,9 +2,23 @@ CRC_VERSION ?= latest
 CRC_URL ?= 'https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/$(CRC_VERSION)/crc-linux-amd64.tar.xz'
 KUBEADMIN_PWD ?= 12345678
 PULL_SECRET  ?= ${PWD}/pull-secret.txt
-NETWORK_ISOLATION_IP_ADDRESS ?= 192.168.122.10
+
+NETWORK_ISOLATION_USE_DEFAULT_NETWORK ?= true
+ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
 NETWORK_ISOLATION_NET_NAME ?= default
+NETWORK_ISOLATION_IP_ADDRESS ?= 192.168.122.10
+else
+NETWORK_ISOLATION_NET_NAME ?= net-iso
+NETWORK_ISOLATION_IP_ADDRESS ?= 172.16.1.10
+endif
+NETWORK_ISOLATION_NETWORK_NAME ?= net-iso
+NETWORK_ISOLATION_IPV4 ?= true
+NETWORK_ISOLATION_IPV6 ?= false
+NETWORK_ISOLATION_IPV4_ADDRESS ?= 172.16.1.1/24
+NETWORK_ISOLATION_IPV4_NAT ?= true
+NETWORK_ISOLATION_IPV6_ADDRESS ?= fd00:aaaa::1/64
 NETWORK_ISOLATION_INSTANCE_NAME ?= crc
+
 EDPM_COMPUTE_SUFFIX ?= 0
 # EDPM_COMPUTE_ADDITIONAL_NETWORKS: JSON string - list of additional networks
 # Examples:
@@ -61,13 +75,6 @@ BMAAS_REDFISH_PASSWORD ?= password
 BMAAS_SUSHY_EMULATOR_NAMESPACE ?= sushy-emulator
 BMAAS_LIBVIRT_USER ?= sushyemu
 BMAAS_ROUTE_LIBVIRT_NETWORKS ?= ${BMAAS_NETWORK_NAME},crc,default
-
-NETWORK_ISOLATION_NETWORK_NAME ?= net-iso
-NETWORK_ISOLATION_IPV4 ?= true
-NETWORK_ISOLATION_IPV6 ?= false
-NETWORK_ISOLATION_IPV4_ADDRESS ?= 172.16.1.1/24
-NETWORK_ISOLATION_IPV4_NAT ?= true
-NETWORK_ISOLATION_IPV6_ADDRESS ?= fd00:aaaa::1/64
 
 DATAPLANE_PLAYBOOK ?= osp.edpm.download_cache
 DATAPLANE_CUSTOM_SERVICE_RUNNER_IMG ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
@@ -202,6 +209,7 @@ edpm_baremetal_compute_cleanup:  ## Cleanup dataplane with BMAAS
 	make bmaas_virtual_bms_cleanup || true
 
 .PHONY: edpm_compute
+edpm_compute: export EDPM_COMPUTE_NETWORK = ${NETWORK_ISOLATION_NET_NAME}
 edpm_compute: ## Create EDPM compute VM
 	$(eval $(call vars))
 	scripts/gen-ansibleee-ssh-key.sh
