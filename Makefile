@@ -404,6 +404,7 @@ SWIFT_KUTTL_NAMESPACE ?= swift-kuttl-tests
 
 # CertManager
 CERTMANAGER_TIMEOUT                  ?= 300s
+INSTALL_CERT_MANAGER		     ?= true
 
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
@@ -535,7 +536,8 @@ input_cleanup: ## deletes the secret/CM, used by the services as input
 ##@ CRC BMO SETUP
 .PHONY: crc_bmo_setup
 crc_bmo_setup: export IRONIC_HOST_IP=${BMO_IRONIC_HOST}
-crc_bmo_setup: crc_bmo_cleanup certmanager
+crc_bmo_setup: crc_bmo_cleanup
+crc_bmo_setup: $(if $(findstring true,$(INSTALL_CERT_MANAGER)), certmanager)
 	$(eval $(call vars,$@))
 	mkdir -p ${OPERATOR_BASE_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(BMO_BRANCH),-b ${BMO_BRANCH}) ${BMO_REPO} "baremetal-operator" && popd
@@ -562,16 +564,20 @@ ifeq (,$(findstring baremetalhosts.metal3.io, ${BMO_CRDS}))
 endif
 
 ##@ OPENSTACK
+
+OPENSTACK_PREP_DEPS := $(if $(findstring true,$(INSTALL_CERT_MANAGER)), certmanager)
+OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config)
+OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_BGP)), nmstate nncp netattach metallb metallb_config)
+OPENSTACK_PREP_DEPS += $(if $(findstring true,$(BMO_SETUP)), crc_bmo_setup)
+
 .PHONY: openstack_prep
 openstack_prep: export IMAGE=${OPENSTACK_IMG}
-openstack_prep: $(if $(findstring true,$(BMO_SETUP)), crc_bmo_setup) ## creates the files to install the operator using olm
-openstack_prep: $(if $(findstring true,$(NETWORK_BGP)), nmstate nncp netattach metallb metallb_config)
-openstack_prep: $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config)
+openstack_prep: $(OPENSTACK_PREP_DEPS) ## creates the files to install the operator using olm
 	$(eval $(call vars,$@,openstack))
 	bash scripts/gen-olm.sh
 
 .PHONY: openstack
-openstack: certmanager operator_namespace openstack_prep ## installs the operator, also runs the prep step. Set OPENSTACK_IMG for custom image.
+openstack: openstack_prep operator_namespace ## installs the operator, also runs the prep step. Set OPENSTACK_IMG for custom image.
 	$(eval $(call vars,$@,openstack))
 	oc apply -f ${OPERATOR_DIR}
 
