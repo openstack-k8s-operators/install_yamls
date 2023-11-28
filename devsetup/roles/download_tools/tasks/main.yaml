@@ -11,6 +11,7 @@
       - virt-install
       - gcc
       - python3-jinja2
+      - xmlstarlet
 
 - name: Set opm download url suffix
   ansible.builtin.set_fact:
