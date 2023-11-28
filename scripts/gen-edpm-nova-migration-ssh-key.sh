@@ -17,7 +17,7 @@ set -ex
 
 function create_migration_key {
     pushd "$(mktemp -d)"
-    ssh-keygen -f ./id -t ed25519 -N ''
+    ssh-keygen -f ./id -t ecdsa-sha2-nistp521 -N ''
     oc create secret generic nova-migration-ssh-key \
     -n openstack \
     --from-file=ssh-privatekey=id \
