@@ -190,6 +190,7 @@ NEUTRON_KUTTL_NAMESPACE ?= neutron-kuttl-tests
 
 # BGP
 NETWORK_BGP           ?= false
+BGP_OVN_ROUTING       ?= false
 BGP_ASN               ?= 64999
 BGP_PEER_ASN          ?= 64999
 BGP_LEAF_1            ?= 100.65.4.1
@@ -318,7 +319,11 @@ DATAPLANE_REPO                                   ?= https://github.com/openstack
 DATAPLANE_BRANCH                                 ?= ${OPENSTACK_K8S_BRANCH}
 DATAPLANE_TIMEOUT                                ?= 20m
 ifeq ($(NETWORK_BGP), true)
+ifeq ($(BGP_OVN_ROUTING), true)
+OPENSTACK_DATAPLANENODESET                       ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset_bgp_ovn_cluster.yaml
+else
 OPENSTACK_DATAPLANENODESET                       ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset_bgp.yaml
+endif
 else
 OPENSTACK_DATAPLANENODESET                       ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset.yaml
 endif
@@ -635,7 +640,11 @@ edpm_deploy_prep: export EDPM_REGISTRY_URL=${DATAPLANE_REGISTRY_URL}
 edpm_deploy_prep: export EDPM_CONTAINER_TAG=${DATAPLANE_CONTAINER_TAG}
 edpm_deploy_prep: export EDPM_CONTAINER_PREFIX=${DATAPLANE_CONTAINER_PREFIX}
 ifeq ($(NETWORK_BGP), true)
-edpm_deploy_prep: export BGP=enabled
+ifeq ($(BGP_OVN_ROUTING), true)
+edpm_deploy_prep: export BGP=ovn
+else
+edpm_deploy_prep: export BGP=kernel
+endif
 endif
 edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
