@@ -93,46 +93,55 @@ if ! [ -f "${SSH_PUB_KEY}" ]; then
 fi
 
 mkdir -p "${WORK_DIR}"/ocp
+mkdir -p "${WORK_DIR}"/bin
+sudo chcon -t bin_t ${WORK_DIR}/bin
 
 function get_oc_client {
     pushd ${WORK_DIR}
+
     # Download the OpenShift Container Platform client (oc)
     if ! [ -f oc.tar.gz ]; then
         curl ${OCP_MIRROR_URL}/$OCP_VERSION/openshift-client-linux.tar.gz \
             -o oc.tar.gz
     fi
-    tar zxf oc.tar.gz
-    chmod +x oc
+    tar zxf oc.tar.gz -C ./bin/
+    chmod +x ./bin/oc
+
     popd
 }
 
 function get_openshift_installer {
     pushd ${WORK_DIR}
+
     # Download the OpenShift Container Platform installer
     if ! [ -f openshift-install-linux.tar.gz ]; then
         curl -k \
             "${OCP_MIRROR_URL}"/"$OCP_VERSION"/openshift-install-linux.tar.gz \
             -o openshift-install-linux.tar.gz
     fi
-    tar zxf openshift-install-linux.tar.gz
-    chmod +x openshift-install
+    tar zxf openshift-install-linux.tar.gz -C ./bin/
+    chmod +x ./bin/openshift-install
+
     popd
 }
 
 function get_rhcos_live_iso {
     pushd ${WORK_DIR}
+
     if ! [ -f rhcos-live.iso ]; then
         # Retrieve the RHCOS ISO URL
-        ISO_URL=$(./openshift-install coreos print-stream-json | grep location | grep ${ARCH} | grep iso | cut -d\" -f4)
+        ISO_URL=$(./bin/openshift-install coreos print-stream-json | grep location | grep ${ARCH} | grep iso | cut -d\" -f4)
 
         # Download the RHCOS ISO
         curl -L ${ISO_URL} -o rhcos-live.iso
     fi
+
     popd
 }
 
 function create_install_iso {
     pushd ${WORK_DIR}
+
     # intall-config.yaml
     cat << EOF > ./ocp/install-config.yaml
 apiVersion: v1
@@ -165,7 +174,7 @@ sshKey: |
 EOF
 
 
-    ./openshift-install --dir=./ocp create single-node-ignition-config
+    ./bin/openshift-install --dir=./ocp create single-node-ignition-config
 
     cp -v rhcos-live.iso ${BOOTSTRAP_ISO_FILENAME}
     podman run --privileged --pull always --rm \
@@ -239,33 +248,32 @@ function cleanup_dnsmasq_config {
 }
 
 function wait_for_install_complete {
+    pushd ${WORK_DIR}
+
     echo
     echo "Waiting for OCP cluster bootstrapping to complete:"
-    echo "${WORK_DIR}/openshift-install --dir=${WORK_DIR}/ocp wait-for bootstrap-complete"
-    ${WORK_DIR}/openshift-install --dir=${WORK_DIR}/ocp wait-for bootstrap-complete
+    echo "${WORK_DIR}/bin/openshift-install --dir=${WORK_DIR}/ocp wait-for bootstrap-complete"
+    ./bin/openshift-install --dir=${WORK_DIR}/ocp wait-for bootstrap-complete
     echo
     echo "Waiting for OCP cluster installation to complete:"
     sleep 60
-    echo "${WORK_DIR}/openshift-install --dir=${WORK_DIR}/ocp wait-for install-complete"
-    ${WORK_DIR}/openshift-install --dir=${WORK_DIR}/ocp wait-for install-complete
+    echo "${WORK_DIR}/bin/openshift-install --dir=${WORK_DIR}/ocp wait-for install-complete"
+    ./bin/openshift-install --dir=${WORK_DIR}/ocp wait-for install-complete
+
+    popd
 }
 
 function post_config {
-    timestamp=$(date +%s)
-    if [ -f ${HOME}/.kube/config ]; then
-        echo "Replacing ${HOME}/.kube/config - backup in ${HOME}/.kube/config-$timestamp"
-        cp -v ${HOME}/.kube/config ${HOME}/.kube/config-"$timestamp"
-    fi
-    mkdir -p ${HOME}/.kube
-    cp -v ${WORK_DIR}/ocp/auth/kubeconfig ${HOME}/.kube/config
+    pushd ${WORK_DIR}
 
-    KUBEADMIN_PASSWD=$(cat ${WORK_DIR}/ocp/auth/kubeadmin-password)
+    KUBEADMIN_PASSWD=$(cat ./ocp/auth/kubeadmin-password)
+    export KUBECONFIG="${WORK_DIR}/ocp/auth/kubeconfig"
     # Create htpasswd file
     htpasswd -c -B -b ${MY_TMP_DIR}/htpasswd admin ${OCP_ADMIN_PASSWD}
 
     # Get ouath config
     mkdir -p ${MY_TMP_DIR}/oauth
-    ${WORK_DIR}/oc get oauth cluster -o yaml > ${MY_TMP_DIR}/oauth/oauth.yaml
+    ./bin/oc get oauth cluster -o yaml > ${MY_TMP_DIR}/oauth/oauth.yaml
     # Add identity provider kustomization
     cat << EOF > ${MY_TMP_DIR}/oauth/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -286,20 +294,36 @@ patches:
   target:
     kind: OAuth
 EOF
-    ${WORK_DIR}/oc kustomize ${MY_TMP_DIR}/oauth/ > ${MY_TMP_DIR}/oauth.yaml
+    ./bin/oc kustomize ${MY_TMP_DIR}/oauth/ > ${MY_TMP_DIR}/oauth.yaml
     # Replace oath config
-    ${WORK_DIR}/oc replace -f ${MY_TMP_DIR}/oauth.yaml
+    ./bin/oc replace -f ${MY_TMP_DIR}/oauth.yaml
     # Create htpasswd secret
-    ${WORK_DIR}/oc create secret generic htpasswd-secret \
+    ./bin/oc create secret generic htpasswd-secret \
         --from-file htpasswd=${MY_TMP_DIR}/htpasswd \
         -n openshift-config
     # Add Admin privilegies to admin user
-    ${WORK_DIR}/oc adm policy add-cluster-role-to-user cluster-admin admin
+    ./bin/oc adm policy add-cluster-role-to-user cluster-admin admin
     echo "Post installation configuration completed"
+
+    popd
+}
+
+function create_source_env {
+    pushd ${WORK_DIR}
+
+    cat > sno_env << EOF
+export KUBECONFIG=${WORK_DIR}/ocp/auth/kubeconfig
+export PATH=${WORK_DIR}/bin:$PATH
+EOF
+
+    popd
 }
 
 function print_cluster_info {
     API_URL="https://api.sno.lab.example.com:6443"
+    echo
+    echo "Source ${WORK_DIR}/sno_env to set up PATH and KUBECONFIG:"
+    echo "      source ${WORK_DIR}/sno_env"
     echo
     echo "Login command (admin):"
     echo "      oc login -u admin -p ${OCP_ADMIN_PASSWD} ${API_URL}"
@@ -321,6 +345,7 @@ function create {
     create_sno_instance
     wait_for_install_complete
     post_config
+    create_source_env
     print_cluster_info
 }
 
