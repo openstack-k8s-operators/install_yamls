@@ -24,7 +24,7 @@ if [ ! -d ${OUT}/crc ]; then
     mkdir -p ${OUT}/crc
 fi
 PV_NUM=${PV_NUM:-12}
-
+STORAGE_CAPACITY=${STORAGE_CAPACITY:-10}
 NODE_NAMES=$(oc get node -o name -l node-role.kubernetes.io/worker | sed -e 's|node/||' | head -c-1 | tr '\n' ' ')
 if [ -z "$NODE_NAMES" ]; then
     echo "Unable to determine node name with 'oc' command."
@@ -38,6 +38,7 @@ metadata:
   name: ${STORAGE_CLASS}
 provisioner: kubernetes.io/no-provisioner
 volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
 EOF_CAT
 
 for node in $NODE_NAMES; do
@@ -55,7 +56,7 @@ metadata:
 spec:
   storageClassName: ${STORAGE_CLASS}
   capacity:
-    storage: 10Gi
+    storage: ${STORAGE_CAPACITY}Gi
   accessModes:
     - ReadWriteOnce
     - ReadWriteMany
@@ -87,7 +88,7 @@ metadata:
 spec:
   resources:
     requests:
-      storage: 10Gi
+      storage: ${STORAGE_CAPACITY}Gi
   accessModes:
     - ReadWriteOnce
     - ReadWriteMany
