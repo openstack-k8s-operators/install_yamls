@@ -39,6 +39,7 @@ echo DEPLOY_DIR ${DEPLOY_DIR}
 echo INTERFACE ${INTERFACE}
 echo VLAN_START ${VLAN_START}
 echo VLAN_STEP ${VLAN_STEP}
+echo CTLPLANE_IP_ADDRESS_PREFIX ${CTLPLANE_IP_ADDRESS_PREFIX}
 
 cat > ${DEPLOY_DIR}/ctlplane.yaml <<EOF_CAT
 apiVersion: k8s.cni.cncf.io/v1
@@ -57,9 +58,9 @@ spec:
       "master": "${INTERFACE}",
       "ipam": {
         "type": "whereabouts",
-        "range": "192.168.122.0/24",
-        "range_start": "192.168.122.30",
-        "range_end": "192.168.122.70"
+        "range": "${CTLPLANE_IP_ADDRESS_PREFIX}.0/24",
+        "range_start": "${CTLPLANE_IP_ADDRESS_PREFIX}.30",
+        "range_end": "${CTLPLANE_IP_ADDRESS_PREFIX}.70"
       }
     }
 EOF_CAT
