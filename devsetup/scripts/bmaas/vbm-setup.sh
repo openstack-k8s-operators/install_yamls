@@ -118,8 +118,10 @@ function create_vm {
         --graphics vnc \
         --virt-type "$VIRT_TYPE" \
         --serial file,path="${CONSOLE_LOG_DIR}/${name}_console.log" \
+        --rng /dev/urandom,rate.period=250 \
         --print-xml \
         > "$temp_file"
+    cat $temp_file
     virsh --connect=qemu:///system define "$temp_file"
 }
 
