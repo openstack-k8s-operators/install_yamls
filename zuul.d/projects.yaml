@@ -7,5 +7,6 @@
         - install-yamls-crc-podified-edpm-baremetal: &content_provider
             dependencies:
               - openstack-k8s-operators-content-provider
-        - podified-multinode-edpm-deployment-crc: *content_provider
-        - content-provider-data-plane-adoption-github-rdo-centos-9-extracted-crc: *content_provider
+        - install-yamls-crc-podified-edpm-baremetal-1: *content_provider
+        - install-yamls-crc-podified-edpm-baremetal-2: *content_provider
+        - install-yamls-crc-podified-edpm-baremetal-3: *content_provider

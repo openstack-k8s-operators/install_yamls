@@ -37,6 +37,7 @@ fi
 
 pushd ${DEPLOY_DIR}
 
+
 cat <<EOF >kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -49,6 +50,15 @@ patches:
     - op: add
       path: /spec/baremetalSetTemplate/bmhNamespace
       value: ${EDPM_BMH_NAMESPACE}
+    - op: add
+      path: /spec/baremetalSetTemplate/userData
+      value: |
+        #cloud-config
+        runcmd:
+          - ['echo', 'DEBUG_RNG_DEBUG']
+          - ['cat', '/sys/devices/virtual/misc/hw_random/rng_available']
+          - ['cat', '/sys/devices/virtual/misc/hw_random/rng_selected']
+          - ['echo', 'DEBUG_RNG_DEBUG']
     - op: add
       path: /spec/services/0
       value: repo-setup

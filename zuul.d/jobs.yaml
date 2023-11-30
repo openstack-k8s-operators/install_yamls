@@ -3,7 +3,7 @@
 - job:
     name: install-yamls-crc-podified-edpm-baremetal
     parent: cifmw-crc-podified-edpm-baremetal
-    files:
+    files: &openstack_f
       - ^devsetup/Makefile
       - ^devsetup/edpm/config/*
       - ^devsetup/edpm/services/*
@@ -23,8 +23,17 @@
       - OWNERS
       - .*/*.md
 - job:
-    name: content-provider-data-plane-adoption-github-rdo-centos-9-extracted-crc
-    parent: data-plane-adoption-github-rdo-centos-9-extracted-crc
-    required-projects:
-      - openstack-k8s-operators/openstack-operator
+    name: install-yamls-crc-podified-edpm-baremetal-1
+    parent: cifmw-crc-podified-edpm-baremetal
+    files: *openstack_f
+    irrelevant-files: *openstack_if
+- job:
+    name: install-yamls-crc-podified-edpm-baremetal-2
+    parent: cifmw-crc-podified-edpm-baremetal
+    files: *openstack_f
+    irrelevant-files: *openstack_if
+- job:
+    name: install-yamls-crc-podified-edpm-baremetal-3
+    parent: cifmw-crc-podified-edpm-baremetal
+    files: *openstack_f
     irrelevant-files: *openstack_if
