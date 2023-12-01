@@ -1,6 +1,7 @@
 # general
 SHELL       := /bin/bash
 OCP_RELEASE := $(shell cut -d '.' -f 1,2 <<< $(shell oc version -o json | jq -r .openshiftVersion))
+OKD                      ?= false
 OPERATOR_NAMESPACE      ?= openstack-operators
 NAMESPACE                ?= openstack
 PASSWORD                 ?= 12345678
@@ -1900,6 +1901,14 @@ nmstate: ## installs nmstate operator in the openshift-nmstate namespace
 	bash scripts/gen-namespace.sh
 	oc apply -f ${OUT}/${NAMESPACE}/namespace.yaml
 	sleep 2
+ifeq ($(OKD), true)
+	bash scripts/gen-olm-nmstate-okd.sh
+	oc apply -f ${OPERATOR_DIR}
+	timeout ${TIMEOUT} bash -c "while ! (oc get deployments/nmstate-operator -n ${NAMESPACE}); do sleep 10; done"
+	oc wait deployments/nmstate-operator -n ${NAMESPACE} --for condition=Available --timeout=${TIMEOUT}
+	oc apply -f ${DEPLOY_DIR}
+	sleep 30
+else
 	bash scripts/gen-olm-nmstate.sh
 	oc apply -f ${OPERATOR_DIR}
 	timeout ${TIMEOUT} bash -c "while ! (oc get deployments/nmstate-operator -n ${NAMESPACE}); do sleep 10; done"
@@ -1909,6 +1918,7 @@ nmstate: ## installs nmstate operator in the openshift-nmstate namespace
 	oc wait pod -n ${NAMESPACE} -l component=kubernetes-nmstate-handler --for condition=Ready --timeout=$(TIMEOUT)
 	timeout ${TIMEOUT} bash -c "while ! (oc get deployments/nmstate-webhook -n ${NAMESPACE}); do sleep 10; done"
 	oc wait deployments/nmstate-webhook -n ${NAMESPACE} --for condition=Available --timeout=${TIMEOUT}
+endif
 
 .PHONY: nncp
 nncp: export INTERFACE=${NNCP_INTERFACE}
@@ -1981,8 +1991,18 @@ metallb: ## installs metallb operator in the metallb-system namespace
 	bash scripts/gen-namespace.sh
 	oc apply -f ${OUT}/${NAMESPACE}/namespace.yaml
 	sleep 2
+ifeq ($(OKD), true)
+	bash scripts/gen-operatorshub-catalog.sh
+	oc apply -f ${OPERATOR_DIR}/operatorshub-catalog/
+	timeout ${TIMEOUT} bash -c "while ! (oc get packagemanifests metallb-operator --no-headers=true | grep metallb-operator); do sleep 10; done"
+	bash scripts/gen-olm-metallb-okd.sh
+	oc apply -f ${OPERATOR_DIR}
+	timeout ${TIMEOUT} bash -c "while ! (oc get deployment metallb-operator-controller-manager --no-headers=true -n ${NAMESPACE}| grep metallb-operator-controller-manager); do sleep 10; done"
+	oc apply -f ${OPERATOR_DIR}/patches
+else
 	bash scripts/gen-olm-metallb.sh
 	oc apply -f ${OPERATOR_DIR}
+endif
 	timeout ${TIMEOUT} bash -c "while ! (oc get pod --no-headers=true -l control-plane=controller-manager -n ${NAMESPACE}| grep metallb-operator-controller); do sleep 10; done"
 	oc wait pod -n ${NAMESPACE} --for condition=Ready -l control-plane=controller-manager --timeout=$(TIMEOUT)
 	timeout ${TIMEOUT} bash -c "while ! (oc get pod --no-headers=true -l component=webhook-server -n ${NAMESPACE}| grep metallb-operator-webhook); do sleep 10; done"
@@ -2175,6 +2195,17 @@ certmanager: export OPERATOR_NAMESPACE=$(if $(findstring 4.10,$(OCP_RELEASE)),op
 certmanager: export CHANNEL=$(if $(findstring 4.10,$(OCP_RELEASE)),tech-preview,stable-v1.11)
 certmanager: ## installs cert-manager operator in the cert-manager-operator namespace, cert-manager runs it cert-manager namespace
 	$(eval $(call vars,$@,cert-manager))
+ifeq ($(OKD), true)
+	$(MAKE) operator_namespace OPERATOR_NAMESPACE=cert-manager
+	bash scripts/gen-olm-cert-manager-okd.sh
+	oc apply -f ${OPERATOR_DIR}
+	while ! (oc get pod --no-headers=true -l app=cainjector -n ${NAMESPACE} | grep "cert-manager-cainjector"); do sleep 10; done
+	oc wait pod -n ${NAMESPACE} -l app=cainjector --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
+	while ! (oc get pod --no-headers=true -l app=webhook -n ${NAMESPACE} | grep "cert-manager-webhook"); do sleep 10; done
+	oc wait pod -n ${NAMESPACE} -l app=webhook --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
+	while ! (oc get pod --no-headers=true -l app=cert-manager -n ${NAMESPACE} | grep "cert-manager"); do sleep 10; done
+	oc wait pod -n ${NAMESPACE} -l app=cert-manager --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
+else
 	$(MAKE) operator_namespace
 	bash scripts/gen-olm-cert-manager.sh
 	oc apply -f ${OPERATOR_DIR}
@@ -2186,6 +2217,7 @@ certmanager: ## installs cert-manager operator in the cert-manager-operator name
 	oc wait pod -n ${NAMESPACE} -l app=webhook --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
 	while ! (oc get pod --no-headers=true -l app=cert-manager -n ${NAMESPACE} | grep "cert-manager"); do sleep 10; done
 	oc wait pod -n ${NAMESPACE} -l app=cert-manager --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
+endif
 
 .PHONY: certmanager_cleanup
 certmanager_cleanup: export NAMESPACE=$(if $(findstring 4.10,$(OCP_RELEASE)),openshift-cert-manager,cert-manager)
