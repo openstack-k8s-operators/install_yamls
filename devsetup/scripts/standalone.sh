@@ -25,9 +25,13 @@ COMPUTE_DRIVER=${2:-"libvirt"}
 EDPM_COMPUTE_ADDITIONAL_NETWORKS=${3:-'[]'}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
 EDPM_COMPUTE_NETWORK=${EDPM_COMPUTE_NETWORK:-default}
-EDPM_COMPUTE_NETWORK_IP=$(virsh net-dumpxml ${EDPM_COMPUTE_NETWORK} | xmllint --xpath 'string(/network/ip/@address)' -)
+STANDALONE_VM=${STANDALONE_VM:-"true"}
+if [[ ${STANDALONE_VM} == "true" ]]; then
+    EDPM_COMPUTE_NETWORK_IP=$(virsh net-dumpxml ${EDPM_COMPUTE_NETWORK} | xmllint --xpath 'string(/network/ip/@address)' -)
+fi
 IP_ADRESS_SUFFIX=${IP_ADRESS_SUFFIX:-"$((100+${EDPM_COMPUTE_SUFFIX}))"}
 IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADRESS_SUFFIX}"}
+OS_NET_CONFIG_IFACE=${OS_NET_CONFIG_IFACE:-"nic1"}
 GATEWAY=${GATEWAY:-"${EDPM_COMPUTE_NETWORK_IP}"}
 OUTPUT_DIR=${OUTPUT_DIR:-"${SCRIPTPATH}/../../out/edpm/"}
 SSH_KEY_FILE=${SSH_KEY_FILE:-"${OUTPUT_DIR}/ansibleee-ssh-key-id_rsa"}
@@ -99,6 +103,7 @@ export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openst
 export COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
 export IP=${IP}
 export GATEWAY=${GATEWAY}
+export STANDALONE_VM=${STANDALONE_VM}
 
 if [[ -f \$HOME/containers-prepare-parameters.yaml ]]; then
     echo "Using existing containers-prepare-parameters.yaml - contents:"
@@ -121,7 +126,6 @@ __EOF__
 sudo systemctl enable network
 sudo cp /tmp/net_config.yaml /etc/os-net-config/config.yaml
 sudo os-net-config -c /etc/os-net-config/config.yaml
-
 
 #---
 ## Copying files
@@ -164,6 +168,8 @@ cat << EOF > ${J2_VARS_FILE}
 additional_networks: ${EDPM_COMPUTE_ADDITIONAL_NETWORKS}
 ctlplane_cidr: 24
 ctlplane_ip: ${IP}
+os_net_config_iface: ${OS_NET_CONFIG_IFACE}
+standalone_vm: ${STANDALONE_VM}
 ctlplane_subnet: ${IP%.*}.0/24
 ctlplane_vip: ${IP%.*}.99
 ip_address_suffix: ${IP_ADRESS_SUFFIX}
