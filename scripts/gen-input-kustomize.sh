@@ -85,6 +85,9 @@ secretGenerator:
   - HeatDatabasePassword=${PASSWORD}
   - HeatAuthEncryptionKey=${HEAT_AUTH_ENCRYPTION_KEY}
   - SwiftPassword=${PASSWORD}
+- name: octavia-ca-passphrase
+  literals:
+  - server-ca-passphrase=${PASSWORD}
 generatorOptions:
   disableNameSuffixHash: true
   labels:
