@@ -12,7 +12,7 @@ sdk_version: v1.31.0
 go_version: 1.19.5
 
 # kustomize version to use (must be specific version)
-kustomize_version: v4.5.7
+kustomize_version: v5.0.3
 
 # kubectl version to use (must be specific version)
 kubectl_version: v1.25.7
