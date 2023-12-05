@@ -676,8 +676,10 @@ edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data pla
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
-	DEPLOY_DIR=${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services KIND=OpenStackDataPlaneService bash scripts/gen-edpm-services-kustomize.sh
-	oc kustomize ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services | oc apply -f -
+	oc apply -f ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
+	oc patch $(shell oc get csv -n ${OPERATOR_NAMESPACE} -o name | grep ansibleee) \
+	-n ${OPERATOR_NAMESPACE} --type='json' \
+	-p='[{"op":"replace", "path":"/spec/install/spec/deployments/0/spec/template/spec/containers/1/env/0", "value": {"name": "RELATED_IMAGE_ANSIBLEEE_IMAGE_URL_DEFAULT", "value": "${DATAPLANE_RUNNER_IMG}"}}]'
 	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
 	cp ${DATAPLANE_NODESET_CR} ${DEPLOY_DIR}
 	cp ${DATAPLANE_DEPLOYMENT_CR} ${DEPLOY_DIR}
@@ -716,8 +718,10 @@ edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install th
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
-	DEPLOY_DIR=${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services KIND=OpenStackDataPlaneService bash scripts/gen-edpm-services-kustomize.sh
-	oc kustomize ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services | oc apply -f -
+	oc apply -f ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
+	oc patch $(shell oc get csv -n openstack-operators -o name | grep ansibleee) \
+	-n openstack-operators --type='json' \
+	-p='[{"op":"replace", "path":"/spec/install/spec/deployments/0/spec/template/spec/containers/1/env/0", "value": {"name": "RELATED_IMAGE_ANSIBLEEE_IMAGE_URL_DEFAULT", "value": "${DATAPLANE_RUNNER_IMG}"}}]'
 	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
 	cp ${DATAPLANE_NODESET_BAREMETAL_CR} ${DEPLOY_DIR}
 	cp ${DATAPLANE_DEPLOYMENT_BAREMETAL_CR} ${DEPLOY_DIR}
