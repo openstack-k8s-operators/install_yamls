@@ -19,13 +19,13 @@ function create_migration_key {
     pushd "$(mktemp -d)"
     ssh-keygen -f ./id -t ecdsa-sha2-nistp521 -N ''
     oc create secret generic nova-migration-ssh-key \
-    -n openstack \
-    --from-file=ssh-privatekey=id \
-    --from-file=ssh-publickey=id.pub \
-    --type kubernetes.io/ssh-auth
+       -n ${NAMESPACE} \
+       --from-file=ssh-privatekey=id \
+       --from-file=ssh-publickey=id.pub \
+       --type kubernetes.io/ssh-auth
 
     rm id*
     popd
 }
 
-oc get secret nova-migration-ssh-key -n openstack || create_migration_key
+oc get secret nova-migration-ssh-key -n ${NAMESPACE} || create_migration_key
