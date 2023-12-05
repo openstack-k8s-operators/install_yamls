@@ -54,8 +54,6 @@ patches:
     - op: replace
       path: /spec/nodes/edpm-compute-0/ansible/ansibleHost
       value: ${EDPM_COMPUTE_IP}
-    - op: remove
-      path: /spec/nodes/edpm-compute-0/ansible/ansibleVars
     - op: replace
       path: /spec/nodes/edpm-compute-0/networks
       value:
