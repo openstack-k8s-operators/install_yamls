@@ -386,6 +386,7 @@ MANILA_KUTTL_NAMESPACE  ?= manila-kuttl-tests
 
 # Ceph
 CEPH_IMG            ?= quay.io/ceph/demo:latest-reef
+CEPH_CLUSTERS       ?= 1
 
 # NNCP
 NNCP_INTERFACE      ?= enp6s0
@@ -1937,21 +1938,18 @@ ceph_help: ## Ceph helper
 
 .PHONY: ceph
 ceph: export CEPH_IMAGE=${CEPH_IMG}
+ceph: export CEPH_INDEX=${CEPH_CLUSTERS}
 ceph: namespace input ## deploy the Ceph Pod
 	$(eval $(call vars,$@,ceph))
-	bash scripts/gen-ceph-kustomize.sh "build"
-	bash scripts/operator-deploy-resources.sh
-	bash scripts/gen-ceph-kustomize.sh "isready"
-	bash scripts/gen-ceph-kustomize.sh "config"
-	bash scripts/gen-ceph-kustomize.sh "cephfs"
-	bash scripts/gen-ceph-kustomize.sh "pools"
-	bash scripts/gen-ceph-kustomize.sh "secret"
-	bash scripts/gen-ceph-kustomize.sh "post"
+	bash scripts/gen-ceph-kustomize.sh
 
 .PHONY: ceph_cleanup
+ceph_cleanup: export CEPH_INDEX=${CEPH_CLUSTERS}
 ceph_cleanup: ## deletes the ceph pod
 	$(eval $(call vars,$@,ceph))
-	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	for number in $(shell seq 0 $$((${CEPH_INDEX}))) ; do \
+		oc kustomize ${DEPLOY_DIR}/ceph-$$number | oc delete --ignore-not-found=true -f -; \
+	done
 	${CLEANUP_DIR_CMD} ${DEPLOY_DIR}
 
 ##@ NMSTATE

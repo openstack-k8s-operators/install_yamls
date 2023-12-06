@@ -33,13 +33,15 @@ if [ ! -d ${DEPLOY_DIR} ]; then
     mkdir -p ${DEPLOY_DIR}
 fi
 
+
 pushd ${DEPLOY_DIR}
 
-CEPH_TIMEOUT=${CEPH_TIMEOUT:-30}
+CEPH_INDEX=${CEPH_INDEX:-0}
+CEPH_TIMEOUT=${CEPH_TIMEOUT:-90}
 CEPH_HOSTNETWORK=${CEPH_HOSTNETWORK:-true}
 CEPH_POOLS=("volumes" "images" "backups" "cephfs.cephfs.meta" "cephfs.cephfs.data")
 CEPH_DAEMONS="osd,mds,rgw"
-CEPH_DATASIZE=${CEPH_DATASIZE:-500Mi}
+CEPH_DATASIZE=${CEPH_DATASIZE:-2Gi}
 CEPH_WORKER=${CEPH_WORKER:-""}
 CEPH_MON_CONF=${CEPH_MON_CONF:-""}
 CEPH_DEMO_UID=${CEPH_DAEMON:-0}
@@ -49,6 +51,9 @@ RGW_NAME=${RGW_NAME:-"ceph"}
 DOMAIN=$(oc -n $NAMESPACE get ingresses.config/cluster -o jsonpath={.spec.domain})
 # make input should be called before ceph to make sure we can access this info
 RGW_PASS=$(oc -n $NAMESPACE get secrets "$OSP_SECRET" -o jsonpath={.data.SwiftPassword} | base64 -d)
+VOLUMEMOUNTS=${VOLUMEMOUNTS:-""}
+VOLUMES=${VOLUMES:-""}
+RESOURCES=${RESOURCES:-""}
 
 
 function add_ceph_pod {
@@ -56,7 +61,7 @@ cat <<EOF >ceph-pod.yaml
 apiVersion: v1
 kind: Pod
 metadata:
-  name: ceph
+  name: ceph-$index
   namespace: $NAMESPACE
   labels:
     app.kubernetes.io/name: ceph
@@ -64,7 +69,7 @@ metadata:
 spec:
   hostNetwork: $CEPH_HOSTNETWORK
   containers:
-   - image: quay.io/ceph/ceph:v18
+   - image: quay.io/ceph/demo:latest-reef
      name: ceph
      env:
      - name: MON_IP
@@ -79,23 +84,9 @@ spec:
        value: "$CEPH_DEMO_UID"
      - name: RGW_NAME
        value: "$RGW_NAME"
-     volumeMounts:
-      - mountPath: /var/lib/ceph
-        name: data
-      - mountPath: /var/log/ceph
-        name: log
-      - mountPath: /run/ceph
-        name: run
-  volumes:
-  - name: data
-    emptyDir:
-      sizeLimit: "$CEPH_DATASIZE"
-  - name: run
-    emptyDir:
-      sizeLimit: "$CEPH_DATASIZE"
-  - name: log
-    emptyDir:
-      sizeLimit: "$CEPH_DATASIZE"
+     volumeMounts: $VOLUMEMOUNTS
+     resources: $RESOURCES
+  volumes: $VOLUMES
   securityContext:
     runAsUser: 0
     seccompProfile:
@@ -146,8 +137,9 @@ function bootstrap_ceph {
 }
 
 function ceph_is_ready {
+    local index="$1"
     echo "Waiting the cluster to be up"
-    until oc rsh -n $NAMESPACE ceph ls /etc/ceph/I_AM_A_DEMO &> /dev/null; do
+    until oc rsh -n $NAMESPACE "ceph-$index" ls /etc/ceph/I_AM_A_DEMO &> /dev/null; do
         sleep 1
         echo -n .
         (( CEPH_TIMEOUT-- ))
@@ -157,14 +149,15 @@ function ceph_is_ready {
 }
 
 function create_pool {
+    local index="$1"
 
     [ "${#CEPH_POOLS[@]}" -eq 0 ] && return;
 
     for pool in "${CEPH_POOLS[@]}"; do
         app="rbd"
-        oc rsh -n $NAMESPACE ceph ceph osd pool create $pool 4
+        oc rsh -n $NAMESPACE "ceph-$index" ceph osd pool create $pool 4
         [[ $pool = *"cephfs"* ]] && app=cephfs
-        oc rsh -n $NAMESPACE ceph ceph osd pool application enable $pool $app
+        oc rsh -n $NAMESPACE "ceph-$index" ceph osd pool application enable $pool $app
     done
 }
 
@@ -181,6 +174,7 @@ function create_key {
     local client=$1
     local caps
     local osd_caps
+    local index=$2
 
     if [ "${#CEPH_POOLS[@]}" -eq 0 ]; then
         osd_caps="allow *"
@@ -189,38 +183,40 @@ function create_key {
         osd_caps="allow class-read object_prefix rbd_children, $caps"
     fi
     # do not log the key if exists
-    oc rsh -n $NAMESPACE ceph ceph auth get-or-create "$client" mgr "allow rw" mon "allow r" osd "$osd_caps" >/dev/null
+    oc rsh -n $NAMESPACE "ceph-$index" ceph auth get-or-create "$client" mgr "allow rw" mon "allow r" osd "$osd_caps" >/dev/null
 }
 
 function create_secret {
 
     SECRET_NAME="$1"
-
+    local index="$2"
     TEMPDIR=`mktemp -d`
     local client="client.openstack"
     trap 'rm -rf -- "$TEMPDIR"' EXIT
-    echo "Copying Ceph config files from the container to $TEMPDIR"
-    oc rsync -n $NAMESPACE ceph:/etc/ceph/ceph.conf $TEMPDIR
+    # Generate minimal ceph.conf that will be used to access the cluster
+    echo "Generate minimal ceph-$index.conf"
+    oc rsh -n $NAMESPACE "ceph-$index" ceph config generate-minimal-conf > $TEMPDIR/ceph-$index.conf
     echo 'Create OpenStack keyring'
     # we build the cephx openstack key
-    create_key "$client"
+    create_key "$client" "$index"
     # do not log the exported key
     echo "Copying OpenStack keyring from the container to $TEMPDIR"
-    oc rsh -n $NAMESPACE ceph ceph auth export "$client" -o /etc/ceph/ceph.$client.keyring >/dev/null
-    oc rsync -n $NAMESPACE ceph:/etc/ceph/ceph.$client.keyring $TEMPDIR
-
+    oc rsh -n $NAMESPACE "ceph-$index" ceph auth export "$client" -o /etc/ceph/ceph-$index.$client.keyring >/dev/null
+    oc rsync -n $NAMESPACE "ceph-$index":/etc/ceph/ceph-$index.$client.keyring $TEMPDIR
     echo "Replacing openshift secret $SECRET_NAME"
     oc delete secret "$SECRET_NAME" -n $NAMESPACE 2>/dev/null || true
-    oc create secret generic $SECRET_NAME --from-file=$TEMPDIR/ceph.conf --from-file=$TEMPDIR/ceph.$client.keyring -n $NAMESPACE
+    oc create secret generic $SECRET_NAME --from-file=$TEMPDIR/ceph-$index.conf --from-file=$TEMPDIR/ceph-$index.$client.keyring -n $NAMESPACE
 }
 
 function create_volume {
     # Create cephfs volume for manila service
+    local index="$1"
     echo "Creating cephfs volume"
-    oc rsh -n $NAMESPACE ceph ceph fs volume create cephfs >/dev/null || true
+    oc rsh -n $NAMESPACE "ceph-$index" ceph fs volume create cephfs >/dev/null || true
 }
 
 function config_ceph {
+    local index="$1"
     # Define any config option that should be set in the mgr database
     # via associative arrays and inject to the Ceph Pod
     # Define and set config options
@@ -246,18 +242,19 @@ function config_ceph {
 
     # Apply config settings to Ceph
     for key in "${!config_keys[@]}"; do
-        oc exec -n $NAMESPACE -it ceph -- sh -c "ceph config set global $key ${config_keys[$key]}"
+        oc exec -n $NAMESPACE -it "ceph-$index" -- sh -c "ceph config set global $key ${config_keys[$key]}"
     done
 }
 
 function config_rgw {
+    local index="$1"
     echo "Restart RGW and reload the config"
-    oc -n $NAMESPACE rsh ceph pkill radosgw
+    oc -n $NAMESPACE rsh "ceph-$index" pkill radosgw
     # RGW data and options
     name="client.rgw.$RGW_NAME"
     path="/var/lib/ceph/radosgw/ceph-rgw.$RGW_NAME/keyring"
     options=" --default-log-to-stderr=true --err-to-stderr=true --default-log-to-file=false"
-    oc -n $NAMESPACE rsh ceph radosgw --cluster ceph --setuser ceph --setgroup ceph "$options" -n "$name" -k "$path"
+    oc -n $NAMESPACE rsh "ceph-$index" radosgw --cluster ceph --setuser ceph --setgroup ceph "$options" -n "$name" -k "$path"
 }
 
 function usage {
@@ -288,6 +285,97 @@ function usage {
     fi
 }
 
+## RUN THE ACTION
+function run {
+    local action="$1"
+    local index="$2"
+    case "$action" in
+        "build")
+            bootstrap_ceph
+            add_ceph_pod "$index"
+            ceph_kustomize
+            kustomization_add_resources
+            ;;
+        "config")
+            config_ceph "$index"
+            ;;
+        "secret")
+            create_secret "ceph-conf-files-$index" "$index"
+            ;;
+        "pools")
+            create_pool "$index"
+            ;;
+        "isready")
+            ceph_is_ready "$index"
+            ;;
+        "cephfs")
+            create_volume "$index"
+            ;;
+        "help")
+            usage "$2"
+            ;;
+        "post")
+            config_rgw "$index"
+            ;;
+    esac
+}
+
+
+# MAIN
+function make_ceph {
+    local index="$1"
+    run "build" "$index"
+    DEPLOY_DIR=${DEPLOY_DIR}/ceph-"$index" . ${SCRIPTPATH}/operator-deploy-resources.sh
+    run "isready" "$index"
+    run "config" "$index"
+    run "cephfs" "$index"
+    run "pools" "$index"
+    run "secret" "$index"
+    run "post" "$index"
+}
+
+if [[ "$CEPH_INDEX" -eq 0 ]]; then
+VOLUMEMOUNTS=$(cat <<END
+
+       - mountPath: /var/lib/ceph
+         name: "data-0"
+       - mountPath: /var/log/ceph
+         name: "log-0"
+       - mountPath: /run/ceph
+         name: "run-0"
+       - mountPath: /etc/ceph
+         name: "etc-0"
+END
+)
+VOLUMES=$(cat <<END
+
+  - name: "etc-0"
+    emptyDir:
+      sizeLimit: "$CEPH_DATASIZE"
+  - name: "data-0"
+    emptyDir:
+      sizeLimit: "$CEPH_DATASIZE"
+  - name: "run-0"
+    emptyDir:
+      sizeLimit: "$CEPH_DATASIZE"
+  - name: "log-0"
+    emptyDir:
+      sizeLimit: "$CEPH_DATASIZE"
+END
+)
+else
+RESOURCES=$(cat <<END
+
+       requests:
+         ephemeral-storage: "$CEPH_DATASIZE"
+       limits:
+         ephemeral-storage: "$CEPH_DATASIZE"
+END
+)
+echo "WARNING: Can't use HOSTNETWORKING with Multiple Ceph clusters on the same node"
+CEPH_HOSTNETWORK="false"
+fi
+
 # if CEPH_HOSTNETWORK is false, we always need
 # to produce the following snippet that is
 # supposed to get the IP assigned to the
@@ -304,33 +392,10 @@ END
 )
 fi
 
-## MAIN
-case "$1" in
-    "build")
-        bootstrap_ceph
-        add_ceph_pod
-        ceph_kustomize
-        kustomization_add_resources
-        ;;
-    "config")
-        config_ceph
-        ;;
-    "secret")
-        create_secret "ceph-conf-files"
-        ;;
-    "pools")
-        create_pool
-        ;;
-    "isready")
-        ceph_is_ready
-        ;;
-    "cephfs")
-        create_volume
-        ;;
-    "help")
-        usage "$2"
-        ;;
-    "post")
-        config_rgw
-        ;;
-esac
+# deploy ceph
+for ((i=0; i<$CEPH_INDEX; i++)); do
+    mkdir -p -p "$DEPLOY_DIR"/ceph-"$i"
+    pushd "$DEPLOY_DIR"/ceph-"$i"
+    make_ceph "$i"
+    popd
+done
