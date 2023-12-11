@@ -1440,13 +1440,15 @@ keystone_kuttl_run: ## runs kuttl tests for the keystone operator, assumes that 
 keystone_kuttl: export NAMESPACE = ${KEYSTONE_KUTTL_NAMESPACE}
 # Set the value of $KEYSTONE_KUTTL_NAMESPACE if you want to run the keystone
 # kuttl tests in a namespace different than the default (keystone-kuttl-tests)
-keystone_kuttl: kuttl_db_prep keystone keystone_deploy_prep ## runs kuttl tests for the keystone operator. Installs keystone operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+keystone_kuttl: kuttl_db_prep rabbitmq rabbitmq_deploy keystone keystone_deploy_prep ## runs kuttl tests for the keystone operator. Installs keystone operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,keystone))
 	make wait
 	make keystone_kuttl_run
 	make deploy_cleanup
 	make keystone_cleanup
 	make kuttl_db_cleanup
+	make rabbitmq_deploy_cleanup
+	make rabbitmq_cleanup
 	bash scripts/restore-namespace.sh
 
 .PHONY: barbican_kuttl_run
