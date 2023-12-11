@@ -32,6 +32,7 @@ if sudo systemctl is-active libvirtd.service; then
 else
     LIBVIRT_SOCKET=""
 fi
+IMAGE=${SUSHY_EMULATOR_IMAGE:-"quay.io/metal3-io/sushy-tools:latest"}
 
 # TODO: Make CRC_NETWORK_NAME a parameter so that this script can be used on
 # separate hypervisor, against any OCP.
@@ -167,7 +168,7 @@ spec:
     app.kubernetes.io/name: sushy-emulator
   containers:
   - name: sushy-emulator
-    image: quay.io/metal3-io/sushy-tools:latest
+    image: ${IMAGE}
     command: ["/usr/local/bin/sushy-emulator", "--config", "/etc/sushy-emulator/config.conf"]
     ports:
     - containerPort: 8000
