@@ -362,6 +362,7 @@ DATAPLANE_KUTTL_DIR                              ?= ${OPERATOR_BASE_DIR}/datapla
 DATAPLANE_KUTTL_NAMESPACE                        ?= dataplane-kuttl-tests
 BM_CTLPLANE_INTERFACE                            ?= enp1s0
 BM_ROOT_PASSWORD_SECRET                          ?=
+GENERATE_SSH_KEYS				 ?= true
 
 # Manila
 MANILA_IMG              ?= quay.io/openstack-k8s-operators/manila-operator-index:${OPENSTACK_K8S_TAG}
@@ -650,6 +651,12 @@ openstack_deploy_cleanup: namespace netconfig_deploy_cleanup ## cleans up the se
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f - || true
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/openstack-operator ${DEPLOY_DIR}
 
+.PHONY: edpm_deploy_generate_keys
+edpm_deploy_generate_keys:
+	$(eval $(call vars,$@,dataplane))
+	devsetup/scripts/gen-ansibleee-ssh-key.sh
+	bash scripts/gen-edpm-nova-migration-ssh-key.sh
+
 .PHONY: edpm_deploy_prep
 edpm_deploy_prep: export KIND=OpenStackDataPlaneNodeSet
 edpm_deploy_prep: export EDPM_ANSIBLE_SECRET=${DATAPLANE_ANSIBLE_SECRET}
@@ -676,16 +683,12 @@ edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data pla
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
-	oc apply -f ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
-	oc patch $(shell oc get csv -n ${OPERATOR_NAMESPACE} -o name | grep ansibleee) \
-	-n ${OPERATOR_NAMESPACE} --type='json' \
-	-p='[{"op":"replace", "path":"/spec/install/spec/deployments/0/spec/template/spec/containers/1/env/0", "value": {"name": "RELATED_IMAGE_ANSIBLEEE_IMAGE_URL_DEFAULT", "value": "${DATAPLANE_RUNNER_IMG}"}}]'
-	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
 	cp ${DATAPLANE_NODESET_CR} ${DEPLOY_DIR}
 	cp ${DATAPLANE_DEPLOYMENT_CR} ${DEPLOY_DIR}
 	bash scripts/gen-edpm-kustomize.sh
-	devsetup/scripts/gen-ansibleee-ssh-key.sh
-	bash scripts/gen-edpm-nova-migration-ssh-key.sh
+ifeq ($(GENERATE_SSH_KEYS), true)
+	make edpm_deploy_generate_keys
+endif
 
 .PHONY: edpm_deploy_cleanup
 edpm_deploy_cleanup: namespace ## cleans up the edpm instance, Does not affect the operator.
@@ -696,6 +699,11 @@ edpm_deploy_cleanup: namespace ## cleans up the edpm instance, Does not affect t
 .PHONY: edpm_deploy
 edpm_deploy: input edpm_deploy_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,dataplane))
+	oc apply -f ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
+	oc patch $(shell oc get csv -n ${OPERATOR_NAMESPACE} -o name | grep ansibleee) \
+	-n ${OPERATOR_NAMESPACE} --type='json' \
+	-p='[{"op":"replace", "path":"/spec/install/spec/deployments/0/spec/template/spec/containers/1/env/0", "value": {"name": "RELATED_IMAGE_ANSIBLEEE_IMAGE_URL_DEFAULT", "value": "${DATAPLANE_RUNNER_IMG}"}}]'
+	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 
 .PHONY: edpm_deploy_baremetal_prep
@@ -718,20 +726,21 @@ edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install th
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
+	cp ${DATAPLANE_NODESET_BAREMETAL_CR} ${DEPLOY_DIR}
+	cp ${DATAPLANE_DEPLOYMENT_BAREMETAL_CR} ${DEPLOY_DIR}
+	bash scripts/gen-edpm-baremetal-kustomize.sh
+ifeq ($(GENERATE_SSH_KEYS), true)
+	make edpm_deploy_generate_keys
+endif
+
+.PHONY: edpm_deploy_baremetal
+edpm_deploy_baremetal: input edpm_deploy_baremetal_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,dataplane))
 	oc apply -f ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
 	oc patch $(shell oc get csv -n openstack-operators -o name | grep ansibleee) \
 	-n openstack-operators --type='json' \
 	-p='[{"op":"replace", "path":"/spec/install/spec/deployments/0/spec/template/spec/containers/1/env/0", "value": {"name": "RELATED_IMAGE_ANSIBLEEE_IMAGE_URL_DEFAULT", "value": "${DATAPLANE_RUNNER_IMG}"}}]'
 	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
-	cp ${DATAPLANE_NODESET_BAREMETAL_CR} ${DEPLOY_DIR}
-	cp ${DATAPLANE_DEPLOYMENT_BAREMETAL_CR} ${DEPLOY_DIR}
-	bash scripts/gen-edpm-baremetal-kustomize.sh
-	devsetup/scripts/gen-ansibleee-ssh-key.sh
-	bash scripts/gen-edpm-nova-migration-ssh-key.sh
-
-.PHONY: edpm_deploy_baremetal
-edpm_deploy_baremetal: input edpm_deploy_baremetal_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
-	$(eval $(call vars,$@,dataplane))
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 
 .PHONY: edpm_wait_deploy_baremetal
