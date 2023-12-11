@@ -18,26 +18,36 @@ MY_TMP_DIR="$(mktemp -d)"
 trap 'rm -rf -- "$MY_TMP_DIR"' EXIT
 
 NODE_NAME_PREFIX=${NODE_NAME_PREFIX:-"crc-bmaas"}
-LIBVIRT_USER=${LIBVIRT_USER:-"sushyemu"}
 NAMESPACE=${SUSHY_EMULATOR_NAMESPACE:-"sushy-emulator"}
-SSH_ALGORITHM=rsa
-SSH_KEY_FILE=bmaas-ssh-key-id_rsa
-SSH_KEY_SIZE=4096
-CRC_NETWORK_NAME=crc
+DRIVER=${SUSHY_EMULATOR_DRIVER:-"libvirt"}
 INGRESS_DOMAIN=$(oc get ingresses.config/cluster -o jsonpath={.spec.domain})
 REDFISH_USERNAME=${REDFISH_USERNAME:-"admin"}
 REDFISH_PASSWORD=${REDFISH_PASSWORD:-"password"}
-if sudo systemctl is-active libvirtd.service; then
-    LIBVIRT_SOCKET="?socket=/var/run/libvirt/libvirt-sock"
-else
-    LIBVIRT_SOCKET=""
-fi
 IMAGE=${SUSHY_EMULATOR_IMAGE:-"quay.io/metal3-io/sushy-tools:latest"}
 
-# TODO: Make CRC_NETWORK_NAME a parameter so that this script can be used on
-# separate hypervisor, against any OCP.
-LIBVIRT_IP_ADDRESS=$(nmcli connection show "${CRC_NETWORK_NAME}" | grep ipv4.addresses | cut -d / -f 1 | awk '{ print $2 }')
-INSTANCES=$(virsh --connect=qemu:///system list --all --uuid --name | grep "${NODE_NAME_PREFIX}" | awk '{ printf "\"" $1 "\", " }')
+if [ $DRIVER = "libvirt" ]; then
+    CRC_NETWORK_NAME=crc
+    SSH_ALGORITHM=rsa
+    SSH_KEY_FILE=bmaas-ssh-key-id_rsa
+    SSH_KEY_SIZE=4096
+    LIBVIRT_USER=${LIBVIRT_USER:-"sushyemu"}
+    if sudo systemctl is-active libvirtd.service; then
+        LIBVIRT_SOCKET="?socket=/var/run/libvirt/libvirt-sock"
+    else
+        LIBVIRT_SOCKET=""
+    fi
+    # TODO: Make CRC_NETWORK_NAME a parameter so that this script can be used on
+    # separate hypervisor, against any OCP.
+    LIBVIRT_IP_ADDRESS=$(nmcli connection show "${CRC_NETWORK_NAME}" | grep ipv4.addresses | cut -d / -f 1 | awk '{ print $2 }')
+    INSTANCES=$(virsh --connect=qemu:///system list --all --uuid --name | grep "${NODE_NAME_PREFIX}" | awk '{ printf "\"" $1 "\" " }' | sed -e 's/" "/", "/' -e 's/^"/["/' -e 's/" $/"]/')
+    LIBVIRT_URI="'qemu+ssh://${LIBVIRT_USER}@${LIBVIRT_IP_ADDRESS}/system${LIBVIRT_SOCKET}'"
+    EMULATOR_OS_CLOUD="None"
+elif [ $DRIVER = "openstack" ]; then
+    OS_CLIENT_CONFIG_FILE=${SUSHY_EMULATOR_OS_CLIENT_CONFIG_FILE:-/etc/openstack/clouds.yaml}
+    INSTANCES=$(openstack --os-cloud=${SUSHY_EMULATOR_OS_CLOUD} server list --name "edpm-compute.*" -f json -c ID | jq -c [.[].ID])
+    LIBVIRT_URI="None"
+    EMULATOR_OS_CLOUD="'${SUSHY_EMULATOR_OS_CLOUD}'"
+fi
 
 function create_sushy_emulator_namespace {
     echo "Creating namespace ${NAMESPACE}"
@@ -93,7 +103,7 @@ data:
 $(htpasswd -nbB "${REDFISH_USERNAME}" "${REDFISH_PASSWORD}" | sed 's/^/    /')
   config: |
     # Listen on all local IP interfaces
-    SUSHY_EMULATOR_LISTEN_IP = u'0.0.0.0'
+    SUSHY_EMULATOR_LISTEN_IP = '0.0.0.0'
 
     # Bind to TCP port 8000
     SUSHY_EMULATOR_LISTEN_PORT = 8000
@@ -105,13 +115,13 @@ $(htpasswd -nbB "${REDFISH_USERNAME}" "${REDFISH_PASSWORD}" | sed 's/^/    /')
     SUSHY_EMULATOR_SSL_KEY = None
 
     # If authentication is desired, set this to an htpasswd file.
-    SUSHY_EMULATOR_AUTH_FILE = u'/etc/sushy-emulator/.htpasswd'
+    SUSHY_EMULATOR_AUTH_FILE = '/etc/sushy-emulator/.htpasswd'
 
     # The OpenStack cloud ID to use. This option enables OpenStack driver.
-    SUSHY_EMULATOR_OS_CLOUD = None
+    SUSHY_EMULATOR_OS_CLOUD = ${EMULATOR_OS_CLOUD}
 
     # The libvirt URI to use. This option enables libvirt driver.
-    SUSHY_EMULATOR_LIBVIRT_URI = u'qemu+ssh://${LIBVIRT_USER}@${LIBVIRT_IP_ADDRESS}/system${LIBVIRT_SOCKET}'
+    SUSHY_EMULATOR_LIBVIRT_URI = ${LIBVIRT_URI}
 
     # Instruct the libvirt driver to ignore any instructions to
     # set the boot device. Allowing the UEFI firmware to instead
@@ -124,7 +134,7 @@ $(htpasswd -nbB "${REDFISH_USERNAME}" "${REDFISH_PASSWORD}" | sed 's/^/    /')
     # This list contains the identities of instances that the driver will filter by.
     # It is useful in a tenant environment where only some instances represent
     # virtual baremetal.
-    SUSHY_EMULATOR_ALLOWED_INSTANCES = [${INSTANCES::-2}]
+    SUSHY_EMULATOR_ALLOWED_INSTANCES = ${INSTANCES}
 EOF
 
     # cat ${MY_TMP_DIR}/config-map.yaml
@@ -133,7 +143,8 @@ EOF
 
 function create_sushy_emulator_secret {
     echo "Creating sushy-emulator-secret"
-    cat << EOF > "${MY_TMP_DIR}/secret.yaml"
+    if [ $DRIVER = "libvirt" ]; then
+        cat << EOF > "${MY_TMP_DIR}/secret.yaml"
 apiVersion: v1
 kind: Secret
 metadata:
@@ -146,7 +157,37 @@ $(base64 < "${MY_TMP_DIR}/${SSH_KEY_FILE}.pub" | sed 's/^/        /')
 $(base64 < "${MY_TMP_DIR}/${SSH_KEY_FILE}" | sed 's/^/        /')
     ssh-known-hosts: |
 $(ssh-keyscan -H "${LIBVIRT_IP_ADDRESS}" | base64 | sed 's/^/        /')
+---
+apiVersion: v1
+kind: Secret
+metadata:
+    name: os-client-config
+    namespace: ${NAMESPACE}
+data:
+    openstack-clouds-yaml: ""
 EOF
+    elif [ $DRIVER = "openstack" ]; then
+        cat << EOF > "${MY_TMP_DIR}/secret.yaml"
+apiVersion: v1
+kind: Secret
+metadata:
+    name: sushy-emulator-secret
+    namespace: ${NAMESPACE}
+data:
+    ssh-publickey: ""
+    ssh-privatekey: ""
+    ssh-known-hosts: ""
+---
+apiVersion: v1
+kind: Secret
+metadata:
+    name: os-client-config
+    namespace: ${NAMESPACE}
+data:
+    openstack-clouds-yaml: |
+$(cat ${OS_CLIENT_CONFIG_FILE} | base64 | sed 's/^/        /')
+EOF
+    fi
 
     # cat ${MY_TMP_DIR}/secret.yaml
     oc apply -f "${MY_TMP_DIR}/secret.yaml"
@@ -178,6 +219,8 @@ spec:
       readOnly: true
     - name: sushy-emulator-config
       mountPath: /etc/sushy-emulator/
+    - name: os-client-config
+      mountPath: /etc/openstack/
   volumes:
   - name: ssh-secret
     secret:
@@ -203,6 +246,13 @@ spec:
       - key: htpasswd
         path: .htpasswd
         mode: 0600 # u=rw,g=r,o=r
+  - name: os-client-config
+    secret:
+      secretName: os-client-config
+      defaultMode: 0644 # u=rw,g=r,o=r
+      items:
+      - key: openstack-clouds-yaml
+        path: clouds.yaml
   restartPolicy: OnFailure
 EOF
 
@@ -262,8 +312,10 @@ function create {
     if ! rpm --quiet -q --whatprovides httpd-tools; then
         sudo dnf -y install httpd-tools || { echo "Unable to install dependency httpd-tools"; exit 1; }
     fi
-    create_sushy_emulator_user
-    generate_ssh_keypair
+    if [ $DRIVER = "libvirt" ]; then
+        create_sushy_emulator_user
+        generate_ssh_keypair
+    fi
     create_sushy_emulator_namespace
     create_sushy_emulator_config
     create_sushy_emulator_secret
@@ -278,11 +330,13 @@ function cleanup {
     else
         echo "Not deleting namespace ${NAMESPACE}, it does not exist"
     fi
-    if getent passwd "${LIBVIRT_USER}" > /dev/null 2>&1; then
-        echo -n "Deleting user ${LIBVIRT_USER}"
-        sudo userdel --remove "${LIBVIRT_USER}" && echo " :: OK" || echo " :: ERROR - failed to delete user"
-    else
-        echo "Not deleting user ${LIBVIRT_USER}, user does not exist"
+    if [ $DRIVER = "libvirt" ]; then
+        if getent passwd "${LIBVIRT_USER}" > /dev/null 2>&1; then
+            echo -n "Deleting user ${LIBVIRT_USER}"
+            sudo userdel --remove "${LIBVIRT_USER}" && echo " :: OK" || echo " :: ERROR - failed to delete user"
+        else
+            echo "Not deleting user ${LIBVIRT_USER}, user does not exist"
+        fi
     fi
 }
 
