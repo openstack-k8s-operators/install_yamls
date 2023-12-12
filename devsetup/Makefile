@@ -73,7 +73,10 @@ BMAAS_NODE_COUNT ?= 1
 BMAAS_REDFISH_USERNAME ?= admin
 BMAAS_REDFISH_PASSWORD ?= password
 BMAAS_SUSHY_EMULATOR_NAMESPACE ?= sushy-emulator
+BMAAS_SUSHY_EMULATOR_DRIVER ?= libvirt
 BMAAS_SUSHY_EMULATOR_IMAGE ?= quay.io/metal3-io/sushy-tools:latest
+BMAAS_SUSHY_EMULATOR_OS_CLOUD ?= openstack
+BMAAS_SUSHY_EMULATOR_OS_CLIENT_CONFIG_FILE ?= /etc/openstack/clouds.yaml
 BMAAS_LIBVIRT_USER ?= sushyemu
 BMAAS_ROUTE_LIBVIRT_NETWORKS ?= ${BMAAS_NETWORK_NAME},crc,default
 
@@ -402,7 +405,10 @@ bmaas_virtual_bms_cleanup: ## Cleanup libvirt VM for BMaaS
 bmaas_sushy_emulator: export NODE_NAME_PREFIX = ${BMAAS_INSTANCE_NAME_PREFIX}
 bmaas_sushy_emulator: export LIBVIRT_USER = ${BMAAS_LIBVIRT_USER}
 bmaas_sushy_emulator: export SUSHY_EMULATOR_NAMESPACE = ${BMAAS_SUSHY_EMULATOR_NAMESPACE}
+bmaas_sushy_emulator: export SUSHY_EMULATOR_DRIVER = ${BMAAS_SUSHY_EMULATOR_DRIVER}
 bmaas_sushy_emulator: export SUSHY_EMULATOR_IMAGE = ${BMAAS_SUSHY_EMULATOR_IMAGE}
+bmaas_sushy_emulator: export SUSHY_EMULATOR_OS_CLOUD = ${BMAAS_SUSHY_EMULATOR_OS_CLOUD}
+bmaas_sushy_emulator: export SUSHY_EMULATOR_OS_CLIENT_CONFIG_FILE = ${BMAAS_SUSHY_EMULATOR_OS_CLIENT_CONFIG_FILE}
 bmaas_sushy_emulator: export REDFISH_USERNAME = ${BMAAS_REDFISH_USERNAME}
 bmaas_sushy_emulator: export REDFISH_PASSWORD = ${BMAAS_REDFISH_PASSWORD}
 bmaas_sushy_emulator: ## Create BMaaS sushy-emulator (Virtual RedFish)
@@ -412,6 +418,8 @@ bmaas_sushy_emulator: ## Create BMaaS sushy-emulator (Virtual RedFish)
 bmaas_sushy_emulator_cleanup: export NODE_NAME_PREFIX = ${BMAAS_INSTANCE_NAME_PREFIX}
 bmaas_sushy_emulator_cleanup: export LIBVIRT_USER = ${BMAAS_LIBVIRT_USER}
 bmaas_sushy_emulator_cleanup: export SUSHY_EMULATOR_NAMESPACE = ${BMAAS_SUSHY_EMULATOR_NAMESPACE}
+bmaas_sushy_emulator_cleanup: export SUSHY_EMULATOR_DRIVER = ${BMAAS_SUSHY_EMULATOR_DRIVER}
+bmaas_sushy_emulator_cleanup: export SUSHY_EMULATOR_OS_CLOUD = ${BMAAS_SUSHY_EMULATOR_OS_CLOUD}
 bmaas_sushy_emulator_cleanup: export REDFISH_USERNAME = ${BMAAS_REDFISH_USERNAME}
 bmaas_sushy_emulator_cleanup: export REDFISH_PASSWORD = ${BMAAS_REDFISH_PASSWORD}
 bmaas_sushy_emulator_cleanup: ## Cleanup BMaaS sushy-emulator (Virtual RedFish)
