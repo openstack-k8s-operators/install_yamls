@@ -70,7 +70,7 @@ metadata:
     app: openstack
 spec:
   bmc:
-    address: redfish+http://sushy-emulator.apps-crc.testing/redfish/v1/Systems/${!uuid_var}
+    address: redfish-virtualmedia+http://sushy-emulator.apps-crc.testing/redfish/v1/Systems/${!uuid_var}
     credentialsName: node-${i}-bmc-secret
   bootMACAddress: ${!mac_var}
   bootMode: UEFI
