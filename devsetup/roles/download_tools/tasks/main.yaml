@@ -87,6 +87,20 @@
     mode: '0755'
     timeout: 30
 
+- name: Download and extract yq
+  ansible.builtin.unarchive:
+    src:
+      https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64.tar.gz
+    dest: "{{ lookup('env', 'HOME') }}/bin/"
+    remote_src: true
+    mode: '0755'
+
+- name: Link yq_linux_amd64 as yq
+  ansible.builtin.file:
+    src: "{{ lookup('env', 'HOME') }}/bin/yq_linux_amd64"
+    dest: "{{ lookup('env', 'HOME') }}/bin/yq"
+    state: link
+
 - name: Set proper golang on the system
   become: true
   become_user: root
