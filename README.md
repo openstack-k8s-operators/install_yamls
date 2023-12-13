@@ -84,7 +84,7 @@ make input
 make openstack
 ```
 
-**Note** this will also run the openstack_prep target, which if NETWORK_ISOLATION == true will install nmstate and metallb operator, configure the secondary interface of the crc VM via nncp, creates the network-attachment-definitions for internalapi, storage and tenant network. Also the metallb l2advertisement and the ipaddresspools get created.
+**Note** this will also run the openstack_prep target, which if NETWORK_ISOLATION == true will install nmstate and metallb operator, configure the secondary interface of the crc VM via nncp, creates the network-attachment-definitions for datacentre, internalapi, storage and tenant network. Also the metallb l2advertisement and the ipaddresspools get created.
 
 The following NADs with ip ranges get configured:
 ```

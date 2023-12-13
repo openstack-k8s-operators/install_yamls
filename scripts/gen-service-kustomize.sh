@@ -230,6 +230,24 @@ if [ -n "$BGP" ]; then
 EOF
 fi
 
+if [[ "${KIND}" == "OpenStackControlPlane" && "${OVN_NICMAPPING}" == "true" ]]; then
+cat <<EOF >>kustomization.yaml
+- patch: |-
+    apiVersion: core.openstack.org/v1beta1
+    kind: ${KIND}
+    metadata:
+      name: unused
+    spec:
+      ovn:
+        template:
+          ovnController:
+            nicMappings:
+              datacentre: ${BRIDGE_NAME}
+  target:
+    kind: ${KIND}
+EOF
+fi
+
 kustomization_add_resources
 
 popd
