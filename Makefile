@@ -1645,16 +1645,12 @@ dataplane_kuttl_cleanup:
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/dataplane-operator
 
 .PHONY: dataplane_kuttl_prep
-dataplane_kuttl_prep: dataplane_kuttl_cleanup
+dataplane_kuttl_prep: dataplane_kuttl_cleanup input ansibleee infra baremetal dataplane namespace operator_namespace ## Prepares all dependencies for running the dataplane-operator kuttl tests
 	$(eval $(call vars,$@,dataplane))
 	# Kuttl tests require the SSH key secret to exist
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
-
-.PHONY: dataplane_kuttl
-# dataplane must come before dataplane_kuttl_prep since dataplane creates the CRDs
-dataplane_kuttl: input ansibleee infra baremetal dataplane namespace dataplane_kuttl_prep operator_namespace ## runs kuttl tests for the openstack-dataplane operator. Installs openstack-dataplane operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,ansibleee))
 	make wait
 	$(eval $(call vars,$@,infra))
@@ -1663,6 +1659,10 @@ dataplane_kuttl: input ansibleee infra baremetal dataplane namespace dataplane_k
 	make wait
 	$(eval $(call vars,$@,dataplane))
 	make wait
+
+.PHONY: dataplane_kuttl
+# dataplane must come before dataplane_kuttl_prep since dataplane creates the CRDs
+dataplane_kuttl: ## runs kuttl tests for the openstack-dataplane operator and cleans up
 	make dataplane_kuttl_run
 	make deploy_cleanup
 	make cleanup
