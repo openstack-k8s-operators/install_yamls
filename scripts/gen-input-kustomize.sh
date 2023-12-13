@@ -76,6 +76,7 @@ secretGenerator:
   - IronicInspectorDatabasePassword=${PASSWORD}
   - OctaviaPassword=${PASSWORD}
   - OctaviaDatabasePassword=${PASSWORD}
+  - OctaviaHeartbeatKey=${PASSWORD}
   - NovaPassword=${PASSWORD}
   - NovaAPIDatabasePassword=${PASSWORD}
   - NovaCell0DatabasePassword=${PASSWORD}
