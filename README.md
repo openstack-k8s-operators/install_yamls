@@ -174,3 +174,11 @@ openstack network agent list
 cd devsetup
 make edpm_deploy_instance
 ```
+
+## Deployment on OKD distro
+
+To deploy operators in okd community distro add parameter OKD=true to the make commands.
+
+```bash
+make openstack OKD=true
+```
