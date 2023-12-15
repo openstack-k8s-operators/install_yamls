@@ -31,6 +31,10 @@ if [ -z "${INTERFACE}" ]; then
     echo "Please set INTERFACE"; exit 1
 fi
 
+if [ -z "${BRIDGE_NAME}" ]; then
+    echo "Please set BRIDGE_NAME"; exit 1
+fi
+
 if [ -z "${INTERFACE_MTU}" ]; then
     echo "Please set INTERFACE_MTU"; exit 1
 fi
@@ -64,6 +68,7 @@ fi
 echo DEPLOY_DIR ${DEPLOY_DIR}
 echo WORKERS ${WORKERS}
 echo INTERFACE ${INTERFACE}
+echo BRIDGE_NAME ${BRIDGE_NAME}
 echo INTERFACE_BGP_1 ${INTERFACE_BGP_1}
 echo INTERFACE_BGP_2 ${INTERFACE_BGP_2}
 echo INTERFACE_MTU ${INTERFACE_MTU}
@@ -135,14 +140,14 @@ EOF_CAT
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       - destination: 0.0.0.0/0
         next-hop-address: ${GATEWAY}
-        next-hop-interface: ${INTERFACE}
+        next-hop-interface: ${BRIDGE_NAME}
 EOF_CAT
     fi
     if [ -n "$IPV6_ENABLED" ]; then
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       - destination: ::/0
         next-hop-address: ${GATEWAY_IPV6}
-        next-hop-interface: ${INTERFACE}
+        next-hop-interface: ${BRIDGE_NAME}
 EOF_CAT
     fi
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
@@ -285,11 +290,9 @@ EOF_CAT
     # ctlplane interface (untagged)
     #
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
-    - description: Configuring ${INTERFACE}
+    - description: Configuring Bridge ${BRIDGE_NAME} with interface ${INTERFACE}
       mtu: ${INTERFACE_MTU}
-      name: ${INTERFACE}
       state: up
-      type: ethernet
 EOF_CAT
     if [ -n "$IPV4_ENABLED" ]; then
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
@@ -320,6 +323,17 @@ EOF_CAT
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv6:
         enabled: false
+      mtu: ${INTERFACE_MTU}
+      name: ${BRIDGE_NAME}
+      bridge:
+        options:
+          stp:
+            enabled: false
+        port:
+          - name: ${INTERFACE}
+            vlan: {}
+      state: up
+      type: linux-bridge
 EOF_CAT
     fi
     if [ -n "$BGP" ]; then

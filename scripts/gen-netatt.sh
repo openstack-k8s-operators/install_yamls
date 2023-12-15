@@ -27,6 +27,10 @@ if [ -z "${INTERFACE}" ]; then
     echo "Please set INTERFACE"; exit 1
 fi
 
+if [ -z "${BRIDGE_NAME}" ]; then
+    echo "Please set BRIDGE_NAME"; exit 1
+fi
+
 if [ -z "${VLAN_START}" ]; then
     echo "Please set VLAN_START"; exit 1
 fi
@@ -55,7 +59,7 @@ spec:
       "cniVersion": "0.3.1",
       "name": "ctlplane",
       "type": "macvlan",
-      "master": "${INTERFACE}",
+      "master": "${BRIDGE_NAME}",
       "ipam": {
         "type": "whereabouts",
         "range": "${CTLPLANE_IP_ADDRESS_PREFIX}.0/24",
@@ -134,6 +138,25 @@ spec:
         "range_start": "172.19.0.30",
         "range_end": "172.19.0.70"
       }
+    }
+EOF_CAT
+
+cat > ${DEPLOY_DIR}/datacentre.yaml <<EOF_CAT
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  labels:
+    osp/net: datacentre
+  name: datacentre
+  namespace: ${NAMESPACE}
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "datacentre",
+      "type": "bridge",
+      "bridge": "${BRIDGE_NAME}",
+      "ipam": {}
     }
 EOF_CAT
 
