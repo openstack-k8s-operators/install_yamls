@@ -339,10 +339,12 @@ endif
 OPENSTACK_DATAPLANENODESET_BAREMETAL             ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset_baremetal_with_ipam.yaml
 OPENSTACK_DATAPLANEDEPLOYMENT		             ?= config/samples/dataplane_v1beta1_openstackdataplanedeployment.yaml
 OPENSTACK_DATAPLANEDEPLOYMENT_BAREMETAL		 	 ?= config/samples/dataplane_v1beta1_openstackdataplanedeployment_baremetal_with_ipam.yaml
+OPENSTACK_DATAPLANESERVICE_NOVA                  ?= config/services/dataplane_v1beta1_openstackdataplaneservice_nova.yaml
 DATAPLANE_NODESET_CR                             ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANENODESET}
 DATAPLANE_NODESET_BAREMETAL_CR                   ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANENODESET_BAREMETAL}
 DATAPLANE_DEPLOYMENT_CR                          ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANEDEPLOYMENT}
 DATAPLANE_DEPLOYMENT_BAREMETAL_CR				 ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANEDEPLOYMENT_BAREMETAL}
+DATAPLANE_SERVICE_NOVA_CR                        ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANESERVICE_NOVA}
 DATAPLANE_ANSIBLE_SECRET                         ?=dataplane-ansible-ssh-private-key-secret
 DATAPLANE_ANSIBLE_USER                           ?=
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
@@ -367,6 +369,7 @@ DATAPLANE_KUTTL_NAMESPACE                        ?= dataplane-kuttl-tests
 BM_CTLPLANE_INTERFACE                            ?= enp1s0
 BM_ROOT_PASSWORD_SECRET                          ?=
 GENERATE_SSH_KEYS				 ?= true
+DATAPLANE_EXTRA_NOVA_CONFIG_FILE                 ?= /dev/null
 
 # Manila
 MANILA_IMG              ?= quay.io/openstack-k8s-operators/manila-operator-index:${OPENSTACK_K8S_TAG}
@@ -682,6 +685,7 @@ edpm_deploy_prep: export EDPM_NTP_SERVER=${DATAPLANE_NTP_SERVER}
 edpm_deploy_prep: export EDPM_REGISTRY_URL=${DATAPLANE_REGISTRY_URL}
 edpm_deploy_prep: export EDPM_CONTAINER_TAG=${DATAPLANE_CONTAINER_TAG}
 edpm_deploy_prep: export EDPM_CONTAINER_PREFIX=${DATAPLANE_CONTAINER_PREFIX}
+edpm_deploy_prep: export EDPM_EXTRA_NOVA_CONFIG_FILE=${DEPLOY_DIR}/25-nova-extra.conf
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
 edpm_deploy_prep: export BGP=ovn
@@ -694,8 +698,10 @@ edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data pla
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
 	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
+	cp ${DATAPLANE_SERVICE_NOVA_CR} ${DEPLOY_DIR}
 	cp ${DATAPLANE_NODESET_CR} ${DEPLOY_DIR}
 	cp ${DATAPLANE_DEPLOYMENT_CR} ${DEPLOY_DIR}
+	cp ${DATAPLANE_EXTRA_NOVA_CONFIG_FILE} ${EDPM_EXTRA_NOVA_CONFIG_FILE}
 	bash scripts/gen-edpm-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
