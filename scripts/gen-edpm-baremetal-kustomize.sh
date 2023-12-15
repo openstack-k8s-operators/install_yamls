@@ -16,23 +16,29 @@
 set -ex
 
 # expect that the common.sh is in the same dir as the calling script
-SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+SCRIPTPATH="$(
+	cd "$(dirname "$0")" >/dev/null 2>&1
+	pwd -P
+)"
 . ${SCRIPTPATH}/common.sh --source-only
 
 if [ -z "$NAMESPACE" ]; then
-    echo "Please set NAMESPACE"; exit 1
+	echo "Please set NAMESPACE"
+	exit 1
 fi
 
 if [ -z "$DEPLOY_DIR" ]; then
-    echo "Please set DEPLOY_DIR"; exit 1
+	echo "Please set DEPLOY_DIR"
+	exit 1
 fi
 
 if [ -z "$EDPM_BMH_NAMESPACE" ]; then
-    echo "Please set EDPM_BMH_NAMESPACE"; exit 1
+	echo "Please set EDPM_BMH_NAMESPACE"
+	exit 1
 fi
 
 if [ ! -d ${DEPLOY_DIR} ]; then
-    mkdir -p ${DEPLOY_DIR}
+	mkdir -p ${DEPLOY_DIR}
 fi
 
 pushd ${DEPLOY_DIR}
@@ -68,9 +74,6 @@ patches:
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/edpm_sshd_allowed_ranges
       value: ${EDPM_SSHD_ALLOWED_RANGES}
-    - op: add
-      path: /spec/env/0
-      value: {"name": "ANSIBLE_CALLBACKS_ENABLED", "value": "profile_tasks"}
     - op: replace
       path: /spec/nodeTemplate/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
@@ -84,14 +87,14 @@ patches:
 EOF
 
 if [ "$EDPM_GROWVOLS_ARGS" != "" ]; then
-cat <<EOF >>kustomization.yaml
+	cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/growvols_args
       value: '${EDPM_GROWVOLS_ARGS}'
 EOF
 fi
 if [ "$EDPM_ROOT_PASSWORD_SECRET" != "" ]; then
-cat <<EOF >>kustomization.yaml
+	cat <<EOF >>kustomization.yaml
     - op: add
       path: /spec/baremetalSetTemplate/passwordSecret
       value:
@@ -100,22 +103,22 @@ cat <<EOF >>kustomization.yaml
 EOF
 fi
 if [ "$EDPM_PROVISIONING_INTERFACE" != "" ]; then
-cat <<EOF >>kustomization.yaml
+	cat <<EOF >>kustomization.yaml
     - op: add
       path: /spec/baremetalSetTemplate/provisioningInterface
       value: ${EDPM_PROVISIONING_INTERFACE}
 EOF
 fi
 if [ "$EDPM_CTLPLANE_INTERFACE" != "" ]; then
-cat <<EOF >>kustomization.yaml
+	cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/baremetalSetTemplate/ctlplaneInterface
       value: ${EDPM_CTLPLANE_INTERFACE}
 EOF
 fi
 if [ "$EDPM_TOTAL_NODES" -gt 1 ]; then
-    for INDEX in $(seq 1 $((${EDPM_TOTAL_NODES} -1))) ; do
-cat <<EOF >>kustomization.yaml
+	for INDEX in $(seq 1 $((${EDPM_TOTAL_NODES} - 1))); do
+		cat <<EOF >>kustomization.yaml
     - op: copy
       from: /spec/nodes/edpm-compute-0
       path: /spec/nodes/edpm-compute-${INDEX}
@@ -123,7 +126,7 @@ cat <<EOF >>kustomization.yaml
       path: /spec/nodes/edpm-compute-${INDEX}/hostName
       value: edpm-compute-${INDEX}
 EOF
-    done
+	done
 fi
 
 kustomization_add_resources
