@@ -118,7 +118,7 @@ function create_vm {
         --graphics vnc \
         --virt-type "$VIRT_TYPE" \
         --serial file,path="${CONSOLE_LOG_DIR}/${name}_console.log" \
-        --rng /dev/urandom,rate.period=250 \
+        --rng /dev/urandom,rate.period=100,rate.bytes=1024 \
         --print-xml \
         > "$temp_file"
     cat $temp_file
