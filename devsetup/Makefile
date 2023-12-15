@@ -267,6 +267,7 @@ standalone_deploy:
 	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX} ${STANDALONE_COMPUTE_DRIVER} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}'
 
 .PHONY: standalone
+standalone: export STANDALONE=true
 standalone: edpm_compute standalone_deploy ## Create vm and deploy tripleo standalone
 	$(eval $(call vars))
 
