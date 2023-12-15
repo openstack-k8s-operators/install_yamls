@@ -179,6 +179,7 @@ OVNNORTHD           ?= config/samples/ovn_v1beta1_ovnnorthd.yaml
 OVNNORTHD_CR        ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNNORTHD}
 OVNCONTROLLER       ?= config/samples/ovn_v1beta1_ovncontroller.yaml
 OVNCONTROLLER_CR    ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNCONTROLLER}
+OVNCONTROLLER_NMAP  ?= ${NETWORK_ISOLATION}
 # TODO: Image customizations for all OVN services
 OVN_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/ovn-operator/kuttl-test.yaml
 OVN_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovn-operator/tests/kuttl/tests
@@ -385,6 +386,7 @@ CEPH_IMG            ?= quay.io/ceph/demo:latest-reef
 
 # NNCP
 NNCP_INTERFACE      ?= enp6s0
+NNCP_BRIDGE         ?= ospbr
 NNCP_TIMEOUT		?= 240s
 NNCP_CLEANUP_TIMEOUT	?= 120s
 NNCP_CTLPLANE_IP_ADDRESS_SUFFIX     ?=10
@@ -419,7 +421,7 @@ TELEMETRY_KUTTL_NAMESPACE ?= telemetry-kuttl-tests
 # BMO
 BMO_REPO                         ?= https://github.com/metal3-io/baremetal-operator
 BMO_BRANCH                       ?= main
-BMO_PROVISIONING_INTERFACE       ?= enp6s0
+BMO_PROVISIONING_INTERFACE       ?= ${NNCP_BRIDGE}
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
 BMO_IRONIC_HOST                  ?= 192.168.122.10
 else
@@ -631,6 +633,8 @@ openstack_cleanup: operator_namespace## deletes the operator, but does not clean
 
 .PHONY: openstack_deploy_prep
 openstack_deploy_prep: export KIND=OpenStackControlPlane
+openstack_deploy_prep: export OVN_NICMAPPING=${OVNCONTROLLER_NMAP}
+openstack_deploy_prep: export BRIDGE_NAME=${NNCP_BRIDGE}
 openstack_deploy_prep: openstack_deploy_cleanup ## prepares the CR to install the service based on the service sample file OPENSTACK
 	$(eval $(call vars,$@,openstack))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
@@ -1943,6 +1947,7 @@ endif
 
 .PHONY: nncp
 nncp: export INTERFACE=${NNCP_INTERFACE}
+nncp: export BRIDGE_NAME=${NNCP_BRIDGE}
 ifeq ($(NETWORK_BGP), true)
 nncp: export BGP=enabled
 nncp: export INTERFACE_BGP_1=${NNCP_BGP_1_INTERFACE}
@@ -1989,6 +1994,7 @@ nncp_cleanup: ## unconfigured nncp configuration on worker node and deletes the 
 
 .PHONY: netattach
 netattach: export INTERFACE=${NNCP_INTERFACE}
+netattach: export BRIDGE_NAME=${NNCP_BRIDGE}
 ifeq ($(NETWORK_BGP), true)
 netattach: export INTERFACE_BGP_1=${NNCP_BGP_1_INTERFACE}
 netattach: export INTERFACE_BGP_2=${NNCP_BGP_2_INTERFACE}
@@ -2011,6 +2017,7 @@ netattach_cleanup: ## Deletes the network-attachment-definitions
 .PHONY: metallb
 metallb: export NAMESPACE=metallb-system
 metallb: export INTERFACE=${NNCP_INTERFACE}
+metallb: export BRIDGE_NAME=${NNCP_BRIDGE}
 metallb: export ASN=${BGP_ASN}
 metallb: export PEER_ASN=${BGP_PEER_ASN}
 metallb: export LEAF_1=${BGP_LEAF_1}
@@ -2046,6 +2053,7 @@ endif
 metallb_config: export NAMESPACE=metallb-system
 metallb_config: export CTLPLANE_METALLB_POOL=${METALLB_POOL}
 metallb_config: export INTERFACE=${NNCP_INTERFACE}
+metallb_config: export BRIDGE_NAME=${NNCP_BRIDGE}
 metallb_config: export ASN=${BGP_ASN}
 metallb_config: export PEER_ASN=${BGP_PEER_ASN}
 metallb_config: export LEAF_1=${BGP_LEAF_1}
