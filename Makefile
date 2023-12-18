@@ -763,13 +763,13 @@ edpm_deploy_baremetal: input edpm_deploy_baremetal_prep ## installs the dataplan
 .PHONY: edpm_wait_deploy_baremetal
 edpm_wait_deploy_baremetal: edpm_deploy_baremetal ## waits for dataplane readiness. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,dataplane))
-	oc kustomize ${DEPLOY_DIR} | oc wait --for condition=Ready --timeout=$(BAREMETAL_TIMEOUT) -f -
+	oc kustomize ${DEPLOY_DIR} | yq '. | select(.kind == "OpenStackDataPlaneNodeSet"), select(.kind == "OpenStackDataPlaneDeployment")' | oc wait --for condition=Ready --timeout=$(BAREMETAL_TIMEOUT) -f -
 	$(MAKE) edpm_nova_discover_hosts
 
 .PHONY: edpm_wait_deploy
 edpm_wait_deploy: edpm_deploy ## waits for dataplane readiness. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,dataplane))
-	oc kustomize ${DEPLOY_DIR} | oc wait --for condition=Ready --timeout=$(DATAPLANE_TIMEOUT) -f -
+	oc kustomize ${DEPLOY_DIR} | yq '. | select(.kind == "OpenStackDataPlaneNodeSet"), select(.kind == "OpenStackDataPlaneDeployment")' | oc wait --for condition=Ready --timeout=$(DATAPLANE_TIMEOUT) -f -
 	$(MAKE) edpm_nova_discover_hosts
 
 .PHONY: edpm_register_dns
