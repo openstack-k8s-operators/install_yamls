@@ -92,6 +92,20 @@ After completing the devsetup, attach the crc VM to the default network:
 make crc_attach_default_interface
 ```
 
+This requires running operators required for controlplane and dataplane:
+```
+pushd ..
+make openstack
+popd
+```
+
+This requires controlplane to be deployed before dataplane:
+```
+pushd ..
+make openstack_deploy
+popd
+```
+
 Deploy a compute node VM:
 ```
 # Creates edpm-compute-0:
@@ -100,8 +114,9 @@ make edpm_compute
 
 Execute the edpm_deploy step:
 ```
-cd ..
+pushd ..
 make edpm_deploy
+popd
 ```
 
 You can also deploy additional compute node VMs:
@@ -116,7 +131,10 @@ Then edit inventory in edpm/edpm-play.yaml.
 
 Cleanup:
 ```
+pushd ..
 make edpm_play_cleanup
+popd
+
 # Will delete VM's!:
 make edpm_compute_cleanup
 ```
@@ -131,10 +149,17 @@ make edpm_compute_cleanup EDPM_COMPUTE_SUFFIX=1
 The EDPM virtual machines can be managed by the openstack-baremetal-operator and
 metal3, which interact with a virtual Redfish BMC provided by sushy-tools.
 
-This requires a running baremetal-operator, and dataplane-operator:
+This requires running operators required for controlplane and dataplane:
 ```
 pushd ..
 make openstack
+popd
+```
+
+This requires controlplane to be deployed before dataplane:
+```
+pushd ..
+make openstack_deploy
 popd
 ```
 
