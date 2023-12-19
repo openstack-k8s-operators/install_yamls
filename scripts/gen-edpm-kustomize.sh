@@ -109,9 +109,6 @@ cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/edpm_sshd_allowed_ranges
       value: ${EDPM_SSHD_ALLOWED_RANGES}
-    - op: add
-      path: /spec/env/0
-      value: {"name": "ANSIBLE_CALLBACKS_ENABLED", "value": "profile_tasks"}
     - op: replace
       path: /spec/nodeTemplate/ansibleSSHPrivateKeySecret
       value: ${EDPM_ANSIBLE_SECRET}
