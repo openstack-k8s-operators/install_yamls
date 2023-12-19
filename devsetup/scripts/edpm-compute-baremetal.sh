@@ -55,6 +55,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: node-${i}-bmc-secret
+  namespace: ${NAMESPACE}
 type: Opaque
 data:
   username: YWRtaW4=
@@ -64,6 +65,7 @@ apiVersion: metal3.io/v1alpha1
 kind: BareMetalHost
 metadata:
   name: edpm-compute-${i}
+  namespace: ${NAMESPACE}
   annotations:
     inspect.metal3.io: disabled
   labels:
