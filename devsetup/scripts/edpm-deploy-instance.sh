@@ -30,7 +30,8 @@ openstack image show cirros || \
     openstack image create --container-format bare --disk-format $DISK_FORMAT cirros < /tmp/$RAW
 
 # Create flavor
-openstack flavor create --ram 512 --vcpus 1 --disk 1 --ephemeral 1 m1.small
+openstack flavor show m1.small || \
+    openstack flavor create --ram 512 --vcpus 1 --disk 1 --ephemeral 1 m1.small
 
 # Create networks
 openstack network show private || openstack network create private --share
@@ -44,19 +45,24 @@ openstack router show priv_router || {
     openstack router set priv_router --external-gateway public
 }
 
+# Create security group and icmp/ssh rules
+openstack security group show basic || {
+    openstack security group create basic
+    openstack security group rule create basic --protocol icmp --ingress --icmp-type -1
+    openstack security group rule create basic --protocol tcp --ingress --dst-port 22
+}
+
 # List External compute resources
 openstack compute service list
 openstack network agent list
 
 # Create an instance
 openstack server show test || {
-    openstack server create --flavor m1.small --image cirros --nic net-id=private test --wait
-    openstack floating ip create public --floating-ip-address 192.168.122.20
+    openstack server create --flavor m1.small --image cirros --nic net-id=private test --security-group basic --wait
+    openstack floating ip show 192.168.122.20 || openstack floating ip create public --floating-ip-address 192.168.122.20
     openstack server add floating ip test 192.168.122.20
 }
 openstack server list
-openstack security group rule create --protocol icmp --ingress --icmp-type -1 $(openstack security group list --project admin -f value -c ID)
-openstack security group rule create --protocol tcp --ingress --dst-port 22 $(openstack security group list --project admin -f value -c ID)
 
 # check connectivity via FIP
 ping -c4 192.168.122.20
