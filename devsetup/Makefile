@@ -190,6 +190,7 @@ network_isolation_bridge_cleanup: ## Cleanup libvirt network isolation network
 
 .PHONY: edpm_baremetal_compute
 edpm_baremetal_compute: export OPERATOR_NAME=openstack
+edpm_baremetal_compute: export NAMESPACE=${BMH_NAMESPACE}
 edpm_baremetal_compute: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
 edpm_baremetal_compute: export BMAAS_INSTANCE_NAME_PREFIX=${BM_INSTANCE_NAME_PREFIX}
 edpm_baremetal_compute: export BMAAS_NODE_COUNT=${BM_NODE_COUNT}
