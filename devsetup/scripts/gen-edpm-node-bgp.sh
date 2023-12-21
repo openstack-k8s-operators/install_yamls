@@ -20,9 +20,11 @@ SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 CRC_POOL=${CRC_POOL:-"$HOME/.crc/machines/crc"}
 OUTPUT_BASEDIR=${OUTPUT_BASEDIR:-"../out/edpm/"}
 
+EDPM_SERVER_ROLE=${EDPM_SERVER_ROLE:-"compute"}
+
 STANDALONE=${STANDALONE:-false}
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
-EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
+EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-${EDPM_SERVER_ROLE}-${EDPM_COMPUTE_SUFFIX}"}
 if [ ${STANDALONE} = "true" ]; then
     EDPM_COMPUTE_VCPUS=${EDPM_COMPUTE_VCPUS:-8}
     EDPM_COMPUTE_RAM=${EDPM_COMPUTE_RAM:-20}
@@ -38,7 +40,7 @@ DATAPLANE_DNS_SERVER=${DATAPLANE_DNS_SERVER:-${EDPM_COMPUTE_NETWORK_IP}}
 CENTOS_9_STREAM_URL=${CENTOS_9_STREAM_URL:-"https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-latest.x86_64.qcow2"}
 BASE_DISK_FILENAME=${BASE_DISK_FILENAME:-"centos-9-stream-base.qcow2"}
 
-DISK_FILENAME=${DISK_FILENAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2"}
+DISK_FILENAME=${DISK_FILENAME:-"edpm-${EDPM_SERVER_ROLE}-${EDPM_COMPUTE_SUFFIX}.qcow2"}
 DISK_FILEPATH=${DISK_FILEPATH:-"${CRC_POOL}/${DISK_FILENAME}"}
 
 SSH_PUBLIC_KEY=${SSH_PUBLIC_KEY:-"${OUTPUT_BASEDIR}/ansibleee-ssh-key-id_rsa.pub"}
@@ -56,13 +58,13 @@ if [ ! -d "${HOME}/.ssh" ]; then
 fi
 
 for i in 0 1 2; do
-    DISK_FILENAME="edpm-compute-$i.qcow2"
+    DISK_FILENAME="edpm-${EDPM_SERVER_ROLE}-$i.qcow2"
     DISK_FILEPATH="${CRC_POOL}/${DISK_FILENAME}"
     MAC_ADDRESS="$(echo -n 52:54:00; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':')"
 
-    cat <<EOF >${OUTPUT_BASEDIR}/edpm-compute-$i.xml
+    cat <<EOF >${OUTPUT_BASEDIR}/edpm-${EDPM_SERVER_ROLE}-$i.xml
 <domain type='kvm'>
-  <name>edpm-compute-$i</name>
+  <name>edpm-${EDPM_SERVER_ROLE}-$i</name>
   <memory unit='GiB'>${EDPM_COMPUTE_RAM}</memory>
   <currentMemory unit='GiB'>${EDPM_COMPUTE_RAM}</currentMemory>
   <memoryBacking>
@@ -181,7 +183,7 @@ EOF
 done
 
 for i in 0 1 2; do
-    cat <<EOF >${OUTPUT_BASEDIR}/edpm-compute-$i-firstboot.sh
+    cat <<EOF >${OUTPUT_BASEDIR}/edpm-${EDPM_SERVER_ROLE}-$i-firstboot.sh
 growpart /dev/vda 1
 xfs_growfs /
 
@@ -221,7 +223,7 @@ done
 
 
 for i in 0 1 2; do
-    DISK_FILENAME="edpm-compute-$i.qcow2"
+    DISK_FILENAME="edpm-${EDPM_SERVER_ROLE}-$i.qcow2"
     DISK_FILEPATH="${CRC_POOL}/${DISK_FILENAME}"
 
     if [ ! -f ${DISK_FILEPATH} ]; then
@@ -237,8 +239,8 @@ for i in 0 1 2; do
         VIRT_HOST_KNOWN_HOSTS=$(ssh-keyscan 192.168.130.1)
         virt-customize -a ${DISK_FILEPATH} \
             --root-password password:12345678 \
-            --hostname edpm-compute-$i \
-            --firstboot ${OUTPUT_BASEDIR}/edpm-compute-$i-firstboot.sh \
+            --hostname edpm-${EDPM_SERVER_ROLE}-$i \
+            --firstboot ${OUTPUT_BASEDIR}/edpm-${EDPM_SERVER_ROLE}-$i-firstboot.sh \
             --run-command "systemctl disable cloud-init cloud-config cloud-final cloud-init-local" \
             --run-command "echo 'PermitRootLogin yes' > /etc/ssh/sshd_config.d/99-root-login.conf" \
             --run-command "mkdir -p /root/.ssh; chmod 0700 /root/.ssh" \
@@ -254,14 +256,14 @@ done
 
 
 for i in 0 1 2; do
-    if ! virsh domuuid edpm-compute-$i; then
-        virsh define "${OUTPUT_BASEDIR}/edpm-compute-$i.xml"
+    if ! virsh domuuid edpm-${EDPM_SERVER_ROLE}-$i; then
+        virsh define "${OUTPUT_BASEDIR}/edpm-${EDPM_SERVER_ROLE}-$i.xml"
     else
-        echo "edpm-compute-$i-0 already defined in libvirt, not redefining."
+        echo "edpm-${EDPM_SERVER_ROLE}-$i-0 already defined in libvirt, not redefining."
     fi
-    if [ "$(virsh domstate edpm-compute-$i)" != "running" ]; then
-        virsh start edpm-compute-$i
+    if [ "$(virsh domstate edpm-${EDPM_SERVER_ROLE}-$i)" != "running" ]; then
+        virsh start edpm-${EDPM_SERVER_ROLE}-$i
     else
-        echo "edpm-compute-$i already running."
+        echo "edpm-${EDPM_SERVER_ROLE}-$i already running."
     fi
 done
