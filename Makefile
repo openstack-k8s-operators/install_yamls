@@ -1985,7 +1985,9 @@ nncp: ## installs the nncp resources to configure the interface connected to the
 	WORKERS='$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}")' \
 	bash scripts/gen-nncp.sh
 	oc apply -f ${DEPLOY_DIR}/
-	oc wait nncp -l osp/interface=${NNCP_INTERFACE} --for condition=available --timeout=$(NNCP_TIMEOUT)
+	# TODO: sleep can be removed once k8s>=1.26
+	sleep 10
+	oc wait nncp -l osp/interface=${NNCP_INTERFACE} --for jsonpath='{.status.conditions[0].reason}'=SuccessfullyConfigured --timeout=$(NNCP_TIMEOUT)
 
 
 .PHONY: nncp_cleanup
