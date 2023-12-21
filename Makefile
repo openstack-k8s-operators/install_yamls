@@ -2181,7 +2181,7 @@ telemetry_kuttl_run: ## runs kuttl tests for the telemetry operator, assumes tha
 telemetry_kuttl: export NAMESPACE = ${TELEMETRY_KUTTL_NAMESPACE}
 # Set the value of $TELEMETRY_KUTTL_NAMESPACE if you want to run the telemetry
 # kuttl tests in a namespace different than the default (telemetry-kuttl-tests)
-telemetry_kuttl: kuttl_common_prep heat heat_deploy telemetry telemetry_deploy_prep
+telemetry_kuttl: kuttl_common_prep telemetry_kuttl_prep heat heat_deploy telemetry telemetry_deploy_prep
 	$(eval $(call vars,$@,telemetry))
 	sed -i "s#- ${TELEMETRY_KUTTL_RELPATH}#- ${TELEMETRY_KUTTL_BASEDIR}/${TELEMETRY_KUTTL_RELPATH}#g" ${TELEMETRY_KUTTL_CONF}
 	make wait
@@ -2191,6 +2191,11 @@ telemetry_kuttl: kuttl_common_prep heat heat_deploy telemetry telemetry_deploy_p
 	make heat_cleanup
 	make kuttl_common_cleanup
 	bash scripts/restore-namespace.sh
+
+.PHONY: telemetry_kuttl_prep
+telemetry_kuttl_prep:
+	$(eval $(call vars,$@,telemetry))
+	oc apply -f ${TELEMETRY_KUTTL_BASEDIR}/tests/kuttl/crd_deps
 
 ##@ SWIFT
 .PHONY: swift_prep
