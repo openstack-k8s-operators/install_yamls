@@ -56,8 +56,6 @@ cat <<EOF >ceph-pod.yaml
 apiVersion: v1
 kind: Pod
 metadata:
-  annotations:
-    k8s.v1.cni.cncf.io/networks: ""
   name: ceph
   namespace: $NAMESPACE
   labels:
@@ -124,10 +122,15 @@ patches:
     - op: replace
       path: /spec/containers/0/image
       value: $CEPH_IMAGE
-    - op: replace
+EOF
+
+if [ -n "${NETWORKS_ANNOTATION}" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: add
       path: /metadata/annotations/k8s.v1.cni.cncf.io~1networks
       value: $NETWORKS_ANNOTATION
 EOF
+fi
 }
 
 function bootstrap_ceph {
