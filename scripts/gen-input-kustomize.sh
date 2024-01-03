@@ -36,6 +36,10 @@ if [ -z "$HEAT_AUTH_ENCRYPTION_KEY" ]; then
     echo "Please set HEAT_AUTH_ENCRYPTION_KEY"; exit 1
 fi
 
+if [ -z "$BARBICAN_SIMPLE_CRYPTO_ENCRYPTION_KEY" ]; then
+    echo "Please set BARBICAN_SIMPLE_CRYPTO_ENCRYPTION_KEY"; exit 1
+fi
+
 DIR=${OUT}/${NAMESPACE}/input
 
 if [ ! -d ${DIR} ]; then
@@ -56,6 +60,7 @@ secretGenerator:
   - AodhDatabasePassword=${PASSWORD}
   - BarbicanPassword=${PASSWORD}
   - BarbicanDatabasePassword=${PASSWORD}
+  - BarbicanSimpleCryptoKEK=${BARBICAN_SIMPLE_CRYPTO_ENCRYPTION_KEY}
   - CeilometerPassword=${PASSWORD}
   - DbRootPassword=${PASSWORD}
   - DatabasePassword=${PASSWORD}
