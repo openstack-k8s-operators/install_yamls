@@ -1678,8 +1678,7 @@ dataplane_kuttl_prep: dataplane_kuttl_cleanup input ansibleee infra baremetal da
 	make wait
 
 .PHONY: dataplane_kuttl
-# dataplane must come before dataplane_kuttl_prep since dataplane creates the CRDs
-dataplane_kuttl: ## runs kuttl tests for the openstack-dataplane operator and cleans up
+dataplane_kuttl: dataplane_kuttl_prep ## runs kuttl tests for the openstack-dataplane operator and cleans up
 	make dataplane_kuttl_run
 	make deploy_cleanup
 	make cleanup
