@@ -133,6 +133,11 @@ crc_cleanup: ## Destroys the CRC env, but does NOT clear ( --clear-cache ) the c
 	sudo ${CLEANUP_DIR_CMD} /etc/pki/ca-trust/source/anchors/crc-router-ca.pem
 	sudo update-ca-trust
 
+.PHONY: crc_scrub
+crc_scrub: crc_cleanup
+	rm -rf ~/.crc
+	sudo rm $(which crc)
+
 .PHONY: crc_attach_default_interface
 crc_attach_default_interface:
 	make attach_default_interface
