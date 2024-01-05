@@ -165,6 +165,7 @@ EOF_CAT
       vlan:
         base-iface: ${INTERFACE}
         id: ${VLAN_START}
+        reorder-headers: true
 EOF_CAT
     if [ -n "$IPV4_ENABLED" ]; then
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
@@ -209,6 +210,7 @@ EOF_CAT
       vlan:
         base-iface: ${INTERFACE}
         id: $((${VLAN_START}+${VLAN_STEP}))
+        reorder-headers: true
 EOF_CAT
     if [ -n "$IPV4_ENABLED" ]; then
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
@@ -253,6 +255,7 @@ EOF_CAT
       vlan:
         base-iface: ${INTERFACE}
         id: $((${VLAN_START}+$((${VLAN_STEP}*2))))
+        reorder-headers: true
 EOF_CAT
     if [ -n "$IPV4_ENABLED" ]; then
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
