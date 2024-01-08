@@ -22,8 +22,10 @@
       - LICENSE
       - OWNERS
       - .*/*.md
-
-# TODO(marios) remove this after wire up of OSP-17 job
+    vars:
+      cifmw_edpm_deploy_baremetal_update_os_containers: true
+      cifmw_set_openstack_containers_overrides:
+        RELATED_IMAGE_OS_CONTAINER_IMAGE_URL_DEFAULT: "quay.io/steveb/edpm-hardened-uefi:18.0-steveb-20231204"
 - job:
     name: content-provider-data-plane-adoption-github-rdo-centos-9-extracted-crc
     parent: data-plane-adoption-github-rdo-centos-9-extracted-crc
