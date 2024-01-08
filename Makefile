@@ -19,6 +19,9 @@ METADATA_SHARED_SECRET   ?= 1234567842
 HEAT_AUTH_ENCRYPTION_KEY ?= 767c3ed056cbaa3b9dfedb8c6f825bf0
 OPENSTACK_K8S_BRANCH     ?= main
 OPENSTACK_K8S_TAG        ?= latest
+# Barbican encryption key should be a random 32-byte string that is base64
+# encoded.  e.g. head --bytes=32 /dev/urandom | base64
+BARBICAN_SIMPLE_CRYPTO_ENCRYPTION_KEY ?= sEFmdFjDUqRM2VemYslV5yGNWjokioJXsg8Nrlc3drU=
 
 # Allows overriding the cleanup command used in *_cleanup targets.
 # Useful in CI, to allow injectin kustomization in each operator CR directory
@@ -454,6 +457,7 @@ ${1}: export SECRET=${SECRET}
 ${1}: export PASSWORD=${PASSWORD}
 ${1}: export METADATA_SHARED_SECRET=${METADATA_SHARED_SECRET}
 ${1}: export HEAT_AUTH_ENCRYPTION_KEY=${HEAT_AUTH_ENCRYPTION_KEY}
+${1}: export BARBICAN_SIMPLE_CRYPTO_ENCRYPTION_KEY=${BARBICAN_SIMPLE_CRYPTO_ENCRYPTION_KEY}
 ${1}: export STORAGE_CLASS=${STORAGE_CLASS}
 ${1}: export OUT=${OUT}
 ${1}: export CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD}
