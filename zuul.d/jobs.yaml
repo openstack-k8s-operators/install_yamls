@@ -21,9 +21,10 @@
       - LICENSE
       - OWNERS
       - .*/*.md
+
 - job:
-    name: content-provider-data-plane-adoption-github-rdo-centos-9-extracted-crc
-    parent: data-plane-adoption-github-rdo-centos-9-extracted-crc
+    name: content-provider-data-plane-adoption-OSP-17-to-extracted-crc
+    parent: data-plane-adoption-OSP-17-to-extracted-crc
     required-projects:
       - openstack-k8s-operators/openstack-operator
     irrelevant-files: *openstack_if
