@@ -291,8 +291,17 @@ EOF_CAT
     #
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: Configuring Bridge ${BRIDGE_NAME} with interface ${INTERFACE}
+      name: ${BRIDGE_NAME}
       mtu: ${INTERFACE_MTU}
+      type: linux-bridge
       state: up
+      bridge:
+        options:
+          stp:
+            enabled: false
+        port:
+          - name: ${INTERFACE}
+            vlan: {}
 EOF_CAT
     if [ -n "$IPV4_ENABLED" ]; then
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
@@ -323,17 +332,6 @@ EOF_CAT
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv6:
         enabled: false
-      mtu: ${INTERFACE_MTU}
-      name: ${BRIDGE_NAME}
-      bridge:
-        options:
-          stp:
-            enabled: false
-        port:
-          - name: ${INTERFACE}
-            vlan: {}
-      state: up
-      type: linux-bridge
 EOF_CAT
     fi
     if [ -n "$BGP" ]; then
