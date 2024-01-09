@@ -2,6 +2,7 @@ CRC_VERSION ?= latest
 CRC_URL ?= 'https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/$(CRC_VERSION)/crc-linux-amd64.tar.xz'
 KUBEADMIN_PWD ?= 12345678
 PULL_SECRET  ?= ${PWD}/pull-secret.txt
+TIMEOUT                  ?= 300s
 
 NETWORK_ISOLATION_USE_DEFAULT_NETWORK ?= true
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
@@ -204,7 +205,7 @@ edpm_baremetal_compute: export DEPLOY_DIR=../out/bmaas
 edpm_baremetal_compute: ## Create virtual baremetal for the dataplane
 	$(eval $(call vars))
 	make bmaas_virtual_bms
-	make bmaas_sushy_emulator
+	make bmaas_sushy_emulator_wait
 	bash scripts/edpm-compute-baremetal.sh --create
 
 edpm_baremetal_compute_cleanup: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
@@ -431,6 +432,10 @@ bmaas_sushy_emulator_cleanup: export REDFISH_USERNAME = ${BMAAS_REDFISH_USERNAME
 bmaas_sushy_emulator_cleanup: export REDFISH_PASSWORD = ${BMAAS_REDFISH_PASSWORD}
 bmaas_sushy_emulator_cleanup: ## Cleanup BMaaS sushy-emulator (Virtual RedFish)
 	scripts/bmaas/sushy-emulator.sh --cleanup
+
+.PHONY: bmaas_sushy_emulator_wait
+bmaas_sushy_emulator_wait: bmaas_sushy_emulator ## waits sushy-emulator to be ready
+	bash -c 'oc -n ${BMAAS_SUSHY_EMULATOR_NAMESPACE} wait --for=condition=ready pod sushy-emulator --timeout=${TIMEOUT}'
 
 .PHONY: bmaas_generate_nodes_yaml
 bmaas_generate_nodes_yaml: export NODE_NAME_PREFIX = ${BMAAS_INSTANCE_NAME_PREFIX}
