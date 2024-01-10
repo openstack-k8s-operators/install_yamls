@@ -221,6 +221,25 @@ spec:
       mountPath: /etc/sushy-emulator/
     - name: os-client-config
       mountPath: /etc/openstack/
+    readinessProbe:
+      httpGet:
+        path: redfish/v1
+        port: 8000
+        initialDelaySeconds: 5
+        periodSeconds: 5
+    livenessProbe:
+      httpGet:
+        path: redfish/v1
+        port: 8000
+        initialDelaySeconds: 10
+        failureThreshold: 30
+        periodSeconds: 10
+    startupProbe:
+      httpGet:
+        path: redfish/v1
+        port: 8000
+        failureThreshold: 30
+        initialDelaySeconds: 10
   volumes:
   - name: ssh-secret
     secret:
