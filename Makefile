@@ -40,11 +40,6 @@ NETWORK_VLAN_STEP   ?= 1
 NETWORK_ISOLATION_IPV4_ADDRESS ?= 172.16.1.1/24
 NETWORK_ISOLATION_IPV6_ADDRESS ?= fd00:aaaa::1/64
 
-ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
-METALLB_POOL			 ?=192.168.122.80-192.168.122.90
-else
-METALLB_POOL			 ?=172.16.1.80-172.16.1.90
-endif
 # are we deploying to microshift
 MICROSHIFT ?= 0
 
@@ -411,6 +406,14 @@ NNCP_CTLPLANE_IPV6_ADDRESS_PREFIX   ?=fd00:aaaa::
 NNCP_CTLPLANE_IPV6_ADDRESS_SUFFIX   ?=10
 NNCP_GATEWAY_IPV6                   ?=fd00:aaaa::1
 NNCP_DNS_SERVER_IPV6                ?=fd00:aaaa::1
+
+# MetalLB
+ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
+METALLB_POOL			 ?=192.168.122.80-192.168.122.90
+else
+METALLB_POOL			 ?=172.16.1.80-172.16.1.90
+endif
+METALLB_IPV6_POOL        ?=$(NNCP_CTLPLANE_IPV6_ADDRESS_PREFIX)80-$(NNCP_CTLPLANE_IPV6_ADDRESS_PREFIX)90
 
 # Telemetry
 TELEMETRY_IMG                    ?= quay.io/openstack-k8s-operators/telemetry-operator-index:${OPENSTACK_K8S_TAG}
@@ -2071,6 +2074,13 @@ endif
 .PHONY: metallb_config
 metallb_config: export NAMESPACE=metallb-system
 metallb_config: export CTLPLANE_METALLB_POOL=${METALLB_POOL}
+metallb_config: export CTLPLANE_METALLB_IPV6_POOL=${METALLB_IPV6_POOL}
+ifeq ($(NETWORK_ISOLATION_IPV4), true)
+metallb_config: export IPV4_ENABLED=true
+endif
+ifeq ($(NETWORK_ISOLATION_IPV6), true)
+metallb_config: export IPV6_ENABLED=true
+endif
 metallb_config: export INTERFACE=${NNCP_INTERFACE}
 metallb_config: export BRIDGE_NAME=${NNCP_BRIDGE}
 metallb_config: export ASN=${BGP_ASN}
