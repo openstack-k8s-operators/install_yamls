@@ -8,4 +8,4 @@
             dependencies:
               - openstack-k8s-operators-content-provider
         - podified-multinode-edpm-deployment-crc: *content_provider
-        - content-provider-data-plane-adoption-OSP-17-to-extracted-crc: *content_provider
+        - cifmw-data-plane-adoption-osp-17-to-extracted-crc: *content_provider
