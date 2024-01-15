@@ -1571,12 +1571,16 @@ ovn_kuttl_run: ## runs kuttl tests for the ovn operator, assumes that everything
 ovn_kuttl: export NAMESPACE = ${OVN_KUTTL_NAMESPACE}
 # Set the value of $OVN_KUTTL_NAMESPACE if you want to run the ovn
 # kuttl tests in a namespace different than the default (ovn-kuttl-tests)
-ovn_kuttl: input deploy_cleanup ovn ovn_deploy_prep ## runs kuttl tests for the ovn operator. Installs ovn operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+ovn_kuttl: input deploy_cleanup infra ovn ovn_deploy_prep ## runs kuttl tests for the ovn operator. Installs ovn operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+	$(eval $(call vars,$@,infra))
+	make wait
 	$(eval $(call vars,$@,ovn))
 	make wait
 	make ovn_kuttl_run
 	make deploy_cleanup
 	make ovn_cleanup
+	$(eval $(call vars,$@,infra))
+	make infra_cleanup
 
 .PHONY: infra_kuttl_run
 infra_kuttl_run: ## runs kuttl tests for the infra operator, assumes that everything needed for running the test was deployed beforehand.
