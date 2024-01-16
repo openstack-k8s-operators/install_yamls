@@ -2031,14 +2031,6 @@ netattach_cleanup: ## Deletes the network-attachment-definitions
 ##@ METALLB
 .PHONY: metallb
 metallb: export NAMESPACE=metallb-system
-metallb: export INTERFACE=${NNCP_INTERFACE}
-metallb: export BRIDGE_NAME=${NNCP_BRIDGE}
-metallb: export ASN=${BGP_ASN}
-metallb: export PEER_ASN=${BGP_PEER_ASN}
-metallb: export LEAF_1=${BGP_LEAF_1}
-metallb: export LEAF_2=${BGP_LEAF_2}
-metallb: export SOURCE_IP=${BGP_SOURCE_IP}
-metallb: export SOURCE_IP6=${BGP_SOURCE_IP6}
 metallb: ## installs metallb operator in the metallb-system namespace
 	$(eval $(call vars,$@,metallb))
 	bash scripts/gen-namespace.sh
@@ -2077,7 +2069,7 @@ metallb_config: export SOURCE_IP=${BGP_SOURCE_IP}
 metallb_config: export SOURCE_IP6=${BGP_SOURCE_IP6}
 metallb_config: metallb_config_cleanup ## creates the IPAddressPools and l2advertisement resources
 	$(eval $(call vars,$@,metallb))
-	bash scripts/gen-olm-metallb.sh
+	bash scripts/gen-metallb-config.sh
 	oc apply -f ${DEPLOY_DIR}/ipaddresspools.yaml
 	oc apply -f ${DEPLOY_DIR}/l2advertisement.yaml
 ifeq ($(NETWORK_BGP), true)
@@ -2090,11 +2082,11 @@ endif
 metallb_config_cleanup: export NAMESPACE=metallb-system
 metallb_config_cleanup: ## deletes the IPAddressPools and l2advertisement resources
 	$(eval $(call vars,$@,metallb))
-	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/ipaddresspools.yaml
-	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/l2advertisement.yaml
-	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/bgppeers.yaml
-	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/bgpadvertisement.yaml
-	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/bgpextras.yaml
+	-oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/ipaddresspools.yaml
+	-oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/l2advertisement.yaml
+	-oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/bgppeers.yaml
+	-oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/bgpadvertisement.yaml
+	-oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/bgpextras.yaml
 	${CLEANUP_DIR_CMD} ${DEPLOY_DIR}/ipaddresspools.yaml ${DEPLOY_DIR}/l2advertisement.yaml ${DEPLOY_DIR}/bgppeers.yaml ${DEPLOY_DIR}/bgpadvertisement.yaml ${DEPLOY_DIR}/bgpextras.yaml
 
 ##@ MANILA
