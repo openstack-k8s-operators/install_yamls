@@ -248,6 +248,140 @@ cat <<EOF >>kustomization.yaml
 EOF
 fi
 
+if [[ "${KIND}" == "OpenStackControlPlane" ]]; then
+    if [ -z "${IPV4_ENABLED}" ]; then
+        cat <<EOF >>kustomization.yaml
+- target:
+    kind: ${KIND}
+  patch: |-
+    - op: remove
+      path: /spec/dns/template/options/0/values/0
+EOF
+    fi
+
+    if [ -n "${IPV6_ENABLED}" ]; then
+        cat <<EOF >>kustomization.yaml
+- target:
+    kind: ${KIND}
+  patch: |-
+    - op: add
+      path: /spec/dns/template/options/0/values/0
+      value: ${CTLPLANE_IPV6_DNS_SERVER}
+EOF
+    fi
+
+    if [ -z "${IPV4_ENABLED}" ] && [ -n "${IPV6_ENABLED}" ]; then
+        cat <<EOF >>kustomization.yaml
+- target:
+    kind: ${KIND}
+  patch: |-
+    - op: replace
+      path: /spec/dns/template/override/service/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: ${CTLPLANE_IPV6_ADDRESS_PREFIX}80
+    - op: replace
+      path: /spec/glance/template/glanceAPIs/default/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80
+    - op: replace
+      path: /spec/cinder/template/cinderAPI/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80
+    - op: replace
+      path: /spec/barbican/template/barbicanAPI/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80
+    - op: replace
+      path: /spec/designate/template/designateAPI/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80
+    - op: replace
+      path: /spec/heat/template/heatAPI/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80
+    - op: replace
+      path: /spec/heat/template/heatEngine/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80
+    - op: replace
+      path: /spec/swift/template/swiftProxy/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80
+    - op: replace
+      path: /spec/keystone/template/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80
+    - op: replace
+      path: /spec/manila/template/manilaAPI/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80
+    - op: replace
+      path: /spec/nova/template/apiServiceTemplate/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80
+    - op: replace
+      path: /spec/nova/template/metadataServiceTemplate/override/service/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80
+    - op: replace
+      path: /spec/neutron/template/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80
+    - op: replace
+      path: /spec/placement/template/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80
+    - op: replace
+      path: /spec/rabbitmq/templates/rabbitmq/override/service/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::85
+    - op: replace
+      path: /spec/rabbitmq/templates/rabbitmq-cell1/override/service/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::86
+EOF
+    elif [ -n "${IPV4_ENABLED}" ] && [ -n "${IPV6_ENABLED}" ]; then
+        # TODO: Add support for dual stack
+        cat <<EOF >>kustomization.yaml
+- target:
+    kind: ${KIND}
+  patch: |-
+    - op: replace
+      path: /spec/dns/template/override/service/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: ${CTLPLANE_IPV6_ADDRESS_PREFIX}80,${CTLPLANE_IP_ADDRESS_PREFIX}.80
+    - op: replace
+      path: /spec/glance/template/glanceAPIs/default/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80,172.17.0.80
+    - op: replace
+      path: /spec/cinder/template/cinderAPI/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80,172.17.0.80
+    - op: replace
+      path: /spec/barbican/template/barbicanAPI/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80,172.17.0.80
+    - op: replace
+      path: /spec/designate/template/designateAPI/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80,172.17.0.80
+    - op: replace
+      path: /spec/heat/template/heatAPI/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80,172.17.0.80
+    - op: replace
+      path: /spec/heat/template/heatEngine/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80,172.17.0.80
+    - op: replace
+      path: /spec/swift/template/swiftProxy/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80,172.17.0.80
+    - op: replace
+      path: /spec/keystone/template/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80,172.17.0.80
+    - op: replace
+      path: /spec/manila/template/manilaAPI/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80,172.17.0.80
+    - op: replace
+      path: /spec/nova/template/apiServiceTemplate/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80,172.17.0.80
+    - op: replace
+      path: /spec/nova/template/metadataServiceTemplate/override/service/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80,172.17.0.80
+    - op: replace
+      path: /spec/neutron/template/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80,172.17.0.80
+    - op: replace
+      path: /spec/placement/template/override/service/internal/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::80,172.17.0.80
+    - op: replace
+      path: /spec/rabbitmq/templates/rabbitmq/override/service/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::85,172.17.0.85
+    - op: replace
+      path: /spec/rabbitmq/templates/rabbitmq-cell1/override/service/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
+      value: fd00:bbbb::86,172.17.0.86
+EOF
+    fi
+fi
+
 kustomization_add_resources
 
 popd
