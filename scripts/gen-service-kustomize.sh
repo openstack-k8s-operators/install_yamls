@@ -35,6 +35,11 @@ if [ -z "$DEPLOY_DIR" ]; then
     echo "Please set DEPLOY_DIR"; exit 1
 fi
 
+if [ -n "$IPV6_ENABLED" ]; then
+    echo CTLPLANE_IPV6_ADDRESS_PREFIX ${CTLPLANE_IPV6_ADDRESS_PREFIX}
+    echo CTLPLANE_IPV6_GATEWAY ${CTLPLANE_IPV6_GATEWAY}
+fi
+
 IMAGE=${IMAGE:-unused}
 IMAGE_PATH=${IMAGE_PATH:-containerImage}
 
@@ -88,6 +93,119 @@ if [ -n "$NAME" ]; then
       value: ${NAME}
 EOF
 fi
+
+if [ "${KIND}" == "NetConfig" ]; then
+
+    if [ -z "${IPV4_ENABLED}" ]; then
+        IPV6_SUBNET_INDEX=0
+    else
+        IPV6_SUBNET_INDEX=1
+    fi
+
+    if [ -z "${IPV4_ENABLED}" ]; then
+        # Delete IPv4 subnets if not enabled
+        cat <<EOF >>kustomization.yaml
+    - op: remove
+      path: /spec/networks/0/subnets/0
+    - op: remove
+      path: /spec/networks/1/subnets/0
+    - op: remove
+      path: /spec/networks/2/subnets/0
+    - op: remove
+      path: /spec/networks/3/subnets/0
+    - op: remove
+      path: /spec/networks/4/subnets/0
+    - op: remove
+      path: /spec/networks/5/subnets/0
+EOF
+    fi
+
+    if [ -n "${IPV6_ENABLED}" ]; then
+    # Add IPv6 if enabled
+
+        # CtlPlane
+        cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/networks/0/subnets/${IPV6_SUBNET_INDEX}
+      value:
+          name: subnet$((${IPV6_SUBNET_INDEX}+1))
+          allocationRanges:
+          - end: ${CTLPLANE_IPV6_ADDRESS_PREFIX}120
+            start: ${CTLPLANE_IPV6_ADDRESS_PREFIX}100
+          - end: ${CTLPLANE_IPV6_ADDRESS_PREFIX}250
+            start: ${CTLPLANE_IPV6_ADDRESS_PREFIX}200
+          cidr: ${CTLPLANE_IPV6_ADDRESS_PREFIX}/64
+          gateway: ${CTLPLANE_IPV6_GATEWAY}
+EOF
+
+        # InternalApi
+        cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/networks/1/subnets/${IPV6_SUBNET_INDEX}
+      value:
+          name: subnet$((${IPV6_SUBNET_INDEX}+1))
+          allocationRanges:
+          - end: fd00:bbbb::250
+            start: fd00:bbbb::100
+          cidr: fd00:bbbb::/64
+          vlan: 20
+EOF
+
+        # External
+        cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/networks/2/subnets/${IPV6_SUBNET_INDEX}
+      value:
+          name: subnet$((${IPV6_SUBNET_INDEX}+1))
+          allocationRanges:
+          - end: fd00:ffff::250
+            start: fd00:ffff::100
+          cidr: fd00:ffff::/64
+          gateway: fd00:ffff::1
+EOF
+
+        # Storage
+        cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/networks/3/subnets/${IPV6_SUBNET_INDEX}
+      value:
+          name: subnet$((${IPV6_SUBNET_INDEX}+1))
+          allocationRanges:
+          - end: fd00:cccc::250
+            start: fd00:cccc::100
+          cidr: fd00:cccc::/64
+          vlan: 21
+EOF
+
+        # StorageMgmt
+        cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/networks/4/subnets/${IPV6_SUBNET_INDEX}
+      value:
+          name: subnet$((${IPV6_SUBNET_INDEX}+1))
+          allocationRanges:
+          - end: fd00:eeee::250
+            start: fd00:eeee::100
+          cidr: fd00:eeee::/64
+          vlan: 23
+EOF
+
+        # Tenant
+        cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/networks/5/subnets/${IPV6_SUBNET_INDEX}
+      value:
+          name: subnet$((${IPV6_SUBNET_INDEX}+1))
+          allocationRanges:
+          - end: fd00:dddd::250
+            start: fd00:dddd::100
+          cidr: fd00:dddd::/64
+          vlan: 22
+EOF
+
+    fi
+fi
+
 
 if [ -n "$BGP" ]; then
     cat <<EOF >>kustomization.yaml
