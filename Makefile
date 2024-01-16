@@ -644,6 +644,16 @@ openstack_cleanup: operator_namespace## deletes the operator, but does not clean
 openstack_deploy_prep: export KIND=OpenStackControlPlane
 openstack_deploy_prep: export OVN_NICMAPPING=${OVNCONTROLLER_NMAP}
 openstack_deploy_prep: export BRIDGE_NAME=${NNCP_BRIDGE}
+openstack_deploy_prep: export CTLPLANE_IP_ADDRESS_PREFIX=${NNCP_CTLPLANE_IPV6_ADDRESS_PREFIX}
+ifeq ($(NETWORK_ISOLATION_IPV4), true)
+openstack_deploy_prep: export IPV4_ENABLED=true
+endif
+ifeq ($(NETWORK_ISOLATION_IPV6), true)
+openstack_deploy_prep: export IPV6_ENABLED=true
+openstack_deploy_prep: export CTLPLANE_IPV6_ADDRESS_PREFIX=${NNCP_CTLPLANE_IPV6_ADDRESS_PREFIX}
+openstack_deploy_prep: export CTLPLANE_IPV6_ADDRESS_SUFFIX=${NNCP_CTLPLANE_IPV6_ADDRESS_SUFFIX}
+openstack_deploy_prep: export CTLPLANE_IPV6_DNS_SERVER=${NNCP_DNS_SERVER_IPV6}
+endif
 openstack_deploy_prep: openstack_deploy_cleanup ## prepares the CR to install the service based on the service sample file OPENSTACK
 	$(eval $(call vars,$@,openstack))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
