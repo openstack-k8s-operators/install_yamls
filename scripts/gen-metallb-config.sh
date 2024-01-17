@@ -51,8 +51,14 @@ if [ -z "${SOURCE_IP}" ]; then
     echo "Please set SOURCE_IP"; exit 1
 fi
 
+if [ -z "$IPV4_ENABLED" ] && [ -z "$IPV6_ENABLED" ]; then
+    echo "Please enable either IPv4 or IPv6 by setting IPV4_ENABLED or IPV6_ENABLED"; exit 1
+fi
+
 echo DEPLOY_DIR ${DEPLOY_DIR}
 echo INTERFACE ${INTERFACE}
+echo CTLPLANE_METALLB_POOL ${CTLPLANE_METALLB_POOL}
+echo CTLPLANE_METALLB_IPV6_POOL ${CTLPLANE_METALLB_IPV6_POOL}
 
 cat > ${DEPLOY_DIR}/ipaddresspools.yaml <<EOF_CAT
 ---
@@ -63,7 +69,18 @@ metadata:
   name: ctlplane
 spec:
   addresses:
+EOF_CAT
+if [ -n "$IPV4_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/ipaddresspools.yaml <<EOF_CAT
   - ${CTLPLANE_METALLB_POOL}
+EOF_CAT
+fi
+if [ -n "$IPV6_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/ipaddresspools.yaml <<EOF_CAT
+  - ${CTLPLANE_METALLB_IPV6_POOL}
+EOF_CAT
+fi
+cat >> ${DEPLOY_DIR}/ipaddresspools.yaml <<EOF_CAT
 ---
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
@@ -72,7 +89,18 @@ metadata:
   name: internalapi
 spec:
   addresses:
+EOF_CAT
+if [ -n "$IPV4_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/ipaddresspools.yaml <<EOF_CAT
   - 172.17.0.80-172.17.0.90
+EOF_CAT
+fi
+if [ -n "$IPV6_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/ipaddresspools.yaml <<EOF_CAT
+  - fd00:bbbb::80-fd00:bbbb::90
+EOF_CAT
+fi
+cat >> ${DEPLOY_DIR}/ipaddresspools.yaml <<EOF_CAT
 ---
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
@@ -81,7 +109,18 @@ metadata:
   name: storage
 spec:
   addresses:
+EOF_CAT
+if [ -n "$IPV4_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/ipaddresspools.yaml <<EOF_CAT
   - 172.18.0.80-172.18.0.90
+EOF_CAT
+fi
+if [ -n "$IPV6_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/ipaddresspools.yaml <<EOF_CAT
+  - fd00:cccc::80-fd00:cccc::90
+EOF_CAT
+fi
+cat >> ${DEPLOY_DIR}/ipaddresspools.yaml <<EOF_CAT
 ---
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
@@ -90,8 +129,17 @@ metadata:
   name: tenant
 spec:
   addresses:
+EOF_CAT
+if [ -n "$IPV4_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/ipaddresspools.yaml <<EOF_CAT
   - 172.19.0.80-172.19.0.90
 EOF_CAT
+fi
+if [ -n "$IPV6_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/ipaddresspools.yaml <<EOF_CAT
+  - fd00:dddd::80-fd00:dddd::90
+EOF_CAT
+fi
 
 cat > ${DEPLOY_DIR}/l2advertisement.yaml <<EOF_CAT
 ---
