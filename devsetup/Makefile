@@ -90,6 +90,32 @@ BM_NODE_COUNT              ?=1
 BM_ROOT_PASSWORD_SECRET    ?=
 BMH_NAMESPACE              ?=openstack
 
+IPV6_LAB_WORK_DIR                 ?= ${HOME}/.ipv6lab
+IPV6_LAB_SSH_PUB_KEY              ?= ${HOME}/.ssh/id_rsa.pub
+IPV6_LAB_LIBVIRT_STORAGE_POOL     ?= default
+IPV6_LAB_NETWORK_NAME             ?= nat64
+IPV6_LAB_MANAGE_FIREWALLD         ?= true
+IPV6_LAB_IPV6_NETWORK_IPADDRESS   ?= fd00:abcd:abcd:fc00::1/64
+IPV6_LAB_IPV4_NETWORK_IPADDRESS   ?= 172.30.0.1/24
+IPV6_LAB_NAT64_INSTANCE_NAME      ?= nat64-router
+IPV6_LAB_NAT64_HOST_IPV6          ?= fd00:abcd:abcd:fc00::2/64
+IPV6_LAB_NAT64_HOST_IPV4          ?= 172.30.0.2/24
+IPV6_LAB_NAT64_TAYGA_IPV4         ?= 192.168.255.1
+IPV6_LAB_NAT64_TAYGA_IPV6         ?= fd00:abcd:abcd:fc00::3
+IPV6_LAB_NAT64_TAYGA_DYNAMIC_POOL ?= 192.168.255.0/24
+IPV6_LAB_NAT64_TAYGA_IPV6_PREFIX  ?= fd00:abcd:abcd:fcff::/96
+IPV6_LAB_NAT64_IPV6_NETWORK       ?= fd00:abcd:abcd:fc00::/64
+IPV6_LAB_NAT64_UPDATE_PACKAGES    ?= false
+IPV6_LAB_SNO_INSTANCE_NAME        ?= sno
+IPV6_LAB_SNO_CLUSTER_NETWORK      ?= fd00:abcd:0::/48
+IPV6_LAB_SNO_HOST_PREFIX          ?= 64
+IPV6_LAB_SNO_MACHINE_NETWORK      ?= fd00:abcd:abcd:fc00::/64
+IPV6_LAB_SNO_SERVICE_NETWORK      ?= fd00:abcd:abcd:fc03::/112
+IPV6_LAB_SNO_HOST_IP              ?= fd00:abcd:abcd:fc00::11
+IPV6_LAB_SNO_OCP_VERSION          ?= latest-4.13
+IPV6_LAB_SNO_OCP_MIRROR_URL       ?= https://mirror.openshift.com/pub/openshift-v4/clients/ocp
+
+
 STANDALONE_COMPUTE_DRIVER ?= libvirt
 
 CLEANUP_DIR_CMD ?= rm -Rf
@@ -147,6 +173,83 @@ crc_attach_default_interface:
 crc_attach_default_interface_cleanup:
 	make attach_default_interface_cleanup
 
+##@ IPv6 Lab
+.PHONY: ipv6_lab_network
+ipv6_lab_network: export WORK_DIR = ${IPV6_LAB_WORK_DIR}
+ipv6_lab_network: export NETWORK_NAME = ${IPV6_LAB_NETWORK_NAME}
+ipv6_lab_network: export MANAGE_FIREWALLD = ${IPV6_LAB_MANAGE_FIREWALLD}
+ipv6_lab_network: export IPV6_NETWORK_IPADDRESS = ${IPV6_LAB_IPV6_NETWORK_IPADDRESS}
+ipv6_lab_network: export IPV4_NETWORK_IPADDRESS = ${IPV6_LAB_IPV4_NETWORK_IPADDRESS}
+ipv6_lab_network: export NAT64_HOST_IPV6 = ${IPV6_LAB_NAT64_HOST_IPV6}
+ipv6_lab_network: ## Deploys libvirt network for IPv6 lab
+	bash scripts/ipv6-nat64/network.sh --create
+
+.PHONY: ipv6_lab_network_cleanup
+ipv6_lab_network_cleanup: export WORK_DIR = ${IPV6_LAB_WORK_DIR}
+ipv6_lab_network_cleanup: export NETWORK_NAME = ${IPV6_LAB_NETWORK_NAME}
+ipv6_lab_network_cleanup: export MANAGE_FIREWALLD = ${IPV6_LAB_MANAGE_FIREWALLD}
+ipv6_lab_network_cleanup: ## Deploys libvirt network for IPv6 lab
+	bash scripts/ipv6-nat64/network.sh --cleanup
+
+.PHONY: ipv6_lab_nat64_router
+ipv6_lab_nat64_router: export WORK_DIR = ${IPV6_LAB_WORK_DIR}
+ipv6_lab_nat64_router: export NETWORK_NAME = ${IPV6_LAB_NETWORK_NAME}
+ipv6_lab_nat64_router: export IPV6_NETWORK_IPADDRESS = ${IPV6_LAB_IPV6_NETWORK_IPADDRESS}
+ipv6_lab_nat64_router: export IPV4_NETWORK_IPADDRESS = ${IPV6_LAB_IPV4_NETWORK_IPADDRESS}
+ipv6_lab_nat64_router: export NAT64_HOST_IPV6 = ${IPV6_LAB_NAT64_HOST_IPV6}
+ipv6_lab_nat64_router: export NAT64_TAYGA_IPV4 = ${IPV6_LAB_NAT64_TAYGA_IPV4}
+ipv6_lab_nat64_router: export NAT64_TAYGA_IPV6 = ${IPV6_LAB_NAT64_TAYGA_IPV6}
+ipv6_lab_nat64_router: export NAT64_TAYGA_DYNAMIC_POOL = ${IPV6_LAB_NAT64_TAYGA_DYNAMIC_POOL}
+ipv6_lab_nat64_router: export NAT64_TAYGA_IPV6_PREFIX = ${IPV6_LAB_NAT64_TAYGA_IPV6_PREFIX}
+ipv6_lab_nat64_router: export NAT64_INSTANCE_NAME = ${IPV6_LAB_NAT64_INSTANCE_NAME}
+ipv6_lab_nat64_router: export SSH_PUB_KEY = ${IPV6_LAB_SSH_PUB_KEY}
+ipv6_lab_nat64_router: export LIBVIRT_STORAGE_POOL = ${IPV6_LAB_LIBVIRT_STORAGE_POOL}
+ipv6_lab_nat64_router: export UPDATE_PACKAGES = ${IPV6_LAB_NAT64_UPDATE_PACKAGES}
+ipv6_lab_nat64_router: ## Deploys NAT64/DNS64 router node
+	bash scripts/ipv6-nat64/nat64_router.sh --create
+
+.PHONY: ipv6_lab_nat64_router_cleanup
+ipv6_lab_nat64_router_cleanup: export WORK_DIR = ${IPV6_LAB_WORK_DIR}
+ipv6_lab_nat64_router_cleanup: export NAT64_INSTANCE_NAME = ${IPV6_LAB_NAT64_INSTANCE_NAME}
+ipv6_lab_nat64_router_cleanup: ## Deploys NAT64/DNS64 router node
+	bash scripts/ipv6-nat64/nat64_router.sh --cleanup
+
+.PHONY: ipv6_lab_sno
+ipv6_lab_sno: export WORK_DIR = ${IPV6_LAB_WORK_DIR}
+ipv6_lab_sno: export SSH_PUB_KEY = ${IPV6_LAB_SSH_PUB_KEY}
+ipv6_lab_sno: export OCP_VERSION = ${IPV&IPV6_LAB_SNO_OCP_VERSION}
+ipv6_lab_sno: export OCP_MIRROR_URL = ${IPV6_LAB_SNO_OCP_MIRROR_URL}
+ipv6_lab_sno: export OCP_ADMIN_PASSWD = ${KUBEADMIN_PWD}
+ipv6_lab_sno: export NETWORK_NAME = ${IPV6_LAB_NETWORK_NAME}
+ipv6_lab_sno: export SNO_CLUSTER_NETWORK = ${IPV6_LAB_SNO_CLUSTER_NETWORK}
+ipv6_lab_sno: export SNO_HOST_PREFIX = ${IPV6_LAB_SNO_HOST_PREFIX}
+ipv6_lab_sno: export SNO_MACHINE_NETWORK = ${IPV6_LAB_SNO_MACHINE_NETWORK}
+ipv6_lab_sno: export SNO_SERVICE_NETWORK = ${IPV6_LAB_SNO_SERVICE_NETWORK}
+ipv6_lab_sno: export SNO_HOST_IP = ${IPV6_LAB_SNO_HOST_IP}
+ipv6_lab_sno: export SNO_INSTANCE_NAME = ${IPV6_LAB_SNO_INSTANCE_NAME}
+ipv6_lab_sno: export LIBVIRT_STORAGE_POOL = ${IPV6_LAB_LIBVIRT_STORAGE_POOL}
+ipv6_lab_sno: ## Deployes Single-node-Openshift
+	bash scripts/ipv6-nat64/sno.sh --create
+
+.PHONY: ipv6_lab_sno_cleanup
+ipv6_lab_sno_cleanup: export WORK_DIR = ${IPV6_LAB_WORK_DIR}
+ipv6_lab_sno_cleanup: export SNO_INSTANCE_NAME = ${IPV6_LAB_SNO_INSTANCE_NAME}
+ipv6_lab_sno_cleanup: export NETWORK_NAME = ${IPV6_LAB_NETWORK_NAME}
+ipv6_lab_sno_cleanup:  ## Destroys Single-node-Openshift
+	bash scripts/ipv6-nat64/sno.sh --cleanup
+
+
+.PHONY: ipv6_lab
+ipv6_lab: ## Deploys IPv6 lab environment
+	make ipv6_lab_network
+	make ipv6_lab_nat64_router
+	make ipv6_lab_sno
+
+.PHONY: ipv6_lab_cleanup
+ipv6_lab_cleanup: ## Deploys IPv6 lab environment
+	make ipv6_lab_sno_cleanup
+	make ipv6_lab_nat64_router_cleanup
+	make ipv6_lab_network_cleanup
 
 ##@ Attach interface
 
