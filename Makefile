@@ -842,6 +842,14 @@ dns_deploy_cleanup: ## cleans up the service instance, Does not affect the opera
 ##@ NETCONFIG
 .PHONY: netconfig_deploy_prep
 netconfig_deploy_prep: export KIND=NetConfig
+ifeq ($(NETWORK_ISOLATION_IPV4), true)
+netconfig_deploy_prep: export IPV4_ENABLED=true
+endif
+ifeq ($(NETWORK_ISOLATION_IPV6), true)
+netconfig_deploy_prep: export IPV6_ENABLED=true
+netconfig_deploy_prep: export CTLPLANE_IPV6_ADDRESS_PREFIX=${NNCP_CTLPLANE_IPV6_ADDRESS_PREFIX}
+netconfig_deploy_prep: export CTLPLANE_IPV6_GATEWAY=${NNCP_GATEWAY_IPV6}
+endif
 ifeq ($(NETWORK_BGP), true)
 netconfig_deploy_prep: export BGP=enabled
 endif
