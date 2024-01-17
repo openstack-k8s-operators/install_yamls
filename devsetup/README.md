@@ -319,3 +319,42 @@ nodes:
   ports:
   - address: 52:54:00:8a:ea:14
 ```
+
+### IPv6 LAB
+
+#### Create the IPv6 LAB
+
+Export vars:
+```bash
+export NETWORK_ISOLATION_NET_NAME=net-iso
+export NETWORK_ISOLATION_IPV4=false
+export NETWORK_ISOLATION_IPV6=true
+export NETWORK_ISOLATION_INSTANCE_NAME=sno
+export NETWORK_ISOLATION_IP_ADDRESS=fd00:aaaa::10
+export NNCP_INTERFACE=enp7s0
+```
+
+Change to the devsetup directory:
+```bash
+cd <install_yamls_root_path>/devsetup
+```
+
+Set up the networking using NAT64 and SNO Single-node-Openshift:
+```bash
+make ipv6_lab
+```
+
+Create the network-isolation network with IPv6 enabled
+```bash
+make network_isolation_bridge
+```
+
+Attach the network-isolation bridge to SNO (Single-node-Openshift):
+```bash
+make attach_default_interface
+```
+
+Login to the cluster:
+```bash
+oc login -u admin -p 12345678 https://api.sno.lab.example.com:6443
+```
