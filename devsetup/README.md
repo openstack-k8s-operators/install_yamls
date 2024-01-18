@@ -132,7 +132,7 @@ Then edit inventory in edpm/edpm-play.yaml.
 Cleanup:
 ```
 pushd ..
-make edpm_play_cleanup
+make edpm_deploy_cleanup
 popd
 
 # Will delete VM's!:
