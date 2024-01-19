@@ -1,0 +1,29 @@
+---
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  labels:
+    app.kubernetes.io/name: openstackdataplaneservice
+    app.kubernetes.io/instance: openstackdataplaneservice-upgrade-minimal
+    app.kubernetes.io/part-of: dataplane-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: dataplane-operator
+  name: upgrade-minimal
+spec:
+  label: upgrade-minimal
+  play: |
+      - hosts: all
+        strategy: linear
+        tasks:
+          - name: Perform system update
+            become: true
+            ansible.builtin.dnf:
+              name: "*"
+              state: latest
+              update_cache: true
+              update_only: true
+              bugfix: true
+            register: edpm_bootstrap_system_update
+            until: edpm_bootstrap_system_update.rc == 0
+            retries: 5
+            delay: 5
