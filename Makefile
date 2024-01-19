@@ -432,7 +432,7 @@ TELEMETRY_KUTTL_NAMESPACE ?= telemetry-kuttl-tests
 # BMO
 BMO_REPO                         ?= https://github.com/metal3-io/baremetal-operator
 BMO_BRANCH                       ?= main
-BMO_PROVISIONING_INTERFACE       ?= ${NNCP_BRIDGE}
+BMO_PROVISIONING_INTERFACE       ?=
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
 BMO_IRONIC_HOST                  ?= 192.168.122.10
 else
@@ -589,12 +589,15 @@ crc_bmo_setup: $(if $(findstring true,$(INSTALL_CERT_MANAGER)), certmanager)
 	$(eval $(call vars,$@))
 	mkdir -p ${OPERATOR_BASE_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(BMO_BRANCH),-b ${BMO_BRANCH}) ${BMO_REPO} "baremetal-operator" && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i -e '$$aIRONIC_IP=${BMO_IRONIC_HOST}' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/eth2/${BMO_PROVISIONING_INTERFACE}/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/ENDPOINT\=http/ENDPOINT\=https/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0.2\:/${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}.10\:/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0.1\:/${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}.11\:/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0./${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}./g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && yq 'del(.spec.template.spec.containers[] | select(.name == "ironic-dnsmasq"))' -i ironic-deployment/base/ironic.yaml && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && make generate manifests && bash tools/deploy.sh -bitm && popd
+	sudo ip route add 192.168.126.0/24 dev virbr0
 	## Hack to add required scc
 	oc adm policy add-scc-to-user privileged system:serviceaccount:baremetal-operator-system:baremetal-operator-controller-manager
 	oc adm policy add-scc-to-user privileged system:serviceaccount:baremetal-operator-system:default
