@@ -357,7 +357,7 @@ DATAPLANE_SSHD_ALLOWED_RANGES                    ?=['172.16.1.0/24']
 DATAPLANE_DEFAULT_GW                             ?= 172.16.1.1
 endif
 DATAPLANE_TOTAL_NODES                            ?=1
-DATAPLANE_RUNNER_IMG                             ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:${OPENSTACK_K8S_TAG}
+DATAPLANE_RUNNER_IMG                             ?=
 DATAPLANE_NETWORK_INTERFACE_NAME                 ?=eth0
 DATAPLANE_NTP_SERVER                             ?=pool.ntp.org
 DATAPLANE_REGISTRY_URL                           ?=quay.io/podified-antelope-centos9
@@ -693,13 +693,19 @@ edpm_deploy_generate_keys:
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
 	bash scripts/gen-edpm-nova-migration-ssh-key.sh
 
+.PHONY: edpm_patch_ansible_runner_image
+edpm_patch_ansible_runner_image:
+	$(eval $(call vars,$@,dataplane))
+	oc patch $(shell oc get csv -n ${OPERATOR_NAMESPACE} -o name | grep ansibleee) \
+	-n ${OPERATOR_NAMESPACE} --type='json' \
+	-p='[{"op":"replace", "path":"/spec/install/spec/deployments/0/spec/template/spec/containers/1/env/0", "value": {"name": "RELATED_IMAGE_ANSIBLEEE_IMAGE_URL_DEFAULT", "value": "${DATAPLANE_RUNNER_IMG}"}}]'
+
 .PHONY: edpm_deploy_prep
 edpm_deploy_prep: export KIND=OpenStackDataPlaneNodeSet
 edpm_deploy_prep: export EDPM_ANSIBLE_SECRET=${DATAPLANE_ANSIBLE_SECRET}
 edpm_deploy_prep: export EDPM_ANSIBLE_USER=${DATAPLANE_ANSIBLE_USER}
 edpm_deploy_prep: export EDPM_COMPUTE_IP=${DATAPLANE_COMPUTE_IP}
 edpm_deploy_prep: export EDPM_TOTAL_NODES=${DATAPLANE_TOTAL_NODES}
-edpm_deploy_prep: export OPENSTACK_RUNNER_IMG=${DATAPLANE_RUNNER_IMG}
 edpm_deploy_prep: export EDPM_NETWORK_INTERFACE_NAME=${DATAPLANE_NETWORK_INTERFACE_NAME}
 edpm_deploy_prep: export CTLPLANE_IP_ADDRESS_PREFIX=${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}
 edpm_deploy_prep: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALLOWED_RANGES}
@@ -739,9 +745,9 @@ edpm_deploy_cleanup: namespace ## cleans up the edpm instance, Does not affect t
 edpm_deploy: input edpm_deploy_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,dataplane))
 	oc apply -f ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
-	oc patch $(shell oc get csv -n ${OPERATOR_NAMESPACE} -o name | grep ansibleee) \
-	-n ${OPERATOR_NAMESPACE} --type='json' \
-	-p='[{"op":"replace", "path":"/spec/install/spec/deployments/0/spec/template/spec/containers/1/env/0", "value": {"name": "RELATED_IMAGE_ANSIBLEEE_IMAGE_URL_DEFAULT", "value": "${DATAPLANE_RUNNER_IMG}"}}]'
+ifneq ($(DATAPLANE_RUNNER_IMG),)
+	make edpm_patch_ansible_runner_image
+endif
 	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 
@@ -775,6 +781,9 @@ endif
 edpm_deploy_baremetal: input edpm_deploy_baremetal_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,dataplane))
 	oc apply -f ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
+ifneq ($(DATAPLANE_RUNNER_IMG),)
+	make edpm_patch_ansible_runner_image
+endif
 	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 
