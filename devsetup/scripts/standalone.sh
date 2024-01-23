@@ -208,5 +208,8 @@ if [[ -z ${SKIP_TRIPLEO_REPOS} || ${SKIP_TRIPLEO_REPOS} == "false" ]]; then
     # a failure while deploying standalone
     ssh $SSH_OPT root@$IP "rm -f /tmp/repo-setup.sh"
 fi
+if [[ -n ${STANDALONE_EXTRA_CMD} ]]; then
+    ssh $SSH_OPT root@$IP "${STANDALONE_EXTRA_CMD}"
+fi
 ssh $SSH_OPT root@$IP "bash /tmp/standalone-deploy.sh"
 ssh $SSH_OPT root@$IP "rm -f /tmp/standalone-deploy.sh"
