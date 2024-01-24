@@ -91,6 +91,7 @@ CMD_ARGS+=" -n $HOME/network_data.yaml"
 ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/standalone/standalone-tripleo.yaml"
 ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml"
 ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/deployed-network-environment.yaml"
+ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/cinder-backup.yaml"
 if [ "$COMPUTE_DRIVER" = "ironic" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/ironic-overcloud.yaml"
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/ironic-inspector.yaml"
