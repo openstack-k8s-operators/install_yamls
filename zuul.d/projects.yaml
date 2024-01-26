@@ -14,5 +14,6 @@
             files:
               - ^devsetup/Makefile
               - ^devsetup/scripts/*
+              - ^devsetup/standalone/*
               - ^Makefile
               - ^zuul.d/projects.yaml
