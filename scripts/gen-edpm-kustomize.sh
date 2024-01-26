@@ -27,17 +27,17 @@ if [ -z "$KIND" ]; then
     echo "Please set SERVICE"; exit 1
 fi
 
-if [ -z "$DEPLOY_DIR" ]; then
-    echo "Please set DEPLOY_DIR"; exit 1
+if [ -z "$EDPM_DEPLOY_DIR" ]; then
+    echo "Please set EDPM_DEPLOY_DIR"; exit 1
 fi
 
 NAME=${KIND,,}
 
-if [ ! -d ${DEPLOY_DIR} ]; then
-    mkdir -p ${DEPLOY_DIR}
+if [ ! -d ${EDPM_DEPLOY_DIR} ]; then
+    mkdir -p ${EDPM_DEPLOY_DIR}
 fi
 
-pushd ${DEPLOY_DIR}
+pushd ${EDPM_DEPLOY_DIR}
 
 cat <<EOF >kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -52,15 +52,15 @@ patches:
       path: /spec/preProvisioned
       value: true
     - op: replace
-      path: /spec/nodes/edpm-compute-0/ansible/ansibleHost
-      value: ${EDPM_COMPUTE_IP}
+      path: /spec/nodes/edpm-${EDPM_SERVER_ROLE}-0/ansible/ansibleHost
+      value: ${EDPM_NODE_IP}
     - op: replace
-      path: /spec/nodes/edpm-compute-0/networks
+      path: /spec/nodes/edpm-${EDPM_SERVER_ROLE}-0/networks
       value:
         - name: CtlPlane
           subnetName: subnet1
           defaultRoute: true
-          fixedIP: ${EDPM_COMPUTE_IP}
+          fixedIP: ${EDPM_NODE_IP}
         - name: InternalApi
           subnetName: subnet1
         - name: Storage
@@ -134,21 +134,26 @@ EOF
 fi
 if [ "$EDPM_TOTAL_NODES" -gt 1 ]; then
     for INDEX in $(seq 1 $((${EDPM_TOTAL_NODES} -1))) ; do
+        if [ "${EDPM_SERVER_ROLE}" == "networker" ]; then
+            IP_ADDRESS_PREFIX=${CTLPLANE_IP_ADDRESS_PREFIX}.$((200 + ${INDEX}))
+        else
+            IP_ADDRESS_PREFIX=${CTLPLANE_IP_ADDRESS_PREFIX}.$((100 + ${INDEX}))
+        fi
 cat <<EOF >>kustomization.yaml
     - op: copy
-      from: /spec/nodes/edpm-compute-0
-      path: /spec/nodes/edpm-compute-${INDEX}
+      from: /spec/nodes/edpm-${EDPM_SERVER_ROLE}-0
+      path: /spec/nodes/edpm-${EDPM_SERVER_ROLE}-${INDEX}
     - op: replace
-      path: /spec/nodes/edpm-compute-${INDEX}/ansible/ansibleHost
-      value: ${CTLPLANE_IP_ADDRESS_PREFIX}.$((100+${INDEX}))
+      path: /spec/nodes/edpm-${EDPM_SERVER_ROLE}-${INDEX}/ansible/ansibleHost
+      value: ${IP_ADDRESS_PREFIX}
     - op: replace
-      path: /spec/nodes/edpm-compute-${INDEX}/hostName
-      value: edpm-compute-${INDEX}
+      path: /spec/nodes/edpm-${EDPM_SERVER_ROLE}-${INDEX}/hostName
+      value: edpm-${EDPM_SERVER_ROLE}-${INDEX}
 EOF
 if [ -n "$BGP" ] && [ "$BGP" = "ovn" ]; then
 cat <<EOF >>kustomization.yaml
     - op: add
-      path: /spec/nodes/edpm-compute-${INDEX}/ansible/ansibleVars
+      path: /spec/nodes/edpm-${EDPM_SERVER_ROLE}-${INDEX}/ansible/ansibleVars
       value:
         edpm_ovn_bgp_agent_local_ovn_peer_ips: ['100.64.$((1+${INDEX})).5', '100.65.$((1+${INDEX})).5']
         edpm_frr_bgp_peers: ['100.64.$((1+${INDEX})).5', '100.65.$((1+${INDEX})).5']
@@ -156,12 +161,12 @@ EOF
 fi
 cat <<EOF >>kustomization.yaml
     - op: add
-      path: /spec/nodes/edpm-compute-${INDEX}/networks
+      path: /spec/nodes/edpm-${EDPM_SERVER_ROLE}-${INDEX}/networks
       value:
         - name: CtlPlane
           subnetName: subnet1
           defaultRoute: true
-          fixedIP: ${CTLPLANE_IP_ADDRESS_PREFIX}.$((100+${INDEX}))
+          fixedIP: ${IP_ADDRESS_PREFIX}
         - name: InternalApi
           subnetName: subnet1
         - name: Storage
@@ -189,6 +194,7 @@ fi
     done
 fi
 
+if [ "${EDPM_SERVER_ROLE}" == "compute" ]; then
 # Create a nova-custom service with a reference to nova-extra-config CM
 cat <<EOF >>kustomization.yaml
 - target:
@@ -227,6 +233,7 @@ EOF
 #
 # So we do a replace by value with yq (assuming golang implementation of yq)
 yq -i '(.spec.services[] | select(. == "nova")) |= "nova-custom"' *openstackdataplanenodeset*.yaml
+fi
 
 kustomization_add_resources
 
