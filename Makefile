@@ -337,26 +337,33 @@ else
 OPENSTACK_DATAPLANENODESET                       ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset.yaml
 endif
 OPENSTACK_DATAPLANENODESET_BAREMETAL             ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset_baremetal_with_ipam.yaml
+OPENSTACK_DATAPLANENODESET_NETWORKER             ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset_networker.yaml
 OPENSTACK_DATAPLANEDEPLOYMENT		             ?= config/samples/dataplane_v1beta1_openstackdataplanedeployment.yaml
 OPENSTACK_DATAPLANEDEPLOYMENT_BAREMETAL		 	 ?= config/samples/dataplane_v1beta1_openstackdataplanedeployment_baremetal_with_ipam.yaml
+OPENSTACK_DATAPLANEDEPLOYMENT_NETWORKER          ?= config/samples/dataplane_v1beta1_openstackdataplanedeployment_networker.yaml
 OPENSTACK_DATAPLANESERVICE_NOVA                  ?= config/services/dataplane_v1beta1_openstackdataplaneservice_nova.yaml
 DATAPLANE_NODESET_CR                             ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANENODESET}
 DATAPLANE_NODESET_BAREMETAL_CR                   ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANENODESET_BAREMETAL}
+DATAPLANE_NODESET_NETWORKER_CR                   ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANENODESET_NETWORKER}
 DATAPLANE_DEPLOYMENT_CR                          ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANEDEPLOYMENT}
 DATAPLANE_DEPLOYMENT_BAREMETAL_CR				 ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANEDEPLOYMENT_BAREMETAL}
+DATAPLANE_DEPLOYMENT_NETWORKER_CR                ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANEDEPLOYMENT_NETWORKER}
 DATAPLANE_SERVICE_NOVA_CR                        ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANESERVICE_NOVA}
 DATAPLANE_ANSIBLE_SECRET                         ?=dataplane-ansible-ssh-private-key-secret
 DATAPLANE_ANSIBLE_USER                           ?=
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
 DATAPLANE_COMPUTE_IP                             ?=192.168.122.100
+DATAPLANE_NETWORKER_IP							 ?=192.168.122.200
 DATAPLANE_SSHD_ALLOWED_RANGES                    ?=['192.168.122.0/24']
 DATAPLANE_DEFAULT_GW                             ?= 192.168.122.1
 else
 DATAPLANE_COMPUTE_IP                             ?=172.16.1.100
+DATAPLANE_NETWORKER_IP							 ?=172.16.1.200
 DATAPLANE_SSHD_ALLOWED_RANGES                    ?=['172.16.1.0/24']
 DATAPLANE_DEFAULT_GW                             ?= 172.16.1.1
 endif
 DATAPLANE_TOTAL_NODES                            ?=1
+DATAPLANE_TOTAL_NETWORKER_NODES					 ?=1
 DATAPLANE_RUNNER_IMG                             ?=
 DATAPLANE_NETWORK_INTERFACE_NAME                 ?=eth0
 DATAPLANE_NTP_SERVER                             ?=pool.ntp.org
@@ -469,6 +476,7 @@ ${1}: export CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD}
 ${1}: export OPERATOR_NAME=${2}
 ${1}: export OPERATOR_DIR=${OUT}/${OPERATOR_NAMESPACE}/${2}/op
 ${1}: export DEPLOY_DIR=${OUT}/${NAMESPACE}/${2}/cr
+${1}: export DEPLOY_DIR_EDPM_NETWORKER=${OUT}/${NAMESPACE}/${2}/networker_cr
 endef
 
 .PHONY: all
@@ -704,7 +712,7 @@ edpm_patch_ansible_runner_image:
 edpm_deploy_prep: export KIND=OpenStackDataPlaneNodeSet
 edpm_deploy_prep: export EDPM_ANSIBLE_SECRET=${DATAPLANE_ANSIBLE_SECRET}
 edpm_deploy_prep: export EDPM_ANSIBLE_USER=${DATAPLANE_ANSIBLE_USER}
-edpm_deploy_prep: export EDPM_COMPUTE_IP=${DATAPLANE_COMPUTE_IP}
+edpm_deploy_prep: export EDPM_NODE_IP=${DATAPLANE_COMPUTE_IP}
 edpm_deploy_prep: export EDPM_TOTAL_NODES=${DATAPLANE_TOTAL_NODES}
 edpm_deploy_prep: export EDPM_NETWORK_INTERFACE_NAME=${DATAPLANE_NETWORK_INTERFACE_NAME}
 edpm_deploy_prep: export CTLPLANE_IP_ADDRESS_PREFIX=${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}
@@ -714,6 +722,8 @@ edpm_deploy_prep: export EDPM_REGISTRY_URL=${DATAPLANE_REGISTRY_URL}
 edpm_deploy_prep: export EDPM_CONTAINER_TAG=${DATAPLANE_CONTAINER_TAG}
 edpm_deploy_prep: export EDPM_CONTAINER_PREFIX=${DATAPLANE_CONTAINER_PREFIX}
 edpm_deploy_prep: export EDPM_EXTRA_NOVA_CONFIG_FILE=${DEPLOY_DIR}/25-nova-extra.conf
+edpm_deploy_prep: export EDPM_DEPLOY_DIR=${DEPLOY_DIR}
+edpm_deploy_prep: export EDPM_SERVER_ROLE=compute
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
 edpm_deploy_prep: export BGP=ovn
@@ -811,6 +821,61 @@ edpm_nova_discover_hosts: ## trigger manual compute host discovery in nova
 .PHONY: openstack_crds
 openstack_crds: namespace openstack_deploy_prep ## installs all openstack CRDs. Useful for infrastructure dev
 	OPENSTACK_BUNDLE_IMG=${OPENSTACK_BUNDLE_IMG} OUT=${OUT} OPENSTACK_CRDS_DIR=${OPENSTACK_CRDS_DIR} OPERATOR_BASE_DIR=${OPERATOR_BASE_DIR} bash scripts/openstack-crds.sh
+
+.PHONY: edpm_deploy_networker_prep
+edpm_deploy_networker_prep: export KIND=OpenStackDataPlaneNodeSet
+edpm_deploy_networker_prep: export EDPM_ANSIBLE_SECRET=${DATAPLANE_ANSIBLE_SECRET}
+edpm_deploy_networker_prep: export EDPM_ANSIBLE_USER=${DATAPLANE_ANSIBLE_USER}
+edpm_deploy_networker_prep: export EDPM_NODE_IP=${DATAPLANE_NETWORKER_IP}
+edpm_deploy_networker_prep: export EDPM_TOTAL_NODES=${DATAPLANE_TOTAL_NETWORKER_NODES}
+edpm_deploy_networker_prep: export OPENSTACK_RUNNER_IMG=${DATAPLANE_RUNNER_IMG}
+edpm_deploy_networker_prep: export EDPM_NETWORK_INTERFACE_NAME=${DATAPLANE_NETWORK_INTERFACE_NAME}
+edpm_deploy_networker_prep: export CTLPLANE_IP_ADDRESS_PREFIX=${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}
+edpm_deploy_networker_prep: export EDPM_SSHD_ALLOWED_RANGES=${DATAPLANE_SSHD_ALLOWED_RANGES}
+edpm_deploy_networker_prep: export EDPM_NTP_SERVER=${DATAPLANE_NTP_SERVER}
+edpm_deploy_networker_prep: export EDPM_REGISTRY_URL=${DATAPLANE_REGISTRY_URL}
+edpm_deploy_networker_prep: export EDPM_CONTAINER_TAG=${DATAPLANE_CONTAINER_TAG}
+edpm_deploy_networker_prep: export EDPM_CONTAINER_PREFIX=${DATAPLANE_CONTAINER_PREFIX}
+edpm_deploy_networker_prep: export EDPM_DEPLOY_DIR=${DEPLOY_DIR_EDPM_NETWORKER}
+edpm_deploy_networker_prep: export EDPM_IP_ADDRESS_OFFSET=200
+edpm_deploy_networker_prep: export EDPM_SERVER_ROLE=networker
+ifeq ($(NETWORK_BGP), true)
+ifeq ($(BGP_OVN_ROUTING), true)
+edpm_deploy_networker_prep: export BGP=ovn
+else
+edpm_deploy_networker_prep: export BGP=kernel
+endif
+endif
+edpm_deploy_networker_prep: edpm_deploy_networker_cleanup ## prepares the CR to install the data plane
+	echo "START PREP"
+	$(eval $(call vars,$@,dataplane))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR_EDPM_NETWORKER}
+	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
+	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
+	cp ${DATAPLANE_NODESET_NETWORKER_CR} ${DEPLOY_DIR_EDPM_NETWORKER}
+	cp ${DATAPLANE_DEPLOYMENT_NETWORKER_CR} ${DEPLOY_DIR_EDPM_NETWORKER}
+	bash scripts/gen-edpm-kustomize.sh
+ifeq ($(GENERATE_SSH_KEYS), true)
+	make edpm_deploy_generate_keys
+endif
+
+.PHONY: edpm_deploy_networker_cleanup
+edpm_deploy_networker_cleanup: namespace ## cleans up the edpm instance, Does not affect the operator.
+	echo "START CLEANUP"
+	$(eval $(call vars,$@,dataplane))
+	oc kustomize ${DEPLOY_DIR_EDPM_NETWORKER} | oc delete --ignore-not-found=true -f -
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/dataplane-operator ${DEPLOY_DIR_EDPM_NETWORKER}
+	echo "CLEANUP DONE"
+
+.PHONY: edpm_deploy_networker
+edpm_deploy_networker: input edpm_deploy_networker_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,dataplane))
+	oc apply -f ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
+ifneq ($(DATAPLANE_RUNNER_IMG),)
+	make edpm_patch_ansible_runner_image
+endif
+	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
+	oc kustomize ${DEPLOY_DIR_EDPM_NETWORKER} | oc apply -f -
 
 ##@ INFRA
 .PHONY: infra_prep
