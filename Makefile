@@ -1603,14 +1603,12 @@ ovn_kuttl: export NAMESPACE = ${OVN_KUTTL_NAMESPACE}
 # Set the value of $OVN_KUTTL_NAMESPACE if you want to run the ovn
 # kuttl tests in a namespace different than the default (ovn-kuttl-tests)
 ovn_kuttl: input deploy_cleanup infra ovn ovn_deploy_prep ## runs kuttl tests for the ovn operator. Installs ovn operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
-	$(eval $(call vars,$@,infra))
-	make wait
+	make wait OPERATOR_NAME=infra
 	$(eval $(call vars,$@,ovn))
 	make wait
 	make ovn_kuttl_run
 	make deploy_cleanup
 	make ovn_cleanup
-	$(eval $(call vars,$@,infra))
 	make infra_cleanup
 
 .PHONY: infra_kuttl_run
@@ -1707,13 +1705,9 @@ dataplane_kuttl_prep: dataplane_kuttl_cleanup input ansibleee infra baremetal da
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
-	$(eval $(call vars,$@,ansibleee))
-	make wait
-	$(eval $(call vars,$@,infra))
-	make wait
-	$(eval $(call vars,$@,openstack-baremetal))
-	make wait
-	$(eval $(call vars,$@,dataplane))
+	make wait OPERATOR_NAME=ansibleee
+	make wait OPERATOR_NAME=infra
+	make wait OPERATOR_NAME=openstack-baremetal
 	make wait
 
 .PHONY: dataplane_kuttl
