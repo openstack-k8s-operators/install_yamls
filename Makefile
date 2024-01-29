@@ -553,7 +553,7 @@ namespace: ## creates the namespace specified via NAMESPACE env var (defaults to
 	$(eval $(call vars,$@))
 	bash scripts/gen-namespace.sh
 	oc apply -f ${OUT}/${NAMESPACE}/namespace.yaml
-	sleep 2
+	timeout $(TIMEOUT) bash -c "while ! (oc get project ${NAMESPACE}); do sleep 1; done"
 ifeq ($(MICROSHIFT) ,0)
 	oc project ${NAMESPACE}
 else
