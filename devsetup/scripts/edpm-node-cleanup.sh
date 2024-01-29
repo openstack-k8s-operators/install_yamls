@@ -16,8 +16,9 @@
 set -ex
 export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+EDPM_SERVER_ROLE=${EDPM_SERVER_ROLE:-"compute"}
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
-EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
+EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-${EDPM_SERVER_ROLE}-${EDPM_COMPUTE_SUFFIX}"}
 CRC_POOL=${CRC_POOL:-"$HOME/.crc/machines/crc"}
 OUTPUT_DIR=${OUTPUT_DIR:-"../out/edpm/"}
 REPO_SETUP_CMDS=${REPO_SETUP_CMDS:-"/tmp/standalone_repos"}

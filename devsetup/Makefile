@@ -21,6 +21,7 @@ NETWORK_ISOLATION_IPV6_ADDRESS ?= fd00:aaaa::1/64
 NETWORK_ISOLATION_INSTANCE_NAME ?= crc
 
 EDPM_COMPUTE_SUFFIX ?= 0
+EDPM_NETWORKER_SUFFIX ?= 0
 # EDPM_COMPUTE_ADDITIONAL_NETWORKS: JSON string - list of additional networks
 # Examples:
 #   cat << EOF
@@ -47,6 +48,7 @@ EDPM_COMPUTE_SUFFIX ?= 0
 EDPM_COMPUTE_ADDITIONAL_NETWORKS ?= '[]'
 EDPM_TOTAL_NODES ?= 1
 EDPM_COMPUTE_CEPH_ENABLED ?= true
+EDPM_TOTAL_NETWORKERS ?= 1
 NETWORK_MTU	?= 1500
 
 NETWORK_BGP ?= false
@@ -328,10 +330,10 @@ edpm_compute: ## Create EDPM compute VM
 	$(eval $(call vars))
 	scripts/gen-ansibleee-ssh-key.sh
 	if [ ${EDPM_TOTAL_NODES} -eq 1 ]; then \
-		scripts/gen-edpm-compute-node.sh ${EDPM_COMPUTE_SUFFIX} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}'; \
+		scripts/gen-edpm-node.sh ${EDPM_COMPUTE_SUFFIX} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}'; \
 	else \
 		for INDEX in $(shell seq 0 $$((${EDPM_TOTAL_NODES} -1))) ; do \
-			scripts/gen-edpm-compute-node.sh $$INDEX '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}' ; \
+			scripts/gen-edpm-node.sh $$INDEX '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}' ; \
 		done \
 	fi
 
@@ -346,7 +348,7 @@ edpm_ansible_runner: ## Debug edpm-ansible playbooks
 edpm_computes_bgp: #
 	$(eval $(call vars))
 	scripts/gen-ansibleee-ssh-key.sh
-	scripts/gen-edpm-compute-node-bgp.sh
+	scripts/gen-edpm-node-bgp.sh
 
 .PHONY: edpm_compute_repos
 edpm_compute_repos: ## Configure EDPM compute VM with repositories
@@ -356,10 +358,35 @@ edpm_compute_repos: ## Configure EDPM compute VM with repositories
 edpm_compute_cleanup: ## Delete EDPM compute VM
 	$(eval $(call vars))
 	if [ ${EDPM_TOTAL_NODES} -eq 1 ]; then \
-		scripts/edpm-compute-cleanup.sh ${EDPM_COMPUTE_SUFFIX}; \
+		scripts/edpm-node-cleanup.sh ${EDPM_COMPUTE_SUFFIX}; \
 	else \
 		for INDEX in $(shell seq 0 $$((${EDPM_TOTAL_NODES} -1))) ; do \
-			scripts/edpm-compute-cleanup.sh $$INDEX ; \
+			scripts/edpm-node-cleanup.sh $$INDEX ; \
+		done \
+	fi
+
+.PHONY: edpm_networker
+edpm_networker: export EDPM_SERVER_ROLE=networker
+edpm_networker: ## Create EDPM networker node VM
+	$(eval $(call vars))
+	scripts/gen-ansibleee-ssh-key.sh
+	if [ ${EDPM_TOTAL_NETWORKERS} -eq 1 ]; then \
+		scripts/gen-edpm-node.sh ${EDPM_NETWORKER_SUFFIX} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}'; \
+	else \
+		for INDEX in $(shell seq 0 $$((${EDPM_TOTAL_NETWORKERS} -1))) ; do \
+			scripts/gen-edpm-node.sh $$INDEX '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}' ; \
+		done \
+	fi
+
+.PHONY: edpm_networker_cleanup
+edpm_networker_cleanup: export EDPM_SERVER_ROLE=networker
+edpm_networker_cleanup: ## Delete EDPM networker node VM
+	$(eval $(call vars))
+	if [ ${EDPM_TOTAL_NETWORKERS} -eq 1 ]; then \
+		scripts/edpm-node-cleanup.sh ${EDPM_NETWORKER_SUFFIX}; \
+	else \
+		for INDEX in $(shell seq 0 $$((${EDPM_TOTAL_NETWORKERS} -1))) ; do \
+			scripts/edpm-node-cleanup.sh $$INDEX ; \
 		done \
 	fi
 

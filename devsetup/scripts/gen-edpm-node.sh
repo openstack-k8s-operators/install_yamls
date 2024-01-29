@@ -22,9 +22,11 @@ OUTPUT_DIR=${OUTPUT_DIR:-"../out/edpm"}
 MY_TMP_DIR="$(mktemp -d)"
 trap 'rm -rf -- "$MY_TMP_DIR"' EXIT
 
+EDPM_SERVER_ROLE=${EDPM_SERVER_ROLE:-"compute"}
+
 STANDALONE=${STANDALONE:-false}
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
-EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
+EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-${EDPM_SERVER_ROLE}-${EDPM_COMPUTE_SUFFIX}"}
 if [ ${STANDALONE} = "true" ]; then
     EDPM_COMPUTE_VCPUS=${EDPM_COMPUTE_VCPUS:-8}
     EDPM_COMPUTE_RAM=${EDPM_COMPUTE_RAM:-20}
@@ -43,12 +45,16 @@ DATAPLANE_DNS_SERVER=${DATAPLANE_DNS_SERVER:-${EDPM_COMPUTE_NETWORK_IP}}
 CENTOS_9_STREAM_URL=${CENTOS_9_STREAM_URL:-"https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-latest.x86_64.qcow2"}
 BASE_DISK_FILENAME=${BASE_DISK_FILENAME:-"centos-9-stream-base.qcow2"}
 
-DISK_FILENAME=${DISK_FILENAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}.qcow2"}
+DISK_FILENAME=${DISK_FILENAME:-"edpm-${EDPM_SERVER_ROLE}-${EDPM_COMPUTE_SUFFIX}.qcow2"}
 DISK_FILEPATH=${DISK_FILEPATH:-"${CRC_POOL}/${DISK_FILENAME}"}
 
 SSH_PUBLIC_KEY=${SSH_PUBLIC_KEY:-"${OUTPUT_DIR}/ansibleee-ssh-key-id_rsa.pub"}
 MAC_ADDRESS=${MAC_ADDRESS:-"$(echo -n 52:54:00; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':')"}
-IP_ADRESS_SUFFIX=${IP_ADRESS_SUFFIX:-"$((100+${EDPM_COMPUTE_SUFFIX}))"}
+if [ "${EDPM_SERVER_ROLE}" == "networker" ]; then
+    IP_ADRESS_SUFFIX=${IP_ADRESS_SUFFIX:-"$((200+${EDPM_COMPUTE_SUFFIX}))"}
+else
+    IP_ADRESS_SUFFIX=${IP_ADRESS_SUFFIX:-"$((100+${EDPM_COMPUTE_SUFFIX}))"}
+fi
 
 if [ ! -f ${SSH_PUBLIC_KEY} ]; then
     echo "${SSH_PUBLIC_KEY} is missing. Run gen-ansibleee-ssh-key.sh"
