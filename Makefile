@@ -1764,12 +1764,13 @@ dataplane_kuttl_cleanup:
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/dataplane-operator
 
 .PHONY: dataplane_kuttl_prep
-dataplane_kuttl_prep: dataplane_kuttl_cleanup input ansibleee infra baremetal dataplane namespace operator_namespace ## Prepares all dependencies for running the dataplane-operator kuttl tests
+dataplane_kuttl_prep: dataplane_kuttl_cleanup input rabbitmq ansibleee infra baremetal dataplane namespace operator_namespace ## Prepares all dependencies for running the dataplane-operator kuttl tests
 	$(eval $(call vars,$@,dataplane))
 	# Kuttl tests require the SSH key secret to exist
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
+	make wait OPERATOR_NAME=rabbitmq
 	make wait OPERATOR_NAME=ansibleee
 	make wait OPERATOR_NAME=infra
 	make wait OPERATOR_NAME=openstack-baremetal
