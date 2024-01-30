@@ -1771,7 +1771,7 @@ dataplane_kuttl_prep: dataplane_kuttl_cleanup input rabbitmq ansibleee infra bar
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR}
 	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
 	make wait OPERATOR_NAME=rabbitmq
-	make wait OPERATOR_NAME=ansibleee
+	make wait OPERATOR_NAME=openstack-ansibleee
 	make wait OPERATOR_NAME=infra
 	make wait OPERATOR_NAME=openstack-baremetal
 	make wait
