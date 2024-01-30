@@ -48,6 +48,7 @@ EDPM_NETWORKER_SUFFIX ?= 0
 EDPM_COMPUTE_ADDITIONAL_NETWORKS ?= '[]'
 EDPM_TOTAL_NODES ?= 1
 EDPM_COMPUTE_CEPH_ENABLED ?= true
+EDPM_CEPH_IP ?= 172.18.0.100
 EDPM_TOTAL_NETWORKERS ?= 1
 NETWORK_MTU	?= 1500
 
@@ -397,6 +398,7 @@ edpm_deploy_instance: ## Spin a instance on edpm node
 
 .PHONY: standalone_deploy
 standalone_deploy: export COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED}
+standalone_deploy: export CEPH_IP=${EDPM_CEPH_IP}
 standalone_deploy: export STANDALONE=true
 standalone_deploy: export INTERFACE_MTU=${NETWORK_MTU}
 standalone_deploy:

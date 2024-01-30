@@ -25,11 +25,17 @@ set -ex
 export CEPH_IP=${CEPH_IP:-"172.18.0.100"}
 
 # Create a block device with logical volumes to be used as an OSD.
-sudo dd if=/dev/zero of=/var/lib/ceph-osd.img bs=1 count=0 seek=7G
-sudo losetup /dev/loop3 /var/lib/ceph-osd.img
-sudo pvcreate /dev/loop3
-sudo vgcreate vg2 /dev/loop3
-sudo lvcreate -n data-lv2 -l +100%FREE vg2
+if ! test -f /var/lib/ceph-osd.img; then
+    rm -f /dev/loop3
+    mknod /dev/loop3 b 7 3
+    chown --reference=/dev/loop0 /dev/loop3
+    chmod --reference=/dev/loop0 /dev/loop3
+    sudo dd if=/dev/zero of=/var/lib/ceph-osd.img bs=1 count=0 seek=7G
+    sudo losetup /dev/loop3 /var/lib/ceph-osd.img
+    sudo pvcreate /dev/loop3
+    sudo vgcreate vg2 /dev/loop3
+    sudo lvcreate -n data-lv2 -l +100%FREE vg2
+fi
 
 # Create an OSD spec file which references the block device.
 cat <<EOF > $HOME/osd_spec.yaml
@@ -43,7 +49,7 @@ sudo openstack overcloud ceph spec \
     --standalone \
     --mon-ip $CEPH_IP \
     --osd-spec $HOME/osd_spec.yaml \
-    --output $HOME/ceph_spec.yaml
+    --output $HOME/ceph_spec.yaml --yes
 
 # Create the ceph-admin user by passing the Ceph spec created earlier.
 sudo openstack overcloud ceph user enable \
@@ -62,6 +68,7 @@ EOF
 
 # Use the files created in the previous steps to install Ceph.
 # Use thw network_data.yaml file so that Ceph uses the isolated networks for storage and storage management.
+# Allow redeploying it with stack UPDATE
 sudo openstack overcloud ceph deploy \
     --mon-ip $CEPH_IP \
     --ceph-spec $HOME/ceph_spec.yaml \
@@ -69,11 +76,13 @@ sudo openstack overcloud ceph deploy \
     --container-image-prepare $HOME/containers-prepare-parameters.yaml \
     --standalone \
     --single-host-defaults \
+    --cephadm-extra-args="--skip-mon-network" \
+    --force \
     --skip-hosts-config \
     --skip-container-registry-config \
     --skip-user-create \
     --network-data /tmp/network_data.yaml \
     --ntp-server $NTP_SERVER \
-    --output $HOME/deployed_ceph.yaml
+    --output $HOME/deployed_ceph.yaml --yes
 
 # Ceph should now be installed. Use sudo cephadm shell -- ceph -s to confirm the Ceph cluster health.

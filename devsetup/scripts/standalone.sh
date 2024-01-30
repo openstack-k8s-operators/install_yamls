@@ -44,6 +44,7 @@ EDPM_COMPUTE_VCPUS=${COMPUTE_VCPUS:-8}
 EDPM_COMPUTE_RAM=${COMPUTE_RAM:-20}
 EDPM_COMPUTE_DISK_SIZE=${COMPUTE_DISK_SIZE:-70}
 EDPM_COMPUTE_CEPH_ENABLED=${COMPUTE_CEPH_ENABLED:-true}
+EDPM_CEPH_IP=${CEPH_IP:-"172.18.0.${IP_ADRESS_SUFFIX}"}
 MANILA_ENABLED=${MANILA_ENABLED:-true}
 
 if [[ ! -f $SSH_KEY_FILE ]]; then
@@ -99,6 +100,7 @@ export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
 export INTERFACE_MTU=${INTERFACE_MTU:-1500}
 export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
+export CEPH_IP=${CEPH_IP}
 export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml}"
 export COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
 export IP=${IP}
