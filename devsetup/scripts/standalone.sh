@@ -95,11 +95,18 @@ sudo dnf install -y https://kojihub.stream.centos.org/kojifiles/packages/podman/
 sudo hostnamectl set-hostname standalone.localdomain
 sudo hostnamectl set-hostname standalone.localdomain --transient
 
+# TODO: use Ceph RBD backend for Nova to implement ceph -> ceph adoption of workloads
+# until then, use local file storage backend for VM workloads adoption
+cat >\$HOME/nova_noceph.yaml <<__EOF__
+parameter_defaults:
+    NovaEnableRbdBackend: false
+__EOF__
+
 export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
 export INTERFACE_MTU=${INTERFACE_MTU:-1500}
 export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
-export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml}"
+export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml -e \$HOME/nova_noceph.yaml}"
 export COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
 export IP=${IP}
 export GATEWAY=${GATEWAY}
