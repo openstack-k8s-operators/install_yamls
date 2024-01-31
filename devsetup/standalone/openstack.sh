@@ -18,6 +18,7 @@ set -ex
 EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
 COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
 INTERFACE_MTU=${INTERFACE_MTU:-1500}
+BARBICAN_ENABLED=${BARBICAN_ENABLED:-true}
 MANILA_ENABLED=${MANILA_ENABLED:-true}
 
 # Use the files created in the previous steps including the network_data.yaml file and thw deployed_network.yaml file.
@@ -40,6 +41,7 @@ fi
 # Create standalone_parameters.yaml file and deploy standalone OpenStack using the following commands.
 cat <<EOF > standalone_parameters.yaml
 parameter_defaults:
+  BarbicanSimpleCryptoGlobalDefault: true
   CloudName: $CTLPLANE_IP
   Debug: true
   DeploymentUser: $USER
@@ -95,6 +97,10 @@ ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/cinder-b
 if [ "$COMPUTE_DRIVER" = "ironic" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/ironic-overcloud.yaml"
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/ironic-inspector.yaml"
+fi
+if [ "$BARBICAN_ENABLED" = "true" ]; then
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/barbican.yaml"
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/barbican-backend-simple-crypto.yaml"
 fi
 if [ "$MANILA_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/manila-cephfsnative-config.yaml"
