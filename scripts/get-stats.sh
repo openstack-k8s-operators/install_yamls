@@ -2,6 +2,7 @@
 
 set -ex
 
+
 NODE_NAMES=$(oc get node -o name -l node-role.kubernetes.io/worker)
 if [ -z "$NODE_NAMES" ]; then
     echo "Unable to determine node name with 'oc' command."
