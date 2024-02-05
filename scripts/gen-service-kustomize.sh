@@ -441,6 +441,30 @@ EOF
     - op: replace
       path: /spec/rabbitmq/templates/rabbitmq-cell1/override/service/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
       value: fd00:bbbb::86
+    - op: add
+      path: /spec/rabbitmq/templates/rabbitmq/rabbitmq
+      value: {}
+    - op: add
+      path: /spec/rabbitmq/templates/rabbitmq/rabbitmq/erlangInetConfig
+      value: |
+        {inet6, true}.
+    - op: add
+      path: /spec/rabbitmq/templates/rabbitmq/rabbitmq/envConfig
+      value: |
+        SERVER_ADDITIONAL_ERL_ARGS="-kernel inetrc '/etc/rabbitmq/erl_inetrc'  -proto_dist inet6_tcp"
+        RABBITMQ_CTL_ERL_ARGS="-proto_dist inet6_tcp"
+    - op: add
+      path: /spec/rabbitmq/templates/rabbitmq-cell1/rabbitmq
+      value: {}
+    - op: add
+      path: /spec/rabbitmq/templates/rabbitmq-cell1/rabbitmq/erlangInetConfig
+      value: |
+        {inet6, true}.
+    - op: add
+      path: /spec/rabbitmq/templates/rabbitmq-cell1/rabbitmq/envConfig
+      value: |
+        SERVER_ADDITIONAL_ERL_ARGS="-kernel inetrc '/etc/rabbitmq/erl_inetrc'  -proto_dist inet6_tcp"
+        RABBITMQ_CTL_ERL_ARGS="-proto_dist inet6_tcp"
 EOF
     elif [ -n "${IPV4_ENABLED}" ] && [ -n "${IPV6_ENABLED}" ]; then
         # TODO: Add support for dual stack
