@@ -59,10 +59,10 @@ openstack network agent list
 # Create an instance
 openstack server show test || {
     openstack server create --flavor m1.small --image cirros --nic net-id=private test --security-group basic --wait
-    openstack floating ip show 192.168.122.20 || openstack floating ip create public --floating-ip-address 192.168.122.20
-    openstack server add floating ip test 192.168.122.20
+    fip=$(openstack floating ip create public -f value -c floating_ip_address)
+    openstack server add floating ip test $fip
 }
 openstack server list
 
 # check connectivity via FIP
-ping -c4 192.168.122.20
+ping -c4 $fip
