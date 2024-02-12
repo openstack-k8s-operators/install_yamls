@@ -144,8 +144,11 @@ make edpm_nova_discover_hosts
 
 * wait until finished, then can check the env
 ```bash
-oc rsh openstackclient
+oc -n openstack rsh openstackclient
 openstack compute service list
+```
+Producing a list of services:
+```
 +--------------------------------------+----------------+------------------------+----------+---------+-------+----------------------------+
 | ID                                   | Binary         | Host                   | Zone     | Status  | State | Updated At                 |
 +--------------------------------------+----------------+------------------------+----------+---------+-------+----------------------------+
@@ -155,8 +158,14 @@ openstack compute service list
 | 2833213e-7ba7-4fc2-a5b6-3467f04368e4 | nova-compute   | edpm-compute-1         | nova     | enabled | up    | 2023-04-11T17:36:23.000000 |
 | bafb827c-6380-408d-afea-2cc2167b3916 | nova-compute   | edpm-compute-0         | nova     | enabled | up    | 2023-04-11T17:36:23.000000 |
 +--------------------------------------+----------------+------------------------+----------+---------+-------+----------------------------+
+```
 
+```bash
 openstack network agent list
+```
+
+Producing a list of agents.
+```
 +--------------------------------------+------------------------------+--------------------+-------------------+-------+-------+----------------------------+
 | ID                                   | Agent Type                   | Host               | Availability Zone | Alive | State | Binary                     |
 +--------------------------------------+------------------------------+--------------------+-------------------+-------+-------+----------------------------+
