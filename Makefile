@@ -147,7 +147,7 @@ MARIADB_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
 MARIADB_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
 MARIADB_KUTTL_NAMESPACE ?= mariadb-kuttl-tests
 
-# Placement
+# Placement test
 PLACEMENT_IMG             ?= quay.io/openstack-k8s-operators/placement-operator-index:${OPENSTACK_K8S_TAG}
 PLACEMENT_REPO            ?= https://github.com/openstack-k8s-operators/placement-operator.git
 PLACEMENT_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}

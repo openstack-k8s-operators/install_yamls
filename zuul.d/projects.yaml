@@ -7,13 +7,3 @@
         - install-yamls-crc-podified-edpm-baremetal: &content_provider
             dependencies:
               - openstack-k8s-operators-content-provider
-        - podified-multinode-edpm-deployment-crc: *content_provider
-        - cifmw-data-plane-adoption-osp-17-to-extracted-crc:
-            dependencies:
-              - openstack-k8s-operators-content-provider
-            files:
-              - ^devsetup/Makefile
-              - ^devsetup/scripts/*
-              - ^devsetup/standalone/*
-              - ^Makefile
-              - ^zuul.d/projects.yaml
