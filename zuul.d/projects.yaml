@@ -8,12 +8,9 @@
             dependencies:
               - openstack-k8s-operators-content-provider
         - podified-multinode-edpm-deployment-crc: *content_provider
-        - cifmw-data-plane-adoption-osp-17-to-extracted-crc:
-            dependencies:
-              - openstack-k8s-operators-content-provider
-            files:
-              - ^devsetup/Makefile
-              - ^devsetup/scripts/*
-              - ^devsetup/standalone/*
-              - ^Makefile
-              - ^zuul.d/projects.yaml
+        - podified-multinode-edpm-deployment-crc1: *content_provider
+        - podified-multinode-edpm-deployment-crc2: *content_provider
+        - podified-multinode-edpm-deployment-crc3: *content_provider
+        - podified-multinode-edpm-deployment-crc4: *content_provider
+        - podified-multinode-edpm-deployment-crc5: *content_provider
+        - podified-multinode-edpm-deployment-crc6: *content_provider

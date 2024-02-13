@@ -141,7 +141,7 @@ EOF_CAT
       - destination: 0.0.0.0/0
         next-hop-address: ${GATEWAY}
         next-hop-interface: ${BRIDGE_NAME}
-        metric: 101
+        metric: 425
 EOF_CAT
     fi
     if [ -n "$IPV6_ENABLED" ]; then

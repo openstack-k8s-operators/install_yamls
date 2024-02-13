@@ -22,3 +22,27 @@
       - LICENSE
       - OWNERS
       - .*/*.md
+
+- job:
+    name: podified-multinode-edpm-deployment-crc1
+    parent: podified-multinode-edpm-deployment-crc
+
+- job:
+    name: podified-multinode-edpm-deployment-crc2
+    parent: podified-multinode-edpm-deployment-crc
+
+- job:
+    name: podified-multinode-edpm-deployment-crc3
+    parent: podified-multinode-edpm-deployment-crc
+
+- job:
+    name: podified-multinode-edpm-deployment-crc4
+    parent: podified-multinode-edpm-deployment-crc
+
+- job:
+    name: podified-multinode-edpm-deployment-crc5
+    parent: podified-multinode-edpm-deployment-crc
+
+- job:
+    name: podified-multinode-edpm-deployment-crc6
+    parent: podified-multinode-edpm-deployment-crc
