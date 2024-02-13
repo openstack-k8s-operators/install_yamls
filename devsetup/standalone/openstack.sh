@@ -20,6 +20,7 @@ COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
 INTERFACE_MTU=${INTERFACE_MTU:-1500}
 BARBICAN_ENABLED=${BARBICAN_ENABLED:-true}
 MANILA_ENABLED=${MANILA_ENABLED:-true}
+TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
 
 # Use the files created in the previous steps including the network_data.yaml file and thw deployed_network.yaml file.
 # The deployed_network.yaml file hard codes the IPs and VIPs configured from the network.sh
@@ -104,6 +105,10 @@ if [ "$BARBICAN_ENABLED" = "true" ]; then
 fi
 if [ "$MANILA_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/manila-cephfsnative-config.yaml"
+fi
+if [ "$TELEMETRY_ENABLED" = "true" ]; then
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/enable-legacy-telemetry.yaml"
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/metrics/collectd-write-qdr.yaml"
 fi
 ENV_ARGS+=" -e $HOME/standalone_parameters.yaml"
 if [ "$EDPM_COMPUTE_CEPH_ENABLED" = "true" ] ; then
