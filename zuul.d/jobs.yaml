@@ -11,7 +11,7 @@
       - ^devsetup/scripts/bmaas/*
       - ^devsetup/scripts/edpm-compute-bmaas.sh
       - ^devsetup/scripts/gen-ansibleee-ssh-key.sh
-      - ^scripts/gen-edpm-baremetal-kustomize.sh
+      - ^scripts/*
       - ^Makefile
     irrelevant-files: &openstack_if
       - .ci-operator.yaml
