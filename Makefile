@@ -40,6 +40,12 @@ NETWORK_VLAN_STEP   ?= 1
 NETWORK_ISOLATION_IPV4_ADDRESS ?= 172.16.1.1/24
 NETWORK_ISOLATION_IPV6_ADDRESS ?= fd00:aaaa::1/64
 
+# This creates a macvlan on the host network namespace on top of the storage VLAN
+# to allow host to/from pod network communication on the same host using that VLAN.
+# An example when this is useful is when using Cinder Volume with LVM + iSCSI
+# without using the host's IP address.
+NETWORK_STORAGE_MACVLAN ?=
+
 # are we deploying to microshift
 MICROSHIFT ?= 0
 
@@ -2079,6 +2085,7 @@ endif
 nncp: export INTERFACE_MTU=${NETWORK_MTU}
 nncp: export VLAN_START=${NETWORK_VLAN_START}
 nncp: export VLAN_STEP=${NETWORK_VLAN_STEP}
+nncp: export STORAGE_MACVLAN=${NETWORK_STORAGE_MACVLAN}
 ## NOTE(ldenny): When applying the nncp resource the OCP API can momentarly drop, below retry is added to aviod checking status while API is down and failing.
 nncp: ## installs the nncp resources to configure the interface connected to the edpm node, right now only single nic vlan. Interface referenced via NNCP_INTERFACE
 	$(eval $(call vars,$@,nncp))
