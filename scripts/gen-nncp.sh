@@ -97,6 +97,10 @@ fi
 # we use starts with .10
 IP_ADDRESS_SUFFIX=5
 IPV6_ADDRESS_SUFFIX=5
+
+# Clean up pre-existing files to avoid failed nncp
+rm --force ${DEPLOY_DIR}/*_nncp.yaml
+
 for WORKER in ${WORKERS}; do
   cat > ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
 apiVersion: nmstate.io/v1
