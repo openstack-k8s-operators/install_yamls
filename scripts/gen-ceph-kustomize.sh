@@ -35,7 +35,12 @@ fi
 
 pushd ${DEPLOY_DIR}
 
-CEPH_TIMEOUT=${CEPH_TIMEOUT:-30}
+# this should not take 300 second however we have seen it take > 30 seconds
+# in ci as it takes 18 seconds just to pull the image so we set this to 300
+# as a limit we should never hit. IF this is timing out at 300 seconds
+# bumping the timeout again is likely not the correct action and something
+# else is wrong.
+CEPH_TIMEOUT=${CEPH_TIMEOUT:-300}
 CEPH_HOSTNETWORK=${CEPH_HOSTNETWORK:-true}
 CEPH_POOLS=("volumes" "images" "backups" "cephfs.cephfs.meta" "cephfs.cephfs.data")
 CEPH_DAEMONS="osd,mds,rgw"
