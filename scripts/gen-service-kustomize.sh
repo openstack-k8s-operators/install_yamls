@@ -65,6 +65,16 @@ patches:
       path: /spec/storageClass
       value: ${STORAGE_CLASS}
 EOF
+if [[ "${KIND}" == "OpenStackControlPlane" && "${OPENSTACK_NEUTRON_CUSTOM_CONF}" != "" ]]; then
+    cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/neutron/template/customServiceConfig
+      value: |-
+EOF
+while IFS= read -r line; do
+    echo "        $line" >>kustomization.yaml
+done < ${OPENSTACK_NEUTRON_CUSTOM_CONF}
+fi
 
 IFS=',' read -ra IMAGES <<< "$IMAGE"
 IFS=',' read -ra IMAGE_PATHS <<< "$IMAGE_PATH"
