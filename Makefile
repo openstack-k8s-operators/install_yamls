@@ -29,6 +29,12 @@ BARBICAN_SIMPLE_CRYPTO_ENCRYPTION_KEY ?= sEFmdFjDUqRM2VemYslV5yGNWjokioJXsg8Nrlc
 # in the CR dir if a call to each deploy target cleans the CR dir.
 CLEANUP_DIR_CMD					 ?= rm -Rf
 
+# When cloning operator's repo, enables the checkout from commit hash
+# that is referenced in openstack-operator's go.mod. Note that openstack-opearator
+# code can exist in OPERATOR_BASE_DIR/openstack-operator path, otherwise it will
+# be also cloned from OPENSTACK_REPO/OPENSTACK_BRANCH.
+CHECKOUT_FROM_OPENSTACK_REF	?= false
+
 # network isolation
 NETWORK_ISOLATION   ?= true
 NETWORK_ISOLATION_USE_DEFAULT_NETWORK ?= true
@@ -66,6 +72,7 @@ GALERA_REPLICAS         ?=
 OPENSTACK_IMG                ?= quay.io/openstack-k8s-operators/openstack-operator-index:${OPENSTACK_K8S_TAG}
 OPENSTACK_REPO               ?= https://github.com/openstack-k8s-operators/openstack-operator.git
 OPENSTACK_BRANCH             ?= ${OPENSTACK_K8S_BRANCH}
+OPENSTACK_COMMIT_HASH        ?=
 
 ifeq ($(NETWORK_ISOLATION), true)
 ifeq ($(DBSERVICE), galera)
@@ -93,6 +100,7 @@ OPENSTACK_KUTTL_NAMESPACE ?= openstack-kuttl-tests
 INFRA_IMG             ?= quay.io/openstack-k8s-operators/infra-operator-index:${OPENSTACK_K8S_TAG}
 INFRA_REPO            ?= https://github.com/openstack-k8s-operators/infra-operator.git
 INFRA_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
+INFRA_COMMIT_HASH     ?=
 INFRA_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/infra-operator/kuttl-test.yaml
 INFRA_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/infra-operator/tests/kuttl/tests
 INFRA_KUTTL_NAMESPACE ?= infra-kuttl-tests
@@ -120,6 +128,7 @@ MEMCACHED_DEPL_IMG  ?= unused
 KEYSTONE_IMG             ?= quay.io/openstack-k8s-operators/keystone-operator-index:${OPENSTACK_K8S_TAG}
 KEYSTONE_REPO            ?= https://github.com/openstack-k8s-operators/keystone-operator.git
 KEYSTONE_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
+KEYSTONE_COMMMIT_HASH    ?=
 KEYSTONEAPI              ?= config/samples/keystone_v1beta1_keystoneapi.yaml
 KEYSTONEAPI_CR           ?= ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
 KEYSTONEAPI_DEPL_IMG     ?= unused
@@ -130,7 +139,8 @@ KEYSTONE_KUTTL_NAMESPACE ?= keystone-kuttl-tests
 # Barbican
 BARBICAN_IMG             ?= quay.io/openstack-k8s-operators/barbican-operator-index:latest
 BARBICAN_REPO            ?= https://github.com/openstack-k8s-operators/barbican-operator.git
-BARBICAN_BRANCH          ?= main
+BARBICAN_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
+BARBICAN_COMMIT_HASH     ?=
 BARBICAN                 ?= config/samples/barbican_v1beta1_barbican.yaml
 BARBICAN_CR              ?= ${OPERATOR_BASE_DIR}/barbican-operator/${BARBICAN}
 BARBICAN_DEPL_IMG        ?= unused
@@ -142,6 +152,7 @@ BARBICAN_KUTTL_NAMESPACE ?= barbican-kuttl-tests
 MARIADB_IMG             ?= quay.io/openstack-k8s-operators/mariadb-operator-index:${OPENSTACK_K8S_TAG}
 MARIADB_REPO            ?= https://github.com/openstack-k8s-operators/mariadb-operator.git
 MARIADB_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
+MARIADB_COMMIT_HASH     ?=
 ifeq ($(DBSERVICE), galera)
 MARIADB                 ?= config/samples/mariadb_v1beta1_galera.yaml
 else
@@ -157,6 +168,7 @@ MARIADB_KUTTL_NAMESPACE ?= mariadb-kuttl-tests
 PLACEMENT_IMG             ?= quay.io/openstack-k8s-operators/placement-operator-index:${OPENSTACK_K8S_TAG}
 PLACEMENT_REPO            ?= https://github.com/openstack-k8s-operators/placement-operator.git
 PLACEMENT_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
+PLACEMENT_COMMIT_HASH     ?=
 PLACEMENTAPI              ?= config/samples/placement_v1beta1_placementapi.yaml
 PLACEMENTAPI_CR           ?= ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI}
 PLACEMENTAPI_DEPL_IMG     ?= unused
@@ -168,6 +180,7 @@ PLACEMENT_KUTTL_NAMESPACE ?= placement-kuttl-tests
 GLANCE_IMG              ?= quay.io/openstack-k8s-operators/glance-operator-index:${OPENSTACK_K8S_TAG}
 GLANCE_REPO             ?= https://github.com/openstack-k8s-operators/glance-operator.git
 GLANCE_BRANCH           ?= ${OPENSTACK_K8S_BRANCH}
+GLANCE_COMMIT_HASH      ?=
 GLANCE                  ?= config/samples/glance_v1beta1_glance.yaml
 GLANCE_CR               ?= ${OPERATOR_BASE_DIR}/glance-operator/${GLANCE}
 GLANCEAPI_DEPL_IMG      ?= unused
@@ -179,6 +192,7 @@ GLANCE_KUTTL_NAMESPACE  ?= glance-kuttl-tests
 OVN_IMG             ?= quay.io/openstack-k8s-operators/ovn-operator-index:${OPENSTACK_K8S_TAG}
 OVN_REPO            ?= https://github.com/openstack-k8s-operators/ovn-operator.git
 OVN_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
+OVN_COMMIT_HASH     ?=
 OVNDBS              ?= config/samples/ovn_v1beta1_ovndbcluster.yaml
 OVNDBS_CR           ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNDBS}
 OVNNORTHD           ?= config/samples/ovn_v1beta1_ovnnorthd.yaml
@@ -195,6 +209,7 @@ OVN_KUTTL_NAMESPACE ?= ovn-kuttl-tests
 NEUTRON_IMG             ?= quay.io/openstack-k8s-operators/neutron-operator-index:${OPENSTACK_K8S_TAG}
 NEUTRON_REPO            ?= https://github.com/openstack-k8s-operators/neutron-operator.git
 NEUTRON_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
+NEUTRON_COMMIT_HASH     ?=
 NEUTRONAPI              ?= config/samples/neutron_v1beta1_neutronapi.yaml
 NEUTRONAPI_CR           ?= ${OPERATOR_BASE_DIR}/neutron-operator/${NEUTRONAPI}
 NEUTRONAPI_DEPL_IMG     ?= unused
@@ -221,6 +236,7 @@ NNCP_BGP_2_IP_ADDRESS ?= 100.64.4.2
 CINDER_IMG             ?= quay.io/openstack-k8s-operators/cinder-operator-index:${OPENSTACK_K8S_TAG}
 CINDER_REPO            ?= https://github.com/openstack-k8s-operators/cinder-operator.git
 CINDER_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
+CINDER_COMMIT_HASH     ?=
 CINDER                 ?= config/samples/cinder_v1beta1_cinder.yaml
 CINDER_CR              ?= ${OPERATOR_BASE_DIR}/cinder-operator/${CINDER}
 CINDERAPI_DEPL_IMG     ?= unused
@@ -232,17 +248,19 @@ CINDER_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/cinder-operator/test/kuttl/tests
 CINDER_KUTTL_NAMESPACE ?= cinder-kuttl-tests
 
 # RabbitMQ
-RABBITMQ_IMG        ?= quay.io/openstack-k8s-operators/rabbitmq-cluster-operator-index:${OPENSTACK_K8S_TAG}
-RABBITMQ_REPO       ?= https://github.com/openstack-k8s-operators/rabbitmq-cluster-operator.git
-RABBITMQ_BRANCH     ?= patches
-RABBITMQ            ?= docs/examples/default-security-context/rabbitmq.yaml
-RABBITMQ_CR         ?= ${OPERATOR_BASE_DIR}/rabbitmq-operator/${RABBITMQ}
-RABBITMQ_DEPL_IMG   ?= unused
+RABBITMQ_IMG            ?= quay.io/openstack-k8s-operators/rabbitmq-cluster-operator-index:${OPENSTACK_K8S_TAG}
+RABBITMQ_REPO           ?= https://github.com/openstack-k8s-operators/rabbitmq-cluster-operator.git
+RABBITMQ_BRANCH         ?= patches
+RABBITMQ_COMMIT_HASH    ?=
+RABBITMQ                ?= docs/examples/default-security-context/rabbitmq.yaml
+RABBITMQ_CR             ?= ${OPERATOR_BASE_DIR}/rabbitmq-operator/${RABBITMQ}
+RABBITMQ_DEPL_IMG       ?= unused
 
 # Ironic
 IRONIC_IMG             ?= quay.io/openstack-k8s-operators/ironic-operator-index:${OPENSTACK_K8S_TAG}
 IRONIC_REPO            ?= https://github.com/openstack-k8s-operators/ironic-operator.git
 IRONIC_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
+IRONIC_COMMIT_HASH     ?=
 IRONIC                 ?= config/samples/ironic_v1beta1_ironic.yaml
 IRONIC_CR              ?= ${OPERATOR_BASE_DIR}/ironic-operator/${IRONIC}
 IRONICAPI_DEPL_IMG     ?= unused
@@ -258,6 +276,7 @@ IRONIC_KUTTL_NAMESPACE ?= ironic-kuttl-tests
 OCTAVIA_IMG             ?= quay.io/openstack-k8s-operators/octavia-operator-index:${OPENSTACK_K8S_TAG}
 OCTAVIA_REPO            ?= https://github.com/openstack-k8s-operators/octavia-operator.git
 OCTAVIA_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
+OCTAVIA_COMMIT_HASH     ?=
 OCTAVIA                 ?= config/samples/octavia_v1beta1_octavia.yaml
 OCTAVIA_CR              ?= ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIA}
 # TODO: Image custom    izations for all Octavia services
@@ -269,6 +288,7 @@ OCTAVIA_KUTTL_NAMESPACE ?= octavia-kuttl-tests
 DESIGNATE_IMG             ?= quay.io/openstack-k8s-operators/designate-operator-index:${OPENSTACK_K8S_TAG}
 DESIGNATE_REPO            ?= https://github.com/openstack-k8s-operators/designate-operator.git
 DESIGNATE_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
+DESIGNATE_COMMIT_HASH     ?=
 DESIGNATE                 ?= config/samples/designate_v1beta1_designate.yaml
 DESIGNATE_CR              ?= ${OPERATOR_BASE_DIR}/designate-operator/${DESIGNATE}
 DESIGNATE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/designate-operator/kuttl-test.yaml
@@ -279,6 +299,7 @@ DESIGNATE_KUTTL_NAMESPACE ?= designate-kuttl-tests
 NOVA_IMG            ?= quay.io/openstack-k8s-operators/nova-operator-index:${OPENSTACK_K8S_TAG}
 NOVA_REPO           ?= https://github.com/openstack-k8s-operators/nova-operator.git
 NOVA_BRANCH         ?= ${OPENSTACK_K8S_BRANCH}
+NOVA_COMMIT_HASH    ?=
 # NOTE(gibi): We intentionally not using the default nova sample here
 # as that would require two RabbitMQCluster to be deployed which a) is not what
 # the make rabbitmq_deploy target does ii) required extra resource in the dev
@@ -291,6 +312,7 @@ NOVA_CR             ?= ${OPERATOR_BASE_DIR}/nova-operator/${NOVA}
 HORIZON_IMG             ?= quay.io/openstack-k8s-operators/horizon-operator-index:${OPENSTACK_K8S_TAG}
 HORIZON_REPO            ?= https://github.com/openstack-k8s-operators/horizon-operator.git
 HORIZON_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
+HORIZON_COMMIT_HASH     ?=
 HORIZON                 ?= config/samples/horizon_v1beta1_horizon.yaml
 HORIZON_CR              ?= ${OPERATOR_BASE_DIR}/horizon-operator/${HORIZON}
 HORIZON_DEPL_IMG        ?= unused
@@ -302,6 +324,7 @@ HORIZON_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/horizon-operator/tests/kuttl/tes
 HEAT_IMG             ?= quay.io/openstack-k8s-operators/heat-operator-index:${OPENSTACK_K8S_TAG}
 HEAT_REPO            ?= https://github.com/openstack-k8s-operators/heat-operator.git
 HEAT_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
+HEAT_COMMIT_HASH     ?=
 HEAT                 ?= config/samples/heat_v1beta1_heat.yaml
 HEAT_CR              ?= ${OPERATOR_BASE_DIR}/heat-operator/${HEAT}
 HEATAPI_DEPL_IMG     ?= unused
@@ -315,6 +338,7 @@ HEAT_KUTTL_NAMESPACE ?= heat-kuttl-tests
 ANSIBLEEE_IMG        ?= quay.io/openstack-k8s-operators/openstack-ansibleee-operator-index:${OPENSTACK_K8S_TAG}
 ANSIBLEEE_REPO       ?= https://github.com/openstack-k8s-operators/openstack-ansibleee-operator
 ANSIBLEEE_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
+ANSIBLEE_COMMIT_HASH      ?=
 ANSIBLEEE                 ?= config/samples/_v1beta1_ansibleee.yaml
 ANSIBLEEE_CR              ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/${ANSIBLEEE}
 ANSIBLEEE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/kuttl-test.yaml
@@ -323,15 +347,17 @@ ANSIBLEEE_KUTTL_NAMESPACE ?= ansibleee-kuttl-tests
 
 
 # Baremetal Operator
-BAREMETAL_IMG       ?= quay.io/openstack-k8s-operators/openstack-baremetal-operator-index:${OPENSTACK_K8S_TAG}
-BAREMETAL_REPO      ?= https://github.com/openstack-k8s-operators/openstack-baremetal-operator.git
-BAREMETAL_BRANCH    ?= ${OPENSTACK_K8S_BRANCH}
-BMH_NAMESPACE       ?= ${NAMESPACE}
+BAREMETAL_IMG           ?= quay.io/openstack-k8s-operators/openstack-baremetal-operator-index:${OPENSTACK_K8S_TAG}
+BAREMETAL_REPO          ?= https://github.com/openstack-k8s-operators/openstack-baremetal-operator.git
+BAREMETAL_BRANCH        ?= ${OPENSTACK_K8S_BRANCH}
+BAREMETAL_COMMIT_HASH   ?=
+BMH_NAMESPACE           ?= ${NAMESPACE}
 
 # Dataplane Operator
 DATAPLANE_IMG                                    ?= quay.io/openstack-k8s-operators/dataplane-operator-index:${OPENSTACK_K8S_TAG}
 DATAPLANE_REPO                                   ?= https://github.com/openstack-k8s-operators/dataplane-operator.git
 DATAPLANE_BRANCH                                 ?= ${OPENSTACK_K8S_BRANCH}
+DATAPLANE_COMMIT_HASH                            ?=
 DATAPLANE_TIMEOUT                                ?= 20m
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
@@ -388,6 +414,7 @@ DATAPLANE_EXTRA_NOVA_CONFIG_FILE                 ?= /dev/null
 MANILA_IMG              ?= quay.io/openstack-k8s-operators/manila-operator-index:${OPENSTACK_K8S_TAG}
 MANILA_REPO             ?= https://github.com/openstack-k8s-operators/manila-operator.git
 MANILA_BRANCH           ?= ${OPENSTACK_K8S_BRANCH}
+MANILA_COMMIT_HASH      ?=
 MANILA                  ?= config/samples/manila_v1beta1_manila.yaml
 MANILA_CR               ?= ${OPERATOR_BASE_DIR}/manila-operator/${MANILA}
 MANILAAPI_DEPL_IMG      ?= unused
@@ -432,6 +459,7 @@ METALLB_IPV6_POOL        ?=$(NNCP_CTLPLANE_IPV6_ADDRESS_PREFIX)80-$(NNCP_CTLPLAN
 TELEMETRY_IMG                    ?= quay.io/openstack-k8s-operators/telemetry-operator-index:${OPENSTACK_K8S_TAG}
 TELEMETRY_REPO                   ?= https://github.com/openstack-k8s-operators/telemetry-operator.git
 TELEMETRY_BRANCH                 ?= ${OPENSTACK_K8S_BRANCH}
+TELEMETRY_COMMIT_HASH            ?=
 TELEMETRY                        ?= config/samples/telemetry_v1beta1_telemetry.yaml
 TELEMETRY_CR                     ?= ${OPERATOR_BASE_DIR}/telemetry-operator/${TELEMETRY}
 CEILOMETER_CENTRAL_DEPL_IMG      ?= unused
@@ -445,6 +473,7 @@ TELEMETRY_KUTTL_NAMESPACE ?= telemetry-kuttl-tests
 # BMO
 BMO_REPO                         ?= https://github.com/metal3-io/baremetal-operator
 BMO_BRANCH                       ?= main
+BMO_COMMIT_HASH                  ?=
 BMO_PROVISIONING_INTERFACE       ?=
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
 BMO_IRONIC_HOST                  ?= 192.168.122.10
@@ -453,14 +482,15 @@ BMO_IRONIC_HOST                  ?= 172.16.1.10
 endif
 
 # Swift
-SWIFT_IMG        ?= quay.io/openstack-k8s-operators/swift-operator-index:${OPENSTACK_K8S_TAG}
-SWIFT_REPO       ?= https://github.com/openstack-k8s-operators/swift-operator.git
-SWIFT_BRANCH     ?= ${OPENSTACK_K8S_BRANCH}
-SWIFT            ?= config/samples/swift_v1beta1_swift.yaml
-SWIFT_CR         ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFT}
-SWIFT_KUTTL_CONF   ?= ${OPERATOR_BASE_DIR}/swift-operator/kuttl-test.yaml
-SWIFT_KUTTL_DIR    ?= ${OPERATOR_BASE_DIR}/swift-operator/tests/kuttl/tests
-SWIFT_KUTTL_NAMESPACE ?= swift-kuttl-tests
+SWIFT_IMG               ?= quay.io/openstack-k8s-operators/swift-operator-index:${OPENSTACK_K8S_TAG}
+SWIFT_REPO              ?= https://github.com/openstack-k8s-operators/swift-operator.git
+SWIFT_BRANCH            ?= ${OPENSTACK_K8S_BRANCH}
+SWIFT_COMMIT_HASH       ?=
+SWIFT                   ?= config/samples/swift_v1beta1_swift.yaml
+SWIFT_CR                ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFT}
+SWIFT_KUTTL_CONF        ?= ${OPERATOR_BASE_DIR}/swift-operator/kuttl-test.yaml
+SWIFT_KUTTL_DIR         ?= ${OPERATOR_BASE_DIR}/swift-operator/tests/kuttl/tests
+SWIFT_KUTTL_NAMESPACE   ?= swift-kuttl-tests
 
 # CertManager
 CERTMANAGER_TIMEOUT                  ?= 300s
@@ -480,9 +510,15 @@ ${1}: export STORAGE_CLASS=${STORAGE_CLASS}
 ${1}: export OUT=${OUT}
 ${1}: export CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD}
 ${1}: export OPERATOR_NAME=${2}
+${1}: export OPERATOR_BASE_DIR=${OPERATOR_BASE_DIR}
 ${1}: export OPERATOR_DIR=${OUT}/${OPERATOR_NAMESPACE}/${2}/op
 ${1}: export DEPLOY_DIR=${OUT}/${NAMESPACE}/${2}/cr
 ${1}: export DEPLOY_DIR_EDPM_NETWORKER=${OUT}/${NAMESPACE}/${2}/networker_cr
+${1}: export OPENSTACK_REPO=${OPENSTACK_REPO}
+${1}: export OPENSTACK_BRANCH=${OPENSTACK_BRANCH}
+${1}: export OPENSTACK_COMMIT_HASH=${OPENSTACK_COMMIT_HASH}
+${1}: export GIT_CLONE_OPTS=${GIT_CLONE_OPTS}
+${1}: export CHECKOUT_FROM_OPENSTACK_REF=${CHECKOUT_FROM_OPENSTACK_REF}
 endef
 
 .PHONY: all
@@ -598,11 +634,14 @@ input_cleanup: ## deletes the secret/CM, used by the services as input
 ##@ CRC BMO SETUP
 .PHONY: crc_bmo_setup
 crc_bmo_setup: export IRONIC_HOST_IP=${BMO_IRONIC_HOST}
+crc_bmo_setup: export REPO=${BMO_REPO}
+crc_bmo_setup: export BRANCH=${BMO_BRANCH}
+crc_bmo_setup: export HASH=${BMO_COMMIT_HASH}
 crc_bmo_setup: crc_bmo_cleanup
 crc_bmo_setup: $(if $(findstring true,$(INSTALL_CERT_MANAGER)), certmanager)
 	$(eval $(call vars,$@))
 	mkdir -p ${OPERATOR_BASE_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(BMO_BRANCH),-b ${BMO_BRANCH}) ${BMO_REPO} "baremetal-operator" && popd
+	bash -c "CHECKOUT_FROM_OPENSTACK_REF=false OPERATOR_NAME=baremetal scripts/clone-operator-repo.sh"
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i -e '$$aIRONIC_IP=${BMO_IRONIC_HOST}' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/eth2/${BMO_PROVISIONING_INTERFACE}/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/ENDPOINT\=http/ENDPOINT\=https/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
@@ -674,10 +713,13 @@ openstack_deploy_prep: export CTLPLANE_IPV6_ADDRESS_PREFIX=${NNCP_CTLPLANE_IPV6_
 openstack_deploy_prep: export CTLPLANE_IPV6_ADDRESS_SUFFIX=${NNCP_CTLPLANE_IPV6_ADDRESS_SUFFIX}
 openstack_deploy_prep: export CTLPLANE_IPV6_DNS_SERVER=${NNCP_DNS_SERVER_IPV6}
 endif
+openstack_deploy_prep: export REPO=${OPENSTACK_REPO}
+openstack_deploy_prep: export BRANCH=${OPENSTACK_BRANCH}
+openstack_deploy_prep: export HASH=${OPENSTACK_COMMIT_HASH}
 openstack_deploy_prep: openstack_deploy_cleanup ## prepares the CR to install the service based on the service sample file OPENSTACK
 	$(eval $(call vars,$@,openstack))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(OPENSTACK_BRANCH),-b ${OPENSTACK_BRANCH}) ${OPENSTACK_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash -c "CHECKOUT_FROM_OPENSTACK_REF=false scripts/clone-operator-repo.sh"
 	cp ${OPENSTACK_CR} ${DEPLOY_DIR}
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), false)
 	sed -i 's/192.168.122/${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}/g' ${DEPLOY_DIR}/$(notdir ${OPENSTACK_CR})
@@ -730,6 +772,9 @@ edpm_deploy_prep: export EDPM_CONTAINER_PREFIX=${DATAPLANE_CONTAINER_PREFIX}
 edpm_deploy_prep: export EDPM_EXTRA_NOVA_CONFIG_FILE=${DEPLOY_DIR}/25-nova-extra.conf
 edpm_deploy_prep: export EDPM_DEPLOY_DIR=${DEPLOY_DIR}
 edpm_deploy_prep: export EDPM_SERVER_ROLE=compute
+edpm_deploy_prep: export REPO=${DATAPLANE_REPO}
+edpm_deploy_prep: export BRANCH=${DATAPLANE_BRANCH}
+edpm_deploy_prep: export HASH=${DATAPLANE_COMMIT_HASH}
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
 edpm_deploy_prep: export BGP=ovn
@@ -740,7 +785,7 @@ endif
 edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
 	cp ${DATAPLANE_SERVICE_NOVA_CR} ${DEPLOY_DIR}
 	cp ${DATAPLANE_NODESET_CR} ${DEPLOY_DIR}
@@ -781,10 +826,13 @@ edpm_deploy_baremetal_prep: export EDPM_REGISTRY_URL=${DATAPLANE_REGISTRY_URL}
 edpm_deploy_baremetal_prep: export EDPM_CONTAINER_TAG=${DATAPLANE_CONTAINER_TAG}
 edpm_deploy_baremetal_prep: export EDPM_CONTAINER_PREFIX=${DATAPLANE_CONTAINER_PREFIX}
 edpm_deploy_baremetal_prep: export EDPM_ROOT_PASSWORD_SECRET=${BM_ROOT_PASSWORD_SECRET}
+edpm_deploy_baremetal_prep: export REPO=${DATAPLANE_REPO}
+edpm_deploy_baremetal_prep: export BRANCH=${DATAPLANE_BRANCH}
+edpm_deploy_baremetal_prep: export HASH=${DATAPLANE_COMMIT_HASH}
 edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
 	cp ${DATAPLANE_NODESET_BAREMETAL_CR} ${DEPLOY_DIR}
 	cp ${DATAPLANE_DEPLOYMENT_BAREMETAL_CR} ${DEPLOY_DIR}
@@ -845,6 +893,9 @@ edpm_deploy_networker_prep: export EDPM_CONTAINER_PREFIX=${DATAPLANE_CONTAINER_P
 edpm_deploy_networker_prep: export EDPM_DEPLOY_DIR=${DEPLOY_DIR_EDPM_NETWORKER}
 edpm_deploy_networker_prep: export EDPM_IP_ADDRESS_OFFSET=200
 edpm_deploy_networker_prep: export EDPM_SERVER_ROLE=networker
+edpm_deploy_networker_prep: export REPO=${DATAPLANE_REPO}
+edpm_deploy_networker_prep: export BRANCH=${DATAPLANE_BRANCH}
+edpm_deploy_networker_prep: export HASH=${DATAPLANE_COMMIT_HASH}
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
 edpm_deploy_networker_prep: export BGP=ovn
@@ -856,7 +907,7 @@ edpm_deploy_networker_prep: edpm_deploy_networker_cleanup ## prepares the CR to 
 	echo "START PREP"
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR_EDPM_NETWORKER}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
 	cp ${DATAPLANE_NODESET_NETWORKER_CR} ${DEPLOY_DIR_EDPM_NETWORKER}
 	cp ${DATAPLANE_DEPLOYMENT_NETWORKER_CR} ${DEPLOY_DIR_EDPM_NETWORKER}
@@ -905,10 +956,13 @@ infra_cleanup: ## deletes the operator, but does not cleanup the service resourc
 .PHONY: dns_deploy_prep
 dns_deploy_prep: export KIND=DNSMasq
 dns_deploy_prep: export IMAGE=${DNS_DEPL_IMG}
+dns_deploy_prep: export REPO=${INFRA_REPO}
+dns_deploy_prep: export BRANCH=${INFRA_BRANCH}
+dns_deploy_prep: export HASH=${INFRA_COMMIT_HASH}
 dns_deploy_prep: dns_deploy_cleanup ## prepares the CR to install the service based on the service sample file DNSMASQ and DNSDATA
 	$(eval $(call vars,$@,infra))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${INFRA_BRANCH} ${INFRA_REPO} && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${DNSMASQ_CR} ${DNSDATA_CR} ${DEPLOY_DIR}
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), false)
 	sed -i 's/192.168.122/${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}/g' ${DEPLOY_DIR}/$(notdir ${DNSMASQ_CR})
@@ -943,10 +997,13 @@ ifeq ($(NETWORK_BGP), true)
 netconfig_deploy_prep: export BGP=enabled
 endif
 netconfig_deploy_prep: export IMAGE=${NETCONFIG_DEPL_IMG}
+netconfig_deploy_prep: export REPO=${INFRA_REPO}
+netconfig_deploy_prep: export BRANCH=${INFRA_BRANCH}
+netconfig_deploy_prep: export HASH=${INFRA_COMMIT_HASH}
 netconfig_deploy_prep: netconfig_deploy_cleanup ## prepares the CR to install the service based on the service sample file DNSMASQ and DNSDATA
 	$(eval $(call vars,$@,infra))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${INFRA_BRANCH} ${INFRA_REPO} && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${NETCONFIG_CR} ${DEPLOY_DIR}
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), false)
 	sed -i 's/192.168.122/${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}/g' ${DEPLOY_DIR}/$(notdir ${NETCONFIG_CR})
@@ -970,10 +1027,13 @@ netconfig_deploy_cleanup: ## cleans up the service instance, Does not affect the
 memcached_deploy_prep: export KIND=Memcached
 memcached_deploy_prep: export NAME=memcached
 memcached_deploy_prep: export IMAGE=${MEMCACHED_DEPL_IMG}
+memcached_deploy_prep: export REPO=${INFRA_REPO}
+memcached_deploy_prep: export BRANCH=${INFRA_BRANCH}
+memcached_deploy_prep: export HASH=${INFRA_COMMIT_HASH}
 memcached_deploy_prep: memcached_deploy_cleanup ## prepares the CR to install the service based on the service sample file MEMCACHED
 	$(eval $(call vars,$@,infra))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(INFRA_BRANCH),-b ${INFRA_BRANCH}) ${INFRA_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${MEMCACHED_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1010,10 +1070,13 @@ keystone_cleanup: ## deletes the operator, but does not cleanup the service reso
 .PHONY: keystone_deploy_prep
 keystone_deploy_prep: export KIND=KeystoneAPI
 keystone_deploy_prep: export IMAGE=${KEYSTONEAPI_DEPL_IMG}
+keystone_deploy_prep: export REPO=${KEYSTONE_REPO}
+keystone_deploy_prep: export BRANCH=${KEYSTONE_BRANCH}
+keystone_deploy_prep: export HASH=${KEYSTONE_COMMIT_HASH}
 keystone_deploy_prep: keystone_deploy_cleanup ## prepares the CR to install the service based on the service sample file KEYSTONEAPI
 	$(eval $(call vars,$@,keystone))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(KEYSTONE_BRANCH),-b ${KEYSTONE_BRANCH}) ${KEYSTONE_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${KEYSTONEAPI_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1050,10 +1113,13 @@ barbican_cleanup: ## deletes the operator, but does not cleanup the service reso
 
 .PHONY: barbican_deploy_prep
 barbican_deploy_prep: export KIND=Barbican
+barbican_deploy_prep: export REPO=${BARBICAN_REPO}
+barbican_deploy_prep: export BRANCH=${BARBICAN_BRANCH}
+barbican_deploy_prep: export HASH=${BARBICAN_COMMIT_HASH}
 barbican_deploy_prep: barbican_deploy_cleanup ## prepares the CR to install the service based on the service sample file BARBICAN
 	$(eval $(call vars,$@,barbican))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(BARBICAN_BRANCH),-b ${BARBICAN_BRANCH}) ${BARBICAN_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${BARBICAN_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1093,10 +1159,13 @@ mariadb_cleanup: ## deletes the operator, but does not cleanup the service resou
 .PHONY: mariadb_deploy_prep
 mariadb_deploy_prep: export KIND=$(patsubst mariadb,MariaDB,$(patsubst galera,Galera,$(DBSERVICE)))
 mariadb_deploy_prep: export IMAGE=${MARIADB_DEPL_IMG}
+mariadb_deploy_prep: export REPO=${MARIADB_REPO}
+mariadb_deploy_prep: export BRANCH=${MARIADB_BRANCH}
+mariadb_deploy_prep: export HASH=${MARIADB_COMMIT_HASH}
 mariadb_deploy_prep: mariadb_deploy_cleanup ## prepares the CRs files to install the service based on the service sample file MARIADB
 	$(eval $(call vars,$@,mariadb))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(MARIADB_BRANCH),-b ${MARIADB_BRANCH}) ${MARIADB_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${MARIADB_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1133,10 +1202,13 @@ placement_cleanup: ## deletes the operator, but does not cleanup the service res
 .PHONY: placement_deploy_prep
 placement_deploy_prep: export KIND=PlacementAPI
 placement_deploy_prep: export IMAGE=${PLACEMENTAPI_DEPL_IMG}
+placement_deploy_prep: export REPO=${PLACEMENT_REPO}
+placement_deploy_prep: export BRANCH=${PLACEMENT_BRANCH}
+placement_deploy_prep: export HASH=${PLACEMENT_COMMIT_HASH}
 placement_deploy_prep: placement_deploy_cleanup ## prepares the CR to install the service based on the service sample file PLACEMENTAPI
 	$(eval $(call vars,$@,placement))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(PLACEMENT_BRANCH),-b ${PLACEMENT_BRANCH}) ${PLACEMENT_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${PLACEMENTAPI_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1175,10 +1247,13 @@ glance_cleanup: ## deletes the operator, but does not cleanup the service resour
 glance_deploy_prep: export KIND=Glance
 glance_deploy_prep: export IMAGE=${GLANCEAPI_DEPL_IMG},${GLANCEAPI_DEPL_IMG},${GLANCEAPI_DEPL_IMG}
 glance_deploy_prep: export IMAGE_PATH=containerImage,glanceAPIInternal/containerImage,glanceAPIExternal/containerImage
+glance_deploy_prep: export REPO=${GLANCE_REPO}
+glance_deploy_prep: export BRANCH=${GLANCE_BRANCH}
+glance_deploy_prep: export HASH=${GLANCE_COMMIT_HASH}
 glance_deploy_prep: glance_deploy_cleanup ## prepares the CR to install the service based on the service sample file GLANCE
 	$(eval $(call vars,$@,glance))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(GLANCE_BRANCH),-b ${GLANCE_BRANCH}) ${GLANCE_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${GLANCE_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1215,10 +1290,13 @@ ovn_cleanup: ## deletes the operator, but does not cleanup the service resources
 
 .PHONY: ovn_deploy_prep
 ovn_deploy_prep: export KIND=.*
+ovn_deploy_prep: export REPO=${OVN_REPO}
+ovn_deploy_prep: export BRANCH=${OVN_BRANCH}
+ovn_deploy_prep: export HASH=${OVN_COMMIT_HASH}
 ovn_deploy_prep: ovn_deploy_cleanup ## prepares the CR to install the service based on the service sample file OVNAPI
 	$(eval $(call vars,$@,ovn))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(OVN_BRANCH),-b ${OVN_BRANCH}) ${OVN_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${OVNDBS_CR} ${OVNNORTHD_CR} ${OVNCONTROLLER_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1255,10 +1333,13 @@ neutron_cleanup: ## deletes the operator, but does not cleanup the service resou
 .PHONY: neutron_deploy_prep
 neutron_deploy_prep: export KIND=NeutronAPI
 neutron_deploy_prep: export IMAGE=${NEUTRONAPI_DEPL_IMG}
+neutron_deploy_prep: export REPO=${NEUTRON_REPO}
+neutron_deploy_prep: export BRANCH=${NEUTRON_BRANCH}
+neutron_deploy_prep: export HASH=${NEUTRON_COMMIT_HASH}
 neutron_deploy_prep: neutron_deploy_cleanup ## prepares the CR to install the service based on the service sample file NEUTRONAPI
 	$(eval $(call vars,$@,neutron))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(NEUTRON_BRANCH),-b ${NEUTRON_BRANCH}) ${NEUTRON_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${NEUTRONAPI_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1297,10 +1378,13 @@ cinder_cleanup: ## deletes the operator, but does not cleanup the service resour
 cinder_deploy_prep: export KIND=Cinder
 cinder_deploy_prep: export IMAGE=${CINDERAPI_DEPL_IMG},${CINDERBKP_DEPL_IMG},${CINDERSCH_DEPL_IMG},${CINDERVOL_DEPL_IMG}
 cinder_deploy_prep: export IMAGE_PATH=cinderAPI/containerImage,cinderBackup/containerImage,cinderScheduler/containerImage,cinderVolumes/volume1/containerImage
+cinder_deploy_prep: export REPO=${CINDER_REPO}
+cinder_deploy_prep: export BRANCH=${CINDER_BRANCH}
+cinder_deploy_prep: export HASH=${CINDER_COMMIT_HASH}
 cinder_deploy_prep: cinder_deploy_cleanup ## prepares the CR to install the service based on the service sample file CINDER
 	$(eval $(call vars,$@,cinder))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(CINDER_BRANCH),-b ${CINDER_BRANCH}) ${CINDER_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${CINDER_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1340,10 +1424,13 @@ rabbitmq_deploy_prep: export KIND=RabbitmqCluster
 rabbitmq_deploy_prep: export NAME=rabbitmq
 rabbitmq_deploy_prep: export IMAGE=${RABBITMQ_DEPL_IMG}
 rabbitmq_deploy_prep: export IMAGE_PATH=image
+rabbitmq_deploy_prep: export REPO=${RABBITMQ_REPO}
+rabbitmq_deploy_prep: export BRANCH=${RABBITMQ_BRANCH}
+rabbitmq_deploy_prep: export HASH=${RABBITMQ_COMMIT_HASH}
 rabbitmq_deploy_prep: rabbitmq_deploy_cleanup ## prepares the CR to install the service based on the service sample file RABBITMQ
 	$(eval $(call vars,$@,rabbitmq))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(RABBITMQ_BRANCH),-b ${RABBITMQ_BRANCH}) ${RABBITMQ_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash -c "CHECKOUT_FROM_OPENSTACK_REF=false scripts/clone-operator-repo.sh"
 	cp ${RABBITMQ_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1381,10 +1468,13 @@ ironic_cleanup: ## deletes the operator, but does not cleanup the service resour
 ironic_deploy_prep: export KIND=Ironic
 ironic_deploy_prep: export IMAGE=${IRONICAPI_DEPL_IMG},${IRONICCON_DEPL_IMG},${IRONICPXE_DEPL_IMG},${IRONICINS_DEPL_IMG},${IRONICPXE_DEPL_IMG},${IRONICNAG_DEPL_IMG}
 ironic_deploy_prep: export IMAGE_PATH=ironicAPI/containerImage,ironicConductors/0/containerImage,ironicConductors/0/pxeContainerImage,ironicInspector/containerImage,ironicInspector/pxeContainerImage,ironicNeutronAgent/containerImage
+ironic_deploy_prep: export REPO=${IRONIC_REPO}
+ironic_deploy_prep: export BRANCH=${IRONIC_BRANCH}
+ironic_deploy_prep: export HASH=${IRONIC_COMMIT_HASH}
 ironic_deploy_prep: ironic_deploy_cleanup ## prepares the CR to install the service based on the service sample file IRONIC
 	$(eval $(call vars,$@,ironic))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(IRONIC_BRANCH),-b ${IRONIC_BRANCH}) ${IRONIC_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${IRONIC_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1422,10 +1512,13 @@ octavia_cleanup: ## deletes the operator, but does not cleanup the service resou
 
 .PHONY: octavia_deploy_prep
 octavia_deploy_prep: export KIND=Octavia
+octavia_deploy_prep: export REPO=${OCTAVIA_REPO}
+octavia_deploy_prep: export BRANCH=${OCTAVIA_BRANCH}
+octavia_deploy_prep: export HASH=${OCTAVIA_COMMIT_HASH}
 octavia_deploy_prep: octavia_deploy_cleanup ## prepares the CR to install the service based on the service sample file OCTAVIA
 	$(eval $(call vars,$@,octavia))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(OCTAVIA_BRANCH),-b ${OCTAVIA_BRANCH}) ${OCTAVIA_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${OCTAVIA_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1462,10 +1555,13 @@ designate_cleanup: ## deletes the operator, but does not cleanup the service res
 
 .PHONY: designate_deploy_prep
 designate_deploy_prep: export KIND=Designate
+designate_deploy_prep: export REPO=${DESIGNATE_REPO}
+designate_deploy_prep: export BRANCH=${DESIGNATE_BRANCH}
+designate_deploy_prep: export HASH=${DESIGNATE_COMMIT_HASH}
 designate_deploy_prep: designate_deploy_cleanup ## prepares the CR to install the service based on the service sample file DESIGNATE
 	$(eval $(call vars,$@,designate))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${DESIGNATE_BRANCH} ${DESIGNATE_REPO} && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${DESIGNATE_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1506,10 +1602,13 @@ nova_deploy_prep: export KIND=Nova
 # but for projects like Cinder and Nova where there are multiple services with
 # different images this customization does not make sense. Make this
 # customization optional in the tooling.
+nova_deploy_prep: export REPO=${NOVA_REPO}
+nova_deploy_prep: export BRANCH=${NOVA_BRANCH}
+nova_deploy_prep: export HASH=${NOVA_COMMIT_HASH}
 nova_deploy_prep: nova_deploy_cleanup ## prepares the CR to install the service based on the service sample file NOVA
 	$(eval $(call vars,$@,nova))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(NOVA_BRANCH),-b ${NOVA_BRANCH}) ${NOVA_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${NOVA_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1744,10 +1843,13 @@ ansibleee_kuttl_cleanup:
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator
 
 .PHONY: ansibleee_kuttl_prep
+ansibleee_kuttl_prep: export REPO=${ANSIBLEEE_REPO}
+ansibleee_kuttl_prep: export BRANCH=${ANSIBLEEE_BRANCH}
+ansibleee_kuttl_prep: export HASH=${ANSIBLEEE_COMMIT_HASH}
 ansibleee_kuttl_prep: ansibleee_kuttl_cleanup
 	$(eval $(call vars,$@,openstack-ansibleee))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(ANSIBLEEE_BRANCH),-b ${ANSIBLEEE_BRANCH}) ${ANSIBLEEE_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 
 .PHONY: ansibleee_kuttl
 ansibleee_kuttl: export NAMESPACE= ${ANSIBLEEE_KUTTL_NAMESPACE}
@@ -1770,12 +1872,15 @@ dataplane_kuttl_cleanup:
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/dataplane-operator
 
 .PHONY: dataplane_kuttl_prep
+dataplane_kuttl_prep: export REPO=${DATAPLANE_REPO}
+dataplane_kuttl_prep: export BRANCH=${DATAPLANE_BRANCH}
+dataplane_kuttl_prep: export HASH=${DATAPLANE_COMMIT_HASH}
 dataplane_kuttl_prep: dataplane_kuttl_cleanup certmanager input rabbitmq ansibleee infra baremetal dataplane namespace operator_namespace ## Prepares all dependencies for running the dataplane-operator kuttl tests
 	$(eval $(call vars,$@,dataplane))
 	# Kuttl tests require the SSH key secret to exist
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(DATAPLANE_BRANCH),-b ${DATAPLANE_BRANCH}) ${DATAPLANE_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	make wait OPERATOR_NAME=rabbitmq
 	make wait OPERATOR_NAME=openstack-ansibleee
 	make wait OPERATOR_NAME=infra
@@ -1889,10 +1994,13 @@ horizon_cleanup: ## deletes the operator, but does not cleanup the service resou
 .PHONY: horizon_deploy_prep
 horizon_deploy_prep: export KIND=Horizon
 horizon_deploy_prep: export IMAGE=${HORIZON_DEPL_IMG}
+horizon_deploy_prep: export REPO=${HORIZON_REPO}
+horizon_deploy_prep: export BRANCH=${HORIZON_BRANCH}
+horizon_deploy_prep: export HASH=${HORIZON_COMMIT_HASH}
 horizon_deploy_prep: horizon_deploy_cleanup ## prepares the CR to install the service based on the service sample file HORIZON
 	$(eval $(call vars,$@,horizon))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(HORIZON_BRANCH),-b ${HORIZON_BRANCH}) ${HORIZON_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${HORIZON_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -1930,10 +2038,13 @@ heat_cleanup: ## deletes the operator, but does not cleanup the service resource
 heat_deploy_prep: export KIND=Heat
 heat_deploy_prep: export IMAGE=${HEATAPI_DEPL_IMG},${HEATCFNAPI_DEPL_IMG},${HEATENGINE_DEPL_IMG}
 heat_deploy_prep: export IMAGE_PATH=heatAPI/containerImage,heatCfnAPI/containerImage,heatEngine/containerImage
+heat_deploy_prep: export REPO=${HEAT_REPO}
+heat_deploy_prep: export BRANCH=${HEAT_BRANCH}
+heat_deploy_prep: export HASH=${HEAT_COMMIT_HASH}
 heat_deploy_prep: heat_deploy_cleanup ## prepares the CR to install the service based on the service sample file HEAT
 	$(eval $(call vars,$@,heat))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(HEAT_BRANCH),-b ${HEAT_BRANCH}) ${HEAT_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${HEAT_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -2230,10 +2341,13 @@ manila_cleanup: ## deletes the operator, but does not cleanup the service resour
 manila_deploy_prep: export KIND=Manila
 manila_deploy_prep: export IMAGE=${MANILAAPI_DEPL_IMG},${MANILASCH_DEPL_IMG},${MANILASHARE_DEPL_IMG}
 manila_deploy_prep: export IMAGE_PATH=manilaAPI/containerImage,manilaScheduler/containerImage,manilaShares/share1/containerImage
+manila_deploy_prep: export REPO=${MANILA_REPO}
+manila_deploy_prep: export BRANCH=${MANILA_BRANCH}
+manila_deploy_prep: export HASH=${MANILA_COMMIT_HASH}
 manila_deploy_prep: manila_deploy_cleanup ## prepares the CR to install the service based on the service sample file MANILA
 	$(eval $(call vars,$@,manila))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(MANILA_BRANCH),-b ${MANILA_BRANCH}) ${MANILA_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${MANILA_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -2272,10 +2386,13 @@ telemetry_cleanup: ## deletes the operator, but does not cleanup the service res
 telemetry_deploy_prep: export KIND=Telemetry
 telemetry_deploy_prep: export IMAGE=${CEILOMETER_CENTRAL_DEPL_IMG},${CEILOMETER_NOTIFICATION_DEPL_IMG},${SG_CORE_DEPL_IMG}
 telemetry_deploy_prep: export IMAGE_PATH=centralImage,notificationImage,sgCoreImage
+telemetry_deploy_prep: export REPO=${TELEMETRY_REPO}
+telemetry_deploy_prep: export BRANCH=${TELEMETRY_BRANCH}
+telemetry_deploy_prep: export HASH=${TELEMETRY_COMMIT_HASH}
 telemetry_deploy_prep: telemetry_deploy_cleanup ## prepares the CR to install the service based on the service sample file TELEMETRY
 	$(eval $(call vars,$@,telemetry))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone ${GIT_CLONE_OPTS} $(if $(TELEMETRY_BRANCH),-b ${TELEMETRY_BRANCH}) ${TELEMETRY_REPO} "${OPERATOR_NAME}-operator" && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${TELEMETRY_CR} ${DEPLOY_DIR}
 	bash scripts/gen-service-kustomize.sh
 
@@ -2333,10 +2450,13 @@ swift_cleanup: ## deletes the operator, but does not cleanup the service resourc
 .PHONY: swift_deploy_prep
 swift_deploy_prep: export KIND=Swift
 swift_deploy_prep: export IMAGE=unused
+swift_deploy_prep: export REPO=${SWIFT_REPO}
+swift_deploy_prep: export BRANCH=${SWIFT_BRANCH}
+swift_deploy_prep: export HASH=${SWIFT_COMMIT_HASH}
 swift_deploy_prep: swift_deploy_cleanup ## prepares the CR to install the service based on the service sample file SWIFTAPI
 	$(eval $(call vars,$@,swift))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	pushd ${OPERATOR_BASE_DIR} && git clone -b ${SWIFT_BRANCH} ${SWIFT_REPO} && popd
+	bash scripts/clone-operator-repo.sh
 	cp ${SWIFT_CR} ${DEPLOY_DIR}
 
 	bash scripts/gen-service-kustomize.sh
