@@ -142,7 +142,7 @@ EOF_CAT
 EOF_CAT
     if [ -n "$IPV4_ENABLED" ]; then
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
-      - destination: 192.168.122.0/24
+      - destination: ${CTLPLANE_IP_ADDRESS_PREFIX}.0/24
         next-hop-address: ${GATEWAY}
         next-hop-interface: ${BRIDGE_NAME}
         metric: 425
