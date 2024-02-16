@@ -114,7 +114,7 @@ IPV6_LAB_SNO_HOST_PREFIX          ?= 64
 IPV6_LAB_SNO_MACHINE_NETWORK      ?= fd00:abcd:abcd:fc00::/64
 IPV6_LAB_SNO_SERVICE_NETWORK      ?= fd00:abcd:abcd:fc03::/112
 IPV6_LAB_SNO_HOST_IP              ?= fd00:abcd:abcd:fc00::11
-IPV6_LAB_SNO_OCP_VERSION          ?= latest-4.13
+IPV6_LAB_SNO_OCP_VERSION          ?= latest-4.14
 IPV6_LAB_SNO_OCP_MIRROR_URL       ?= https://mirror.openshift.com/pub/openshift-v4/clients/ocp
 
 

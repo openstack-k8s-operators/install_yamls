@@ -51,7 +51,7 @@ WORK_DIR="${WORK_DIR:-$HOME/.sno-workdir}"
 # OCP installer
 PULL_SECRET="${PULL_SECRET:-${HOME}/pull-secret.txt}"
 SSH_PUB_KEY="${SSH_PUB_KEY:-${HOME}/.ssh/id_rsa.pub}"
-OCP_VERSION="${OCP_VERSION:-latest-4.13}"
+OCP_VERSION="${OCP_VERSION:-latest-4.14}"
 OCP_MIRROR_URL="${OCP_MIRROR_URL:-https://mirror.openshift.com/pub/openshift-v4/clients/ocp}"
 OCP_ADMIN_PASSWD=${OCP_ADMIN_PASSWD:-12345678}
 BOOTSTRAP_ISO_FILENAME="${BOOTSTRAP_ISO_FILENAME:-rhcos-live-with-ignition.iso}"
