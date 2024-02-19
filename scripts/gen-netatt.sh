@@ -230,15 +230,15 @@ kind: NetworkAttachmentDefinition
 metadata:
   labels:
     osp/net: octavia
-  name: lb-mgmt-net
+  name: octavia-amphora-net
   namespace: ${NAMESPACE}
 spec:
   config: |
     {
       "cniVersion": "0.3.1",
       "name": "octavia-amphora-net",
-      "bridge": "br-octavia",
-      "type": "bridge",
+      "type": "macvlan",
+      "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}*3))",
       "ipam": {
         "type": "whereabouts",
         "range": "172.23.0.0/24",
