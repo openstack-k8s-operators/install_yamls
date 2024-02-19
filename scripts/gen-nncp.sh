@@ -295,6 +295,96 @@ EOF_CAT
     fi
 
     #
+    # octavia-vlan-link VLAN interface
+    #
+    cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+    - description: octavia-vlan-link vlan interface
+      name: ${INTERFACE}.$((${VLAN_START}+$((${VLAN_STEP}*3))))
+      state: up
+      type: vlan
+      vlan:
+        base-iface: ${INTERFACE}
+        id: $((${VLAN_START}+$((${VLAN_STEP}*3))))
+        reorder-headers: true
+EOF_CAT
+    if [ -n "$IPV4_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv4:
+        address:
+        - ip: 172.23.0.${IP_ADDRESS_SUFFIX}
+          prefix-length: 24
+        enabled: true
+        dhcp: false
+EOF_CAT
+    else
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv4:
+        enabled: false
+EOF_CAT
+    fi
+    if [ -n "$IPV6_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv6:
+        address:
+        - ip: fd00:eeee::${IPV6_ADDRESS_SUFFIX}
+          prefix-length: 64
+        enabled: true
+        dhcp: false
+        autoconf: false
+EOF_CAT
+    else
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv6:
+        enabled: false
+EOF_CAT
+    fi
+
+    #
+    # designate VLAN interface
+    #
+    cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+    - description: designate vlan interface
+      name: ${INTERFACE}.$((${VLAN_START}+$((${VLAN_STEP}*4))))
+      state: up
+      type: vlan
+      vlan:
+        base-iface: ${INTERFACE}
+        id: $((${VLAN_START}+$((${VLAN_STEP}*4))))
+        reorder-headers: true
+EOF_CAT
+    if [ -n "$IPV4_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv4:
+        address:
+        - ip: 172.30.0.${IP_ADDRESS_SUFFIX}
+          prefix-length: 24
+        enabled: true
+        dhcp: false
+EOF_CAT
+    else
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv4:
+        enabled: false
+EOF_CAT
+    fi
+    if [ -n "$IPV6_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv6:
+        address:
+        - ip: fd00:eded::${IPV6_ADDRESS_SUFFIX}
+          prefix-length: 64
+        enabled: true
+        dhcp: false
+        autoconf: false
+EOF_CAT
+    else
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv6:
+        enabled: false
+EOF_CAT
+    fi
+
+    #
     # ctlplane interface (untagged)
     #
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
