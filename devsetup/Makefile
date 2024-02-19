@@ -395,6 +395,13 @@ edpm_deploy_instance: ## Spin a instance on edpm node
 	-oc cp scripts/edpm-deploy-instance.sh openstackclient:/tmp/
 	-oc rsh openstackclient bash /tmp/edpm-deploy-instance.sh
 
+.PHONY: tripleo_deploy
+tripleo_deploy: export INTERFACE_MTU=${NETWORK_MTU}
+tripleo_deploy:
+	$(eval $(call vars))
+	scripts/undercloud.sh
+
+
 .PHONY: standalone_deploy
 standalone_deploy: export COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED}
 standalone_deploy: export STANDALONE=true
