@@ -395,6 +395,7 @@ DATAPLANE_SSHD_ALLOWED_RANGES                    ?=['172.16.1.0/24']
 DATAPLANE_DEFAULT_GW                             ?= 172.16.1.1
 endif
 DATAPLANE_TOTAL_NODES                            ?=1
+DATAPLANE_GROWVOLS_ARGS                          ?=/=8GB /tmp=1GB /home=1GB /var=100%
 DATAPLANE_TOTAL_NETWORKER_NODES					 ?=1
 DATAPLANE_RUNNER_IMG                             ?=
 DATAPLANE_NETWORK_INTERFACE_NAME                 ?=eth0
@@ -826,6 +827,7 @@ edpm_deploy_baremetal_prep: export EDPM_REGISTRY_URL=${DATAPLANE_REGISTRY_URL}
 edpm_deploy_baremetal_prep: export EDPM_CONTAINER_TAG=${DATAPLANE_CONTAINER_TAG}
 edpm_deploy_baremetal_prep: export EDPM_CONTAINER_PREFIX=${DATAPLANE_CONTAINER_PREFIX}
 edpm_deploy_baremetal_prep: export EDPM_ROOT_PASSWORD_SECRET=${BM_ROOT_PASSWORD_SECRET}
+edpm_deploy_baremetal_prep: export EDPM_GROWVOLS_ARGS=${DATAPLANE_GROWVOLS_ARGS}
 edpm_deploy_baremetal_prep: export REPO=${DATAPLANE_REPO}
 edpm_deploy_baremetal_prep: export BRANCH=${DATAPLANE_BRANCH}
 edpm_deploy_baremetal_prep: export HASH=${DATAPLANE_COMMIT_HASH}
