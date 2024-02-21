@@ -74,6 +74,7 @@ echo INTERFACE_BGP_2 ${INTERFACE_BGP_2}
 echo INTERFACE_MTU ${INTERFACE_MTU}
 echo VLAN_START ${VLAN_START}
 echo VLAN_STEP ${VLAN_STEP}
+echo STORAGE_MACVLAN ${STORAGE_MACVLAN}
 if [ -n "$IPV4_ENABLED" ]; then
 echo CTLPLANE_IP_ADDRESS_PREFIX ${CTLPLANE_IP_ADDRESS_PREFIX}
 echo CTLPLANE_IP_ADDRESS_SUFFIX ${CTLPLANE_IP_ADDRESS_SUFFIX}
@@ -207,16 +208,35 @@ EOF_CAT
     #
     # storage VLAN interface
     #
-    cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+    storage_vlan_id=$((VLAN_START + VLAN_STEP))
+
+    cat >> "${DEPLOY_DIR}/${WORKER}_nncp.yaml" <<EOF_CAT
     - description: storage vlan interface
-      name: ${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}))
+      name: ${INTERFACE}.${storage_vlan_id}
       state: up
       type: vlan
       vlan:
         base-iface: ${INTERFACE}
-        id: $((${VLAN_START}+${VLAN_STEP}))
+        id: ${storage_vlan_id}
         reorder-headers: true
 EOF_CAT
+
+    if [ -n "${STORAGE_MACVLAN}" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv4:
+        enabled: false
+      ipv6:
+        enabled: false
+    - description: macvlan interface for storage NW
+      name: storage
+      state: up
+      type: mac-vlan
+      mac-vlan:
+        base-iface: ${INTERFACE}.${storage_vlan_id}
+        mode: bridge
+EOF_CAT
+    fi
+
     if [ -n "$IPV4_ENABLED" ]; then
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv4:
