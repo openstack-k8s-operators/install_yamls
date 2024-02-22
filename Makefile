@@ -1968,6 +1968,9 @@ ansibleee_cleanup: ## deletes the operator, but does not cleanup the service res
 	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 ##@ BAREMETAL
+
+BAREMETAL_PREP_DEPS := $(if $(findstring true,$(BMO_SETUP)), crc_bmo_setup)
+
 .PHONY: baremetal_prep
 baremetal_prep: export IMAGE=${BAREMETAL_IMG}
 baremetal_prep: ## creates the files to install the operator using olm
@@ -1975,7 +1978,7 @@ baremetal_prep: ## creates the files to install the operator using olm
 	bash scripts/gen-olm.sh
 
 .PHONY: baremetal
-baremetal: operator_namespace baremetal_prep ## installs the operator, also runs the prep step. Set BAREMETAL_IMG for custom image.
+baremetal: operator_namespace $(BAREMETAL_PREP_DEPS) baremetal_prep ## installs the operator, also runs the prep step. Set BAREMETAL_IMG for custom image.
 	$(eval $(call vars,$@,openstack-baremetal))
 	oc apply -f ${OPERATOR_DIR}
 
