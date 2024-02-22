@@ -1753,12 +1753,18 @@ octavia_kuttl_run: ## runs kuttl tests for the octavia operator, assumes that ev
 
 .PHONY: octavia_kuttl
 octavia_kuttl: export NAMESPACE = ${OCTAVIA_KUTTL_NAMESPACE}
-octavia_kuttl: kuttl_common_prep ovn ovn_deploy redis_deploy octavia octavia_deploy_prep ## runs kuttl tests for the octavia operator. Installs octavia operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+octavia_kuttl: kuttl_common_prep ovn ovn_deploy redis_deploy neutron neutron_deploy nova nova_deploy glance glance_deploy octavia octavia_deploy_prep ## runs kuttl tests for the octavia operator. Installs octavia operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+	make wait OPERATOR_NAME=neutron
+	make wait OPERATOR_NAME=nova
+	make wait OPERATOR_NAME=glance
 	$(eval $(call vars,$@,octavia))
 	make wait
 	make octavia_kuttl_run
 	make deploy_cleanup
 	make octavia_cleanup
+	make neutron_cleanup
+	make nova_cleanup
+	make glance_cleanup
 	make ovn_cleanup
 	make kuttl_common_cleanup
 
