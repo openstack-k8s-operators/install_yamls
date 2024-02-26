@@ -23,6 +23,7 @@ INTERFACE_MTU=${INTERFACE_MTU:-1500}
 BARBICAN_ENABLED=${BARBICAN_ENABLED:-true}
 MANILA_ENABLED=${MANILA_ENABLED:-true}
 SWIFT_REPLICATED=${SWIFT_REPLICATED:-false}
+TLSE_ENABLED=${TLSE_ENABLED:-true}
 
 # Use the files created in the previous steps including the network_data.yaml file and thw deployed_network.yaml file.
 # The deployed_network.yaml file hard codes the IPs and VIPs configured from the network.sh
@@ -45,7 +46,7 @@ fi
 cat <<EOF > standalone_parameters.yaml
 parameter_defaults:
   BarbicanSimpleCryptoGlobalDefault: true
-  CloudName: $CTLPLANE_IP
+  CloudName: standalone.ooo.test
   Debug: true
   DeploymentUser: $USER
   NtpServer: $NTP_SERVER
@@ -107,6 +108,43 @@ if [ "$BARBICAN_ENABLED" = "true" ]; then
 fi
 if [ "$MANILA_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/manila-cephfsnative-config.yaml"
+fi
+if [ "$TLSE_ENABLED" = "true" ]; then
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/ssl/tls-everywhere-endpoints-dns.yaml"
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/haproxy-public-tls-certmonger.yaml"
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/ssl/enable-internal-tls.yaml"
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/ssl/enable-memcached-tls.yaml"
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/ci/environments/standalone-ipa.yaml"
+    export IPA_ADMIN_USER=admin
+    export IPA_PRINCIPAL=$IPA_ADMIN_USER
+    export IPA_ADMIN_PASSWORD=fce95318204114530f31f885c9df588f
+    export IPA_PASSWORD=$IPA_ADMIN_PASSWORD
+    export CLOUD_DOMAIN=ooo.test
+    export UNDERCLOUD_FQDN=standalone.$CLOUD_DOMAIN
+    export IPA_DOMAIN=$CLOUD_DOMAIN
+    export IPA_REALM=$(echo $IPA_DOMAIN | awk '{print toupper($0)}')
+    export IPA_HOST=ipa.$IPA_DOMAIN
+    export IPA_SERVER_HOSTNAME=$IPA_HOST
+    mkdir /tmp/ipa-data
+    podman run -d --name freeipa-server-container \
+        --sysctl net.ipv6.conf.lo.disable_ipv6=0 \
+        --security-opt seccomp=unconfined \
+        --ip 10.88.0.2 \
+        -e IPA_SERVER_IP=10.88.0.2 \
+        -e PASSWORD=$IPA_ADMIN_PASSWORD \
+        -h $IPA_SERVER_HOSTNAME \
+        --read-only --tmpfs /run --tmpfs /tmp \
+        -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+        -v /tmp/ipa-data:/data:Z quay.io/freeipa/freeipa-server:fedora-39 no-exit \
+        -U -r $IPA_REALM --setup-dns --no-reverse --no-ntp \
+        --no-dnssec-validation --auto-forwarders
+    timeout 900s grep -qEi '(INFO The ipa-server-install command was successful|ERROR The ipa-server-install command failed)' <(tail -F /tmp/ipa-data/var/log/ipaserver-install.log)
+    cat  <<EOF > /etc/resolv.conf
+search ooo.test
+nameserver 10.88.0.2
+EOF
+    cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+    ansible-playbook /usr/share/ansible/tripleo-playbooks/undercloud-ipa-install.yaml
 fi
 ENV_ARGS+=" -e $HOME/standalone_parameters.yaml"
 if [ "$EDPM_COMPUTE_CEPH_ENABLED" = "true" ] ; then
