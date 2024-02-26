@@ -97,8 +97,8 @@ sudo dnf install -y podman python3-tripleoclient util-linux lvm2 cephadm
 # STEP_CONFIG in container-puppet-* containers.
 sudo dnf install -y https://kojihub.stream.centos.org/kojifiles/packages/podman/4.6.0/1.el9/x86_64/podman-4.6.0-1.el9.x86_64.rpm
 
-sudo hostnamectl set-hostname standalone.localdomain
-sudo hostnamectl set-hostname standalone.localdomain --transient
+sudo hostnamectl set-hostname standalone.ooo.test
+sudo hostnamectl set-hostname standalone.ooo.test --transient
 
 # TODO: use Ceph RBD backend for Nova to implement ceph -> ceph adoption of workloads
 # until then, use local file storage backend for VM workloads adoption
