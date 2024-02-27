@@ -361,25 +361,14 @@ DATAPLANE_COMMIT_HASH                            ?=
 DATAPLANE_TIMEOUT                                ?= 20m
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
-OPENSTACK_DATAPLANENODESET                       ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset_bgp_ovn_cluster.yaml
+DATAPLANE_KUSTOMIZE_SCENARIO                     ?= bgp_ovn_cluster
 else
-OPENSTACK_DATAPLANENODESET                       ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset_bgp.yaml
+DATAPLANE_KUSTOMIZE_SCENARIO                     ?= bgp
 endif
 else
-OPENSTACK_DATAPLANENODESET                       ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset.yaml
+DATAPLANE_KUSTOMIZE_SCENARIO                     ?= preprovisioned
 endif
-OPENSTACK_DATAPLANENODESET_BAREMETAL             ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset_baremetal_with_ipam.yaml
-OPENSTACK_DATAPLANENODESET_NETWORKER             ?= config/samples/dataplane_v1beta1_openstackdataplanenodeset_networker.yaml
-OPENSTACK_DATAPLANEDEPLOYMENT		             ?= config/samples/dataplane_v1beta1_openstackdataplanedeployment.yaml
-OPENSTACK_DATAPLANEDEPLOYMENT_BAREMETAL		 	 ?= config/samples/dataplane_v1beta1_openstackdataplanedeployment_baremetal_with_ipam.yaml
-OPENSTACK_DATAPLANEDEPLOYMENT_NETWORKER          ?= config/samples/dataplane_v1beta1_openstackdataplanedeployment_networker.yaml
 OPENSTACK_DATAPLANESERVICE_NOVA                  ?= config/services/dataplane_v1beta1_openstackdataplaneservice_nova.yaml
-DATAPLANE_NODESET_CR                             ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANENODESET}
-DATAPLANE_NODESET_BAREMETAL_CR                   ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANENODESET_BAREMETAL}
-DATAPLANE_NODESET_NETWORKER_CR                   ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANENODESET_NETWORKER}
-DATAPLANE_DEPLOYMENT_CR                          ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANEDEPLOYMENT}
-DATAPLANE_DEPLOYMENT_BAREMETAL_CR				 ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANEDEPLOYMENT_BAREMETAL}
-DATAPLANE_DEPLOYMENT_NETWORKER_CR                ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANEDEPLOYMENT_NETWORKER}
 DATAPLANE_SERVICE_NOVA_CR                        ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANESERVICE_NOVA}
 DATAPLANE_ANSIBLE_SECRET                         ?=dataplane-ansible-ssh-private-key-secret
 DATAPLANE_ANSIBLE_USER                           ?=
@@ -788,9 +777,8 @@ edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data pla
 	bash scripts/clone-operator-repo.sh
 	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
 	cp ${DATAPLANE_SERVICE_NOVA_CR} ${DEPLOY_DIR}
-	cp ${DATAPLANE_NODESET_CR} ${DEPLOY_DIR}
-	cp ${DATAPLANE_DEPLOYMENT_CR} ${DEPLOY_DIR}
 	cp ${DATAPLANE_EXTRA_NOVA_CONFIG_FILE} ${EDPM_EXTRA_NOVA_CONFIG_FILE}
+	kustomize build ${OPERATOR_BASE_DIR}/dataplane-operator/examples/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
 	bash scripts/gen-edpm-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
@@ -829,13 +817,13 @@ edpm_deploy_baremetal_prep: export EDPM_ROOT_PASSWORD_SECRET=${BM_ROOT_PASSWORD_
 edpm_deploy_baremetal_prep: export REPO=${DATAPLANE_REPO}
 edpm_deploy_baremetal_prep: export BRANCH=${DATAPLANE_BRANCH}
 edpm_deploy_baremetal_prep: export HASH=${DATAPLANE_COMMIT_HASH}
+edpm_deploy_baremetal_prep: export DATAPLANE_KUSTOMIZE_SCENARIO=baremetal
 edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	bash scripts/clone-operator-repo.sh
 	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
-	cp ${DATAPLANE_NODESET_BAREMETAL_CR} ${DEPLOY_DIR}
-	cp ${DATAPLANE_DEPLOYMENT_BAREMETAL_CR} ${DEPLOY_DIR}
+	kustomize build ${OPERATOR_BASE_DIR}/dataplane-operator/examples/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
 	bash scripts/gen-edpm-baremetal-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
@@ -896,6 +884,7 @@ edpm_deploy_networker_prep: export EDPM_SERVER_ROLE=networker
 edpm_deploy_networker_prep: export REPO=${DATAPLANE_REPO}
 edpm_deploy_networker_prep: export BRANCH=${DATAPLANE_BRANCH}
 edpm_deploy_networker_prep: export HASH=${DATAPLANE_COMMIT_HASH}
+edpm_deploy_networker_prep: export DATAPLANE_KUSTOMIZE_SCENARIO=networker
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
 edpm_deploy_networker_prep: export BGP=ovn
@@ -909,8 +898,7 @@ edpm_deploy_networker_prep: edpm_deploy_networker_cleanup ## prepares the CR to 
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR_EDPM_NETWORKER}
 	bash scripts/clone-operator-repo.sh
 	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
-	cp ${DATAPLANE_NODESET_NETWORKER_CR} ${DEPLOY_DIR_EDPM_NETWORKER}
-	cp ${DATAPLANE_DEPLOYMENT_NETWORKER_CR} ${DEPLOY_DIR_EDPM_NETWORKER}
+	kustomize build ${OPERATOR_BASE_DIR}/dataplane-operator/examples/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR_EDPM_NETWORKER}/dataplane.yaml
 	bash scripts/gen-edpm-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
