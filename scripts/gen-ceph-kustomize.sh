@@ -39,7 +39,7 @@ CEPH_TIMEOUT=${CEPH_TIMEOUT:-30}
 CEPH_HOSTNETWORK=${CEPH_HOSTNETWORK:-true}
 CEPH_POOLS=("volumes" "images" "backups" "cephfs.cephfs.meta" "cephfs.cephfs.data")
 CEPH_DAEMONS="osd,mds,rgw"
-CEPH_DATASIZE=${CEPH_DATASIZE:-500Mi}
+CEPH_DATASIZE=${CEPH_DATASIZE:-2Gi}
 CEPH_WORKER=${CEPH_WORKER:-""}
 CEPH_MON_CONF=${CEPH_MON_CONF:-""}
 CEPH_DEMO_UID=${CEPH_DAEMON:-0}
@@ -122,6 +122,16 @@ patches:
     - op: replace
       path: /spec/containers/0/image
       value: $CEPH_IMAGE
+    - op: replace
+      path: /spec/volumes/0/emptyDir/sizeLimit
+      value: $CEPH_DATASIZE
+    - op: replace
+      path: /spec/volumes/1/emptyDir/sizeLimit
+      value: $CEPH_DATASIZE
+    - op: replace
+      path: /spec/volumes/2/emptyDir/sizeLimit
+      value: $CEPH_DATASIZE
+
 EOF
 
 if [ -n "${NETWORKS_ANNOTATION}" ]; then
