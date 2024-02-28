@@ -407,7 +407,7 @@ edpm_deploy_instance: ## Spin a instance on edpm node
 tripleo_deploy: export INTERFACE_MTU=${NETWORK_MTU}
 tripleo_deploy:
 	$(eval $(call vars))
-	scripts/undercloud.sh
+	scripts/tripleo.sh
 
 
 .PHONY: standalone_deploy
