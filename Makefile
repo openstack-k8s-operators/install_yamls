@@ -352,6 +352,7 @@ BAREMETAL_REPO          ?= https://github.com/openstack-k8s-operators/openstack-
 BAREMETAL_BRANCH        ?= ${OPENSTACK_K8S_BRANCH}
 BAREMETAL_COMMIT_HASH   ?=
 BMH_NAMESPACE           ?= ${NAMESPACE}
+BAREMETAL_OS_CONTAINER_IMG ?=
 
 # Dataplane Operator
 DATAPLANE_IMG                                    ?= quay.io/openstack-k8s-operators/dataplane-operator-index:${OPENSTACK_K8S_TAG}
@@ -818,6 +819,7 @@ edpm_deploy_baremetal_prep: export KIND=OpenStackDataPlaneNodeSet
 edpm_deploy_baremetal_prep: export EDPM_ANSIBLE_SECRET=${DATAPLANE_ANSIBLE_SECRET}
 edpm_deploy_baremetal_prep: export EDPM_ANSIBLE_USER=${DATAPLANE_ANSIBLE_USER}
 edpm_deploy_baremetal_prep: export EDPM_BMH_NAMESPACE=${BMH_NAMESPACE}
+edpm_deploy_baremetal_prep: export EDPM_OS_CONTAINER_IMG=${BAREMETAL_OS_CONTAINER_IMG}
 edpm_deploy_baremetal_prep: export EDPM_PROVISIONING_INTERFACE=${BMO_PROVISIONING_INTERFACE}
 edpm_deploy_baremetal_prep: export EDPM_CTLPLANE_INTERFACE=${BM_CTLPLANE_INTERFACE}
 edpm_deploy_baremetal_prep: export EDPM_TOTAL_NODES=${DATAPLANE_TOTAL_NODES}
