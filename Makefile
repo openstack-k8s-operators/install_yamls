@@ -810,7 +810,6 @@ edpm_deploy: input edpm_deploy_prep ## installs the dataplane instance using kus
 ifneq ($(DATAPLANE_RUNNER_IMG),)
 	make edpm_patch_ansible_runner_image
 endif
-	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 
 .PHONY: edpm_deploy_baremetal_prep
@@ -850,7 +849,6 @@ edpm_deploy_baremetal: input edpm_deploy_baremetal_prep ## installs the dataplan
 ifneq ($(DATAPLANE_RUNNER_IMG),)
 	make edpm_patch_ansible_runner_image
 endif
-	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 
 .PHONY: edpm_wait_deploy_baremetal
@@ -933,7 +931,6 @@ edpm_deploy_networker: input edpm_deploy_networker_prep ## installs the dataplan
 ifneq ($(DATAPLANE_RUNNER_IMG),)
 	make edpm_patch_ansible_runner_image
 endif
-	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
 	oc kustomize ${DEPLOY_DIR_EDPM_NETWORKER} | oc apply -f -
 
 ##@ INFRA
