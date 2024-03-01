@@ -16,6 +16,7 @@
 set -ex
 
 EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
+EDPM_COMPUTE_SRIOV_ENABLED=${EDPM_COMPUTE_SRIOV_ENABLED:-true}
 COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
 INTERFACE_MTU=${INTERFACE_MTU:-1500}
 BARBICAN_ENABLED=${BARBICAN_ENABLED:-true}
@@ -113,5 +114,9 @@ if [ "$EDPM_COMPUTE_CEPH_ENABLED" = "true" ] ; then
 fi
 ENV_ARGS+=" -e $HOME/containers-prepare-parameters.yaml"
 ENV_ARGS+=" -e $HOME/deployed_network.yaml"
+if [ "$EDPM_COMPUTE_SRIOV_ENABLED" = "true" ] ; then
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-sriov.yaml"
+    ENV_ARGS+=" -e $HOME/sriov_template.yaml"
+fi
 
 sudo ${CMD} ${CMD_ARGS} ${ENV_ARGS}
