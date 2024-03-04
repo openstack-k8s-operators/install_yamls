@@ -230,13 +230,13 @@ kind: NetworkAttachmentDefinition
 metadata:
   labels:
     osp/net: octavia
-  name: octavia-amphora-net
+  name: octavia
   namespace: ${NAMESPACE}
 spec:
   config: |
     {
       "cniVersion": "0.3.1",
-      "name": "octavia-amphora-net",
+      "name": "octavia",
       "type": "macvlan",
       "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}*3))",
       "ipam": {
