@@ -49,6 +49,11 @@ make keystone_deploy
 ```bash
 git clone https://github.com/openstack-k8s-operators/install_yamls.git
 ```
+* ensure the dependencies are installed
+```bash
+cd install_yamls/devsetup
+make download_tools
+```
 
 * install CRC
 ```bash
