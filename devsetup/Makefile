@@ -405,6 +405,7 @@ tripleo_deploy:
 standalone_deploy: export COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED}
 standalone_deploy: export STANDALONE=true
 standalone_deploy: export INTERFACE_MTU=${NETWORK_MTU}
+standalone_deploy: export EDPM_COMPUTE_NETWORK = ${NETWORK_ISOLATION_NET_NAME}
 standalone_deploy:
 	$(eval $(call vars))
 	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX} ${STANDALONE_COMPUTE_DRIVER} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}'
