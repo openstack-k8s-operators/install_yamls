@@ -232,7 +232,7 @@ EOF
 #      value: nova-custom
 #
 # So we do a replace by value with yq (assuming golang implementation of yq)
-yq -i '(.spec.services[] | select(. == "nova")) |= "nova-custom"' *openstackdataplanenodeset*.yaml
+yq -i '(.spec.services[] | select(. == "nova")) |= "nova-custom"' dataplane.yaml
 fi
 
 kustomization_add_resources
