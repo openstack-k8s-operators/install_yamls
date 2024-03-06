@@ -487,6 +487,12 @@ SWIFT_KUTTL_NAMESPACE   ?= swift-kuttl-tests
 CERTMANAGER_TIMEOUT                  ?= 300s
 INSTALL_CERT_MANAGER		     ?= true
 
+# Redis
+# REDIS_IMG     ?= (this is unused because this is part of infra operator)
+REDIS           ?= config/samples/redis_v1beta1_redis.yaml
+REDIS_CR        ?= ${OPERATOR_BASE_DIR}/infra-operator/${REDIS}
+REDIS_DEPL_IMG  ?= unused
+
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
 ${1}: export OCP_RELEASE=$(OCP_RELEASE)
@@ -1732,7 +1738,7 @@ octavia_kuttl_run: ## runs kuttl tests for the octavia operator, assumes that ev
 
 .PHONY: octavia_kuttl
 octavia_kuttl: export NAMESPACE = ${OCTAVIA_KUTTL_NAMESPACE}
-octavia_kuttl: kuttl_common_prep ovn ovn_deploy octavia octavia_deploy_prep ## runs kuttl tests for the octavia operator. Installs octavia operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+octavia_kuttl: kuttl_common_prep ovn ovn_deploy redis_deploy octavia octavia_deploy_prep ## runs kuttl tests for the octavia operator. Installs octavia operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,octavia))
 	make wait
 	make octavia_kuttl_run
@@ -2505,3 +2511,30 @@ certmanager_cleanup:
 	oc delete -n ${OPERATOR_NAMESPACE} csv --all --ignore-not-found=true
 	oc delete -n ${NAMESPACE} installplan --all --ignore-not-found=true
 	oc delete -n cert-manager deployment --all
+
+##@ REDIS
+.PHONY: redis_deploy_prep
+redis_deploy_prep: export KIND=Redis
+redis_deploy_prep: export NAME=redis
+redis_deploy_prep: export IMAGE=${REDIS_DEPL_IMG}
+redis_deploy_prep: export REPO=${INFRA_REPO}
+redis_deploy_prep: export BRANCH=${INFRA_BRANCH}
+redis_deploy_prep: export HASH=${INFRA_COMMIT_HASH}
+redis_deploy_prep: redis_deploy_cleanup ## prepares the CR to install the service based on the service sample file REDIS
+	$(eval $(call vars,$@,infra))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	bash scripts/clone-operator-repo.sh
+	cp ${REDIS_CR} ${DEPLOY_DIR}
+	bash scripts/gen-service-kustomize.sh
+
+.PHONY: redis_deploy
+redis_deploy: input redis_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set INFRA_REPO and INFRA_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,infra))
+	make wait
+	bash scripts/operator-deploy-resources.sh
+
+.PHONY: redis_deploy_cleanup
+redis_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,infra))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/infra-operator ${DEPLOY_DIR}
