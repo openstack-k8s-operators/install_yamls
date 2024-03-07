@@ -44,6 +44,7 @@ EDPM_COMPUTE_VCPUS=${COMPUTE_VCPUS:-8}
 EDPM_COMPUTE_RAM=${COMPUTE_RAM:-20}
 EDPM_COMPUTE_DISK_SIZE=${COMPUTE_DISK_SIZE:-70}
 EDPM_COMPUTE_CEPH_ENABLED=${COMPUTE_CEPH_ENABLED:-true}
+EDPM_COMPUTE_SRIOV_ENABLED=${COMPUTE_SRIOV_ENABLED:-true}
 MANILA_ENABLED=${MANILA_ENABLED:-true}
 
 if [[ ! -f $SSH_KEY_FILE ]]; then
@@ -100,6 +101,14 @@ sudo hostnamectl set-hostname standalone.localdomain --transient
 cat >\$HOME/nova_noceph.yaml <<__EOF__
 parameter_defaults:
     NovaEnableRbdBackend: false
+__EOF__
+
+cat >\$HOME/sriov_template.yaml <<__EOF__
+parameter_defaults:
+    NovaPCIPassthrough:
+      - devname: "dummy-dev"
+        physical_network: "dummy_sriov_net"
+    NeutronPhysicalDevMappings: "dummy_sriov_net:dummy-dev"
 __EOF__
 
 export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
@@ -184,6 +193,7 @@ interface_mtu: ${INTERFACE_MTU:-1500}
 gateway_ip: ${GATEWAY}
 dns_server: ${PRIMARY_RESOLV_CONF_ENTRY}
 compute_driver: ${COMPUTE_DRIVER}
+sriov_agent: ${EDPM_COMPUTE_SRIOV_ENABLED}
 EOF
 
 jinja2_render standalone/network_data.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/network_data.yaml
