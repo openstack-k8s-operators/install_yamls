@@ -589,7 +589,7 @@ operator_namespace: ## creates the namespace specified via OPERATOR_NAMESPACE en
 	$(eval $(call vars,$@))
 	bash scripts/gen-namespace.sh
 	oc apply -f ${OUT}/${OPERATOR_NAMESPACE}/namespace.yaml
-	timeout $(TIMEOUT) bash -c "while ! (oc get project ${OPERATOR_NAMESPACE}); do sleep 1; done"
+	timeout $(TIMEOUT) bash -c "while ! (oc get project.v1.project.openshift.io ${OPERATOR_NAMESPACE}); do sleep 1; done"
 ifeq ($(MICROSHIFT) ,0)
 	oc project ${OPERATOR_NAMESPACE}
 else
@@ -603,7 +603,7 @@ namespace: ## creates the namespace specified via NAMESPACE env var (defaults to
 	$(eval $(call vars,$@))
 	bash scripts/gen-namespace.sh
 	oc apply -f ${OUT}/${NAMESPACE}/namespace.yaml
-	timeout $(TIMEOUT) bash -c "while ! (oc get project ${NAMESPACE}); do sleep 1; done"
+	timeout $(TIMEOUT) bash -c "while ! (oc get project.v1.project.openshift.io ${NAMESPACE}); do sleep 1; done"
 ifeq ($(MICROSHIFT) ,0)
 	oc project ${NAMESPACE}
 else
@@ -2162,7 +2162,7 @@ nmstate: ## installs nmstate operator in the openshift-nmstate namespace
 	$(eval $(call vars,$@,nmstate))
 	bash scripts/gen-namespace.sh
 	oc apply -f ${OUT}/${NAMESPACE}/namespace.yaml
-	timeout $(TIMEOUT) bash -c "while ! (oc get project ${NAMESPACE}); do sleep 1; done"
+	timeout $(TIMEOUT) bash -c "while ! (oc get project.v1.project.openshift.io ${NAMESPACE}); do sleep 1; done"
 ifeq ($(OKD), true)
 	bash scripts/gen-olm-nmstate-okd.sh
 	oc apply -f ${OPERATOR_DIR}
@@ -2269,7 +2269,7 @@ metallb: ## installs metallb operator in the metallb-system namespace
 	$(eval $(call vars,$@,metallb))
 	bash scripts/gen-namespace.sh
 	oc apply -f ${OUT}/${NAMESPACE}/namespace.yaml
-	timeout $(TIMEOUT) bash -c "while ! (oc get project ${NAMESPACE}); do sleep 1; done"
+	timeout $(TIMEOUT) bash -c "while ! (oc get project.v1.project.openshift.io ${NAMESPACE}); do sleep 1; done"
 ifeq ($(OKD), true)
 	bash scripts/gen-operatorshub-catalog.sh
 	oc apply -f ${OPERATOR_DIR}/operatorshub-catalog/
