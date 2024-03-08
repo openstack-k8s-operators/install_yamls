@@ -45,6 +45,7 @@ EDPM_COMPUTE_RAM=${COMPUTE_RAM:-20}
 EDPM_COMPUTE_DISK_SIZE=${COMPUTE_DISK_SIZE:-70}
 EDPM_COMPUTE_CEPH_ENABLED=${COMPUTE_CEPH_ENABLED:-true}
 EDPM_COMPUTE_SRIOV_ENABLED=${COMPUTE_SRIOV_ENABLED:-true}
+EDPM_COMPUTE_DHCP_AGENT_ENABLED=${COMPUTE_DHCP_AGENT_ENABLED:-true}
 MANILA_ENABLED=${MANILA_ENABLED:-true}
 SWIFT_REPLICATED=${SWIFT_REPLICATED:-false}
 
@@ -110,6 +111,15 @@ parameter_defaults:
       - devname: "dummy-dev"
         physical_network: "dummy_sriov_net"
     NeutronPhysicalDevMappings: "dummy_sriov_net:dummy-dev"
+__EOF__
+
+cat >\$HOME/dhcp_agent_template.yaml <<__EOF__
+parameter_defaults:
+  NeutronEnableForceMetadata: true
+  DhcpAgentNotification: true
+
+resource_registry:
+  OS::TripleO::Services::NeutronDhcpAgent: deployment/neutron/neutron-dhcp-container-puppet.yaml
 __EOF__
 
 export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
@@ -196,6 +206,7 @@ gateway_ip: ${GATEWAY}
 dns_server: ${PRIMARY_RESOLV_CONF_ENTRY}
 compute_driver: ${COMPUTE_DRIVER}
 sriov_agent: ${EDPM_COMPUTE_SRIOV_ENABLED}
+dhcp_agent: ${EDPM_COMPUTE_DHCP_AGENT_ENABLED}
 EOF
 
 jinja2_render standalone/network_data.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/network_data.yaml
