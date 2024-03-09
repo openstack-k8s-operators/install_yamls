@@ -50,8 +50,10 @@ patches:
       path: /spec/baremetalSetTemplate/bmhNamespace
       value: ${EDPM_BMH_NAMESPACE}
     - op: add
-      path: /spec/services/0
-      value: repo-setup
+      path: /spec/nodeTemplate/ansible/ansibleVarsFrom/0
+      value:
+        configMapRef:
+          name: repo-setup-bootstrap
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/timesync_ntp_servers
       value:

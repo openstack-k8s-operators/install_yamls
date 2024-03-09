@@ -1,0 +1,31 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openstack-aee-default-env
+data:
+  ANSIBLE_CALLBACKS_ENABLED: profile_tasks
+  ANSIBLE_VERBOSITY: "1"
+  ANSIBLE_FORCE_COLOR: "True"
+  ANSIBLE_SSH_ARGS: "-C -o ControlMaster=auto -o ControlPersist=80s"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: repo-setup-bootstrap
+data:
+  edpm_bootstrap_command: |
+    set -euxo pipefail
+    pushd /var/tmp
+    curl -sL https://github.com/openstack-k8s-operators/repo-setup/archive/refs/heads/main.tar.gz | tar -xz
+    pushd repo-setup-main
+    python3 -m venv ./venv
+    PBR_VERSION=0.0.0 ./venv/bin/pip install ./
+    # This is required for FIPS enabled until trunk.rdoproject.org
+    # is not being served from a centos7 host, tracked by
+    # https://issues.redhat.com/browse/RHOSZUUL-1517
+    update-crypto-policies --set FIPS:NO-ENFORCE-EMS
+    ./venv/bin/repo-setup current-podified -b antelope
+    popd
+    rm -rf repo-setup-main
+    sudo dnf -y update

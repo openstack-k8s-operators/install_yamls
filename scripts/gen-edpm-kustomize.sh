@@ -88,8 +88,10 @@ fi
 
 cat <<EOF >>kustomization.yaml
     - op: add
-      path: /spec/services/0
-      value: repo-setup
+      path: /spec/nodeTemplate/ansible/ansibleVarsFrom/0
+      value:
+        configMapRef:
+          name: repo-setup-bootstrap
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/timesync_ntp_servers
       value:
