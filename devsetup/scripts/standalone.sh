@@ -31,6 +31,7 @@ if [[ ${STANDALONE_VM} == "true" ]]; then
 fi
 IP_ADRESS_SUFFIX=${IP_ADRESS_SUFFIX:-"$((100+${EDPM_COMPUTE_SUFFIX}))"}
 IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADRESS_SUFFIX}"}
+CTLPLANE_IP=${CTLPLANE_IP:-"${IP}"}
 OS_NET_CONFIG_IFACE=${OS_NET_CONFIG_IFACE:-"nic1"}
 GATEWAY=${GATEWAY:-"${EDPM_COMPUTE_NETWORK_IP}"}
 OUTPUT_DIR=${OUTPUT_DIR:-"${SCRIPTPATH}/../../out/edpm/"}
@@ -117,7 +118,7 @@ export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
 export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml -e \$HOME/nova_noceph.yaml}"
 export COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
-export IP=${IP}
+export IP=${CTLPLANE_IP}
 export GATEWAY=${GATEWAY}
 export STANDALONE_VM=${STANDALONE_VM}
 
@@ -183,11 +184,12 @@ cat << EOF > ${J2_VARS_FILE}
 ---
 additional_networks: ${EDPM_COMPUTE_ADDITIONAL_NETWORKS}
 ctlplane_cidr: 24
-ctlplane_ip: ${IP}
+ctlplane_ip: ${CTLPLANE_IP}
+additional_ctlplane_ip: ${IP}
 os_net_config_iface: ${OS_NET_CONFIG_IFACE}
 standalone_vm: ${STANDALONE_VM}
-ctlplane_subnet: ${IP%.*}.0/24
-ctlplane_vip: ${IP%.*}.99
+ctlplane_subnet: ${CTLPLANE_IP%.*}.0/24
+ctlplane_vip: ${CTLPLANE_IP%.*}.99
 ip_address_suffix: ${IP_ADRESS_SUFFIX}
 interface_mtu: ${INTERFACE_MTU:-1500}
 gateway_ip: ${GATEWAY}
