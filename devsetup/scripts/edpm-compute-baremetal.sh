@@ -31,6 +31,7 @@ SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 NODE_NAME_PREFIX=${BMAAS_INSTANCE_NAME_PREFIX=:-"edpm-compute"}
 NETWORK_NAME=${BMAAS_NETWORK_NAME:-"default"}
 BMH_CR_FILE=${BMH_CR_FILE:-bmh_deploy.yaml}
+INGRESS_DOMAIN=$(oc get ingresses.config/cluster -o jsonpath={.spec.domain})
 
 function create {
     mkdir -p ${DEPLOY_DIR}
@@ -72,7 +73,7 @@ metadata:
     app: openstack
 spec:
   bmc:
-    address: redfish-virtualmedia+http://sushy-emulator.apps-crc.testing/redfish/v1/Systems/${!uuid_var}
+    address: redfish-virtualmedia+http://sushy-emulator.${INGRESS_DOMAIN}/redfish/v1/Systems/${!uuid_var}
     credentialsName: node-${i}-bmc-secret
   bootMACAddress: ${!mac_var}
   bootMode: UEFI
