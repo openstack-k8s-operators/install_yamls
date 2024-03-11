@@ -403,6 +403,7 @@ BM_CTLPLANE_INTERFACE                            ?= enp1s0
 BM_ROOT_PASSWORD                                 ?=
 GENERATE_SSH_KEYS				 ?= true
 DATAPLANE_EXTRA_NOVA_CONFIG_FILE                 ?= /dev/null
+DATAPLANE_SERVER_ROLE                            ?= compute
 
 # Manila
 MANILA_IMG              ?= quay.io/openstack-k8s-operators/manila-operator-index:${OPENSTACK_K8S_TAG}
@@ -778,7 +779,7 @@ edpm_deploy_prep: export EDPM_CONTAINER_TAG=${DATAPLANE_CONTAINER_TAG}
 edpm_deploy_prep: export EDPM_CONTAINER_PREFIX=${DATAPLANE_CONTAINER_PREFIX}
 edpm_deploy_prep: export EDPM_EXTRA_NOVA_CONFIG_FILE=${DEPLOY_DIR}/25-nova-extra.conf
 edpm_deploy_prep: export EDPM_DEPLOY_DIR=${DEPLOY_DIR}
-edpm_deploy_prep: export EDPM_SERVER_ROLE=compute
+edpm_deploy_prep: export EDPM_SERVER_ROLE=${DATAPLANE_SERVER_ROLE}
 edpm_deploy_prep: export REPO=${DATAPLANE_REPO}
 edpm_deploy_prep: export BRANCH=${DATAPLANE_BRANCH}
 edpm_deploy_prep: export HASH=${DATAPLANE_COMMIT_HASH}
