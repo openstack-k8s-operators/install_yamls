@@ -42,6 +42,7 @@ fi
 
 IMAGE=${IMAGE:-unused}
 IMAGE_PATH=${IMAGE_PATH:-containerImage}
+STORAGE_REQUEST=${STORAGE_REQUEST:-10G}
 
 if [ ! -d ${DEPLOY_DIR} ]; then
     mkdir -p ${DEPLOY_DIR}
@@ -101,6 +102,25 @@ if [ -n "$NAME" ]; then
     - op: replace
       path: /metadata/name
       value: ${NAME}
+EOF
+fi
+
+if [ "${KIND}" == "OpenStackControlPlane" ]; then
+   cat <<EOF>>kustomization.yaml
+    - op: replace
+      path: /spec/galera/templates/openstack/storageRequest
+      value: ${STORAGE_REQUEST}
+    - op: replace
+      path: /spec/galera/templates/openstack-cell1/storageRequest
+      value: ${STORAGE_REQUEST}
+EOF
+fi
+
+if [ "${KIND}" == "Galera" ]; then
+   cat <<EOF>>kustomization.yaml
+    - op: replace
+      path: /spec/storageRequest
+      value: ${STORAGE_REQUEST}
 EOF
 fi
 
