@@ -24,9 +24,12 @@ INGRESS_DOMAIN=$(oc get ingresses.config/cluster -o jsonpath={.spec.domain})
 REDFISH_USERNAME=${REDFISH_USERNAME:-"admin"}
 REDFISH_PASSWORD=${REDFISH_PASSWORD:-"password"}
 IMAGE=${SUSHY_EMULATOR_IMAGE:-"quay.io/metal3-io/sushy-tools:latest"}
+CRC_NETWORK_NAME=${CRC_NETWORK_NAME:-crc}
+BM_IPV6=${BM_IPV6:-false}
+BM_IPV4=${BM_IPV4:-false}
+
 
 if [ $DRIVER = "libvirt" ]; then
-    CRC_NETWORK_NAME=crc
     SSH_ALGORITHM=rsa
     SSH_KEY_FILE=bmaas-ssh-key-id_rsa
     SSH_KEY_SIZE=4096
@@ -36,11 +39,17 @@ if [ $DRIVER = "libvirt" ]; then
     else
         LIBVIRT_SOCKET=""
     fi
-    # TODO: Make CRC_NETWORK_NAME a parameter so that this script can be used on
-    # separate hypervisor, against any OCP.
-    LIBVIRT_IP_ADDRESS=$(nmcli connection show "${CRC_NETWORK_NAME}" | grep ipv4.addresses | cut -d / -f 1 | awk '{ print $2 }')
+    if [ $BM_IPV6 = true ]; then
+        LIBVIRT_IP_ADDRESS=$(nmcli connection show "${CRC_NETWORK_NAME}" | grep ipv6.addresses | cut -d / -f 1 | awk '{ print $2 }')
+        LIBVIRT_URI="'qemu+ssh://${LIBVIRT_USER}@[${LIBVIRT_IP_ADDRESS}]/system${LIBVIRT_SOCKET}'"
+        SUSHY_EMULATOR_LISTEN_IP="'::'"
+
+    else
+        LIBVIRT_IP_ADDRESS=$(nmcli connection show "${CRC_NETWORK_NAME}" | grep ipv4.addresses | cut -d / -f 1 | awk '{ print $2 }')
+        LIBVIRT_URI="'qemu+ssh://${LIBVIRT_USER}@${LIBVIRT_IP_ADDRESS}/system${LIBVIRT_SOCKET}'"
+        SUSHY_EMULATOR_LISTEN_IP="'0.0.0.0'"
+    fi
     INSTANCES=$(virsh --connect=qemu:///system list --all --uuid --name | grep "${NODE_NAME_PREFIX}" | awk '{ printf "\"" $1 "\" " }' | sed -e 's/" "/", "/' -e 's/^"/["/' -e 's/" $/"]/')
-    LIBVIRT_URI="'qemu+ssh://${LIBVIRT_USER}@${LIBVIRT_IP_ADDRESS}/system${LIBVIRT_SOCKET}'"
     EMULATOR_OS_CLOUD="None"
 elif [ $DRIVER = "openstack" ]; then
     OS_CLIENT_CONFIG_FILE=${SUSHY_EMULATOR_OS_CLIENT_CONFIG_FILE:-/etc/openstack/clouds.yaml}
@@ -103,7 +112,7 @@ data:
 $(htpasswd -nbB "${REDFISH_USERNAME}" "${REDFISH_PASSWORD}" | sed 's/^/    /')
   config: |
     # Listen on all local IP interfaces
-    SUSHY_EMULATOR_LISTEN_IP = '0.0.0.0'
+    SUSHY_EMULATOR_LISTEN_IP = ${SUSHY_EMULATOR_LISTEN_IP}
 
     # Bind to TCP port 8000
     SUSHY_EMULATOR_LISTEN_PORT = 8000

@@ -4,7 +4,9 @@ KUBEADMIN_PWD ?= 12345678
 PULL_SECRET  ?= ${PWD}/pull-secret.txt
 TIMEOUT                  ?= 300s
 
+OCP_NETWORK_NAME ?=crc
 NETWORK_ISOLATION_USE_DEFAULT_NETWORK ?= true
+
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
 NETWORK_ISOLATION_NET_NAME ?= default
 NETWORK_ISOLATION_IP_ADDRESS ?= 192.168.122.10
@@ -551,6 +553,9 @@ bmaas_virtual_bms_cleanup: ## Cleanup libvirt VM for BMaaS
 .PHONY: bmaas_sushy_emulator
 bmaas_sushy_emulator: export NODE_NAME_PREFIX = ${BMAAS_INSTANCE_NAME_PREFIX}
 bmaas_sushy_emulator: export LIBVIRT_USER = ${BMAAS_LIBVIRT_USER}
+bmaas_sushy_emulator: export CRC_NETWORK_NAME = ${OCP_NETWORK_NAME}
+bmaas_sushy_emulator: export BM_IPV6 = ${BMAAS_IPV6}
+bmaas_sushy_emulator: export BM_IPV4 = ${BMAAS_IPV4}
 bmaas_sushy_emulator: export SUSHY_EMULATOR_NAMESPACE = ${BMAAS_SUSHY_EMULATOR_NAMESPACE}
 bmaas_sushy_emulator: export SUSHY_EMULATOR_DRIVER = ${BMAAS_SUSHY_EMULATOR_DRIVER}
 bmaas_sushy_emulator: export SUSHY_EMULATOR_IMAGE = ${BMAAS_SUSHY_EMULATOR_IMAGE}
