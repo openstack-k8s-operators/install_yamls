@@ -314,6 +314,7 @@ edpm_baremetal_compute: ## Create virtual baremetal for the dataplane
 	bash scripts/edpm-compute-baremetal.sh --create
 
 edpm_baremetal_compute_cleanup: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
+edpm_baremetal_compute_cleanup: export NAMESPACE=${BMH_NAMESPACE}
 edpm_baremetal_compute_cleanup: export BMAAS_INSTANCE_NAME_PREFIX=${BM_INSTANCE_NAME_PREFIX}
 edpm_baremetal_compute_cleanup: export BMAAS_NODE_COUNT=${BM_NODE_COUNT}
 edpm_baremetal_compute_cleanup: export NODE_COUNT=${BM_NODE_COUNT}

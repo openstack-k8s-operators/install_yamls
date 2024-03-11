@@ -97,8 +97,7 @@ function cleanup {
     while oc get bmh | grep -q -e "deprovisioning" -e "provisioned"; do
         sleep 5
     done || true
-    oc delete --all bmh --ignore-not-found=true || true
-    oc delete --all openstackprovisionserver --ignore-not-found=true || true
+    oc delete --all -n bmh $NAMESPACE --ignore-not-found=true || true
 }
 
 case "$1" in
