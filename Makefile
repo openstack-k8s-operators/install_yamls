@@ -61,6 +61,7 @@ OPERATOR_BASE_DIR   ?= ${OUT}/operator
 # storage (used by some operators)
 STORAGE_CLASS       ?= "local-storage"
 CRC_STORAGE_RETRIES ?= 3
+LVMS_CR ?= 1
 
 # options to pass in all targets that use git clone
 GIT_CLONE_OPTS      ?=
@@ -2155,6 +2156,25 @@ ceph_cleanup: ## deletes the ceph pod
 	$(eval $(call vars,$@,ceph))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${DEPLOY_DIR}
+
+##@ LVMS
+.PHONY: lvms
+lvms: ## deploy lvms operator
+	$(eval $(call vars,$@,lvms))
+	bash scripts/gen-lvms-kustomize.sh
+
+lvms_deploy: export LVMS_CLUSTER_CR=${LVMS_CR}
+lvms_deploy: ## deploy lvms cluster
+	$(eval $(call vars,$@,lvms))
+	bash scripts/gen-lvms-kustomize.sh
+
+lvms_cleanup: ## delete the lvms operator
+	$(eval $(call vars,$@,lvms))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+
+lvms_deploy_cleanup: ## delete the lvms cluster
+	$(eval $(call vars,$@,lvms))
+	oc delete -f ${DEPLOY_DIR}/lvms_cluster.yaml
 
 ##@ NMSTATE
 .PHONY: nmstate
