@@ -65,10 +65,10 @@ function git_clone_checkout {
 
     pushd ${OPERATOR_BASE_DIR}
 
-    echo "Cloning repo: git clone ${git_opts} ${branch} ${repo} ${operator}-operator"
-    git clone ${git_opts} ${branch} ${repo} ${operator}-operator
+    echo "Cloning repo: git clone ${git_opts} ${branch} ${repo} ${operator}-operator${ALT_CHECKOUT:+-$ALT_CHECKOUT}"
+    git clone ${git_opts} ${branch} ${repo} ${operator}-operator${ALT_CHECKOUT:+-$ALT_CHECKOUT}
     if [ -n "${hash}" ]; then
-        pushd ${operator}-operator
+        pushd ${operator}-operator${ALT_CHECKOUT:+-$ALT_CHECKOUT}
         echo "Running checkout: git checkout ${hash}"
         git checkout ${hash}
         popd
