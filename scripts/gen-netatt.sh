@@ -246,13 +246,25 @@ if [ -n "$IPV4_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/octavia.yaml <<EOF_CAT
         "range": "172.23.0.0/24",
         "range_start": "172.23.0.30",
-        "range_end": "172.23.0.70"
+        "range_end": "172.23.0.70",
+        "routes": [
+           {
+             "dst": "172.24.0.0/16",
+             "gw" : "172.23.0.5"
+           }
+         ]
 EOF_CAT
 elif [ -n "$IPV6_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/octavia.yaml <<EOF_CAT
         "range": "fd00:eeee::/64",
         "range_start": "fd00:eeee::30",
         "range_end": "fd00:eeee::70"
+        "routes": [
+           {
+             "dst": "fd6c:6261:6173:0001::/64",
+             "gw" : "fd00:eeee::5"
+           }
+         ]
 EOF_CAT
 fi
 cat >> ${DEPLOY_DIR}/octavia.yaml <<EOF_CAT
