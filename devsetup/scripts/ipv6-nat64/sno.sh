@@ -219,7 +219,6 @@ function create_dnsmasq_config {
     cat << EOF > ${MY_TMP_DIR}/sno.conf
 log-queries
 dhcp-range=${SNO_MACHINE_NETWORK%%/*},static,${SNO_MACHINE_NETWORK##*/}
-address=/sno.lab.example.com/${SNO_HOST_IP}
 address=/apps.sno.lab.example.com/${SNO_HOST_IP}
 # Make sure we return NODATA-IPv4. Without this A queries are forwarded,
 # and cause lookup delay.
