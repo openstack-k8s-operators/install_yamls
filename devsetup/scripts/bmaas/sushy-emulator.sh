@@ -353,7 +353,7 @@ function create {
 }
 
 function cleanup {
-    if oc get project "${NAMESPACE}" > /dev/null 2>&1; then
+    if oc get project.v1.project.openshift.io "${NAMESPACE}" > /dev/null 2>&1; then
         oc delete project "${NAMESPACE}" --wait=true
     else
         echo "Not deleting namespace ${NAMESPACE}, it does not exist"
