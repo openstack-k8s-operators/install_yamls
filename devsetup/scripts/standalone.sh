@@ -23,6 +23,7 @@ SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
 COMPUTE_DRIVER=${2:-"libvirt"}
 EDPM_COMPUTE_ADDITIONAL_NETWORKS=${3:-'[]'}
+EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES=${4:-'[]'}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
 EDPM_COMPUTE_NETWORK=${EDPM_COMPUTE_NETWORK:-default}
 STANDALONE_VM=${STANDALONE_VM:-"true"}
@@ -184,6 +185,7 @@ J2_VARS_FILE=$(mktemp --suffix=".yaml" --tmpdir="${MY_TMP_DIR}")
 cat << EOF > ${J2_VARS_FILE}
 ---
 additional_networks: ${EDPM_COMPUTE_ADDITIONAL_NETWORKS}
+additional_host_routes: ${EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES}
 ctlplane_cidr: 24
 ctlplane_ip: ${IP}
 os_net_config_iface: ${OS_NET_CONFIG_IFACE}
