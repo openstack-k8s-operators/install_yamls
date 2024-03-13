@@ -219,7 +219,7 @@ ipv6_lab_nat64_router_cleanup: ## Deploys NAT64/DNS64 router node
 .PHONY: ipv6_lab_sno
 ipv6_lab_sno: export WORK_DIR = ${IPV6_LAB_WORK_DIR}
 ipv6_lab_sno: export SSH_PUB_KEY = ${IPV6_LAB_SSH_PUB_KEY}
-ipv6_lab_sno: export OCP_VERSION = ${IPV&IPV6_LAB_SNO_OCP_VERSION}
+ipv6_lab_sno: export OCP_VERSION = ${IPV6_LAB_SNO_OCP_VERSION}
 ipv6_lab_sno: export OCP_MIRROR_URL = ${IPV6_LAB_SNO_OCP_MIRROR_URL}
 ipv6_lab_sno: export OCP_ADMIN_PASSWD = ${KUBEADMIN_PWD}
 ipv6_lab_sno: export NETWORK_NAME = ${IPV6_LAB_NETWORK_NAME}
