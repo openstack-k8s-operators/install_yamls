@@ -149,6 +149,14 @@ EOF_CAT
         metric: 425
 EOF_CAT
     fi
+    if [ -n "$NNCP_ADDITIONAL_HOST_ROUTES" ]; then
+        for route in $NNCP_ADDITIONAL_HOST_ROUTES; do
+            cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      - destination: ${route}
+        next-hop-interface: ${BRIDGE_NAME}
+EOF_CAT
+        done
+    fi
     if [ -n "$IPV6_ENABLED" ]; then
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       - destination: ::/0
