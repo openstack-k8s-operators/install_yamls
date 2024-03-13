@@ -46,6 +46,7 @@ EDPM_COMPUTE_DISK_SIZE=${COMPUTE_DISK_SIZE:-70}
 EDPM_COMPUTE_CEPH_ENABLED=${COMPUTE_CEPH_ENABLED:-true}
 EDPM_COMPUTE_SRIOV_ENABLED=${COMPUTE_SRIOV_ENABLED:-true}
 MANILA_ENABLED=${MANILA_ENABLED:-true}
+SWIFT_REPLICATED=${SWIFT_REPLICATED:-false}
 
 if [[ ! -f $SSH_KEY_FILE ]]; then
     echo "$SSH_KEY_FILE is missing"
@@ -120,6 +121,7 @@ export COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
 export IP=${IP}
 export GATEWAY=${GATEWAY}
 export STANDALONE_VM=${STANDALONE_VM}
+export SWIFT_REPLICATED=${SWIFT_REPLICATED}
 
 if [[ -f \$HOME/containers-prepare-parameters.yaml ]]; then
     echo "Using existing containers-prepare-parameters.yaml - contents:"
