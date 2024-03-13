@@ -25,6 +25,7 @@ trap 'rm -rf -- "$MY_TMP_DIR"' EXIT
 EDPM_SERVER_ROLE=${EDPM_SERVER_ROLE:-"compute"}
 
 STANDALONE=${STANDALONE:-false}
+SWIFT_REPLICATED=${SWIFT_REPLICATED:-false}
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-${EDPM_SERVER_ROLE}-${EDPM_COMPUTE_SUFFIX}"}
 if [ ${STANDALONE} = "true" ]; then
@@ -196,6 +197,23 @@ if [ ! -z "${ADD_INTERFACES}" ]; then
     fi
     mv ${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}.xml ${MY_TMP_DIR}/${EDPM_COMPUTE_NAME}.xml
     xmlstarlet edit --subnode '/domain/devices' --type text --name '' --value "${ADD_INTERFACES}" ${MY_TMP_DIR}/${EDPM_COMPUTE_NAME}.xml \
+    | xmlstarlet unescape | xmlstarlet format --omit-decl \
+    | tee ${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}.xml
+fi
+
+if [ "$SWIFT_REPLICATED" = "true" ]; then
+    # Add additional disks to the domain XML
+    for DISK in vdb vdc vdd ; do
+        SWIFTDISK_FILENAME="edpm-${EDPM_SERVER_ROLE}-${EDPM_COMPUTE_SUFFIX}-${DISK}.qcow2"
+        SWIFTDISK_FILEPATH="${CRC_POOL}/${SWIFTDISK_FILENAME}"
+        qemu-img create -f qcow2 "${SWIFTDISK_FILEPATH}" "10G"
+        ADD_DISKS+="$(virsh attach-disk ${EDPM_COMPUTE_NAME} ${SWIFTDISK_FILEPATH} ${DISK} --config --print-xml)"
+    done
+    if [ ! -e /usr/bin/xmlstarlet ]; then
+        sudo dnf -y install /usr/bin/xmlstarlet
+    fi
+    mv ${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}.xml ${MY_TMP_DIR}/${EDPM_COMPUTE_NAME}.xml
+    xmlstarlet edit --subnode '/domain/devices' --type text --name '' --value "${ADD_DISKS}" ${MY_TMP_DIR}/${EDPM_COMPUTE_NAME}.xml \
     | xmlstarlet unescape | xmlstarlet format --omit-decl \
     | tee ${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}.xml
 fi
