@@ -18,6 +18,10 @@ network_config:
   routes:
   - ip_netmask: 0.0.0.0/0
     next_hop: {{ gateway_ip }}
+  {%- for route in additional_host_routes %}
+  - ip_netmask: {{ route }}
+    next_hop: {{ ctlplane_ip }}
+  {% endfor %}
   {% endif %}
   members:
   - type: interface
