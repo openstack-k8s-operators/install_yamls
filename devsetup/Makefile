@@ -26,7 +26,7 @@ EDPM_COMPUTE_SUFFIX ?= 0
 EDPM_NETWORKER_SUFFIX ?= 0
 # EDPM_COMPUTE_ADDITIONAL_NETWORKS: JSON string - list of additional networks
 # Examples:
-#   cat << EOF
+#   cat > additional_nets.json << EOF
 #   [
 #     {
 #       "type": "network",
@@ -46,8 +46,12 @@ EDPM_NETWORKER_SUFFIX ?= 0
 #     }
 #   ]
 #   EOF
-#   EDPM_COMPUTE_ADDITIONAL_NETWORKS=$(jq -c addtional_nets.json)
+#   EDPM_COMPUTE_ADDITIONAL_NETWORKS=$(cat additional_nets.json | jq -c)
 EDPM_COMPUTE_ADDITIONAL_NETWORKS ?= '[]'
+
+# EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES="[172.31.0.0/24,172.32.0.0/24]"
+EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES ?= '[]'
+
 EDPM_TOTAL_NODES ?= 1
 EDPM_COMPUTE_CEPH_ENABLED ?= true
 EDPM_COMPUTE_SRIOV_ENABLED ?= true
@@ -413,7 +417,7 @@ standalone_deploy: export INTERFACE_MTU=${NETWORK_MTU}
 standalone_deploy: export EDPM_COMPUTE_NETWORK = ${NETWORK_ISOLATION_NET_NAME}
 standalone_deploy:
 	$(eval $(call vars))
-	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX} ${STANDALONE_COMPUTE_DRIVER} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}'
+	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX} ${STANDALONE_COMPUTE_DRIVER} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}' '${EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES}'
 
 .PHONY: standalone
 standalone: export STANDALONE=true
