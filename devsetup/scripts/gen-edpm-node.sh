@@ -204,9 +204,9 @@ fi
 if [ "$SWIFT_REPLICATED" = "true" ]; then
     # Add additional disks to the domain XML
     for DISK in vdb vdc vdd ; do
-        SWIFTDISK_FILENAME="edpm-${EDPM_SERVER_ROLE}-${EDPM_COMPUTE_SUFFIX}-${DISK}.qcow2"
+        SWIFTDISK_FILENAME="edpm-${EDPM_SERVER_ROLE}-${EDPM_COMPUTE_SUFFIX}-${DISK}.img"
         SWIFTDISK_FILEPATH="${CRC_POOL}/${SWIFTDISK_FILENAME}"
-        qemu-img create -f qcow2 "${SWIFTDISK_FILEPATH}" "10G"
+        qemu-img create -f raw "${SWIFTDISK_FILEPATH}" "10G"
         ADD_DISKS+="$(virsh attach-disk ${EDPM_COMPUTE_NAME} ${SWIFTDISK_FILEPATH} ${DISK} --config --print-xml)"
     done
     if [ ! -e /usr/bin/xmlstarlet ]; then
