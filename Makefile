@@ -258,7 +258,7 @@ RABBITMQ_BRANCH         ?= patches
 RABBITMQ_COMMIT_HASH    ?=
 RABBITMQ                ?= docs/examples/default-security-context/rabbitmq.yaml
 RABBITMQ_CR             ?= ${OPERATOR_BASE_DIR}/rabbitmq-operator/${RABBITMQ}
-RABBITMQ_DEPL_IMG       ?= unused
+RABBITMQ_DEPL_IMG       ?= quay.io/podified-antelope-centos9/openstack-rabbitmq:current-podified
 
 # Ironic
 IRONIC_IMG             ?= quay.io/openstack-k8s-operators/ironic-operator-index:${OPENSTACK_K8S_TAG}
