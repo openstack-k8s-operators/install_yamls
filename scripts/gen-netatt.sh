@@ -224,6 +224,42 @@ spec:
     }
 EOF_CAT
 
+cat > ${DEPLOY_DIR}/storagemgmt.yaml <<EOF_CAT
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  labels:
+    osp/net: storagemgmt
+  name: storagemgmt
+  namespace: ${NAMESPACE}
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "storagemgmt",
+      "type": "macvlan",
+      "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}*3))",
+      "ipam": {
+        "type": "whereabouts",
+EOF_CAT
+if [ -n "$IPV4_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/storagemgmt.yaml <<EOF_CAT
+        "range": "172.20.0.0/24",
+        "range_start": "172.20.0.30",
+        "range_end": "172.20.0.70"
+EOF_CAT
+elif [ -n "$IPV6_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/storagemgmt.yaml <<EOF_CAT
+        "range": "fd00:dede::/64",
+        "range_start": "fd00:dede::30",
+        "range_end": "fd00:dede::70"
+EOF_CAT
+fi
+cat >> ${DEPLOY_DIR}/storagemgmt.yaml <<EOF_CAT
+      }
+    }
+EOF_CAT
+
 cat > ${DEPLOY_DIR}/octavia.yaml <<EOF_CAT
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
@@ -238,7 +274,7 @@ spec:
       "cniVersion": "0.3.1",
       "name": "octavia",
       "type": "macvlan",
-      "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}*3))",
+      "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}*4))",
       "ipam": {
         "type": "whereabouts",
 EOF_CAT
@@ -274,7 +310,7 @@ spec:
       "cniVersion": "0.3.1",
       "name": "designate",
       "type": "macvlan",
-      "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}*4))",
+      "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}*5))",
       "ipam": {
         "type": "whereabouts",
         "range": "172.30.0.0/24",
