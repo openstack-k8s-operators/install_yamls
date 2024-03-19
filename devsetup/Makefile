@@ -429,6 +429,14 @@ standalone_deploy:
 	$(eval $(call vars))
 	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX} ${STANDALONE_COMPUTE_DRIVER} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}' '${EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES}'
 
+.PHONY: standalone_sync
+standalone_sync: export STANDALONE=true
+standalone_sync: export INTERFACE_MTU=${NETWORK_MTU}
+standalone_sync: export EDPM_COMPUTE_NETWORK = ${NETWORK_ISOLATION_NET_NAME}
+standalone_sync:
+	$(eval $(call vars))
+	scripts/standalone-sync.sh ${EDPM_COMPUTE_SUFFIX} ${STANDALONE_COMPUTE_DRIVER} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}' '${EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES}'
+
 .PHONY: standalone
 standalone: export STANDALONE=true
 standalone: edpm_compute standalone_deploy ## Create vm and deploy tripleo standalone
@@ -450,6 +458,7 @@ standalone_snapshot: ## Create standalone snapshot
 standalone_revert: ## Revert standalone snapshot
 	$(eval $(call vars))
 	virsh --connect=qemu:///system snapshot-revert --domain edpm-compute-${EDPM_COMPUTE_SUFFIX} --snapshotname clean
+	make standalone_sync
 
 .PHONY: cifmw_prepare
 cifmw_prepare: ## Clone the ci-framework repository in the ci-framework directory. That location is ignored from git.
