@@ -423,7 +423,6 @@ standalone_deploy:
 
 .PHONY: standalone_sync
 standalone_sync: export STANDALONE=true
-standalone_sync: export INTERFACE_MTU=${NETWORK_MTU}
 standalone_sync: export EDPM_COMPUTE_NETWORK = ${NETWORK_ISOLATION_NET_NAME}
 standalone_sync:
 	$(eval $(call vars))
@@ -431,7 +430,7 @@ standalone_sync:
 
 .PHONY: standalone
 standalone: export STANDALONE=true
-standalone: edpm_compute standalone_deploy ## Create vm and deploy tripleo standalone
+standalone: edpm_compute standalone_deploy standalone_sync ## Create vm and deploy tripleo standalone
 	$(eval $(call vars))
 
 .PHONY: standalone_cleanup
