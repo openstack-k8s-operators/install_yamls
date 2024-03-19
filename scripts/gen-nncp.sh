@@ -428,7 +428,7 @@ EOF_CAT
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv4:
         address:
-        - ip: 172.30.0.${IP_ADDRESS_SUFFIX}
+        - ip: 172.28.0.${IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
         dhcp: false

@@ -313,9 +313,9 @@ spec:
       "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}*5))",
       "ipam": {
         "type": "whereabouts",
-        "range": "172.30.0.0/24",
-        "range_start": "172.30.0.30",
-        "range_end": "172.30.0.70"
+        "range": "172.28.0.0/24",
+        "range_start": "172.28.0.30",
+        "range_end": "172.28.0.70"
       }
     }
 EOF_CAT
