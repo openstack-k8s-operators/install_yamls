@@ -57,30 +57,30 @@ patches:
     - op: replace
       path: /spec/nodes/edpm-${EDPM_SERVER_ROLE}-0/networks
       value:
-        - name: CtlPlane
+        - name: ctlplane
           subnetName: subnet1
           defaultRoute: true
           fixedIP: ${EDPM_NODE_IP}
-        - name: InternalApi
+        - name: internalapi
           subnetName: subnet1
-        - name: Storage
+        - name: storage
           subnetName: subnet1
-        - name: Tenant
+        - name: tenant
           subnetName: subnet1
 EOF
 
 if [ -n "$BGP" ]; then
 cat <<EOF >>kustomization.yaml
-        - name: BgpNet1
+        - name: bgpnet1
           subnetName: subnet1
           fixedIP: 100.65.1.6
-        - name: BgpNet2
+        - name: bgpnet2
           subnetName: subnet1
           fixedIP: 100.64.1.6
-        - name: BgpMainNet
+        - name: bgpmainnet
           subnetName: subnet1
           fixedIP: 172.30.1.2
-        - name: BgpMainNet6
+        - name: bgpmainnet6
           subnetName: subnet1
           fixedIP: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0012
 EOF
