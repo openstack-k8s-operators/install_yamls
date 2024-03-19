@@ -12,6 +12,7 @@
       - gcc
       - python3-jinja2
       - xmlstarlet
+      - openssl
 
 - name: Set opm download url suffix
   ansible.builtin.set_fact:
