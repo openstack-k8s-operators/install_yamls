@@ -17,6 +17,7 @@ set -ex
 
 EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
 EDPM_COMPUTE_SRIOV_ENABLED=${EDPM_COMPUTE_SRIOV_ENABLED:-true}
+EDPM_COMPUTE_DHCP_AGENT_ENABLED=${EDPM_COMPUTE_DHCP_AGENT_ENABLED:-true}
 COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
 INTERFACE_MTU=${INTERFACE_MTU:-1500}
 BARBICAN_ENABLED=${BARBICAN_ENABLED:-true}
@@ -126,6 +127,10 @@ cat <<EOF >> standalone_parameters.yaml
   SwiftRawDisks: {"vdb": {}, "vdc": {}, "vdd": {}}
   SwiftUseLocalDir: false
 EOF
+fi
+
+if [ "$EDPM_COMPUTE_DHCP_AGENT_ENABLED" = "true" ] ; then
+    ENV_ARGS+=" -e $HOME/dhcp_agent_template.yaml"
 fi
 
 sudo ${CMD} ${CMD_ARGS} ${ENV_ARGS}
