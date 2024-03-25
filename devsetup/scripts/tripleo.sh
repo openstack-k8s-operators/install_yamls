@@ -84,7 +84,7 @@ sudo cp /tmp/net_config.yaml /etc/os-net-config/config.yaml
 sudo os-net-config -c /etc/os-net-config/config.yaml
 
 pushd \$HOME
-\$HOME/undercloud_install.sh
+\$HOME/tripleo_install.sh
 popd
 
 # explicitely return exit code 0 when we reach the end of the script
@@ -122,10 +122,17 @@ jinja2_render tripleo/undercloud.conf.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/under
 scp $SSH_OPT $REPO_SETUP_CMDS root@$IP:/tmp/repo-setup.sh
 scp $SSH_OPT $CMDS_FILE zuul@$IP:/tmp/undercloud-deploy-cmds.sh
 scp $SSH_OPT ${MY_TMP_DIR}/net_config.yaml root@$IP:/tmp/net_config.yaml
-scp $SSH_OPT tripleo/undercloud_install.sh zuul@$IP:$HOME/undercloud_install.sh
+scp $SSH_OPT tripleo/tripleo_install.sh zuul@$IP:$HOME/tripleo_install.sh
 scp $SSH_OPT tripleo/hieradata_overrides_undercloud.yaml zuul@$IP:$HOME/hieradata_overrides_undercloud.yaml
 scp $SSH_OPT tripleo/undercloud-parameter-defaults.yaml zuul@$IP:$HOME/undercloud-parameter-defaults.yaml
 scp $SSH_OPT ${MY_TMP_DIR}/undercloud.conf zuul@$IP:$HOME/undercloud.conf
+scp $SSH_OPT tripleo/network_data.yaml zuul@$IP:$HOME/network_data.yaml
+scp $SSH_OPT tripleo/vips_data.yaml zuul@$IP:$HOME/vips_data.yaml
+scp $SSH_OPT tripleo/config-download.yaml zuul@$IP:$HOME/config-download.yaml
+scp $SSH_OPT tripleo/overcloud_roles.yaml zuul@$IP:$HOME/overcloud_roles.yaml
+scp $SSH_OPT tripleo/overcloud_services.yaml zuul@$IP:$HOME/overcloud_services.yaml
+scp $SSH_OPT tripleo/ansible_config.cfg zuul@$IP:$HOME/ansible_config.cfg
+
 if [[ -f $HOME/containers-prepare-parameters.yaml ]]; then
     scp $SSH_OPT $HOME/containers-prepare-parameters.yaml zuul@$IP:$HOME/containers-prepare-parameters.yaml
 fi

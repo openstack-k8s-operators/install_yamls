@@ -1,0 +1,56 @@
+#jinja2: trim_blocks:False
+network_config:
+- type: ovs_bridge
+  name: br-ex
+  mtu: {{ interface_mtu }}
+  use_dhcp: false
+  dns_servers:
+  {% if dns_server %}
+  - {{ dns_server }}
+  {% endif %}
+  - {{ gateway_ip }}
+  domain: []
+  addresses:
+  - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
+  routes: []
+  members:
+  - type: interface
+    name: {{ os_net_config_iface | default(nic1) }}
+    mtu: {{ interface_mtu }}
+    # force the MAC address of the bridge to this interface
+    primary: true
+  # external
+  - type: vlan
+    mtu: {{ interface_mtu }}
+    vlan_id: 44
+    addresses:
+    - ip_netmask: 172.21.0.{{ ip_address_suffix }}/24
+    routes: []
+  # internal
+  - type: vlan
+    mtu: {{ interface_mtu }}
+    vlan_id: 20
+    addresses:
+    - ip_netmask: 172.17.0.{{ ip_address_suffix }}/24
+    routes: []
+  # storage
+  - type: vlan
+    mtu: {{ interface_mtu }}
+    vlan_id: 21
+    addresses:
+    - ip_netmask: 172.18.0.{{ ip_address_suffix }}/24
+    routes: []
+  # storage_mgmt
+  - type: vlan
+    mtu: {{ interface_mtu }}
+    vlan_id: 23
+    addresses:
+    - ip_netmask: 172.20.0.{{ ip_address_suffix }}/24
+    routes: []
+  # tenant
+  - type: vlan
+    mtu: {{ interface_mtu }}
+    vlan_id: 22
+    addresses:
+    - ip_netmask: 172.19.0.{{ ip_address_suffix }}/24
+    routes: []
