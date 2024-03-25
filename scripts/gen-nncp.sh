@@ -367,49 +367,30 @@ EOF_CAT
 EOF_CAT
     fi
     #
-    # octavia-vlan-link VLAN interface
+    # octavia-vlan-link VLAN interface and bridge. Note that
+    # octavia only requires L2 connectivity at the host level
+    # Address management, etc. is unnecessary.
     #
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
-    - description: octavia-vlan-link vlan interface
+    - description: Octavia vlan host interface
       name: ${INTERFACE}.$((${VLAN_START}+$((${VLAN_STEP}*4))))
       state: up
       type: vlan
       vlan:
         base-iface: ${INTERFACE}
         id: $((${VLAN_START}+$((${VLAN_STEP}*4))))
-        reorder-headers: true
+    - bridge:
+        options:
+          stp:
+            enabled: false
+        port:
+          - name: ${INTERFACE}.$((${VLAN_START}+$((${VLAN_STEP}*4))))
+      description: Configuring bridge octbr
+      mtu: 1500
+      name: octbr
+      state: up
+      type: linux-bridge
 EOF_CAT
-    if [ -n "$IPV4_ENABLED" ]; then
-        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
-      ipv4:
-        address:
-        - ip: 172.23.0.${IP_ADDRESS_SUFFIX}
-          prefix-length: 24
-        enabled: true
-        dhcp: false
-EOF_CAT
-    else
-        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
-      ipv4:
-        enabled: false
-EOF_CAT
-    fi
-    if [ -n "$IPV6_ENABLED" ]; then
-        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
-      ipv6:
-        address:
-        - ip: fd00:eeee::${IPV6_ADDRESS_SUFFIX}
-          prefix-length: 64
-        enabled: true
-        dhcp: false
-        autoconf: false
-EOF_CAT
-    else
-        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
-      ipv6:
-        enabled: false
-EOF_CAT
-    fi
 
     #
     # designate VLAN interface
