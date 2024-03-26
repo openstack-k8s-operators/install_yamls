@@ -16,7 +16,7 @@
 set -ex
 
 MY_TMP_DIR="$(mktemp -d)"
-trap 'rm -rf -- "$MY_TMP_DIR"' EXIT
+trap 'rv=$?; rm -rf -- "$MY_TMP_DIR"; exit $rv' EXIT
 
 export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
@@ -89,6 +89,7 @@ fi
 
 if [[ ! -f $CMDS_FILE ]]; then
     cat <<EOF > $CMDS_FILE
+set -ex
 sudo dnf install -y podman python3-tripleoclient util-linux lvm2 cephadm
 
 # Pin Podman to work around a Podman regression where env variables
@@ -244,4 +245,6 @@ if [[ -n ${STANDALONE_EXTRA_CMD} ]]; then
     ssh $SSH_OPT root@$IP "${STANDALONE_EXTRA_CMD}"
 fi
 ssh $SSH_OPT root@$IP "bash /tmp/standalone-deploy.sh"
+deploy_result="$?"
 ssh $SSH_OPT root@$IP "rm -f /tmp/standalone-deploy.sh"
+exit $deploy_result
