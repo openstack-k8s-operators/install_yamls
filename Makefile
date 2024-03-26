@@ -798,7 +798,7 @@ edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data pla
 	bash scripts/clone-operator-repo.sh
 	cp ${DATAPLANE_SERVICE_NOVA_CR} ${DEPLOY_DIR}
 	cp ${DATAPLANE_EXTRA_NOVA_CONFIG_FILE} ${EDPM_EXTRA_NOVA_CONFIG_FILE}
-	kustomize build ${OPERATOR_BASE_DIR}/dataplane-operator/examples/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
+	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/dataplane-operator/examples/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
 	bash scripts/gen-edpm-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
@@ -849,7 +849,7 @@ edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install th
 	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
 	cp ${DATAPLANE_SERVICE_NOVA_CR} ${DEPLOY_DIR}
 	cp ${DATAPLANE_EXTRA_NOVA_CONFIG_FILE} ${EDPM_EXTRA_NOVA_CONFIG_FILE}
-	kustomize build ${OPERATOR_BASE_DIR}/dataplane-operator/examples/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
+	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/dataplane-operator/examples/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
 	bash scripts/gen-edpm-baremetal-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
@@ -924,7 +924,7 @@ edpm_deploy_networker_prep: edpm_deploy_networker_cleanup ## prepares the CR to 
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR_EDPM_NETWORKER}
 	bash scripts/clone-operator-repo.sh
 	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
-	kustomize build ${OPERATOR_BASE_DIR}/dataplane-operator/examples/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR_EDPM_NETWORKER}/dataplane.yaml
+	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/dataplane-operator/examples/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR_EDPM_NETWORKER}/dataplane.yaml
 	bash scripts/gen-edpm-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
