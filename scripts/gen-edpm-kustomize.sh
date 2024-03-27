@@ -57,30 +57,30 @@ patches:
     - op: replace
       path: /spec/nodes/edpm-${EDPM_SERVER_ROLE}-0/networks
       value:
-        - name: CtlPlane
+        - name: ctlplane
           subnetName: subnet1
           defaultRoute: true
           fixedIP: ${EDPM_NODE_IP}
-        - name: InternalApi
+        - name: internalapi
           subnetName: subnet1
-        - name: Storage
+        - name: storage
           subnetName: subnet1
-        - name: Tenant
+        - name: tenant
           subnetName: subnet1
 EOF
 
 if [ -n "$BGP" ]; then
 cat <<EOF >>kustomization.yaml
-        - name: BgpNet1
+        - name: bgpnet1
           subnetName: subnet1
           fixedIP: 100.65.1.6
-        - name: BgpNet2
+        - name: bgpnet2
           subnetName: subnet1
           fixedIP: 100.64.1.6
-        - name: BgpMainNet
+        - name: bgpmainnet
           subnetName: subnet1
           fixedIP: 172.30.1.2
-        - name: BgpMainNet6
+        - name: bgpmainnet6
           subnetName: subnet1
           fixedIP: f00d:f00d:f00d:f00d:f00d:f00d:f00d:0012
 EOF
@@ -194,46 +194,7 @@ fi
     done
 fi
 
-if [ "${EDPM_SERVER_ROLE}" == "compute" ]; then
-# Create a nova-custom service with a reference to nova-extra-config CM
-cat <<EOF >>kustomization.yaml
-- target:
-    kind: OpenStackDataPlaneService
-    name: nova
-  patch: |-
-    - op: replace
-      path: /metadata/name
-      value: nova-custom
-    - op: add
-      path: /spec/configMaps
-      value:
-        - nova-extra-config
-EOF
-
-# Create the nova-extra-config CM based on the provided config file
-cat <<EOF >>kustomization.yaml
-configMapGenerator:
-- name: nova-extra-config
-  files:
-    - 25-nova-extra.conf=${EDPM_EXTRA_NOVA_CONFIG_FILE}
-  options:
-    disableNameSuffixHash: true
-EOF
-
-# Replace the nova service in the nodeset with the new nova-custom service
-#
-# NOTE(gibi): This is hard to do with kustomize as it only allows
-# list item replacemnet by index and not by value, but we cannot
-# be sure that the index is not changing in the future by
-# adding more services or splitting existing services.
-# The kustozmization would be something like:
-#     - op: replace
-#      path: /spec/services/11
-#      value: nova-custom
-#
-# So we do a replace by value with yq (assuming golang implementation of yq)
-yq -i '(.spec.services[] | select(. == "nova")) |= "nova-custom"' *openstackdataplanenodeset*.yaml
-fi
+. ${SCRIPTPATH}/gen-nova-custom-dataplane-service.sh
 
 kustomization_add_resources
 

@@ -7,7 +7,7 @@ CRC installation requires sudo to create a NetworkManager dispatcher file in /et
 
 ```bash
 cd <install_yamls_root_path>/devsetup
-make crc
+CPUS=12 MEMORY=25600 DISK=100 make crc
 ```
 
 After the installation is complete, proceed with the OpenStack service provisioning.

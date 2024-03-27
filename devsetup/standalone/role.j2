@@ -131,7 +131,6 @@
     - OS::TripleO::Services::NeutronBgpVpnApi
     - OS::TripleO::Services::NeutronBgpVpnBagpipe
     - OS::TripleO::Services::NeutronCorePlugin
-    - OS::TripleO::Services::NeutronDhcpAgent
     - OS::TripleO::Services::NeutronL2gwAgent
     - OS::TripleO::Services::NeutronL2gwApi
     - OS::TripleO::Services::NeutronL3Agent
@@ -139,6 +138,12 @@
     - OS::TripleO::Services::NeutronMetadataAgent
     - OS::TripleO::Services::NeutronOvsAgent
     - OS::TripleO::Services::NeutronSfcApi
+{%- if sriov_agent %}
+    - OS::TripleO::Services::NeutronSriovAgent
+{%- endif %}
+{%- if dhcp_agent %}
+    - OS::TripleO::Services::NeutronDhcpAgent
+{%- endif %}
     - OS::TripleO::Services::NeutronVppAgent
     - OS::TripleO::Services::NovaApi
     - OS::TripleO::Services::NovaConductor

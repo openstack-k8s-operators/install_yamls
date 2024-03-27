@@ -87,12 +87,12 @@ cat <<EOF >>kustomization.yaml
       value: '${EDPM_GROWVOLS_ARGS}'
 EOF
 fi
-if [ "$EDPM_ROOT_PASSWORD_SECRET" != "" ]; then
+if [ "$EDPM_ROOT_PASSWORD" != "" ]; then
 cat <<EOF >>kustomization.yaml
     - op: add
       path: /spec/baremetalSetTemplate/passwordSecret
       value:
-        name: ${EDPM_ROOT_PASSWORD_SECRET}
+        name: baremetalset-password-secret
         namespace: ${NAMESPACE}
 EOF
 fi
@@ -101,6 +101,13 @@ cat <<EOF >>kustomization.yaml
     - op: add
       path: /spec/baremetalSetTemplate/provisioningInterface
       value: ${EDPM_PROVISIONING_INTERFACE}
+EOF
+fi
+if [ "$EDPM_OS_CONTAINER_IMG" != "" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/baremetalSetTemplate/osContainerImageUrl
+      value: ${EDPM_OS_CONTAINER_IMG}
 EOF
 fi
 if [ "$EDPM_CTLPLANE_INTERFACE" != "" ]; then
@@ -122,6 +129,8 @@ cat <<EOF >>kustomization.yaml
 EOF
     done
 fi
+
+. ${SCRIPTPATH}/gen-nova-custom-dataplane-service.sh
 
 kustomization_add_resources
 

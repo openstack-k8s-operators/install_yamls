@@ -4,7 +4,9 @@ KUBEADMIN_PWD ?= 12345678
 PULL_SECRET  ?= ${PWD}/pull-secret.txt
 TIMEOUT                  ?= 300s
 
+OCP_NETWORK_NAME ?=crc
 NETWORK_ISOLATION_USE_DEFAULT_NETWORK ?= true
+
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
 NETWORK_ISOLATION_NET_NAME ?= default
 NETWORK_ISOLATION_IP_ADDRESS ?= 192.168.122.10
@@ -24,7 +26,7 @@ EDPM_COMPUTE_SUFFIX ?= 0
 EDPM_NETWORKER_SUFFIX ?= 0
 # EDPM_COMPUTE_ADDITIONAL_NETWORKS: JSON string - list of additional networks
 # Examples:
-#   cat << EOF
+#   cat > additional_nets.json << EOF
 #   [
 #     {
 #       "type": "network",
@@ -44,10 +46,16 @@ EDPM_NETWORKER_SUFFIX ?= 0
 #     }
 #   ]
 #   EOF
-#   EDPM_COMPUTE_ADDITIONAL_NETWORKS=$(jq -c addtional_nets.json)
+#   EDPM_COMPUTE_ADDITIONAL_NETWORKS=$(cat additional_nets.json | jq -c)
 EDPM_COMPUTE_ADDITIONAL_NETWORKS ?= '[]'
+
+# EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES="[172.31.0.0/24,172.32.0.0/24]"
+EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES ?= '[]'
+
 EDPM_TOTAL_NODES ?= 1
 EDPM_COMPUTE_CEPH_ENABLED ?= true
+EDPM_COMPUTE_SRIOV_ENABLED ?= true
+EDPM_COMPUTE_DHCP_AGENT_ENABLED ?= true
 EDPM_TOTAL_NETWORKERS ?= 1
 NETWORK_MTU	?= 1500
 
@@ -85,7 +93,6 @@ BMAAS_ROUTE_LIBVIRT_NETWORKS ?= ${BMAAS_NETWORK_NAME},crc,default
 
 DATAPLANE_PLAYBOOK ?= osp.edpm.download_cache
 DATAPLANE_CUSTOM_SERVICE_RUNNER_IMG ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
-DATAPLANE_GROWVOLS_ARGS    ?=
 BM_NETWORK_NAME            ?=default
 BM_INSTANCE_NAME_PREFIX    ?=edpm-compute
 BM_NODE_COUNT              ?=1
@@ -114,7 +121,7 @@ IPV6_LAB_SNO_HOST_PREFIX          ?= 64
 IPV6_LAB_SNO_MACHINE_NETWORK      ?= fd00:abcd:abcd:fc00::/64
 IPV6_LAB_SNO_SERVICE_NETWORK      ?= fd00:abcd:abcd:fc03::/112
 IPV6_LAB_SNO_HOST_IP              ?= fd00:abcd:abcd:fc00::11
-IPV6_LAB_SNO_OCP_VERSION          ?= latest-4.13
+IPV6_LAB_SNO_OCP_VERSION          ?= latest-4.14
 IPV6_LAB_SNO_OCP_MIRROR_URL       ?= https://mirror.openshift.com/pub/openshift-v4/clients/ocp
 
 
@@ -219,7 +226,7 @@ ipv6_lab_nat64_router_cleanup: ## Deploys NAT64/DNS64 router node
 .PHONY: ipv6_lab_sno
 ipv6_lab_sno: export WORK_DIR = ${IPV6_LAB_WORK_DIR}
 ipv6_lab_sno: export SSH_PUB_KEY = ${IPV6_LAB_SSH_PUB_KEY}
-ipv6_lab_sno: export OCP_VERSION = ${IPV&IPV6_LAB_SNO_OCP_VERSION}
+ipv6_lab_sno: export OCP_VERSION = ${IPV6_LAB_SNO_OCP_VERSION}
 ipv6_lab_sno: export OCP_MIRROR_URL = ${IPV6_LAB_SNO_OCP_MIRROR_URL}
 ipv6_lab_sno: export OCP_ADMIN_PASSWD = ${KUBEADMIN_PWD}
 ipv6_lab_sno: export NETWORK_NAME = ${IPV6_LAB_NETWORK_NAME}
@@ -314,6 +321,7 @@ edpm_baremetal_compute: ## Create virtual baremetal for the dataplane
 	bash scripts/edpm-compute-baremetal.sh --create
 
 edpm_baremetal_compute_cleanup: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
+edpm_baremetal_compute_cleanup: export NAMESPACE=${BMH_NAMESPACE}
 edpm_baremetal_compute_cleanup: export BMAAS_INSTANCE_NAME_PREFIX=${BM_INSTANCE_NAME_PREFIX}
 edpm_baremetal_compute_cleanup: export BMAAS_NODE_COUNT=${BM_NODE_COUNT}
 edpm_baremetal_compute_cleanup: export NODE_COUNT=${BM_NODE_COUNT}
@@ -395,13 +403,23 @@ edpm_deploy_instance: ## Spin a instance on edpm node
 	-oc cp scripts/edpm-deploy-instance.sh openstackclient:/tmp/
 	-oc rsh openstackclient bash /tmp/edpm-deploy-instance.sh
 
+.PHONY: tripleo_deploy
+tripleo_deploy: export INTERFACE_MTU=${NETWORK_MTU}
+tripleo_deploy:
+	$(eval $(call vars))
+	scripts/tripleo.sh
+
+
 .PHONY: standalone_deploy
 standalone_deploy: export COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED}
+standalone_deploy: export COMPUTE_SRIOV_ENABLED=${EDPM_COMPUTE_SRIOV_ENABLED}
+standalone_deploy: export COMPUTE_DHCP_AGENT_ENABLED=${EDPM_COMPUTE_DHCP_AGENT_ENABLED}
 standalone_deploy: export STANDALONE=true
 standalone_deploy: export INTERFACE_MTU=${NETWORK_MTU}
+standalone_deploy: export EDPM_COMPUTE_NETWORK = ${NETWORK_ISOLATION_NET_NAME}
 standalone_deploy:
 	$(eval $(call vars))
-	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX} ${STANDALONE_COMPUTE_DRIVER} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}'
+	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX} ${STANDALONE_COMPUTE_DRIVER} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}' '${EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES}'
 
 .PHONY: standalone
 standalone: export STANDALONE=true
@@ -542,6 +560,9 @@ bmaas_virtual_bms_cleanup: ## Cleanup libvirt VM for BMaaS
 .PHONY: bmaas_sushy_emulator
 bmaas_sushy_emulator: export NODE_NAME_PREFIX = ${BMAAS_INSTANCE_NAME_PREFIX}
 bmaas_sushy_emulator: export LIBVIRT_USER = ${BMAAS_LIBVIRT_USER}
+bmaas_sushy_emulator: export CRC_NETWORK_NAME = ${OCP_NETWORK_NAME}
+bmaas_sushy_emulator: export BM_IPV6 = ${BMAAS_IPV6}
+bmaas_sushy_emulator: export BM_IPV4 = ${BMAAS_IPV4}
 bmaas_sushy_emulator: export SUSHY_EMULATOR_NAMESPACE = ${BMAAS_SUSHY_EMULATOR_NAMESPACE}
 bmaas_sushy_emulator: export SUSHY_EMULATOR_DRIVER = ${BMAAS_SUSHY_EMULATOR_DRIVER}
 bmaas_sushy_emulator: export SUSHY_EMULATOR_IMAGE = ${BMAAS_SUSHY_EMULATOR_IMAGE}

@@ -224,26 +224,86 @@ spec:
     }
 EOF_CAT
 
+cat > ${DEPLOY_DIR}/storagemgmt.yaml <<EOF_CAT
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  labels:
+    osp/net: storagemgmt
+  name: storagemgmt
+  namespace: ${NAMESPACE}
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "storagemgmt",
+      "type": "macvlan",
+      "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}*3))",
+      "ipam": {
+        "type": "whereabouts",
+EOF_CAT
+if [ -n "$IPV4_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/storagemgmt.yaml <<EOF_CAT
+        "range": "172.20.0.0/24",
+        "range_start": "172.20.0.30",
+        "range_end": "172.20.0.70"
+EOF_CAT
+elif [ -n "$IPV6_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/storagemgmt.yaml <<EOF_CAT
+        "range": "fd00:dede::/64",
+        "range_start": "fd00:dede::30",
+        "range_end": "fd00:dede::70"
+EOF_CAT
+fi
+cat >> ${DEPLOY_DIR}/storagemgmt.yaml <<EOF_CAT
+      }
+    }
+EOF_CAT
+
 cat > ${DEPLOY_DIR}/octavia.yaml <<EOF_CAT
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
   labels:
     osp/net: octavia
-  name: lb-mgmt-net
+  name: octavia
   namespace: ${NAMESPACE}
 spec:
   config: |
     {
       "cniVersion": "0.3.1",
-      "name": "octavia-amphora-net",
-      "bridge": "br-octavia",
-      "type": "bridge",
+      "name": "octavia",
+      "type": "macvlan",
+      "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}*4))",
       "ipam": {
         "type": "whereabouts",
+EOF_CAT
+if [ -n "$IPV4_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/octavia.yaml <<EOF_CAT
         "range": "172.23.0.0/24",
         "range_start": "172.23.0.30",
-        "range_end": "172.23.0.70"
+        "range_end": "172.23.0.70",
+        "routes": [
+           {
+             "dst": "172.24.0.0/16",
+             "gw" : "172.23.0.5"
+           }
+         ]
+EOF_CAT
+elif [ -n "$IPV6_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/octavia.yaml <<EOF_CAT
+        "range": "fd00:eeee::/64",
+        "range_start": "fd00:eeee::30",
+        "range_end": "fd00:eeee::70"
+        "routes": [
+           {
+             "dst": "fd6c:6261:6173:0001::/64",
+             "gw" : "fd00:eeee::5"
+           }
+         ]
+EOF_CAT
+fi
+cat >> ${DEPLOY_DIR}/octavia.yaml <<EOF_CAT
       }
     }
 EOF_CAT
@@ -262,12 +322,12 @@ spec:
       "cniVersion": "0.3.1",
       "name": "designate",
       "type": "macvlan",
-      "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}*4))",
+      "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}*5))",
       "ipam": {
         "type": "whereabouts",
-        "range": "172.30.0.0/24",
-        "range_start": "172.30.0.30",
-        "range_end": "172.30.0.70"
+        "range": "172.28.0.0/24",
+        "range_start": "172.28.0.30",
+        "range_end": "172.28.0.70"
       }
     }
 EOF_CAT

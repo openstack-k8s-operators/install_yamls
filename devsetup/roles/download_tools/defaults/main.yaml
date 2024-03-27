@@ -9,7 +9,7 @@ opm_version: latest
 sdk_version: v1.31.0
 
 # golang version
-go_version: 1.19.5
+go_version: 1.20.14
 
 # kustomize version to use (must be specific version)
 kustomize_version: v5.0.3

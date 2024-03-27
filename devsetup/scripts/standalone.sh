@@ -23,6 +23,7 @@ SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
 COMPUTE_DRIVER=${2:-"libvirt"}
 EDPM_COMPUTE_ADDITIONAL_NETWORKS=${3:-'[]'}
+EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES=${4:-'[]'}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
 EDPM_COMPUTE_NETWORK=${EDPM_COMPUTE_NETWORK:-default}
 STANDALONE_VM=${STANDALONE_VM:-"true"}
@@ -44,7 +45,10 @@ EDPM_COMPUTE_VCPUS=${COMPUTE_VCPUS:-8}
 EDPM_COMPUTE_RAM=${COMPUTE_RAM:-20}
 EDPM_COMPUTE_DISK_SIZE=${COMPUTE_DISK_SIZE:-70}
 EDPM_COMPUTE_CEPH_ENABLED=${COMPUTE_CEPH_ENABLED:-true}
+EDPM_COMPUTE_SRIOV_ENABLED=${COMPUTE_SRIOV_ENABLED:-true}
+EDPM_COMPUTE_DHCP_AGENT_ENABLED=${COMPUTE_DHCP_AGENT_ENABLED:-true}
 MANILA_ENABLED=${MANILA_ENABLED:-true}
+SWIFT_REPLICATED=${SWIFT_REPLICATED:-false}
 
 if [[ ! -f $SSH_KEY_FILE ]]; then
     echo "$SSH_KEY_FILE is missing"
@@ -102,6 +106,23 @@ parameter_defaults:
     NovaEnableRbdBackend: false
 __EOF__
 
+cat >\$HOME/sriov_template.yaml <<__EOF__
+parameter_defaults:
+    NovaPCIPassthrough:
+      - devname: "dummy-dev"
+        physical_network: "dummy_sriov_net"
+    NeutronPhysicalDevMappings: "dummy_sriov_net:dummy-dev"
+__EOF__
+
+cat >\$HOME/dhcp_agent_template.yaml <<__EOF__
+parameter_defaults:
+  NeutronEnableForceMetadata: true
+  DhcpAgentNotification: true
+
+resource_registry:
+  OS::TripleO::Services::NeutronDhcpAgent: deployment/neutron/neutron-dhcp-container-puppet.yaml
+__EOF__
+
 export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
 export INTERFACE_MTU=${INTERFACE_MTU:-1500}
 export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
@@ -111,6 +132,7 @@ export COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
 export IP=${IP}
 export GATEWAY=${GATEWAY}
 export STANDALONE_VM=${STANDALONE_VM}
+export SWIFT_REPLICATED=${SWIFT_REPLICATED}
 
 if [[ -f \$HOME/containers-prepare-parameters.yaml ]]; then
     echo "Using existing containers-prepare-parameters.yaml - contents:"
@@ -173,6 +195,7 @@ J2_VARS_FILE=$(mktemp --suffix=".yaml" --tmpdir="${MY_TMP_DIR}")
 cat << EOF > ${J2_VARS_FILE}
 ---
 additional_networks: ${EDPM_COMPUTE_ADDITIONAL_NETWORKS}
+additional_host_routes: ${EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES}
 ctlplane_cidr: 24
 ctlplane_ip: ${IP}
 os_net_config_iface: ${OS_NET_CONFIG_IFACE}
@@ -184,6 +207,8 @@ interface_mtu: ${INTERFACE_MTU:-1500}
 gateway_ip: ${GATEWAY}
 dns_server: ${PRIMARY_RESOLV_CONF_ENTRY}
 compute_driver: ${COMPUTE_DRIVER}
+sriov_agent: ${EDPM_COMPUTE_SRIOV_ENABLED}
+dhcp_agent: ${EDPM_COMPUTE_DHCP_AGENT_ENABLED}
 EOF
 
 jinja2_render standalone/network_data.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/network_data.yaml

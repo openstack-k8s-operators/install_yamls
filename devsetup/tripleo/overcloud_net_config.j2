@@ -1,7 +1,7 @@
 #jinja2: trim_blocks:False
 network_config:
 - type: ovs_bridge
-  name: br-ctlplane
+  name: br-ex
   mtu: {{ interface_mtu }}
   use_dhcp: false
   dns_servers:
@@ -12,17 +12,7 @@ network_config:
   domain: []
   addresses:
   - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
-  - ip_netmask: {{ ctlplane_ip }}/32
-  - ip_netmask: {{ ctlplane_vip }}/32
-  {% if standalone_vm|default(true) %}
-  routes:
-  - ip_netmask: 0.0.0.0/0
-    next_hop: {{ gateway_ip }}
-  {%- for route in additional_host_routes %}
-  - ip_netmask: {{ route }}
-    next_hop: {{ ctlplane_ip }}
-  {% endfor %}
-  {% endif %}
+  routes: []
   members:
   - type: interface
     name: {{ os_net_config_iface | default(nic1) }}
@@ -35,7 +25,6 @@ network_config:
     vlan_id: 44
     addresses:
     - ip_netmask: 172.21.0.{{ ip_address_suffix }}/24
-    - ip_netmask: 172.21.0.2/32
     routes: []
   # internal
   - type: vlan
@@ -43,7 +32,6 @@ network_config:
     vlan_id: 20
     addresses:
     - ip_netmask: 172.17.0.{{ ip_address_suffix }}/24
-    - ip_netmask: 172.17.0.2/32
     routes: []
   # storage
   - type: vlan
@@ -51,7 +39,6 @@ network_config:
     vlan_id: 21
     addresses:
     - ip_netmask: 172.18.0.{{ ip_address_suffix }}/24
-    - ip_netmask: 172.18.0.2/32
     routes: []
   # storage_mgmt
   - type: vlan
@@ -59,7 +46,6 @@ network_config:
     vlan_id: 23
     addresses:
     - ip_netmask: 172.20.0.{{ ip_address_suffix }}/24
-    - ip_netmask: 172.20.0.2/32
     routes: []
   # tenant
   - type: vlan
@@ -68,21 +54,3 @@ network_config:
     addresses:
     - ip_netmask: 172.19.0.{{ ip_address_suffix }}/24
     routes: []
-{%- for network in additional_networks if network.standalone_config %}
-{%- set net = network.standalone_config %}
-- type: {{ net.type }}
-  name: br-{{ net.name.lower() }}
-  use_dhcp: false
-  addresses:
-  - ip_netmask: {{ net.ip_subnet.split('/')[0].split('.')[:-1] | join('.') + '.' + ip_address_suffix | string }}/{{ net.ip_subnet.split('/')[1] }}
-{%- if net.vip %}
-  - ip_netmask: {{ net.ip_subnet.split('/')[0].split('.')[:-1] | join('.') + '.' + 2 | string }}/32
-{%- endif %}
-  routes: {{ net.host_routes | default([]) }}
-  members:
-  - type: interface
-    name: nic{{loop.index + 1}}
-    mtu: {{ net.mtu | default(1500) }}
-    # force the MAC address of the bridge to this interface
-    primary: true
-{%- endfor %}

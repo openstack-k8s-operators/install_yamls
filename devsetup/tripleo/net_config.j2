@@ -14,15 +14,7 @@ network_config:
   - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
   - ip_netmask: {{ ctlplane_ip }}/32
   - ip_netmask: {{ ctlplane_vip }}/32
-  {% if standalone_vm|default(true) %}
-  routes:
-  - ip_netmask: 0.0.0.0/0
-    next_hop: {{ gateway_ip }}
-  {%- for route in additional_host_routes %}
-  - ip_netmask: {{ route }}
-    next_hop: {{ ctlplane_ip }}
-  {% endfor %}
-  {% endif %}
+  routes: []
   members:
   - type: interface
     name: {{ os_net_config_iface | default(nic1) }}
@@ -68,21 +60,3 @@ network_config:
     addresses:
     - ip_netmask: 172.19.0.{{ ip_address_suffix }}/24
     routes: []
-{%- for network in additional_networks if network.standalone_config %}
-{%- set net = network.standalone_config %}
-- type: {{ net.type }}
-  name: br-{{ net.name.lower() }}
-  use_dhcp: false
-  addresses:
-  - ip_netmask: {{ net.ip_subnet.split('/')[0].split('.')[:-1] | join('.') + '.' + ip_address_suffix | string }}/{{ net.ip_subnet.split('/')[1] }}
-{%- if net.vip %}
-  - ip_netmask: {{ net.ip_subnet.split('/')[0].split('.')[:-1] | join('.') + '.' + 2 | string }}/32
-{%- endif %}
-  routes: {{ net.host_routes | default([]) }}
-  members:
-  - type: interface
-    name: nic{{loop.index + 1}}
-    mtu: {{ net.mtu | default(1500) }}
-    # force the MAC address of the bridge to this interface
-    primary: true
-{%- endfor %}

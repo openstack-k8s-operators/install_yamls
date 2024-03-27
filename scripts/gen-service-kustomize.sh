@@ -42,6 +42,7 @@ fi
 
 IMAGE=${IMAGE:-unused}
 IMAGE_PATH=${IMAGE_PATH:-containerImage}
+STORAGE_REQUEST=${STORAGE_REQUEST:-10G}
 
 if [ ! -d ${DEPLOY_DIR} ]; then
     mkdir -p ${DEPLOY_DIR}
@@ -65,6 +66,16 @@ patches:
       path: /spec/storageClass
       value: ${STORAGE_CLASS}
 EOF
+if [[ "${KIND}" == "OpenStackControlPlane" && "${OPENSTACK_NEUTRON_CUSTOM_CONF}" != "" ]]; then
+    cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/neutron/template/customServiceConfig
+      value: |-
+EOF
+while IFS= read -r line; do
+    echo "        $line" >>kustomization.yaml
+done < ${OPENSTACK_NEUTRON_CUSTOM_CONF}
+fi
 
 IFS=',' read -ra IMAGES <<< "$IMAGE"
 IFS=',' read -ra IMAGE_PATHS <<< "$IMAGE_PATH"
@@ -91,6 +102,25 @@ if [ -n "$NAME" ]; then
     - op: replace
       path: /metadata/name
       value: ${NAME}
+EOF
+fi
+
+if [ "${KIND}" == "OpenStackControlPlane" ]; then
+   cat <<EOF>>kustomization.yaml
+    - op: replace
+      path: /spec/galera/templates/openstack/storageRequest
+      value: ${STORAGE_REQUEST}
+    - op: replace
+      path: /spec/galera/templates/openstack-cell1/storageRequest
+      value: ${STORAGE_REQUEST}
+EOF
+fi
+
+if [ "${KIND}" == "Galera" ]; then
+   cat <<EOF>>kustomization.yaml
+    - op: replace
+      path: /spec/storageRequest
+      value: ${STORAGE_REQUEST}
 EOF
 fi
 
@@ -441,6 +471,30 @@ EOF
     - op: replace
       path: /spec/rabbitmq/templates/rabbitmq-cell1/override/service/metadata/annotations/metallb.universe.tf~1loadBalancerIPs
       value: fd00:bbbb::86
+    - op: add
+      path: /spec/rabbitmq/templates/rabbitmq/rabbitmq
+      value: {}
+    - op: add
+      path: /spec/rabbitmq/templates/rabbitmq/rabbitmq/erlangInetConfig
+      value: |
+        {inet6, true}.
+    - op: add
+      path: /spec/rabbitmq/templates/rabbitmq/rabbitmq/envConfig
+      value: |
+        SERVER_ADDITIONAL_ERL_ARGS="-kernel inetrc '/etc/rabbitmq/erl_inetrc'  -proto_dist inet6_tcp"
+        RABBITMQ_CTL_ERL_ARGS="-proto_dist inet6_tcp"
+    - op: add
+      path: /spec/rabbitmq/templates/rabbitmq-cell1/rabbitmq
+      value: {}
+    - op: add
+      path: /spec/rabbitmq/templates/rabbitmq-cell1/rabbitmq/erlangInetConfig
+      value: |
+        {inet6, true}.
+    - op: add
+      path: /spec/rabbitmq/templates/rabbitmq-cell1/rabbitmq/envConfig
+      value: |
+        SERVER_ADDITIONAL_ERL_ARGS="-kernel inetrc '/etc/rabbitmq/erl_inetrc'  -proto_dist inet6_tcp"
+        RABBITMQ_CTL_ERL_ARGS="-proto_dist inet6_tcp"
 EOF
     elif [ -n "${IPV4_ENABLED}" ] && [ -n "${IPV6_ENABLED}" ]; then
         # TODO: Add support for dual stack
