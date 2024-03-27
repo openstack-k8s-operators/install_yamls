@@ -273,6 +273,10 @@ function post_config {
     # Get ouath config
     mkdir -p ${MY_TMP_DIR}/oauth
     ./bin/oc get oauth cluster -o yaml > ${MY_TMP_DIR}/oauth/oauth.yaml
+
+    # Enable global forwarding
+    ./bin/oc patch network.operator cluster -p '{"spec":{"defaultNetwork":{"ovnKubernetesConfig":{"gatewayConfig": {"ipForwarding": "Global"}}}}}' --type=merge
+
     # Add identity provider kustomization
     cat << EOF > ${MY_TMP_DIR}/oauth/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
