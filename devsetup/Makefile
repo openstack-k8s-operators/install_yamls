@@ -214,6 +214,7 @@ ipv6_lab_nat64_router: export NAT64_INSTANCE_NAME = ${IPV6_LAB_NAT64_INSTANCE_NA
 ipv6_lab_nat64_router: export SSH_PUB_KEY = ${IPV6_LAB_SSH_PUB_KEY}
 ipv6_lab_nat64_router: export LIBVIRT_STORAGE_POOL = ${IPV6_LAB_LIBVIRT_STORAGE_POOL}
 ipv6_lab_nat64_router: export UPDATE_PACKAGES = ${IPV6_LAB_NAT64_UPDATE_PACKAGES}
+ipv6_lab_nat64_router: export NET_ISOLATION_IPV6_ADDR = ${NETWORK_ISOLATION_IPV6_ADDRESS}
 ipv6_lab_nat64_router: ## Deploys NAT64/DNS64 router node
 	bash scripts/ipv6-nat64/nat64_router.sh --create
 
@@ -294,12 +295,19 @@ network_isolation_bridge: export IPV4_ADDRESS=${NETWORK_ISOLATION_IPV4_ADDRESS}
 network_isolation_bridge: export IPV4_NAT=${NETWORK_ISOLATION_IPV4_NAT}
 endif
 ifeq ($(NETWORK_ISOLATION_IPV6), true)
+network_isolation_bridge: export IPV6_NAT64=true
 network_isolation_bridge: export IPV6_ADDRESS=${NETWORK_ISOLATION_IPV6_ADDRESS}
+network_isolation_bridge: export NAT64_HOST_IPV6=${IPV6_LAB_NAT64_HOST_IPV6}
+network_isolation_bridge: export NAT64_TAYGA_IPV6_PREFIX=${IPV6_LAB_NAT64_TAYGA_IPV6_PREFIX}
 endif
 network_isolation_bridge: ## Create libvirt network isolation network
 	scripts/network-setup.sh --create
 
 .PHONY: network_isolation_bridge_cleanup
+ifeq ($(NETWORK_ISOLATION_IPV6), true)
+network_isolation_bridge: export IPV6_NAT64=true
+network_isolation_bridge_cleanup: export NAT64_TAYGA_IPV6_PREFIX=${IPV6_LAB_NAT64_TAYGA_IPV6_PREFIX}
+endif
 network_isolation_bridge_cleanup: export NETWORK_NAME=${NETWORK_ISOLATION_NETWORK_NAME}
 network_isolation_bridge_cleanup: ## Cleanup libvirt network isolation network
 	scripts/network-setup.sh --cleanup
