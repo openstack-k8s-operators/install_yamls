@@ -31,6 +31,27 @@ sudo pvcreate /dev/loop3
 sudo vgcreate vg2 /dev/loop3
 sudo lvcreate -n data-lv2 -l +100%FREE vg2
 
+# Persist the created device to restore it on startup.
+cat > /tmp/ceph-osd-losetup.service << EOF
+[Unit]
+Description=Ceph OSD losetup
+After=syslog.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c '/sbin/losetup /dev/loop3 || \
+/sbin/losetup /dev/loop3 /var/lib/ceph-osd.img ; partprobe /dev/loop3'
+ExecStop=/sbin/losetup -d /dev/loop3
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+EOF
+cat /tmp/ceph-osd-losetup.service | sudo tee /etc/systemd/system/ceph-osd-losetup.service
+sudo chmod 0644 /etc/systemd/system/ceph-osd-losetup.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now ceph-osd-losetup.service
+
 # Create an OSD spec file which references the block device.
 cat <<EOF > $HOME/osd_spec.yaml
 data_devices:
