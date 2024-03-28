@@ -273,8 +273,9 @@ spec:
     {
       "cniVersion": "0.3.1",
       "name": "octavia",
-      "type": "macvlan",
-      "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}*4))",
+      "type": "bridge",
+      "bridge": "octbr",
+      "vlan": $((${VLAN_START}+${VLAN_STEP}*4)),
       "ipam": {
         "type": "whereabouts",
 EOF_CAT
@@ -286,7 +287,7 @@ if [ -n "$IPV4_ENABLED" ]; then
         "routes": [
            {
              "dst": "172.24.0.0/16",
-             "gw" : "172.23.0.5"
+             "gw" : "172.23.0.150"
            }
          ]
 EOF_CAT
@@ -298,7 +299,7 @@ elif [ -n "$IPV6_ENABLED" ]; then
         "routes": [
            {
              "dst": "fd6c:6261:6173:0001::/64",
-             "gw" : "fd00:eeee::5"
+             "gw" : "fd00:eeee::0096"
            }
          ]
 EOF_CAT
