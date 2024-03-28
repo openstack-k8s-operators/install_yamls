@@ -54,8 +54,8 @@ NAT64_INSTANCE_DISK_SIZE=${NAT64_INSTANCE_DISK_SIZE:-20}
 VIRT_TYPE=${VIRT_TYPE:-kvm}
 NET_MODEL=${NET_MODEL:-virtio}
 SSH_PUB_KEY=${SSH_PUB_KEY:-${HOME}/.ssh/id_rsa.pub}
-FEDORA_IMG=Fedora-Cloud-Base-38-1.6.x86_64.qcow2
-FEDORA_IMG_URL=https://download.fedoraproject.org/pub/fedora/linux/releases/38/Cloud/x86_64/images/${FEDORA_IMG}
+FEDORA_IMG=Fedora-Cloud-Base-39-1.5.x86_64.qcow2
+FEDORA_IMG_URL=https://download.fedoraproject.org/pub/fedora/linux/releases/39/Cloud/x86_64/images/${FEDORA_IMG}
 UPDATE_PACKAGES=${UPDATE_PACKAGES:-true}
 
 mkdir -p "${WORK_DIR}"
@@ -116,6 +116,7 @@ packages:
   - tayga
   - radvd
   - bind-utils
+  - crudini
 write_files:
   - path: /etc/radvd.conf
     owner: root:root
@@ -277,6 +278,9 @@ runcmd:
   - [ 'systemctl', 'enable', 'tayga@default.service' ]
   - [ 'systemctl', 'enable', 'nftables.service' ]
   - [ 'systemctl', 'enable', 'radvd.service' ]
+  # TODO: Workaround - https://github.com/canonical/cloud-init/issues/4518 - Remove WA when fix in packages
+  - [ 'crudini', '--del', '/etc/NetworkManager/system-connections/cloud-init-eth0.nmconnection', 'ipv4', 'route2' ]
+  - [ 'crudini', '--set', '/etc/NetworkManager/system-connections/cloud-init-eth0.nmconnection', 'ipv6', 'route1', '::/0,${IPV6_NETWORK_IPADDRESS%%/*}' ]
 power_state:
   mode: poweroff
   message: Bye Bye

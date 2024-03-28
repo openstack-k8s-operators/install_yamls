@@ -15,6 +15,9 @@ NETWORK_NAME=${NETWORK_NAME:-$DEFAULT_NETWORK_NAME}
 IPV4_ADDRESS=${IPV4_ADDRESS:-""}
 IPV4_NAT=${IPV4_NAT:-true}
 IPV6_ADDRESS=${IPV6_ADDRESS:-""}
+IPV6_NAT64=${IPV6_NAT64:-false}
+NAT64_TAYGA_IPV6_PREFIX=${NAT64_TAYGA_IPV6_PREFIX:-""}
+NAT64_HOST_IPV6=${NAT64_HOST_IPV6:""}
 
 MY_TMP_DIR="$(mktemp -d)"
 trap 'rm -rf -- "$MY_TMP_DIR"' EXIT
@@ -24,10 +27,6 @@ function usage {
     echo "options:"
     echo "  --create        Define and start the libvirt network"
     echo "  --cleanup       Destroy and undefine the libvirt network"
-    echo "  --network-name  Libvirt network name (Default: $DEFAULT_NETWORK_NAME)"
-    echo "  --ipv4-address  IPv4 Address for libvirt network bridge"
-    echo "  --ipv6-address  IPv6 Address for libvirt network bridge"
-    echo "  --ipv4-nat      When specified IPv4 NAT is enabled. (Default: true)"
     echo
 }
 
@@ -55,18 +54,35 @@ EOF
         cat $temp_file | xmlstarlet edit --omit-decl --pf --subnode '/network' --type text --name '' \
             --value "<ip family='ipv6' address='${IPV6_ADDRESS%%/*}' prefix='${IPV6_ADDRESS##*/}'/>" \
             | tee ${temp_file}
+        if [ "${IPV6_NAT64}" = "true" ]; then
+            # Set forward mode to open to disable all Libvirt firewall rules.
+            cat $temp_file | xmlstarlet edit --omit-decl --pf --subnode '/network' --type text --name '' \
+                --value "<forward mode='open'/>" \
+                | tee ${temp_file}
+        fi
     fi
     cat "$temp_file" | xmlstarlet unescape | tee ${temp_file}
 
     $VIRSH_CMD net-define "$temp_file"
     $VIRSH_CMD net-autostart "$NETWORK_NAME"
     $VIRSH_CMD net-start "$NETWORK_NAME"
+
+    if [ "${IPV6_NAT64}" = "true" ]; then
+        # Add a route on the hypervisor for the NAT64 IPv6 prefix
+        sudo ip -6 route add ${NAT64_TAYGA_IPV6_PREFIX} dev nat64 via ${NAT64_HOST_IPV6%%/*}
+        # Add firewall rules to allow forwarding the NAT64 IPv6 prefix
+        sudo ip6tables -I LIBVIRT_FWI 1 -d ${NAT64_TAYGA_IPV6_PREFIX} -o nat64 -j ACCEPT
+        sudo ip6tables -I LIBVIRT_FWO 1 -s ${NAT64_TAYGA_IPV6_PREFIX} -j ACCEPT
+    fi
 }
 
 function cleanup {
     if virsh --connect=qemu:///system net-list --name | grep "$NETWORK_NAME"; then
         virsh --connect=qemu:///system net-destroy "$NETWORK_NAME" || true
         virsh --connect=qemu:///system net-undefine "$NETWORK_NAME" || true
+    fi
+    if [ "${IPV6_NAT64}" = "true" ]; then
+        sudo ip -6 route del ${NAT64_TAYGA_IPV6_PREFIX}
     fi
 }
 
@@ -76,21 +92,6 @@ case "$1" in
     ;;
     "--cleanup")
         ACTION="CLEANUP";
-    ;;
-    "--network-name")
-        NETWORK_NAME="$2";
-        shift
-    ;;
-    "--ipv4-address")
-        IPV4_ADDRESS="$2";
-        shift
-    ;;
-    "--ipv6-address")
-        IPV6_ADDRESS="$2";
-        shift
-    ;;
-    "--ipv4-nat")
-        IPV4_NAT=true
     ;;
     *)
         echo >&2 "Invalid option: $*";
