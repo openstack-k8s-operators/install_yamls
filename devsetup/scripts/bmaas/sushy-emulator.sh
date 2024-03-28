@@ -49,7 +49,7 @@ if [ $DRIVER = "libvirt" ]; then
         LIBVIRT_URI="'qemu+ssh://${LIBVIRT_USER}@${LIBVIRT_IP_ADDRESS}/system${LIBVIRT_SOCKET}'"
         SUSHY_EMULATOR_LISTEN_IP="'0.0.0.0'"
     fi
-    INSTANCES=$(virsh --connect=qemu:///system list --all --uuid --name | grep "${NODE_NAME_PREFIX}" | awk '{ printf "\"" $1 "\" " }' | sed -e 's/" "/", "/' -e 's/^"/["/' -e 's/" $/"]/')
+    INSTANCES=$(virsh --connect=qemu:///system list --all --uuid --name | grep "${NODE_NAME_PREFIX}" | awk 'BEGIN{ printf "[" }; { printf "%s\"%s\"", sep, $1, sep=","}; END{ printf "]" }')
     EMULATOR_OS_CLOUD="None"
 elif [ $DRIVER = "openstack" ]; then
     OS_CLIENT_CONFIG_FILE=${SUSHY_EMULATOR_OS_CLIENT_CONFIG_FILE:-/etc/openstack/clouds.yaml}
