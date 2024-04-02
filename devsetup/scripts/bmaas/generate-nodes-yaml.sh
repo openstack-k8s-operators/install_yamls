@@ -26,7 +26,7 @@ function echo_nodes_yaml {
         echo "    redfish_username: ${REDFISH_USERNAME}"
         echo "    redfish_password: ${REDFISH_PASSOWRD}"
         echo "  ports:"
-        echo "  - address: $mac_address"
+        echo "  - address: \"$mac_address\""
     done <<< "$(virsh --connect=qemu:///system list --all --uuid --name | grep "${NODE_NAME_PREFIX}")"
 }
 
