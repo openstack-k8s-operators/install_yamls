@@ -117,7 +117,7 @@ HOSTNETWORK=false NETWORKS_ANNOTATION=\'[\{\"name\":\"storage\",\"namespace\":\"
 If `NETWORK_ISOLATION == true`, `config/samples/core_v1beta1_openstackcontrolplane_network_isolation.yaml` will be used, if `false` then `config/samples/core_v1beta1_openstackcontrolplane.yaml`.
 
 ```bash
-make openstack_deploy
+make openstack_wait_deploy TIMEOUT=800s
 ```
 
 (optional) To deploy with ceph as backend for glance and cinder, a sample config can be found at https://github.com/openstack-k8s-operators/openstack-operator/blob/main/config/samples/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml .
@@ -138,7 +138,7 @@ At this point the ctlplane is deployed with the services using isolated networks
 * deploy edpm compute
 ```bash
 # To use a NTP server other than the ntp.pool.org default one, override the DATAPLANE_NTP_SERVER variable
-DATAPLANE_TOTAL_NODES=2 make edpm_wait_deploy
+DATAPLANE_TOTAL_NODES=2 make edpm_wait_deploy DATAPLANE_TIMEOUT=25m
 ```
 Note: if you used the `edpm_deploy` target to start the deployment then after
 the compute services are visible in `openstack compute service list` you need
