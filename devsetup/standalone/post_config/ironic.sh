@@ -16,11 +16,14 @@
 set -ex
 
 export OS_CLOUD="standalone"
-IRONIC_PYTHON_AGENT_URI=${IRONIC_PYTHON_AGENT_URI:-"https://images.rdoproject.org/centos9/master/rdo_trunk/current-tripleo/ironic-python-agent.tar"}
+IRONIC_PYTHON_AGENT_URI=${IRONIC_PYTHON_AGENT_URI:-"https://tarballs.opendev.org/openstack/ironic-python-agent/dib/ipa-centos8-stable-wallaby.tar.gz"}
+IPA_KERNEL=ipa-centos8-stable-wallaby.kernel
+IPA_RAMDISK=ipa-centos8-stable-wallaby.initramfs
 SUBNET_RANGE=${SUBNET_RANGE:-"172.20.1.0/24"}
 SUBNET_GATEWAY=${SUBNET_GATEWAY:-"172.20.1.1"}
 SUBNET_ALLOC_POOL_START=${SUBNET_ALLOC_POOL_START:-"172.20.1.200"}
 SUBNET_ALLOC_POOL_END=${SUBNET_ALLOC_POOL_END:-"172.20.1.250"}
+
 
 
 function deploy_images {
@@ -28,8 +31,8 @@ function deploy_images {
     pushd $HOME/images
     curl -o ironic-python-agent.tar.gz ${IRONIC_PYTHON_AGENT_URI}
     tar xvf ironic-python-agent.tar.gz
-    sudo cp ironic-python-agent.kernel /var/lib/ironic/httpboot/agent.kernel
-    sudo cp ironic-python-agent.initramfs /var/lib/ironic/httpboot/agent.ramdisk
+    sudo cp ${IPA_KERNEL} /var/lib/ironic/httpboot/agent.kernel
+    sudo cp ${IPA_RAMDISK} /var/lib/ironic/httpboot/agent.ramdisk
     popd
 
 
@@ -37,12 +40,12 @@ function deploy_images {
         --public \
         --container-format aki \
         --disk-format aki \
-        --file $HOME/images/ironic-python-agent.kernel
+        --file $HOME/images/$IPA_KERNEL
     openstack image create deploy-ramdisk \
         --public \
         --container-format ari \
         --disk-format ari \
-        --file $HOME/images/ironic-python-agent.initramfs
+        --file $HOME/images/$IPA_RAMDISK
 }
 
 
