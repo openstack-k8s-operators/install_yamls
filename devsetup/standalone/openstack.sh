@@ -56,7 +56,7 @@ parameter_defaults:
   - $CTLPLANE_IP:8787
   NeutronPublicInterface: $NEUTRON_INTERFACE
   # domain name used by the host
-  NeutronDnsDomain: localdomain
+  NeutronDnsDomain: ooo.test
   # re-use ctlplane bridge for public net
   NeutronBridgeMappings: $BRIDGE_MAPPINGS
   NeutronPhysicalBridge: $BRIDGE
