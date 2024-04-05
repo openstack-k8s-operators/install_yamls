@@ -192,7 +192,7 @@ done
 if [ ${COMPUTE_DRIVER} == 'ironic' ]; then
     PRIMARY_RESOLV_CONF_ENTRY="192.168.130.11"  # Use crc for dns to enable resolving apps-crc.testing
     # Add a hosts entry for the network address to speed up iptables
-    ssh $SSH_OPT root@$IP "echo ${IP%.*}.0 .localdomain >> /etc/hosts"
+    ssh $SSH_OPT root@$IP "echo ${IP%.*}.0 .ooo.test >> /etc/hosts"
 else
     PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
 fi

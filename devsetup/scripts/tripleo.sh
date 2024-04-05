@@ -52,8 +52,8 @@ sudo dnf install -y podman python3-tripleoclient util-linux lvm2
 # STEP_CONFIG in container-puppet-* containers.
 sudo dnf install -y https://kojihub.stream.centos.org/kojifiles/packages/podman/4.6.0/1.el9/x86_64/podman-4.6.0-1.el9.x86_64.rpm
 
-sudo hostnamectl set-hostname undercloud.localdomain
-sudo hostnamectl set-hostname undercloud.localdomain --transient
+sudo hostnamectl set-hostname undercloud.ooo.test
+sudo hostnamectl set-hostname undercloud.ooo.test --transient
 
 export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
 export INTERFACE_MTU=${INTERFACE_MTU:-1500}
