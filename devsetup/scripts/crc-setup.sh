@@ -71,3 +71,10 @@ sudo update-ca-trust
 if [ $export_path == 1 ]; then
     echo "WARNING: you must add ~/bin in your PATH in order to access to crc binary"
 fi
+
+# Required to patch network.operator with OVNKubernetes backend
+# ipForwarding: Global is required for MetalLB on secondary interfaces
+# routingViaHost: true is required for local host routes on CRC VM to be used
+if [ $(oc get network.operator cluster -o json|jq -r .spec.defaultNetwork.type) == "OVNKubernetes" ]; then
+    oc patch network.operator cluster -p '{"spec":{"defaultNetwork":{"ovnKubernetesConfig":{"gatewayConfig":{"routingViaHost": true, "ipForwarding": "Global"}}}}}' --type=merge
+fi
