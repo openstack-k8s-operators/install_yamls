@@ -295,7 +295,7 @@ elif [ -n "$IPV6_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/octavia.yaml <<EOF_CAT
         "range": "fd00:eeee::/64",
         "range_start": "fd00:eeee::30",
-        "range_end": "fd00:eeee::70"
+        "range_end": "fd00:eeee::70",
         "routes": [
            {
              "dst": "fd6c:6261:6173:0001::/64",
