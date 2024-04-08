@@ -654,6 +654,9 @@ crc_bmo_setup: $(if $(findstring true,$(INSTALL_CERT_MANAGER)), certmanager)
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && yq 'del(.spec.template.spec.containers[] | select(.name == "ironic-dnsmasq"))' -i ironic-deployment/base/ironic.yaml && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && make generate manifests && bash tools/deploy.sh -bitm && popd
 	sudo ip route replace 192.168.126.0/24 dev virbr0
+	oc patch deployment/baremetal-operator-controller-manager \
+	-n baremetal-operator-system --type='json' \
+	-p='[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "quay.io/metal3-io/baremetal-operator:${BMO_BRANCH}"}]'
 	## Hack to add required scc
 	oc adm policy add-scc-to-user privileged system:serviceaccount:baremetal-operator-system:baremetal-operator-controller-manager
 	oc adm policy add-scc-to-user privileged system:serviceaccount:baremetal-operator-system:default
