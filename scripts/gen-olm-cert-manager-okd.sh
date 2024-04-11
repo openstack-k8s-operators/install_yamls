@@ -23,10 +23,6 @@ if [ -z "${OPERATOR_NAMESPACE}" ]; then
     echo "Please set OPERATOR_NAMESPACE"; exit 1
 fi
 
-if [ -z "${OCP_RELEASE}" ]; then
-    echo "Please set OCP_RELEASE"; exit 1
-fi
-
 if [ -z "${CHANNEL}" ]; then
     echo "Please set CHANNEL"; exit 1
 fi
@@ -35,7 +31,6 @@ if [ ! -d ${OPERATOR_DIR} ]; then
     mkdir -p ${OPERATOR_DIR}
 fi
 
-echo OCP_RELEASE ${OCP_RELEASE}
 echo OPERATOR_DIR ${OPERATOR_DIR}
 echo OPERATOR_NAMESPACE ${OPERATOR_NAMESPACE}
 echo CHANNEL ${CHANNEL}

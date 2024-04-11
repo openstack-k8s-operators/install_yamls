@@ -1,6 +1,5 @@
 # general
 SHELL       := /bin/bash
-OCP_RELEASE := $(shell cut -d '.' -f 1,2 <<< $(shell oc version -o json | jq -r .openshiftVersion))
 OKD                      ?= false
 OPERATOR_NAMESPACE      ?= openstack-operators
 NAMESPACE                ?= openstack
@@ -501,7 +500,6 @@ REDIS_DEPL_IMG  ?= unused
 
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
-${1}: export OCP_RELEASE=$(OCP_RELEASE)
 ${1}: export NAMESPACE=${NAMESPACE}
 ${1}: export OPERATOR_NAMESPACE=${OPERATOR_NAMESPACE}
 ${1}: export SECRET=${SECRET}
@@ -2519,9 +2517,9 @@ swift_deploy_cleanup: ## cleans up the service instance, Does not affect the ope
 
 ##@ CERT-MANAGER
 .PHONY: certmanager
-certmanager: export NAMESPACE=$(if $(findstring 4.10,$(OCP_RELEASE)),openshift-cert-manager,cert-manager)
-certmanager: export OPERATOR_NAMESPACE=$(if $(findstring 4.10,$(OCP_RELEASE)),openshift-cert-manager-operator,cert-manager-operator)
-certmanager: export CHANNEL=$(if $(findstring 4.10,$(OCP_RELEASE)),tech-preview,$(if $(findstring 4.15,$(OCP_RELEASE)),stable-v1.13,stable-v1.11))
+certmanager: export NAMESPACE=cert-manager
+certmanager: export OPERATOR_NAMESPACE=cert-manager-operator
+certmanager: export CHANNEL=stable-v1
 certmanager: ## installs cert-manager operator in the cert-manager-operator namespace, cert-manager runs it cert-manager namespace
 	$(eval $(call vars,$@,cert-manager))
 ifeq ($(OKD), true)
@@ -2549,8 +2547,8 @@ else
 endif
 
 .PHONY: certmanager_cleanup
-certmanager_cleanup: export NAMESPACE=$(if $(findstring 4.10,$(OCP_RELEASE)),openshift-cert-manager,cert-manager)
-certmanager_cleanup: export OPERATOR_NAMESPACE=$(if $(findstring 4.10,$(OCP_RELEASE)),openshift-cert-manager-operator,cert-manager-operator)
+certmanager_cleanup: export NAMESPACE=cert-manager
+certmanager_cleanup: export OPERATOR_NAMESPACE=cert-manager-operator
 certmanager_cleanup:
 	oc delete -n ${OPERATOR_NAMESPACE} operatorgroup --all --ignore-not-found=true
 	oc delete -n ${OPERATOR_NAMESPACE} subscription --all --ignore-not-found=true
