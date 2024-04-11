@@ -1,8 +1,15 @@
 ---
+- nodeset:
+    name: centos-9-crc-2-34-1-6xlarge
+    nodes:
+      - name: controller
+        label: centos-9-stream-crc-2-34-1-6xlarge
+
 # Bmaas deployment job with CRC and two bmaas compute nodes.
 - job:
     name: install-yamls-crc-podified-edpm-baremetal
     parent: cifmw-crc-podified-edpm-baremetal
+    nodeset: centos-9-crc-2-34-1-6xlarge
     files:
       - ^devsetup/Makefile
       - ^devsetup/edpm/config/*
