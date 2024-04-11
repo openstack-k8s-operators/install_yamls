@@ -25,6 +25,7 @@ EDPM_SERVER_ROLE=${EDPM_SERVER_ROLE:-"compute"}
 STANDALONE=${STANDALONE:-false}
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-${EDPM_SERVER_ROLE}-${EDPM_COMPUTE_SUFFIX}"}
+EDPM_COMPUTE_DOMAIN=${EDPM_COMPUTE_DOMAIN:-"localdomain"}
 if [ ${STANDALONE} = "true" ]; then
     EDPM_COMPUTE_VCPUS=${EDPM_COMPUTE_VCPUS:-8}
     EDPM_COMPUTE_RAM=${EDPM_COMPUTE_RAM:-20}
@@ -239,7 +240,7 @@ for i in 0 1 2; do
         VIRT_HOST_KNOWN_HOSTS=$(ssh-keyscan 192.168.130.1)
         virt-customize -a ${DISK_FILEPATH} \
             --root-password password:12345678 \
-            --hostname edpm-${EDPM_SERVER_ROLE}-$i \
+            --hostname edpm-${EDPM_SERVER_ROLE}-${i}.${EDPM_COMPUTE_DOMAIN} \
             --firstboot ${OUTPUT_BASEDIR}/edpm-${EDPM_SERVER_ROLE}-$i-firstboot.sh \
             --run-command "systemctl disable cloud-init cloud-config cloud-final cloud-init-local" \
             --run-command "echo 'PermitRootLogin yes' > /etc/ssh/sshd_config.d/99-root-login.conf" \
