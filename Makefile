@@ -1955,12 +1955,14 @@ swift_kuttl_run: ## runs kuttl tests for the swift operator, assumes that everyt
 
 .PHONY: swift_kuttl
 swift_kuttl: export NAMESPACE = ${SWIFT_KUTTL_NAMESPACE}
-swift_kuttl: kuttl_common_prep swift swift_deploy_prep ## runs kuttl tests for the swift operator. Installs swift operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+swift_kuttl: kuttl_common_prep barbican barbican_deploy swift swift_deploy_prep ## runs kuttl tests for the swift operator. Installs swift operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,swift))
 	make wait
 	make swift_kuttl_run
 	make deploy_cleanup
+	make barbican_deploy_cleanup
 	make swift_cleanup
+	make barbican_cleanup
 	make kuttl_common_cleanup
 
 .PHONY: horizon_kuttl_run
