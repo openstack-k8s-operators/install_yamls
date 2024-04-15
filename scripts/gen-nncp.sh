@@ -146,7 +146,7 @@ EOF_CAT
       - destination: ${CTLPLANE_IP_ADDRESS_PREFIX}.0/24
         next-hop-address: ${GATEWAY}
         next-hop-interface: ${BRIDGE_NAME}
-        metric: 425
+        metric: 430
 EOF_CAT
     fi
     if [ -n "$NNCP_ADDITIONAL_HOST_ROUTES" ]; then
