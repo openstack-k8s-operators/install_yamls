@@ -13,7 +13,7 @@
 # the user is responsible for configuring all system hostname settings
 # appropriately.  If set, the undercloud install will configure all
 # system hostname settings. (string value)
-undercloud_hostname = standalone.ooo.test
+undercloud_hostname = standalone.{{ cloud_domain }}
 
 # IP information for the interface on the Undercloud that will be
 # handling the PXE boots and DHCP for Overcloud instances.  The IP
@@ -52,7 +52,7 @@ undercloud_timezone = UTC
 # parameter "CloudDomain" must be set to a matching value. (string
 # value)
 #overcloud_domain_name = localdomain
-overcloud_domain_name = ooo.test
+overcloud_domain_name = {{ cloud_domain }}
 
 # Certificate file to use for OpenStack service SSL connections.
 # Setting this enables SSL for the OpenStack API endpoints, leaving it

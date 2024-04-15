@@ -53,6 +53,7 @@ EDPM_COMPUTE_ADDITIONAL_NETWORKS ?= '[]'
 EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES ?= '[]'
 
 TLS_ENABLED ?= false
+DNS_DOMAIN ?= localdomain
 
 EDPM_TOTAL_NODES ?= 1
 EDPM_COMPUTE_CEPH_ENABLED ?= true
@@ -414,6 +415,7 @@ edpm_deploy_instance: ## Spin a instance on edpm node
 	-oc rsh openstackclient bash /tmp/edpm-deploy-instance.sh
 
 .PHONY: tripleo_deploy
+tripleo_deploy: export CLOUD_DOMAIN=${DNS_DOMAIN}
 tripleo_deploy: export INTERFACE_MTU=${NETWORK_MTU}
 tripleo_deploy:
 	$(eval $(call vars))
@@ -422,6 +424,7 @@ tripleo_deploy:
 
 .PHONY: standalone_deploy
 standalone_deploy: export TLSE_ENABLED=${TLS_ENABLED}
+standalone_deploy: export CLOUD_DOMAIN=${DNS_DOMAIN}
 standalone_deploy: export COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED}
 standalone_deploy: export COMPUTE_SRIOV_ENABLED=${EDPM_COMPUTE_SRIOV_ENABLED}
 standalone_deploy: export COMPUTE_DHCP_AGENT_ENABLED=${EDPM_COMPUTE_DHCP_AGENT_ENABLED}

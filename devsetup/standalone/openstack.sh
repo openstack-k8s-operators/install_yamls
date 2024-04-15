@@ -24,6 +24,7 @@ BARBICAN_ENABLED=${BARBICAN_ENABLED:-true}
 MANILA_ENABLED=${MANILA_ENABLED:-true}
 SWIFT_REPLICATED=${SWIFT_REPLICATED:-false}
 TLSE_ENABLED=${TLSE_ENABLED:-false}
+CLOUD_DOMAIN=${CLOUD_DOMAIN:-localdomain}
 
 # Use the files created in the previous steps including the network_data.yaml file and thw deployed_network.yaml file.
 # The deployed_network.yaml file hard codes the IPs and VIPs configured from the network.sh
@@ -46,7 +47,7 @@ fi
 cat <<EOF > standalone_parameters.yaml
 parameter_defaults:
   BarbicanSimpleCryptoGlobalDefault: true
-  CloudName: standalone.ooo.test
+  CloudName: standalone.${CLOUD_DOMAIN}
   Debug: true
   DeploymentUser: $USER
   NtpServer: $NTP_SERVER
@@ -56,7 +57,7 @@ parameter_defaults:
   - $CTLPLANE_IP:8787
   NeutronPublicInterface: $NEUTRON_INTERFACE
   # domain name used by the host
-  NeutronDnsDomain: ooo.test
+  NeutronDnsDomain: ${CLOUD_DOMAIN}
   # re-use ctlplane bridge for public net
   NeutronBridgeMappings: $BRIDGE_MAPPINGS
   NeutronPhysicalBridge: $BRIDGE
@@ -119,7 +120,7 @@ if [ "$TLSE_ENABLED" = "true" ]; then
     export IPA_PRINCIPAL=$IPA_ADMIN_USER
     export IPA_ADMIN_PASSWORD=fce95318204114530f31f885c9df588f
     export IPA_PASSWORD=$IPA_ADMIN_PASSWORD
-    export CLOUD_DOMAIN=ooo.test
+    #export CLOUD_DOMAIN=$CLOUD_DOMAIN
     export UNDERCLOUD_FQDN=standalone.$CLOUD_DOMAIN
     export IPA_DOMAIN=$CLOUD_DOMAIN
     export IPA_REALM=$(echo $IPA_DOMAIN | awk '{print toupper($0)}')
@@ -140,7 +141,7 @@ if [ "$TLSE_ENABLED" = "true" ]; then
         --no-dnssec-validation --auto-forwarders
     timeout 900s grep -qEi '(INFO The ipa-server-install command was successful|ERROR The ipa-server-install command failed)' <(tail -F /tmp/ipa-data/var/log/ipaserver-install.log)
     cat  <<EOF > /etc/resolv.conf
-search ooo.test
+search ${CLOUD_DOMAIN}
 nameserver 10.88.0.2
 EOF
     cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
