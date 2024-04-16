@@ -16,7 +16,7 @@
 set -ex
 
 MY_TMP_DIR="$(mktemp -d)"
-trap 'rm -rf -- "$MY_TMP_DIR"' EXIT
+trap 'rv=$?; rm -rf -- "$MY_TMP_DIR"; exit $rv' EXIT
 
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
@@ -45,6 +45,7 @@ fi
 
 if [[ ! -f $CMDS_FILE ]]; then
     cat <<EOF > $CMDS_FILE
+set -ex
 sudo dnf install -y podman python3-tripleoclient util-linux lvm2
 
 # Pin Podman to work around a Podman regression where env variables
@@ -60,6 +61,8 @@ export INTERFACE_MTU=${INTERFACE_MTU:-1500}
 export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
 export IP=${IP}
 export GATEWAY=${GATEWAY}
+export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-false}
+export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm.yaml}"
 
 if [[ -f \$HOME/containers-prepare-parameters.yaml ]]; then
     echo "Using existing containers-prepare-parameters.yaml - contents:"
@@ -132,6 +135,10 @@ scp $SSH_OPT tripleo/config-download.yaml zuul@$IP:$HOME/config-download.yaml
 scp $SSH_OPT tripleo/overcloud_roles.yaml zuul@$IP:$HOME/overcloud_roles.yaml
 scp $SSH_OPT tripleo/overcloud_services.yaml zuul@$IP:$HOME/overcloud_services.yaml
 scp $SSH_OPT tripleo/ansible_config.cfg zuul@$IP:$HOME/ansible_config.cfg
+if [[ "$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]]; then
+    scp $SSH_OPT tripleo/ceph.sh root@$IP:/tmp/ceph.sh
+    scp $SSH_OPT tripleo/generate_ceph_inventory.py root@$IP:/tmp/generate_ceph_inventory.py
+fi
 
 if [[ -f $HOME/containers-prepare-parameters.yaml ]]; then
     scp $SSH_OPT $HOME/containers-prepare-parameters.yaml zuul@$IP:$HOME/containers-prepare-parameters.yaml
