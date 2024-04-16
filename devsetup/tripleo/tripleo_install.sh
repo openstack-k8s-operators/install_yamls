@@ -21,6 +21,8 @@ source stackrc
 openstack overcloud network provision --output network_provision_out.yaml ./network_data.yaml
 openstack overcloud network vip provision --stack overcloud --output vips_provision_out.yaml ./vips_data.yaml
 
+sed -i "s/DNS_DOMAIN/${CLOUD_DOMAIN}/" config-download.yaml
+
 # update the config-download with proper overcloud hostnames
 control0=$(grep "overcloud-controller-0" hostnamemap.yaml  | awk '{print $2}')
 control1=$(grep "overcloud-controller-1" hostnamemap.yaml  | awk '{print $2}')
