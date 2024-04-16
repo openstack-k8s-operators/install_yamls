@@ -47,8 +47,12 @@ EDPM_COMPUTE_DISK_SIZE=${COMPUTE_DISK_SIZE:-70}
 EDPM_COMPUTE_CEPH_ENABLED=${COMPUTE_CEPH_ENABLED:-true}
 EDPM_COMPUTE_SRIOV_ENABLED=${COMPUTE_SRIOV_ENABLED:-true}
 EDPM_COMPUTE_DHCP_AGENT_ENABLED=${COMPUTE_DHCP_AGENT_ENABLED:-true}
+BARBICAN_ENABLED=${BARBICAN_ENABLED:-true}
 MANILA_ENABLED=${MANILA_ENABLED:-true}
 SWIFT_REPLICATED=${SWIFT_REPLICATED:-false}
+TLSE_ENABLED=${TLSE_ENABLED:-false}
+CLOUD_DOMAIN=${CLOUD_DOMAIN:-localdomain}
+
 
 if [[ ! -f $SSH_KEY_FILE ]]; then
     echo "$SSH_KEY_FILE is missing"
@@ -97,8 +101,8 @@ sudo dnf install -y podman python3-tripleoclient util-linux lvm2 cephadm
 # STEP_CONFIG in container-puppet-* containers.
 sudo dnf install -y https://kojihub.stream.centos.org/kojifiles/packages/podman/4.6.0/1.el9/x86_64/podman-4.6.0-1.el9.x86_64.rpm
 
-sudo hostnamectl set-hostname standalone.localdomain
-sudo hostnamectl set-hostname standalone.localdomain --transient
+sudo hostnamectl set-hostname standalone.${CLOUD_DOMAIN}
+sudo hostnamectl set-hostname standalone.${CLOUD_DOMAIN} --transient
 
 # TODO: use Ceph RBD backend for Nova to implement ceph -> ceph adoption of workloads
 # until then, use local file storage backend for VM workloads adoption
@@ -134,6 +138,8 @@ export IP=${IP}
 export GATEWAY=${GATEWAY}
 export STANDALONE_VM=${STANDALONE_VM}
 export SWIFT_REPLICATED=${SWIFT_REPLICATED}
+export TLSE_ENABLED=${TLSE_ENABLED}
+export CLOUD_DOMAIN=${CLOUD_DOMAIN}
 
 if [[ -f \$HOME/containers-prepare-parameters.yaml ]]; then
     echo "Using existing containers-prepare-parameters.yaml - contents:"
@@ -188,7 +194,7 @@ done
 if [ ${COMPUTE_DRIVER} == 'ironic' ]; then
     PRIMARY_RESOLV_CONF_ENTRY="192.168.130.11"  # Use crc for dns to enable resolving apps-crc.testing
     # Add a hosts entry for the network address to speed up iptables
-    ssh $SSH_OPT root@$IP "echo ${IP%.*}.0 .localdomain >> /etc/hosts"
+    ssh $SSH_OPT root@$IP "echo ${IP%.*}.0 .${CLOUD_DOMAIN} >> /etc/hosts"
 else
     PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
 fi
