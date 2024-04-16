@@ -30,18 +30,49 @@ sed -i "s/controller-0/${control0}/" config-download.yaml
 sed -i "s/controller-1/${control1}/" config-download.yaml
 sed -i "s/controller-2/${control2}/" config-download.yaml
 sed -i "s/compute-0/${compute0}/" config-download.yaml
+
+# read all the contents of hostnamemap except the yaml separator into one line
+hostnamemap=$(grep -v "\---" hostnamemap.yaml | tr '\n' '\r')
+hostnamemap="$hostnamemap\r  ControllerHostnameFormat: '%stackname%-controller-%index%'\r"
+if [ "$EDPM_COMPUTE_CEPH_ENABLED" == "true"  ] ; then
+    # add hci role for ceph nodes
+    hostnamemap="$hostnamemap\r  ComputeHCIHostnameFormat: '%stackname%-novacompute-%index%'"
+fi
+# insert hostnamemap contents into config-download.yaml
+sed -i "s/parameter_defaults:/${hostnamemap}/" config-download.yaml
+if [ "$EDPM_COMPUTE_CEPH_ENABLED" == "true"  ] ; then
+    # swap computes for compute hci
+    sed -i "s/::Compute::/::ComputeHCI::/" config-download.yaml
+    # add storage management port to compute hci nodes
+    stg_line="OS::TripleO::ComputeHCI::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml"
+    stg_mgmt_line="OS::TripleO::ComputeHCI::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage_mgmt.yaml"
+    sed -i "s#$stg_line#$stg_line\r  $stg_mgmt_line#" config-download.yaml
+fi
 # Remove any quotes e.g. "np10002"-ctlplane -> np10002-ctlplane
 sed -i 's/\"//g' config-download.yaml
+# re-add newlines
+sed -i "s/\r/\n/g" config-download.yaml
+# remove empty lines
+sed -i "/^$/d" config-download.yaml
+
+# defaults for non-ceph case
+CEPH_OVERCLOUD_ARGS=""
+ROLES_FILE="/home/zuul/overcloud_roles.yaml"
+if [ "$EDPM_COMPUTE_CEPH_ENABLED" == "true"  ] ; then
+    CEPH_OVERCLOUD_ARGS="${CEPH_ARGS}"
+    ROLES_FILE="/home/zuul/roles.yaml"
+    /tmp/ceph.sh
+fi
 
 openstack overcloud deploy --stack overcloud \
     --override-ansible-cfg /home/zuul/ansible_config.cfg --templates /usr/share/openstack-tripleo-heat-templates \
-    --roles-file /home/zuul/overcloud_roles.yaml -n /home/zuul/network_data.yaml --libvirt-type qemu \
+    --roles-file ${ROLES_FILE} -n /home/zuul/network_data.yaml --libvirt-type qemu \
     --ntp-server 0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org,3.pool.ntp.org \
     --timeout 90 --overcloud-ssh-user zuul --deployed-server \
     -e /home/zuul/hostnamemap.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/docker-ha.yaml \
     -e /home/zuul/containers-prepare-parameters.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/podman.yaml \
     -e /usr/share/openstack-tripleo-heat-templates/environments/low-memory-usage.yaml \
-    -e /usr/share/openstack-tripleo-heat-templates/environments/debug.yaml --validation-warnings-fatal \
+    -e /usr/share/openstack-tripleo-heat-templates/environments/debug.yaml --validation-warnings-fatal ${CEPH_OVERCLOUD_ARGS} \
     -e /home/zuul/overcloud_services.yaml -e /home/zuul/config-download.yaml \
     -e /home/zuul/vips_provision_out.yaml -e /home/zuul/network_provision_out.yaml --disable-validations --heat-type pod \
     --disable-protected-resource-types
