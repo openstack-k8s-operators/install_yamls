@@ -43,10 +43,10 @@ parameter_defaults:
   ComputeCount: 1
   NeutronGlobalPhysnetMtu: 1350
   CinderLVMLoopDeviceSize: 20480
-  CloudName: overcloud.{{ cloud_domain}}
-  CloudNameInternal: overcloud.internalapi.{{ cloud_domain }}
-  CloudNameStorage: overcloud.storage.{{ cloud_domain }}
-  CloudNameStorageManagement: overcloud.storagemgmt.{{ cloud_domain }}
-  CloudNameCtlplane: overcloud.ctlplane.{{ cloud_domain }}
-  CloudDomain: {{ cloud_domain }}
+  CloudName: overcloud.localdomain
+  CloudNameInternal: overcloud.internalapi.localdomain
+  CloudNameStorage: overcloud.storage.localdomain
+  CloudNameStorageManagement: overcloud.storagemgmt.localdomain
+  CloudNameCtlplane: overcloud.ctlplane.localdomain
+  CloudDomain: localdomain
   NetworkConfigWithAnsible: false
