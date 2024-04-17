@@ -128,7 +128,7 @@ parameter_defaults:
         ip_subnet: 172.19.0.0/24
   CtlplaneNetworkAttributes:
     network:
-      dns_domain: DNS_DOMAIN
+      dns_domain: localdomain
       mtu: 1500
       name: ctlplane
       tags:
