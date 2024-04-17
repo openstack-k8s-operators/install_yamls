@@ -52,8 +52,8 @@ sudo dnf install -y podman python3-tripleoclient util-linux lvm2
 # STEP_CONFIG in container-puppet-* containers.
 sudo dnf install -y https://kojihub.stream.centos.org/kojifiles/packages/podman/4.6.0/1.el9/x86_64/podman-4.6.0-1.el9.x86_64.rpm
 
-sudo hostnamectl set-hostname undercloud.${CLOUD_DOMAIN}
-sudo hostnamectl set-hostname undercloud.${CLOUD_DOMAIN} --transient
+sudo hostnamectl set-hostname undercloud.localdomain
+sudo hostnamectl set-hostname undercloud.localdomain --transient
 
 export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
 export INTERFACE_MTU=${INTERFACE_MTU:-1500}
@@ -112,13 +112,11 @@ ip_address_suffix: ${IP_ADRESS_SUFFIX}
 interface_mtu: ${INTERFACE_MTU:-1500}
 gateway_ip: ${GATEWAY}
 dns_server: ${PRIMARY_RESOLV_CONF_ENTRY}
-cloud_domain: ${CLOUD_DOMAIN}
 user_home: ${HOME}
 EOF
 
 jinja2_render tripleo/net_config.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/net_config.yaml
 jinja2_render tripleo/undercloud.conf.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/undercloud.conf
-jinja2_render tripleo/overcloud_services.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/overcloud_services.yaml
 
 # Copying files
 scp $SSH_OPT $REPO_SETUP_CMDS root@$IP:/tmp/repo-setup.sh
@@ -132,7 +130,7 @@ scp $SSH_OPT tripleo/network_data.yaml zuul@$IP:$HOME/network_data.yaml
 scp $SSH_OPT tripleo/vips_data.yaml zuul@$IP:$HOME/vips_data.yaml
 scp $SSH_OPT tripleo/config-download.yaml zuul@$IP:$HOME/config-download.yaml
 scp $SSH_OPT tripleo/overcloud_roles.yaml zuul@$IP:$HOME/overcloud_roles.yaml
-scp $SSH_OPT ${MY_TMP_DIR}/overcloud_services.yaml zuul@$IP:$HOME/overcloud_services.yaml
+scp $SSH_OPT tripleo/overcloud_services.yaml zuul@$IP:$HOME/overcloud_services.yaml
 scp $SSH_OPT tripleo/ansible_config.cfg zuul@$IP:$HOME/ansible_config.cfg
 
 if [[ -f $HOME/containers-prepare-parameters.yaml ]]; then
