@@ -40,6 +40,10 @@ if [ -z "$BARBICAN_SIMPLE_CRYPTO_ENCRYPTION_KEY" ]; then
     echo "Please set BARBICAN_SIMPLE_CRYPTO_ENCRYPTION_KEY"; exit 1
 fi
 
+if [ -z "$LIBVIRT_SECRET" ]; then
+    echo "Please set LIBVIRT_SECRET"; exit 1
+fi
+
 DIR=${OUT}/${NAMESPACE}/input
 
 if [ ! -d ${DIR} ]; then
@@ -93,6 +97,9 @@ secretGenerator:
   - HeatDatabasePassword=${PASSWORD}
   - HeatAuthEncryptionKey=${HEAT_AUTH_ENCRYPTION_KEY}
   - SwiftPassword=${PASSWORD}
+- name: ${LIBVIRT_SECRET}
+  literals:
+  - LibvirtPassword=${PASSWORD}
 - name: octavia-ca-passphrase
   literals:
   - server-ca-passphrase=${PASSWORD}
