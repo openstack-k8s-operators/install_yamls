@@ -1881,12 +1881,10 @@ ansibleee_kuttl: input ansibleee_kuttl_prep ansibleee ## runs kuttl tests for th
 
 .PHONY: dataplane_kuttl_run
 dataplane_kuttl_run: ## runs kuttl tests for the dataplane operator, assumes that everything needed for running the test was deployed beforehand.
-	if oc get -n ${NAMESPACE} dnsmasq dns; then echo "dnsmasq/dns CR can not exist during kuttl tests"; exit 1; fi
-	if oc get -n ${NAMESPACE} netconfig netconfig; then echo "netconfig/netconfig CR can not exist during kuttl tests"; exit 1; fi
-	kubectl-kuttl test --config ${DATAPLANE_KUTTL_CONF} ${DATAPLANE_KUTTL_DIR}
+	kubectl-kuttl test --config ${DATAPLANE_KUTTL_CONF} ${DATAPLANE_KUTTL_DIR} ${DATAPLANE_KUTTL_ARGS}
 
 .PHONY: dataplane_kuttl_cleanup
-dataplane_kuttl_cleanup:
+dataplane_kuttl_cleanup: openstack_deploy_cleanup openstack_cleanup certmanager_cleanup
 	$(eval $(call vars,$@,dataplane))
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/dataplane-operator
 
@@ -1894,23 +1892,18 @@ dataplane_kuttl_cleanup:
 dataplane_kuttl_prep: export REPO=${DATAPLANE_REPO}
 dataplane_kuttl_prep: export BRANCH=${DATAPLANE_BRANCH}
 dataplane_kuttl_prep: export HASH=${DATAPLANE_COMMIT_HASH}
-dataplane_kuttl_prep: dataplane_kuttl_cleanup certmanager input rabbitmq ansibleee infra baremetal dataplane namespace operator_namespace ## Prepares all dependencies for running the dataplane-operator kuttl tests
+dataplane_kuttl_prep: dataplane_kuttl_cleanup input openstack ## Prepares all dependencies for running the dataplane-operator kuttl tests
 	$(eval $(call vars,$@,dataplane))
 	# Kuttl tests require the SSH key secret to exist
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR}
 	bash scripts/clone-operator-repo.sh
-	make wait OPERATOR_NAME=rabbitmq
-	make wait OPERATOR_NAME=openstack-ansibleee
-	make wait OPERATOR_NAME=infra
-	make wait OPERATOR_NAME=openstack-baremetal
-	make wait
+	make wait OPERATOR_NAME=openstack
 
 .PHONY: dataplane_kuttl
 dataplane_kuttl: dataplane_kuttl_prep ## runs kuttl tests for the openstack-dataplane operator and cleans up
 	make dataplane_kuttl_run
-	make deploy_cleanup
-	make cleanup
+	make dataplane_kuttl_cleanup
 
 .PHONY: glance_kuttl_run
 glance_kuttl_run: ## runs kuttl tests for the glance operator, assumes that everything needed for running the test was deployed beforehand.
