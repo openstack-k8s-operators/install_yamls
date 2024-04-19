@@ -843,7 +843,6 @@ edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install th
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	bash scripts/clone-operator-repo.sh
-	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
 	cp ${DATAPLANE_SERVICE_NOVA_CR} ${DEPLOY_DIR}
 	cp ${DATAPLANE_EXTRA_NOVA_CONFIG_FILE} ${EDPM_EXTRA_NOVA_CONFIG_FILE}
 	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/dataplane-operator/examples/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
@@ -851,11 +850,11 @@ edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install th
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
 endif
+	oc apply -f devsetup/edpm/services/*.yaml
 
 .PHONY: edpm_deploy_baremetal
 edpm_deploy_baremetal: input edpm_deploy_baremetal_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,dataplane))
-	oc apply -f ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
 ifneq ($(DATAPLANE_RUNNER_IMG),)
 	make edpm_patch_ansible_runner_image
 endif
