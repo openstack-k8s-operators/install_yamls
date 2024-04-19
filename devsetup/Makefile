@@ -57,6 +57,7 @@ DNS_DOMAIN ?= localdomain
 
 EDPM_TOTAL_NODES ?= 1
 EDPM_COMPUTE_CEPH_ENABLED ?= true
+EDPM_COMPUTE_CEPH_NOVA ?= true
 EDPM_COMPUTE_SRIOV_ENABLED ?= true
 EDPM_COMPUTE_DHCP_AGENT_ENABLED ?= true
 EDPM_TOTAL_NETWORKERS ?= 1
@@ -426,6 +427,7 @@ tripleo_deploy:
 standalone_deploy: export TLSE_ENABLED=${TLS_ENABLED}
 standalone_deploy: export CLOUD_DOMAIN=${DNS_DOMAIN}
 standalone_deploy: export COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED}
+standalone_deploy: export COMPUTE_CEPH_NOVA=${EDPM_COMPUTE_CEPH_NOVA}
 standalone_deploy: export COMPUTE_SRIOV_ENABLED=${EDPM_COMPUTE_SRIOV_ENABLED}
 standalone_deploy: export COMPUTE_DHCP_AGENT_ENABLED=${EDPM_COMPUTE_DHCP_AGENT_ENABLED}
 standalone_deploy: export STANDALONE=true
