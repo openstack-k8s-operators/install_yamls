@@ -45,6 +45,7 @@ EDPM_COMPUTE_VCPUS=${COMPUTE_VCPUS:-8}
 EDPM_COMPUTE_RAM=${COMPUTE_RAM:-20}
 EDPM_COMPUTE_DISK_SIZE=${COMPUTE_DISK_SIZE:-70}
 EDPM_COMPUTE_CEPH_ENABLED=${COMPUTE_CEPH_ENABLED:-true}
+EDPM_COMPUTE_CEPH_NOVA=${COMPUTE_CEPH_NOVA:-true}
 EDPM_COMPUTE_SRIOV_ENABLED=${COMPUTE_SRIOV_ENABLED:-true}
 EDPM_COMPUTE_DHCP_AGENT_ENABLED=${COMPUTE_DHCP_AGENT_ENABLED:-true}
 BARBICAN_ENABLED=${BARBICAN_ENABLED:-true}
@@ -104,8 +105,6 @@ sudo dnf install -y https://kojihub.stream.centos.org/kojifiles/packages/podman/
 sudo hostnamectl set-hostname standalone.${CLOUD_DOMAIN}
 sudo hostnamectl set-hostname standalone.${CLOUD_DOMAIN} --transient
 
-# TODO: use Ceph RBD backend for Nova to implement ceph -> ceph adoption of workloads
-# until then, use local file storage backend for VM workloads adoption
 cat >\$HOME/nova_noceph.yaml <<__EOF__
 parameter_defaults:
     NovaEnableRbdBackend: false
@@ -132,7 +131,9 @@ export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
 export INTERFACE_MTU=${INTERFACE_MTU:-1500}
 export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
-export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml -e \$HOME/nova_noceph.yaml}"
+export EDPM_COMPUTE_CEPH_NOVA=${EDPM_COMPUTE_CEPH_NOVA:-true}
+export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml}"
+[[ "\$EDPM_COMPUTE_CEPH_NOVA" == "false" ]] && export CEPH_ARGS="\${CEPH_ARGS} -e \$HOME/nova_noceph.yaml"
 export COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
 export IP=${IP}
 export GATEWAY=${GATEWAY}
