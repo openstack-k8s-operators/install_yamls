@@ -1898,6 +1898,9 @@ dataplane_kuttl_prep: dataplane_kuttl_cleanup input openstack ## Prepares all de
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR}
 	bash scripts/clone-operator-repo.sh
 	make wait OPERATOR_NAME=openstack
+	make wait OPERATOR_NAME=openstack-ansibleee
+	make wait OPERATOR_NAME=infra
+	make wait OPERATOR_NAME=openstack-baremetal
 
 .PHONY: dataplane_kuttl
 dataplane_kuttl: dataplane_kuttl_prep ## runs kuttl tests for the openstack-dataplane operator and cleans up
