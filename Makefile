@@ -516,6 +516,7 @@ ${1}: export OPENSTACK_BRANCH=${OPENSTACK_BRANCH}
 ${1}: export OPENSTACK_COMMIT_HASH=${OPENSTACK_COMMIT_HASH}
 ${1}: export GIT_CLONE_OPTS=${GIT_CLONE_OPTS}
 ${1}: export CHECKOUT_FROM_OPENSTACK_REF=${CHECKOUT_FROM_OPENSTACK_REF}
+${1}: export TIMEOUT=$(TIMEOUT)
 endef
 
 .PHONY: all
@@ -669,7 +670,8 @@ endif
 
 ##@ OPENSTACK
 
-OPENSTACK_PREP_DEPS := $(if $(findstring true,$(INSTALL_CERT_MANAGER)), certmanager)
+OPENSTACK_PREP_DEPS := validate_marketplace
+OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_CERT_MANAGER)), certmanager)
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config)
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_BGP)), nmstate nncp netattach metallb metallb_config)
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(BMO_SETUP)), crc_bmo_setup)
@@ -2548,3 +2550,8 @@ certmanager_cleanup:
 	oc delete -n ${OPERATOR_NAMESPACE} csv --all --ignore-not-found=true
 	oc delete -n ${NAMESPACE} installplan --all --ignore-not-found=true
 	oc delete -n cert-manager deployment --all
+
+.PHONY: validate_marketplace
+validate_marketplace: ## validates that the openshift marketplace is healthy and has the packagemanifests for the required operators
+	$(eval $(call vars,$@,openshift-marketplace))
+	bash scripts/validate-marketplace.sh
