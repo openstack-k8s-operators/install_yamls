@@ -490,8 +490,8 @@ SWIFT_KUTTL_DIR         ?= ${OPERATOR_BASE_DIR}/swift-operator/tests/kuttl/tests
 SWIFT_KUTTL_NAMESPACE   ?= swift-kuttl-tests
 
 # CertManager
-CERTMANAGER_TIMEOUT                  ?= 300s
-INSTALL_CERT_MANAGER		     ?= true
+CERTMANAGER_TIMEOUT              ?= 600s
+INSTALL_CERT_MANAGER             ?= true
 
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
