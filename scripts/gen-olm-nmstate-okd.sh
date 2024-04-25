@@ -28,7 +28,7 @@ if [ -z "${DEPLOY_DIR}" ]; then
 fi
 
 if [ -z "${NMSTATE_VERSION}" ]; then
-    export NMSTATE_VERSION=v0.80.1
+    export NMSTATE_VERSION=v0.81.0
 fi
 
 if [ ! -d ${DEPLOY_DIR} ]; then
