@@ -92,7 +92,7 @@ spec:
 EOF_CAT
 if [ -n "$IPV4_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/ipaddresspools.yaml <<EOF_CAT
-  - 172.17.0.80-172.17.0.90
+  - ${INTERNALAPI_PREFIX}.80-${INTERNALAPI_PREFIX}.90
 EOF_CAT
 fi
 if [ -n "$IPV6_ENABLED" ]; then
@@ -112,7 +112,7 @@ spec:
 EOF_CAT
 if [ -n "$IPV4_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/ipaddresspools.yaml <<EOF_CAT
-  - 172.18.0.80-172.18.0.90
+  - ${STORAGE_PREFIX}.80-${STORAGE_PREFIX}.90
 EOF_CAT
 fi
 if [ -n "$IPV6_ENABLED" ]; then
@@ -132,7 +132,7 @@ spec:
 EOF_CAT
 if [ -n "$IPV4_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/ipaddresspools.yaml <<EOF_CAT
-  - 172.19.0.80-172.19.0.90
+  - ${TENANT_PREFIX}.80-${TENANT_PREFIX}.90
 EOF_CAT
 fi
 if [ -n "$IPV6_ENABLED" ]; then
