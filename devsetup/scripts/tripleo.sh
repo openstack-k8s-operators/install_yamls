@@ -174,6 +174,17 @@ tripleo_networking: ${TRIPLEO_NETWORKING}
 dns_server: ${PRIMARY_RESOLV_CONF_ENTRY}
 user_home: /home/zuul
 cloud_domain: ${CLOUD_DOMAIN}
+# Adoption related stuff
+adopted_internal_net: ${ADOPTED_INTERNAL_NET}
+adopted_storage_net: ${ADOPTED_STORAGE_NET}
+adopted_storage_mgmt_net: ${ADOPTED_STORAGE_MGMT_NET}
+adopted_tenant_net: ${ADOPTED_TENANT_NET}
+adopted_external_net: ${ADOPTED_EXTERNAL_NET}
+standalone_internal_prefix: ${NETWORK_INTERNAL_PREFIX}
+standalone_storage_prefix: ${NETWORK_STORAGE_PREFIX}
+standalone_storage_mgmt_prefix: ${NETWORK_STORAGE_MGMT_PREFIX}
+standalone_tenant_prefix: ${NETWORK_TENANT_PREFIX}
+standalone_external_prefix: ${NETWORK_EXTERNAL_PREFIX}
 EOF
 
 jinja2_render ${SCRIPTPATH}/../tripleo/undercloud.conf.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/undercloud.conf
