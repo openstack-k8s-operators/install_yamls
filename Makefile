@@ -802,7 +802,7 @@ edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data pla
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
 endif
-	oc apply -f devsetup/edpm/services/*.yaml
+	oc apply -f devsetup/edpm/services
 
 .PHONY: edpm_deploy_cleanup
 edpm_deploy_cleanup: namespace ## cleans up the edpm instance, Does not affect the operator.
@@ -852,7 +852,7 @@ edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install th
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
 endif
-	oc apply -f devsetup/edpm/services/*.yaml
+	oc apply -f devsetup/edpm/services
 
 .PHONY: edpm_deploy_baremetal
 edpm_deploy_baremetal: input edpm_deploy_baremetal_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
