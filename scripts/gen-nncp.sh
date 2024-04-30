@@ -78,13 +78,11 @@ echo STORAGE_MACVLAN ${STORAGE_MACVLAN}
 if [ -n "$IPV4_ENABLED" ]; then
 echo CTLPLANE_IP_ADDRESS_PREFIX ${CTLPLANE_IP_ADDRESS_PREFIX}
 echo CTLPLANE_IP_ADDRESS_SUFFIX ${CTLPLANE_IP_ADDRESS_SUFFIX}
-echo GATEWAY ${GATEWAY}
 echo DNS_SERVER ${DNS_SERVER}
 fi
 if [ -n "$IPV6_ENABLED" ]; then
 echo CTLPLANE_IPV6_ADDRESS_PREFIX ${CTLPLANE_IPV6_ADDRESS_PREFIX}
 echo CTLPLANE_IPV6_ADDRESS_SUFFIX ${CTLPLANE_IPV6_ADDRESS_SUFFIX}
-echo GATEWAY_IPV6 ${GATEWAY_IPV6}
 echo DNS_SERVER_IPV6 ${DNS_SERVER_IPV6}
 fi
 if [ -n "$BGP" ]; then
@@ -133,36 +131,20 @@ EOF_CAT
         - ${DNS_SERVER_IPV6}
 EOF_CAT
     fi
-
+    if [ -n "$NNCP_ADDITIONAL_HOST_ROUTES" ]; then
     #
-    # Routes
+    # Host Routes
     #
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     routes:
       config:
 EOF_CAT
-    if [ -n "$IPV4_ENABLED" ]; then
-        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
-      - destination: ${CTLPLANE_IP_ADDRESS_PREFIX}.0/24
-        next-hop-address: ${GATEWAY}
-        next-hop-interface: ${BRIDGE_NAME}
-        metric: 430
-EOF_CAT
-    fi
-    if [ -n "$NNCP_ADDITIONAL_HOST_ROUTES" ]; then
         for route in $NNCP_ADDITIONAL_HOST_ROUTES; do
             cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       - destination: ${route}
         next-hop-interface: ${BRIDGE_NAME}
 EOF_CAT
         done
-    fi
-    if [ -n "$IPV6_ENABLED" ]; then
-        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
-      - destination: ::/0
-        next-hop-address: ${GATEWAY_IPV6}
-        next-hop-interface: ${BRIDGE_NAME}
-EOF_CAT
     fi
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     interfaces:
