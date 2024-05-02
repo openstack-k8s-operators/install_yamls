@@ -14,6 +14,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+OVN_NBCTL=ovn-nbctl
+OVN_SBCTL=ovn-sbctl
+
+OVN_NB_SERVICE=ovsdbserver-nb
+OVN_SB_SERVICE=ovsdbserver-sb
+
+
 #---
 ## Jinja2 template render function
 # Parameter #1 is the Jinja2 template file
@@ -115,4 +122,42 @@ function deduplicate_string_list {
 
     result=$(echo -n "${cs_list}" | awk --field-separator="${field_separator}" '{for (i=1;i<=NF;i++) if (!a[$i]++) printf("%s%s",$i,FS)}')
     echo ${result%%"${field_separator}"}
+}
+
+#---
+## Run an ovsdb-server command in a given service pod
+# Parameter #1 is the OVN database abbreviation - either NB or SB
+# The rest of parameters are the ctl parameters
+#
+# Example:
+#   run_ovn_ctl_command SB list chassis
+#---
+function run_ovn_ctl_command {
+    local db=$1
+    shift
+    local cmd="$@"
+    local service
+    local ctl
+
+    if [ "x" = "x$db" -o "x" = "x$cmd" ]; then
+        echo "At least two parameters are required, the DB type that can be either NB or SB, and then the command" 1>&2
+        return 1
+    fi
+
+    if [ "$db" != "NB" -a "$db" != "SB" ]; then
+        echo "Unknown DB type $db" 1>&2
+        return 1
+    fi
+
+    service=OVN_${db}_SERVICE
+    ctl=OVN_${db}CTL
+
+    pod=$(oc get pods -n openstack -l service=${!service} -o name | head -n1)
+
+    if [ $? -ne 0 -o "x$pod" = "x" ]; then
+        echo "Cannot find a pod for ${!service} service" 1>&2
+        return 1
+    fi
+
+    oc rsh $pod ${!ctl} $cmd
 }
