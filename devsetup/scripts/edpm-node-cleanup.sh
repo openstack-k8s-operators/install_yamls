@@ -14,6 +14,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 set -ex
+
+SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+. ${SCRIPTPATH}/common.sh --source-only
+
 export VIRSH_DEFAULT_CONNECT_URI=qemu:///system
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 EDPM_SERVER_ROLE=${EDPM_SERVER_ROLE:-"compute"}
@@ -29,6 +33,12 @@ STANDALONE=${STANDALONE:-false}
 virsh destroy ${EDPM_COMPUTE_NAME} || :
 virsh undefine --snapshots-metadata --remove-all-storage ${EDPM_COMPUTE_NAME} || :
 ${CLEANUP_DIR_CMD} "${CRC_POOL}/${EDPM_COMPUTE_NAME}.qcow2"
+
+chassis_uuid=$(run_ovn_ctl_command SB --format=csv --data=bare --columns=name,hostname list chassis | awk -F "," "/,${EDPM_COMPUTE_NAME}/{ print \$1 }")
+
+if [ "x" != "x$chassis_uuid" ]; then
+    run_ovn_ctl_command SB chassis-del $chassis_uuid
+fi
 
 if [ ${STANDALONE} = "true" ]; then
     ${CLEANUP_DIR_CMD} $CMDS_FILE
