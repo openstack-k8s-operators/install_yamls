@@ -2552,4 +2552,8 @@ certmanager_cleanup:
 .PHONY: validate_marketplace
 validate_marketplace: ## validates that the openshift marketplace is healthy and has the packagemanifests for the required operators
 	$(eval $(call vars,$@,openshift-marketplace))
+ifeq ($(OKD), true)
+	bash scripts/validate-marketplace-okd.sh
+else
 	bash scripts/validate-marketplace.sh
+endif
