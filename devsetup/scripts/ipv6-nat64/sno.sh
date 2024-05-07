@@ -281,6 +281,9 @@ function post_config {
     cat << EOF > ${MY_TMP_DIR}/oauth/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+labels:
+  - pairs:
+      created-by: install_yamls
 resources:
 - oauth.yaml
 patches:
