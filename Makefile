@@ -817,7 +817,12 @@ ifneq ($(DATAPLANE_RUNNER_IMG),)
 	make edpm_patch_ansible_runner_image
 endif
 	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	# Apply the NodeSet
+	oc kustomize ${DEPLOY_DIR}| yq 'select(.kind != "OpenStackDataPlaneDeployment")' | oc apply -f -
+	# Wait NodeSet setup
+	oc kustomize ${DEPLOY_DIR} | yq 'select(.kind == "OpenStackDataPlaneNodeSet")' | oc wait --for condition=SetupReady --timeout=$(DATAPLANE_TIMEOUT) -f -
+	# Apply the Deployment
+	oc kustomize ${DEPLOY_DIR}| yq 'select(.kind == "OpenStackDataPlaneDeployment")' | oc apply -f -
 
 .PHONY: edpm_deploy_baremetal_prep
 edpm_deploy_baremetal_prep: export KIND=OpenStackDataPlaneNodeSet
@@ -861,7 +866,12 @@ ifneq ($(DATAPLANE_RUNNER_IMG),)
 	make edpm_patch_ansible_runner_image
 endif
 	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
-	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	# Apply the NodeSet
+	oc kustomize ${DEPLOY_DIR}| yq 'select(.kind != "OpenStackDataPlaneDeployment")' | oc apply -f -
+	# Wait NodeSet setup
+	oc kustomize ${DEPLOY_DIR} | yq 'select(.kind == "OpenStackDataPlaneNodeSet")' | oc wait --for condition=SetupReady --timeout=$(BAREMETAL_TIMEOUT) -f -
+	# Apply the Deployment
+	oc kustomize ${DEPLOY_DIR}| yq 'select(.kind == "OpenStackDataPlaneDeployment")' | oc apply -f -
 
 .PHONY: edpm_wait_deploy_baremetal
 edpm_wait_deploy_baremetal: edpm_deploy_baremetal ## waits for dataplane readiness. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
