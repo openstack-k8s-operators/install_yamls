@@ -44,7 +44,8 @@ EDPM_COMPUTE_ADDITIONAL_NETWORKS=${2:-'[]'}
 EDPM_COMPUTE_NETWORK_IP=$(virsh net-dumpxml ${EDPM_COMPUTE_NETWORK} | xmllint --xpath 'string(/network/ip/@address)' -)
 DATAPLANE_DNS_SERVER=${DATAPLANE_DNS_SERVER:-${EDPM_COMPUTE_NETWORK_IP}}
 CENTOS_9_STREAM_URL=${CENTOS_9_STREAM_URL:-"https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-latest.x86_64.qcow2"}
-BASE_DISK_FILENAME=${BASE_DISK_FILENAME:-"centos-9-stream-base.qcow2"}
+EDPM_IMAGE_URL=${EDPM_IMAGE_URL:-"${CENTOS_9_STREAM_URL}"}
+BASE_DISK_FILENAME=${BASE_DISK_FILENAME:-"$(basename ${EDPM_IMAGE_URL})"}
 
 DISK_FILENAME=${DISK_FILENAME:-"edpm-${EDPM_SERVER_ROLE}-${EDPM_COMPUTE_SUFFIX}.qcow2"}
 DISK_FILEPATH=${DISK_FILEPATH:-"${CRC_POOL}/${DISK_FILENAME}"}
@@ -277,7 +278,7 @@ chmod +x ${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
 if [ ! -f ${DISK_FILEPATH} ]; then
     if [ ! -f ${CRC_POOL}/${BASE_DISK_FILENAME} ]; then
         pushd ${CRC_POOL}
-        curl -L -k ${CENTOS_9_STREAM_URL} -o ${BASE_DISK_FILENAME}
+        curl -L -k ${EDPM_IMAGE_URL} -o ${BASE_DISK_FILENAME}
         popd
     fi
     qemu-img create -o backing_file=${CRC_POOL}/${BASE_DISK_FILENAME},backing_fmt=qcow2 -f qcow2 "${DISK_FILEPATH}" "${EDPM_COMPUTE_DISK_SIZE}G"
