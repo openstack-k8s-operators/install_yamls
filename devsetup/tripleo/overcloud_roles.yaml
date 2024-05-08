@@ -206,7 +206,7 @@
   HostnameFormatDefault: '%stackname%-novacompute-%index%'
   RoleParametersDefault:
     FsAioMaxNumber: 1048576
-    TunedProfileName: "virtual-host"
+    TunedProfileName: "throughput-performance"
   # Deprecated & backward-compatible values (FIXME: Make parameters consistent)
   # Set uses_deprecated_params to true if any deprecated params are used.
   # These deprecated_params only need to be used for existing roles and not for
