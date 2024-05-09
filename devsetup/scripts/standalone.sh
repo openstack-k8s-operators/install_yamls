@@ -64,12 +64,8 @@ fi
 
 source ${SCRIPTPATH}/common.sh
 
-
 # Clock synchronization is important for both Ceph and OpenStack services, so both ceph deploy and tripleo deploy commands will make use of chrony to ensure the clock is properly in sync.
-# We'll use the NTP_SERVER environmental variable to define the NTP server to use.
-# If we are running alls these commands in a system inside the Red Hat network we should use the clock.corp.redhat.com server:
-# export NTP_SERVER=clock.corp.redhat.com
-# And when running it from our own systems outside of the Red Hat network we can use any available server:
+# We'll use the NTP_SERVER environmental variable to define the NTP server to use, e.g.:
 # export NTP_SERVER=pool.ntp.org
 
 if [[ ! -f $REPO_SETUP_CMDS ]]; then
@@ -126,7 +122,7 @@ __EOF__
 
 export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
 export INTERFACE_MTU=${INTERFACE_MTU:-1500}
-export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
+export NTP_SERVER=${NTP_SERVER:-"pool.ntp.org"}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
 export EDPM_COMPUTE_CEPH_NOVA=${EDPM_COMPUTE_CEPH_NOVA:-true}
 export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml}"

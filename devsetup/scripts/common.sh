@@ -33,18 +33,18 @@ function jinja2_render {
     j2_vars_file=$2
 
     /usr/bin/python3 -c "
-import yaml
 import jinja2
+import os
+import yaml
 
 with open('$j2_vars_file', 'r') as f:
     vars = yaml.safe_load(f.read())
 
-with open('$j2_template_file', 'r') as f:
-    template = f.read()
+loader = jinja2.FileSystemLoader(os.path.dirname('$j2_template_file'))
+env = jinja2.Environment(autoescape=True, loader=loader)
+env.filters['bool'] = bool
 
-j2_template = jinja2.Template(template)
-
-print(j2_template.render(**vars))
+print(env.get_template(os.path.basename('$j2_template_file')).render(**vars))
 "
 }
 

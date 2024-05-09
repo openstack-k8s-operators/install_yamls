@@ -1,0 +1,62 @@
+---
+# NOTE(bogdando): for cells-specific DNS domains, may subnets overlap in different network_data files for cellX?
+- name: Storage
+  mtu: 1500
+  vip: true
+  name_lower: storage
+  dns_domain: storage.{{ cloud_domain }}. # storage.cell{{ cell }}.{{ cloud_domain }}.
+  service_net_map_replace: storage
+  subnets:
+    storage_subnet:
+      vlan: 21
+      ip_subnet: '172.18.0.0/24'
+      allocation_pools: [{'start': '172.18.0.160', 'end': '172.18.0.250'}]
+
+- name: StorageMgmt
+  mtu: 1500
+  vip: true
+  name_lower: storage_mgmt
+  dns_domain: storagemgmt.{{ cloud_domain }}. # storagemgmt.cell{{ cell }}.{{ cloud_domain }}.
+  service_net_map_replace: storage_mgmt
+  subnets:
+    storage_mgmt_subnet:
+      vlan: 23
+      ip_subnet: '172.20.0.0/24'
+      allocation_pools: [{'start': '172.20.0.160', 'end': '172.20.0.250'}]
+
+- name: InternalApi
+  mtu: 1500
+  vip: true
+  name_lower: internal_api
+  dns_domain: internal-api.{{ cloud_domain }}. # internal-api.cell{{ cell }}.{{ cloud_domain }}.
+  service_net_map_replace: internal_api
+  subnets:
+    internal_api_subnet:
+      vlan: 20
+      ip_subnet: '172.17.0.0/24'
+      allocation_pools: [{'start': '172.17.0.160', 'end': '172.17.0.250'}]
+
+- name: Tenant
+  mtu: 1500
+  vip: false  # Tenant network does not use VIPs
+  name_lower: tenant
+  dns_domain: tenant.{{ cloud_domain }}. # tenant.cell{{ cell }}.{{ cloud_domain }}.
+  service_net_map_replace: tenant
+  subnets:
+    tenant_subnet:
+      vlan: 22
+      ip_subnet: '172.19.0.0/24'
+      allocation_pools: [{'start': '172.19.0.160', 'end': '172.19.0.250'}]
+
+- name: External
+  mtu: 1500
+  vip: true
+  name_lower: external
+  dns_domain: external.{{ cloud_domain }}. # external.cell{{ cell }}.{{ cloud_domain }}.
+  service_net_map_replace: external
+  subnets:
+    external_subnet:
+      gateway_ip: '172.21.0.1'
+      vlan: 44
+      ip_subnet: '172.21.0.0/24'
+      allocation_pools: [{'start': '172.21.0.160', 'end': '172.21.0.250'}]
