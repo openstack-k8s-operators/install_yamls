@@ -14,7 +14,14 @@ network_config:
   - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
   - ip_netmask: {{ ctlplane_ip }}/32
   - ip_netmask: {{ ctlplane_vip }}/32
+  {% if manage_default_route|bool %}
+  routes:
+    - ip_netmask: 0.0.0.0/0
+      next_hop: 192.168.122.1
+      default: true
+  {% else %}
   routes: []
+  {% endif %}
   members:
   - type: interface
     name: {{ os_net_config_iface | default(nic1) }}

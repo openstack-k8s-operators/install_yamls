@@ -18,19 +18,38 @@ resource_registry:
   OS::TripleO::Services::MySQL: /usr/share/openstack-tripleo-heat-templates/deployment/database/mysql-pacemaker-puppet.yaml
   OS::TripleO::Services::CinderBackup: /usr/share/openstack-tripleo-heat-templates/deployment/cinder/cinder-backup-pacemaker-puppet.yaml
   OS::TripleO::Services::CinderVolume: /usr/share/openstack-tripleo-heat-templates/deployment/cinder/cinder-volume-pacemaker-puppet.yaml
-  OS::TripleO::Services::HeatApi: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-api-container-puppet.yaml
-  OS::TripleO::Services::HeatApiCfn: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-api-cfn-container-puppet.yaml
-  OS::TripleO::Services::HeatApiCloudwatch: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-api-cloudwatch-disabled-puppet.yaml
-  OS::TripleO::Services::HeatEngine: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-engine-container-puppet.yaml
+{% if cell|int > 0 %}
+  # Complements the 'ManageNetworks: false', not needed otherwise
+  OS::TripleO::Network::External: OS::Heat::None
+  OS::TripleO::Network::InternalApi: OS::Heat::None
+  OS::TripleO::Network::Storage: OS::Heat::None
+  OS::TripleO::Network::StorageMgmt: OS::Heat::None
+  OS::TripleO::Network::Tenant: OS::Heat::None
+  OS::TripleO::Network::Management: OS::Heat::None
+{% endif %}
 
 parameter_defaults:
+{% if cell|int > 0 %}
+  # Specify that this is an additional cell
+  NovaAdditionalCell: True
+  # Disable network creation in order to use the `network_data.yaml` file from the overcloud stack,
+  # and create ports for the nodes in the separate stacks on the existing networks.
+  # NOTE(bogdando): might need to enable it, to deploy cells-specific subdomains from different network_data_cellX.yaml files.
+  # Also, test RHOSO adoption for a metadata agent deployed per each cell, to see if it handles each one properly,
+  # when transitioning all to a superconductor layoyt from a flat OSP17.1 layout
+  ManageNetworks: false
+  NovaLocalMetadataPerCell: True
+{% endif %}
   RedisVirtualFixedIPs:
-    - ip_address: 192.168.122.110
+    - ip_address: 192.168.122.{{ 110 + cell * (max_cells - 1) + ind % max_cells }}
       use_neutron: false
   OVNDBsVirtualFixedIPs:
-    - ip_address: 192.168.122.111
+    - ip_address: 192.168.122.{{ 120 + cell * (max_cells - 1) + ind % max_cells }}
       use_neutron: false
-  ControllerExtraConfig:
+  CellControllerExtraConfig:
+    nova::compute::libvirt::services::libvirt_virt_type: qemu
+    nova::compute::libvirt::virt_type: qemu
+  CellControllerComputeExtraConfig:
     nova::compute::libvirt::services::libvirt_virt_type: qemu
     nova::compute::libvirt::virt_type: qemu
   ComputeExtraConfig:
@@ -39,27 +58,39 @@ parameter_defaults:
   Debug: true
   DockerPuppetDebug: true
   ContainerCli: podman
-  ControllerCount: 3
-  CellControllerCount: 0
-  CellControllerComputeCount: 0
-  ComputeCount: 3
+  ControllerCount: {{ contr_count }}
+  CellControllerCount: {{ cell_contr_count }}
+  CellControllerComputeCount: {{ aio_count }}
+  ComputeCount: {{ comp_count }}
   NeutronGlobalPhysnetMtu: 1350
   CinderLVMLoopDeviceSize: 20480
-  CloudName: overcloud.localdomain
-  CloudNameInternal: overcloud.internalapi.localdomain
-  CloudNameStorage: overcloud.storage.localdomain
-  CloudNameStorageManagement: overcloud.storagemgmt.localdomain
-  CloudNameCtlplane: overcloud.ctlplane.localdomain
-  CloudDomain: localdomain
-  NetworkConfigWithAnsible: false
-  ControllerNetworkConfigUpdate: false
-  ComputeNetworkConfigUpdate: false
-  BlockStorageNetworkConfigUpdate: false
-  ObjectStorageNetworkConfigUpdate: false
-  CephStorageNetworkConfigUpdate: false
-  NetworkerNetworkConfigUpdate: false
-  CellControllerNetworkConfigUpdate: false
-  CellControllerComputeNetworkConfigUpdate: false
+  # TODO(bogdando): cells-specific DNS domains
+  CloudName: multicell.{{ cloud_domain }} # cell{{ cell }}.{{ cloud_domain }}
+  CloudNameInternal: multicell.internalapi.localdomain # internalapi.cell{{ cell }}.{{ cloud_domain }}
+  CloudNameStorage: multicell.storage.localdomain # storage.cell{{ cell }}.{{ cloud_domain }}
+  CloudNameStorageManagement: multicell.storagemgmt.localdomain # storagemgmt.cell{{ cell }}.{{ cloud_domain }}
+  CloudNameExternal: multicell.external.localdomain # external.cell{{ cell }}.{{ cloud_domain }}
+  CloudNameCtlplane: multicell.ctlplane.localdomain # ctlplane.cell{{ cell }}.{{ cloud_domain }}
+  CloudDomain: {{ cloud_domain }}
+
+  OVNCMSOptions: enable-chassis-as-gw
+  NeutronPhysicalBridge: br-ex
+  NeutronNetworkType: geneve
+  NeutronTunnelTypes: geneve
+  NeutronBridgeMappings: datacentre:br-ex
+
+  # If tripleo_networking, update the existing os-net-config on deployed servers for tripleo isolnet
+  # This should also work for CI, where we initially configure zuul subnodes with os-net-config,
+  # but is mostly targeting local libvirt or cloud deployments (without zuul and ci-framework)
+  NetworkConfigWithAnsible: {{ tripleo_networking }}
+  ControllerNetworkConfigUpdate: {{ tripleo_networking }}
+  ComputeNetworkConfigUpdate: {{ tripleo_networking }}
+  BlockStorageNetworkConfigUpdate: {{ tripleo_networking }}
+  ObjectStorageNetworkConfigUpdate: {{ tripleo_networking }}
+  CephStorageNetworkConfigUpdate: {{ tripleo_networking }}
+  NetworkerNetworkConfigUpdate: {{ tripleo_networking }}
+  CellControllerNetworkConfigUpdate: {{ tripleo_networking }}
+  CellControllerComputeNetworkConfigUpdate: {{ tripleo_networking }}
 
   ControllerNetworkConfigTemplate: templates/single_nic_vlans/single_nic_vlans.j2
   ComputeNetworkConfigTemplate: templates/single_nic_vlans/single_nic_vlans.j2

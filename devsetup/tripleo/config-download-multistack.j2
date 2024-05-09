@@ -1,0 +1,182 @@
+---
+resource_registry:
+  OS::TripleO::DeployedServer::ControlPlanePort: /usr/share/openstack-tripleo-heat-templates/deployed-server/deployed-neutron-port.yaml
+  OS::TripleO::OVNMacAddressNetwork: OS::Heat::None
+  OS::TripleO::OVNMacAddressPort: OS::Heat::None
+  OS::TripleO::Compute::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_internal_api.yaml
+  OS::TripleO::Compute::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage_mgmt.yaml
+  OS::TripleO::Compute::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
+  OS::TripleO::Compute::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
+  OS::TripleO::Compute::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
+  OS::TripleO::Controller::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_internal_api.yaml
+  OS::TripleO::Controller::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage_mgmt.yaml
+  OS::TripleO::Controller::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
+  OS::TripleO::Controller::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
+  OS::TripleO::Controller::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
+  OS::TripleO::CellController::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_internal_api.yaml
+  OS::TripleO::CellController::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage_mgmt.yaml
+  OS::TripleO::CellController::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
+  OS::TripleO::CellController::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
+  OS::TripleO::CellController::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
+  OS::TripleO::CellControllerCompute::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_internal_api.yaml
+  OS::TripleO::CellControllerCompute::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage_mgmt.yaml
+  OS::TripleO::CellControllerCompute::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
+  OS::TripleO::CellControllerCompute::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
+  OS::TripleO::CellControllerCompute::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
+parameter_defaults:
+  DeployedServerPortMap:
+    controller-0-ctlplane:
+      fixed_ips:
+        - ip_address: 192.168.122.103
+      subnets:
+        - cidr: 192.168.122.0/24
+      network:
+        tags:
+          - 192.168.122.0/24
+    compute-1-ctlplane:
+      fixed_ips:
+        - ip_address: 192.168.122.107
+      subnets:
+        - cidr: 192.168.122.0/24
+      network:
+        tags:
+          - 192.168.122.0/24
+    compute-2-ctlplane:
+      fixed_ips:
+        - ip_address: 192.168.122.109
+      subnets:
+        - cidr: 192.168.122.0/24
+      network:
+        tags:
+          - 192.168.122.0/24
+    compute-0-ctlplane:
+      fixed_ips:
+        - ip_address: 192.168.122.106
+      subnets:
+        - cidr: 192.168.122.0/24
+      network:
+        tags:
+          - 192.168.122.0/24
+  # NOTE(bogdando): assuming at most 3 IPs reservations per a cell stack in this flat networking /24 model, we get:
+  # IP_ind = base(103) + cell(0..max_cells-1) * max_cells + ind(0..2)
+  # Here we just provide results as static entries, which must match those in
+  # ci-framework adoption.yaml ci-framework crc_ci_bootstrap_networking and rdo-jobs _data_plane_adoption.yaml zuul config
+  NodePortMap:
+    controller-0: # overcloud-controller-0 (cell0, ind0)
+      ctlplane:
+        ip_address: 192.168.122.103
+        ip_address_uri: 192.168.122.103
+        ip_subnet: 192.168.122.0/24
+      internal_api:
+        ip_address: 172.17.0.103
+        ip_address_uri: 172.17.0.103
+        ip_subnet: 172.17.0.0/24
+      storage:
+        ip_address: 172.18.0.103
+        ip_address_uri: 172.18.0.103
+        ip_subnet: 172.18.0.0/24
+      tenant:
+        ip_address: 172.19.0.103
+        ip_address_uri: 172.19.0.103
+        ip_subnet: 172.19.0.0/24
+      storage_mgmt:
+        ip_address: 172.20.0.103
+        ip_address_uri: 172.20.0.103
+        ip_subnet: 172.20.0.0/24
+      external:
+        ip_address: 172.21.0.103
+        ip_address_uri: 172.21.0.103
+        ip_subnet: 172.21.0.0/24
+    compute-0: # cell1-controller-0 (cell1, ind0)
+      ctlplane:
+        ip_address: 192.168.122.106
+        ip_address_uri: 192.168.122.106
+        ip_subnet: 192.168.122.0/24
+      internal_api:
+        ip_address: 172.17.0.106
+        ip_address_uri: 172.17.0.106
+        ip_subnet: 172.17.0.0/24
+      storage:
+        ip_address: 172.18.0.106
+        ip_address_uri: 172.18.0.106
+        ip_subnet: 172.18.0.0/24
+      tenant:
+        ip_address: 172.19.0.106
+        ip_address_uri: 172.19.0.106
+        ip_subnet: 172.19.0.0/24
+      storage_mgmt:
+        ip_address: 172.20.0.106
+        ip_address_uri: 172.20.0.106
+        ip_subnet: 172.20.0.0/24
+      external:
+        ip_address: 172.21.0.106
+        ip_address_uri: 172.21.0.106
+        ip_subnet: 172.21.0.0/24
+    compute-1: # cell1-compute-0 (cell1, ind1)
+      ctlplane:
+        ip_address: 192.168.122.107
+        ip_address_uri: 192.168.122.107
+        ip_subnet: 192.168.122.0/24
+      internal_api:
+        ip_address: 172.17.0.107
+        ip_address_uri: 172.17.0.107
+        ip_subnet: 172.17.0.0/24
+      storage:
+        ip_address: 172.18.0.107
+        ip_address_uri: 172.18.0.107
+        ip_subnet: 172.18.0.0/24
+      tenant:
+        ip_address: 172.19.0.107
+        ip_address_uri: 172.19.0.107
+        ip_subnet: 172.19.0.0/24
+      storage_mgmt:
+        ip_address: 172.20.0.107
+        ip_address_uri: 172.20.0.107
+        ip_subnet: 172.20.0.0/24
+      external:
+        ip_address: 172.21.0.107
+        ip_address_uri: 172.21.0.107
+        ip_subnet: 172.21.0.0/24
+    compute-2: # cell2-controller-compute-0 AIO (cell2, ind0)
+      ctlplane:
+        ip_address: 192.168.122.109
+        ip_address_uri: 192.168.122.109
+        ip_subnet: 192.168.122.0/24
+      internal_api:
+        ip_address: 172.17.0.109
+        ip_address_uri: 172.17.0.109
+        ip_subnet: 172.17.0.0/24
+      storage:
+        ip_address: 172.18.0.109
+        ip_address_uri: 172.18.0.109
+        ip_subnet: 172.18.0.0/24
+      tenant:
+        ip_address: 172.19.0.109
+        ip_address_uri: 172.19.0.109
+        ip_subnet: 172.19.0.0/24
+      storage_mgmt:
+        ip_address: 172.20.0.109
+        ip_address_uri: 172.20.0.109
+        ip_subnet: 172.20.0.0/24
+      external:
+        ip_address: 172.21.0.109
+        ip_address_uri: 172.21.0.109
+        ip_subnet: 172.21.0.0/24
+  CtlplaneNetworkAttributes:
+    network:
+      dns_domain: localdomain
+      mtu: 1500
+      name: ctlplane
+      tags:
+        - 192.168.122.0/24
+    subnets:
+      ctlplane-subnet:
+        cidr: 192.168.122.0/24
+        dns_nameservers: [{{ dns_server }}, 192.168.122.1]
+        gateway_ip: {{ gateway_ip }}
+        host_routes:
+          - ip_netmask: 0.0.0.0/0
+            next_hop: 192.168.122.1
+            default: true
+        ip_version: 4
+        name: ctlplane-subnet

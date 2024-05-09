@@ -1,0 +1,30 @@
+---
+# TODO(bogdando): cells-specific DNS domains
+# NOTE(bogdando): in this flat networking /24 model, we get:
+# VIP_ind = base + cell(0..max_cells-1) * max_cells + ind(0..max_cells-1)
+{% set shift = cell * (max_cells - 1) + ind % max_cells %}
+- name: ctlplane_vip
+  network: ctlplane
+  ip_address: 192.168.122.{{ 90 + shift }}
+  subnet: ctlplane-subnet
+  dns_name: multicell # cell{{ cell }}
+- name: internal_api_vip
+  network: internal_api
+  ip_address: 172.17.0.{{ 130 + shift }}
+  subnet: internal_api_subnet
+  dns_name: multicell # cell{{ cell }}
+- name: storage_vip
+  network: storage
+  subnet: storage_subnet
+  ip_address: 172.18.0.{{ 140 + shift }}
+  dns_name: multicell # cell{{ cell }}
+- name: storage_mgmt_vip
+  network: storage_mgmt
+  subnet: storage_mgmt_subnet
+  ip_address: 172.20.0.{{ 150 + shift }}
+  dns_name: multicell # cell{{ cell }}
+- name: external_vip
+  network: external
+  subnet: external_subnet
+  ip_address: 172.21.0.{{ 80 + shift }}
+  dns_name: multicell # cell{{ cell }}
