@@ -1988,8 +1988,6 @@ openstack_kuttl: input deploy_cleanup openstack openstack_deploy_prep ## runs ku
 	$(eval $(call vars,$@,openstack))
 	make wait
 	make openstack_kuttl_run
-	make openstack_deploy_cleanup
-	make openstack_cleanup
 
 ##@ HORIZON
 .PHONY: horizon_prep
