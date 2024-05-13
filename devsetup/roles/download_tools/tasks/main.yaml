@@ -1,7 +1,8 @@
 ---
 - name: Install build dependencies
   become: true
-  become_user: root
+  tags:
+    - dependencies
   ansible.builtin.package:
     name:
       - jq
@@ -15,22 +16,30 @@
       - openssl
 
 - name: Set opm download url suffix
+  tags:
+    - opm
   ansible.builtin.set_fact:
     opm_url_suffix: "latest/download"
   when: opm_version is undefined or opm_version == "latest"
 
 - name: Set opm download url suffix
+  tags:
+    - opm
   ansible.builtin.set_fact:
     opm_url_suffix: "download/{{ opm_version }}"
   when: opm_version is defined and opm_version != "latest"
 
 - name: Create $HOME/bin dir
+  tags:
+    - always
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/bin"
     state: directory
     mode: '0755'
 
 - name: Download opm
+  tags:
+    - opm
   ansible.builtin.get_url:
     url:
       "https://github.com/operator-framework/operator-registry/releases/\
@@ -40,20 +49,28 @@
     timeout: 30
 
 - name: Get version from sdk_version
+  tags:
+    - operator_sdk
   ansible.builtin.set_fact:
     _sdk_version: "{{ sdk_version | regex_search('v(.*)', '\\1') | first }}"
 
 - name: Set operator-sdk file for version < 1.3.0
+  tags:
+    - operator_sdk
   ansible.builtin.set_fact:
     _operator_sdk_file: "operator-sdk-{{ sdk_version }}-x86_64-linux-gnu"
   when: _sdk_version is version('1.3.0', 'lt', strict=True )
 
 - name: Set operator-sdk file for version >= 1.3.0
+  tags:
+    - operator_sdk
   ansible.builtin.set_fact:
     _operator_sdk_file: "operator-sdk_linux_amd64"
   when: _sdk_version is version('1.3.0', 'ge', strict=True )
 
 - name: Download operator-sdk
+  tags:
+    - operator_sdk
   ansible.builtin.get_url:
     url:
       "https://github.com/operator-framework/operator-sdk/releases/download/\
@@ -64,6 +81,8 @@
     timeout: 30
 
 - name: Download and extract kustomize
+  tags:
+    - kustomize
   ansible.builtin.unarchive:
     src:
       "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F\
@@ -72,6 +91,8 @@
     remote_src: true
 
 - name: Download kubectl
+  tags:
+    - kubectl
   ansible.builtin.get_url:
     url:
       "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
@@ -80,6 +101,8 @@
     timeout: 30
 
 - name: Download kuttl
+  tags:
+    - kuttl
   ansible.builtin.get_url:
     url:
       "https://github.com/kudobuilder/kuttl/releases/download/v{{ kuttl_version }}/\
@@ -89,6 +112,8 @@
     timeout: 30
 
 - name: Download and extract yq
+  tags:
+    - yq
   ansible.builtin.unarchive:
     src:
       https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64.tar.gz
@@ -97,6 +122,8 @@
     mode: '0755'
 
 - name: Link yq_linux_amd64 as yq
+  tags:
+    - yq
   ansible.builtin.file:
     src: "{{ lookup('env', 'HOME') }}/bin/yq_linux_amd64"
     dest: "{{ lookup('env', 'HOME') }}/bin/yq"
@@ -104,7 +131,8 @@
 
 - name: Set proper golang on the system
   become: true
-  become_user: root
+  tags:
+    - golang
   block:
     - name: Deinstall golang
       ansible.builtin.package:
@@ -149,5 +177,7 @@
       changed_when: true
 
 - name: Clean bash cache
+  tags:
+    - always
   ansible.builtin.debug:
     msg: When move from rpm to upstream version, make sure to clean bash cache using `hash -d go`
