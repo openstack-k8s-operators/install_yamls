@@ -161,3 +161,13 @@ function run_ovn_ctl_command {
 
     oc rsh $pod ${!ctl} $cmd
 }
+
+#---
+## Run an openstack command
+#
+# Example:
+#   run_openstack_command server list --all
+#---
+function run_openstack_command {
+    oc rsh openstackclient openstack $@
+}
