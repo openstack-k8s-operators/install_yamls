@@ -477,6 +477,7 @@ BMO_IRONIC_HOST                  ?= 192.168.122.10
 else
 BMO_IRONIC_HOST                  ?= 172.16.1.10
 endif
+BMO_SETUP_ROUTE_REPLACE          ?= true
 
 # Swift
 SWIFT_IMG               ?= quay.io/openstack-k8s-operators/swift-operator-index:${OPENSTACK_K8S_TAG}
@@ -648,7 +649,9 @@ crc_bmo_setup: $(if $(findstring true,$(INSTALL_CERT_MANAGER)), certmanager)
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0./${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}./g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && yq 'del(.spec.template.spec.containers[] | select(.name == "ironic-dnsmasq"))' -i ironic-deployment/base/ironic.yaml && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && make generate manifests && bash tools/deploy.sh -bitm && popd
+ifeq ($(BMO_SETUP_ROUTE_REPLACE), true)
 	sudo ip route replace 192.168.126.0/24 dev virbr0
+endif
 	oc patch deployment/baremetal-operator-controller-manager \
 	-n baremetal-operator-system --type='json' \
 	-p='[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "quay.io/metal3-io/baremetal-operator:${BMO_BRANCH}"}]'
