@@ -40,6 +40,12 @@ if [ "x" != "x$chassis_uuid" ]; then
     run_ovn_ctl_command SB chassis-del $chassis_uuid
 fi
 
+# We don't know the domain of the FQDN so we need to search for the name
+compute_service_uuid=$(run_openstack_command compute service list -c ID -c Host --service nova-compute -f value | awk "/${EDPM_COMPUTE_NAME}/{ print \$1 }")
+if [ "x" != "x$compute_service_uuid" ]; then
+    run_openstack_command compute service delete $compute_service_uuid
+fi
+
 if [ ${STANDALONE} = "true" ]; then
     ${CLEANUP_DIR_CMD} $CMDS_FILE
     ${CLEANUP_DIR_CMD} $REPO_SETUP_CMDS
