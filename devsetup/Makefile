@@ -3,6 +3,7 @@ CRC_URL ?= 'https://developers.redhat.com/content-gateway/rest/mirror/pub/opensh
 KUBEADMIN_PWD ?= 12345678
 PULL_SECRET  ?= ${PWD}/pull-secret.txt
 TIMEOUT                  ?= 300s
+DOWNLOAD_TOOLS_SELECTION ?= all
 
 OCP_NETWORK_NAME ?=crc
 NETWORK_ISOLATION_USE_DEFAULT_NETWORK ?= true
@@ -156,9 +157,9 @@ help: ## Display this help.
 
 ##@ Download required tools and versions
 .PHONY: download_tools
-download_tools: ## Runs an ansible playbook to install required tools with the versions to develop the service operators. The tools get installed in ~/bin and go in /usr/local/go (alternatives get used to set it as the system wide go version)
+download_tools: ## Runs an ansible playbook to install required tools with the versions to develop the service operators. The tools get installed in ~/bin and go in /usr/local/go (alternatives get used to set it as the system wide go version). You can select installed tools using DOWNLOAD_TOOLS_SELECTION listing the wanted tags (dependencies, golang, kubectl, kustomize, kuttl, operator_sdk, opm, yq).
 	ANSIBLE_FORCE_COLOR=true ansible-playbook \
-	-v -i hosts \
+	-v -i hosts --tags ${DOWNLOAD_TOOLS_SELECTION} \
 	download_tools.yaml
 
 ##@ CRC
