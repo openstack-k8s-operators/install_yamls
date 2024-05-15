@@ -45,8 +45,8 @@ openstack overcloud roles generate Controller ComputeHCI > roles.yaml
 
 # disable external gateway for controller nodes
 sed -i "s/default_route_networks: \['External'\]/default_route_networks: \['ControlPlane'\]/" roles.yaml
-sed -i "/External:/d" -i roles.yaml
-sed -i "/subnet: external_subnet/d" -i roles.yaml
+sed -i "/External:/d" roles.yaml
+sed -i "/subnet: external_subnet/d" roles.yaml
 
 # generate ceph_spec file
 openstack overcloud ceph spec config-download.yaml \
@@ -61,4 +61,5 @@ openstack overcloud ceph deploy \
     --ceph-spec ceph_spec.yaml \
     --network-data network_data.yaml \
     --cephadm-default-container \
-    --output deployed_ceph.yaml
+    --output deployed_ceph.yaml \
+    --config initial-ceph.conf # TODO: jgilaber only required have ceph working with only 1 compute node should remove it once we move to have 3 computes
