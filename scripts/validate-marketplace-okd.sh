@@ -19,7 +19,7 @@ if [ -z "${TIMEOUT}" ]; then
     echo "Please set TIMEOUT"; exit 1
 fi
 
-OPERATORS="cert-manager metallb-operator"
+OPERATORS="cert-manager"
 
 for operator in $OPERATORS; do
     n=0
