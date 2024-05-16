@@ -44,6 +44,9 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 namespace: ${NAMESPACE}
+labels:
+  - pairs:
+      created-by: install_yamls
 patches:
 - target:
     kind: ${KIND}

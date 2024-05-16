@@ -87,6 +87,9 @@ EOF
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: ${NAMESPACE}
+labels:
+  - pairs:
+      created-by: install_yamls
 resources:
   - ${BMH_CR_FILE}
 EOF
