@@ -109,6 +109,9 @@ function ceph_kustomize {
 cat <<EOF >kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+labels:
+  - pairs:
+      created-by: install_yamls
 resources:
 - ./ceph-pod.yaml
 namespace: $NAMESPACE
