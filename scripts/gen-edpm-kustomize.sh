@@ -49,6 +49,12 @@ labels:
       created-by: install_yamls
 patches:
 - target:
+    kind: OpenStackDataPlaneDeployment
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: ${DEPLOYMENT_NAME:-"edpm-deployment"}
+- target:
     kind: ${KIND}
   patch: |-
     - op: replace
