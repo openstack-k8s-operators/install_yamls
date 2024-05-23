@@ -12,7 +12,7 @@ metadata:
 spec:
   label: repo-setup
   play: |
-    - hosts: all
+      hosts: all
       strategy: linear
       tasks:
         - name: Enable podified-repos
