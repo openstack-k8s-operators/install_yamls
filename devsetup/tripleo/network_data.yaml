@@ -27,8 +27,8 @@
   mtu: 1500
   vip: true
   name_lower: internal_api
-  dns_domain: internal.mydomain.tld.
-  service_net_map_replace: internal
+  dns_domain: internal-api.mydomain.tld.
+  service_net_map_replace: internal_api
   subnets:
     internal_api_subnet:
       vlan: 20
