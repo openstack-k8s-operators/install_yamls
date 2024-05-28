@@ -4,7 +4,8 @@ The main purpose is to provide scripts to automate installing OpenStack in your 
 
 Aside from generating Yaml and running *oc* commands to apply them to your cluster nothing in this repo should modify the local machine, require sudo, or make any changes to the local machine.
 
-Helper scripts to automate installing CRC and required tools with versions used in openstack-k8s-operators can be found in [devsetup](devsetup/README.md). These scripts/playbook required sudo permissions.
+Helper scripts to automate installing CRC and required tools with versions used in openstack-k8s-operators can be found in [devsetup](devsetup/README.md).
+These scripts/playbook require sudo permissions.
 
 **Note**
 The `install_yamls` project expects several dependencies on the host machine.
@@ -45,6 +46,9 @@ make keystone_deploy
 ```
 
 ## Deploy dev env using CRC, edpm nodes with isolated networks
+
+**Warning** The dev environment requires substantial resources to be deployed successfully. It is recommended that you deploy this environment on machines with enough overhead.
+
 * clone install_yamls
 ```bash
 git clone https://github.com/openstack-k8s-operators/install_yamls.git
@@ -134,6 +138,8 @@ oc apply -f /tmp/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml
 Wait for the ctlplane to be up.
 
 At this point the ctlplane is deployed with the services using isolated networks as specified in the CR sample.
+
+**Note** Deployment may take longer than the default timeout allows for. In these cases, make sure to adjust `DATAPLANE_TIMEOUT` variable.
 
 * deploy edpm compute
 ```bash
