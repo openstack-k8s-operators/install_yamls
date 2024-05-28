@@ -28,6 +28,8 @@
     {{ net.name }}:
       subnet: {{ net.name.lower() }}_subnet
 {%- endfor %}
+  RoleParametersDefault:
+    OVNCMSOptions: "enable-chassis-as-gw"
   ServicesDefault:
     - OS::TripleO::Services::Aide
     - OS::TripleO::Services::AodhApi
