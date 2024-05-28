@@ -25,6 +25,7 @@ MANILA_ENABLED=${MANILA_ENABLED:-true}
 SWIFT_REPLICATED=${SWIFT_REPLICATED:-false}
 TLSE_ENABLED=${TLSE_ENABLED:-false}
 CLOUD_DOMAIN=${CLOUD_DOMAIN:-localdomain}
+TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
 
 # Use the files created in the previous steps including the network_data.yaml file and thw deployed_network.yaml file.
 # The deployed_network.yaml file hard codes the IPs and VIPs configured from the network.sh
@@ -109,6 +110,9 @@ if [ "$BARBICAN_ENABLED" = "true" ]; then
 fi
 if [ "$MANILA_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/manila-cephfsnative-config.yaml"
+fi
+if [ "$TELEMETRY_ENABLED" = "true" ]; then
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/enable-legacy-telemetry.yaml"
 fi
 if [ "$TLSE_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/ssl/tls-everywhere-endpoints-dns.yaml"
