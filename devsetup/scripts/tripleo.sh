@@ -164,7 +164,6 @@ gateway_ip: ${GATEWAY}
 manage_default_route: ${TRIPLEO_NETWORKING}
 dns_server: ${PRIMARY_RESOLV_CONF_ENTRY}
 user_home: /home/zuul
-<<<<<<< HEAD
 cloud_domain: ${CLOUD_DOMAIN}
 # Adoption related stuff
 adopted_internal_net: ${ADOPTED_INTERNAL_NET}
