@@ -141,32 +141,32 @@ EOF_CAT
       if [ -n "$NNCP_INTERNALAPI_HOST_ROUTES" ]; then
         for internalapi_route in $NNCP_INTERNALAPI_HOST_ROUTES; do
           cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
-    - destination: ${internalapi_route}
-      next-hop-interface: ${INTERFACE}.${internalapi_vlan_id}
+      - destination: ${internalapi_route}
+        next-hop-interface: ${INTERFACE}.${internalapi_vlan_id}
 EOF_CAT
         done
       fi
       if [ -n "$NNCP_STORAGE_HOST_ROUTES" ]; then
         for storage_route in $NNCP_STORAGE_HOST_ROUTES; do
           cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
-    - destination: ${storage_route}
-      next-hop-interface: ${INTERFACE}.${storage_vlan_id}
+      - destination: ${storage_route}
+        next-hop-interface: ${INTERFACE}.${storage_vlan_id}
 EOF_CAT
         done
       fi
       if [ -n "$NNCP_STORAGEMGMT_HOST_ROUTES" ]; then
         for storagemgmt_route in $NNCP_STORAGEMGMT_HOST_ROUTES; do
           cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
-    - destination: ${storagemgmt_route}
-      next-hop-interface: ${INTERFACE}.${storagemgmt_vlan_id}
+      - destination: ${storagemgmt_route}
+        next-hop-interface: ${INTERFACE}.${storagemgmt_vlan_id}
 EOF_CAT
         done
       fi
       if [ -n "$NNCP_TENANT_HOST_ROUTES" ]; then
         for tenant_route in $NNCP_TENANT_HOST_ROUTES; do
           cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
-    - destination: ${tenant_route}
-      next-hop-interface: ${INTERFACE}.${tenant_vlan_id}
+      - destination: ${tenant_route}
+        next-hop-interface: ${INTERFACE}.${tenant_vlan_id}
 EOF_CAT
         done
       fi
