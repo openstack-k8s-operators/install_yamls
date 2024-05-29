@@ -15,10 +15,10 @@
 # under the License.
 set -ex
 
-function check_var_set () {
-  if [[ ! -v $1 ]]; then
-    echo "Please set $1"; exit 1
-  fi
+function check_var_set {
+    if [[ ! -v $1 ]]; then
+        echo "Please set $1"; exit 1
+    fi
 }
 
 check_var_set DEPLOY_DIR
@@ -40,10 +40,10 @@ check_var_set STORAGEMGMT_PREFIX
 check_var_set TENANT_PREFIX
 check_var_set DESIGNATE_PREFIX
 if [ -n "$BGP" ]; then
-  check_var_set INTERFACE_BGP_1
-  check_var_set INTERFACE_BGP_2
-  check_var_set BGP_1_IP_ADDRESS
-  check_var_set BGP_2_IP_ADDRESS
+    check_var_set INTERFACE_BGP_1
+    check_var_set INTERFACE_BGP_2
+    check_var_set BGP_1_IP_ADDRESS
+    check_var_set BGP_2_IP_ADDRESS
 fi
 
 echo DEPLOY_DIR ${DEPLOY_DIR}
@@ -130,46 +130,46 @@ EOF_CAT
       config:
 EOF_CAT
     fi
-      if [ -n "$NNCP_ADDITIONAL_HOST_ROUTES" ]; then
-        for route in $NNCP_ADDITIONAL_HOST_ROUTES; do
-            cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+        if [ -n "$NNCP_ADDITIONAL_HOST_ROUTES" ]; then
+            for route in $NNCP_ADDITIONAL_HOST_ROUTES; do
+                cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       - destination: ${route}
         next-hop-interface: ${BRIDGE_NAME}
 EOF_CAT
-        done
-      fi
-      if [ -n "$NNCP_INTERNALAPI_HOST_ROUTES" ]; then
-        for internalapi_route in $NNCP_INTERNALAPI_HOST_ROUTES; do
-          cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+            done
+        fi
+        if [ -n "$NNCP_INTERNALAPI_HOST_ROUTES" ]; then
+            for internalapi_route in $NNCP_INTERNALAPI_HOST_ROUTES; do
+                cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       - destination: ${internalapi_route}
         next-hop-interface: ${INTERFACE}.${internalapi_vlan_id}
 EOF_CAT
-        done
-      fi
-      if [ -n "$NNCP_STORAGE_HOST_ROUTES" ]; then
-        for storage_route in $NNCP_STORAGE_HOST_ROUTES; do
-          cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+            done
+        fi
+        if [ -n "$NNCP_STORAGE_HOST_ROUTES" ]; then
+            for storage_route in $NNCP_STORAGE_HOST_ROUTES; do
+                cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       - destination: ${storage_route}
         next-hop-interface: ${INTERFACE}.${storage_vlan_id}
 EOF_CAT
-        done
-      fi
-      if [ -n "$NNCP_STORAGEMGMT_HOST_ROUTES" ]; then
-        for storagemgmt_route in $NNCP_STORAGEMGMT_HOST_ROUTES; do
-          cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+            done
+        fi
+        if [ -n "$NNCP_STORAGEMGMT_HOST_ROUTES" ]; then
+            for storagemgmt_route in $NNCP_STORAGEMGMT_HOST_ROUTES; do
+                cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       - destination: ${storagemgmt_route}
         next-hop-interface: ${INTERFACE}.${storagemgmt_vlan_id}
 EOF_CAT
-        done
-      fi
-      if [ -n "$NNCP_TENANT_HOST_ROUTES" ]; then
-        for tenant_route in $NNCP_TENANT_HOST_ROUTES; do
-          cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+            done
+        fi
+        if [ -n "$NNCP_TENANT_HOST_ROUTES" ]; then
+            for tenant_route in $NNCP_TENANT_HOST_ROUTES; do
+              cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       - destination: ${tenant_route}
         next-hop-interface: ${INTERFACE}.${tenant_vlan_id}
 EOF_CAT
-        done
-      fi
+            done
+        fi
     if [ -n "$IPV6_ENABLED" ]; then
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       - destination: ::/0

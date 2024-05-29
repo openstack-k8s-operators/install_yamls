@@ -215,7 +215,6 @@ compute_driver: ${COMPUTE_DRIVER}
 sriov_agent: ${EDPM_COMPUTE_SRIOV_ENABLED}
 dhcp_agent: ${EDPM_COMPUTE_DHCP_AGENT_ENABLED}
 # Adoption related stuff
-adoption_scenario: ${ADOPTION_SCENARIO_A}
 adopted_internal_net: ${ADOPTED_INTERNAL_NET}
 adopted_storage_net: ${ADOPTED_STORAGE_NET}
 adopted_storage_mgmt_net: ${ADOPTED_STORAGE_MGMT_NET}
