@@ -33,15 +33,15 @@ network_config:
     mtu: {{ interface_mtu }}
     vlan_id: 44
     addresses:
-    - ip_netmask: {{ standalone_external_prefix | default("172.21.0", true)}}172.21.0.{{ ip_address_suffix }}/24
+    - ip_netmask: {{ standalone_external_prefix | default("172.21.0", true)}}.{{ ip_address_suffix }}/24
     - ip_netmask: {{ standalone_external_prefix | default("172.21.0", true)}}.2/32
-  {% if adopted_external_net|default %}
+    {% if adopted_external_net|default %}
     routes:
-        - ip_netmask: {{ adopted_external_net }}
-          next_hop: {{ standalone_external_prefix | default("172.21.0", true) }}.{{ip_address_suffix}}
-  {% else %}
+      - ip_netmask: {{ adopted_external_net }}
+        next_hop: {{ standalone_external_prefix | default("172.21.0", true) }}.{{ip_address_suffix}}
+    {% else %}
     routes: []
-  {% endif %}
+    {% endif %}
   # internal
   - type: vlan
     mtu: {{ interface_mtu }}
@@ -49,13 +49,13 @@ network_config:
     addresses:
     - ip_netmask: {{ standalone_internal_prefix | default("172.17.0", true)}}.{{ ip_address_suffix }}/24
     - ip_netmask: {{ standalone_internal_prefix | default("172.17.0", true)}}.2/32
-  {% if adopted_internal_net|default %}
+    {% if adopted_internal_net|default %}
     routes:
-        - ip_netmask: {{ adopted_internal_net }}
-          next_hop: {{ standalone_internal_prefix | default("172.17.0", true) }}.{{ip_address_suffix}}
-  {% else %}
+      - ip_netmask: {{ adopted_internal_net }}
+        next_hop: {{ standalone_internal_prefix | default("172.17.0", true) }}.{{ip_address_suffix}}
+    {% else %}
     routes: []
-  {% endif %}
+    {% endif %}
   # storage
   - type: vlan
     mtu: {{ interface_mtu }}
@@ -63,13 +63,13 @@ network_config:
     addresses:
     - ip_netmask: {{ standalone_storage_prefix | default("172.18.0", true) }}.{{ ip_address_suffix }}/24
     - ip_netmask: {{ standalone_storage_prefix | default("172.18.0", true) }}.2/32
-  {% if adopted_storage_net|default %}
+    {% if adopted_storage_net|default %}
     routes:
       - ip_netmask: {{ adopted_storage_net }}
         next_hop: {{ standalone_storage_prefix | default("172.18.0", true) }}.{{ ip_address_suffix }}
-  {% else %}
+    {% else %}
     routes: []
-  {% endif %}
+    {% endif %}
   # storage_mgmt
   - type: vlan
     mtu: {{ interface_mtu }}
@@ -77,22 +77,23 @@ network_config:
     addresses:
     - ip_netmask: {{ standalone_storage_mgmt_prefix | default("172.20.0", true) }}.{{ ip_address_suffix }}/24
     - ip_netmask: {{ standalone_storage_mgmt_prefix | default("172.20.0", true) }}.2/32
-  {% if adopted_storage_mgmt_net|default %}
+    {% if adopted_storage_mgmt_net|default %}
     routes:
       - ip_netmask: {{ adopted_storage_mgmt_net }}
         next_hop: {{ standalone_storage_mgmt_prefix | default("172.20.0", true) }}.{{ ip_address_suffix }}
-  {% else %}
+    {% else %}
     routes: []
-  {% endif %}
+    {% endif %}
   # tenant
   - type: vlan
     mtu: {{ interface_mtu }}
     vlan_id: 22
+    addresses:
     - ip_netmask: {{ standalone_tenant_prefix | default("172.19.0", true) }}.{{ ip_address_suffix }}/24
-  {% if adopted_tenant_net|default %}
+    {% if adopted_tenant_net|default %}
     routes:
       - ip_netmask: {{ adopted_tenant_net }}
         next_hop: {{ standalone_tenant_prefix | default("172.19.0", true) }}.{{ ip_address_suffix }}
-  {% else %}
+    {% else %}
     routes: []
-  {% endif %}
+    {% endif %}
