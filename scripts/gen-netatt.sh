@@ -15,10 +15,10 @@
 # under the License.
 set -ex
 
-function check_var_setted () {
-  if [[ ! -v $1 ]]; then
-    echo "Please set $1"; exit 1
-  fi
+function check_var_setted {
+    if [[ ! -v $1 ]]; then
+        echo "Please set $1"; exit 1
+    fi
 }
 
 check_var_setted DEPLOY_DIR
@@ -41,11 +41,11 @@ if [ -n "$IPV4_ENABLED" ] && [ -n "$IPV6_ENABLED" ]; then
 fi
 
 if [ -n "$IPV4_ENABLED" ]; then
-check_var_setted INTERNALAPI_PREFIX
-check_var_setted STORAGE_PREFIX
-check_var_setted STORAGEMGMT_PREFIX
-check_var_setted TENANT_PREFIX
-check_var_setted DESIGNATE_PREFIX
+    check_var_setted INTERNALAPI_PREFIX
+    check_var_setted STORAGE_PREFIX
+    check_var_setted STORAGEMGMT_PREFIX
+    check_var_setted TENANT_PREFIX
+    check_var_setted DESIGNATE_PREFIX
 fi
 
 echo DEPLOY_DIR ${DEPLOY_DIR}
