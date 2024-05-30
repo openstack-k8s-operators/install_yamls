@@ -36,9 +36,10 @@ hostnamemap=$(grep -v "\---" hostnamemap.yaml | tr '\n' '\r')
 hostnamemap="$hostnamemap\r  ControllerHostnameFormat: '%stackname%-controller-%index%'\r"
 if [ "$EDPM_COMPUTE_CEPH_ENABLED" == "true"  ] ; then
     # add hci role for ceph nodes
-    hostnamemap="$hostnamemap\r  ComputeHCIHostnameFormat: '%stackname%-novacompute-%index%'"
+    hostnamemap="$hostnamemap\r  ComputeHCIHostnameFormat: '%stackname%-computehci-%index%'"
 fi
-# insert hostnamemap contents into config-download.yaml
+# insert hostnamemap contents into config-download.yaml, we need it to generate
+# the inventory for ceph deployment
 sed -i "s/parameter_defaults:/${hostnamemap}/" config-download.yaml
 if [ "$EDPM_COMPUTE_CEPH_ENABLED" == "true"  ] ; then
     # swap computes for compute hci
@@ -46,7 +47,11 @@ if [ "$EDPM_COMPUTE_CEPH_ENABLED" == "true"  ] ; then
     # add storage management port to compute hci nodes
     stg_line="OS::TripleO::ComputeHCI::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml"
     stg_mgmt_line="OS::TripleO::ComputeHCI::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage_mgmt.yaml"
-    sed -i "s#$stg_line#$stg_line\r  $stg_mgmt_line#" config-download.yaml
+    sed -i "s#$stg_line#$stg_line\r  $stg_mgmt_line\r#" config-download.yaml
+    # use default role name for ComputeHCI in hostnamemap
+    sed -i "s/-novacompute-/-computehci-/" hostnamemap.yaml
+    sed -i "s/-novacompute-/-computehci-/" config-download.yaml
+    sed -i "s/ComputeCount/ComputeHCICount/" overcloud_services.yaml
 fi
 # Remove any quotes e.g. "np10002"-ctlplane -> np10002-ctlplane
 sed -i 's/\"//g' config-download.yaml

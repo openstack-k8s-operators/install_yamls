@@ -138,6 +138,7 @@ scp $SSH_OPT tripleo/ansible_config.cfg zuul@$IP:$HOME/ansible_config.cfg
 if [[ "$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]]; then
     scp $SSH_OPT tripleo/ceph.sh root@$IP:/tmp/ceph.sh
     scp $SSH_OPT tripleo/generate_ceph_inventory.py root@$IP:/tmp/generate_ceph_inventory.py
+    scp $SSH_OPT tripleo/initial-ceph.conf root@$IP:$HOME/initial-ceph.conf
 fi
 
 if [[ -f $HOME/containers-prepare-parameters.yaml ]]; then
