@@ -29,15 +29,13 @@ fi
 
 cd ci-framework
 # create block devices on all compute nodes
-ansible-playbook -i $INV playbooks/ceph.yml --tags block -e num_osds=3
+ansible-playbook -i $INV playbooks/ceph.yml --tags block -e cifmw_num_osds_perhost=1
 cd ..
 
 cat <<EOF > osd_spec.yaml
 data_devices:
   paths:
     - /dev/ceph_vg0/ceph_lv0
-    - /dev/ceph_vg1/ceph_lv1
-    - /dev/ceph_vg2/ceph_lv2
 EOF
 
 # create roles file
@@ -62,5 +60,4 @@ openstack overcloud ceph deploy \
     --ceph-spec ceph_spec.yaml \
     --network-data network_data.yaml \
     --cephadm-default-container \
-    --output deployed_ceph.yaml \
-    --config initial-ceph.conf # TODO: jgilaber only required have ceph working with only 1 compute node should remove it once we move to have 3 computes
+    --output deployed_ceph.yaml
