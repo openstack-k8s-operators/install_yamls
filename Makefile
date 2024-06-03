@@ -426,7 +426,7 @@ CEPH_IMG            ?= quay.io/ceph/demo:latest-reef
 # NNCP
 NNCP_INTERFACE      ?= enp6s0
 NNCP_BRIDGE         ?= ospbr
-NNCP_TIMEOUT		?= 240s
+NNCP_TIMEOUT		?= 480s
 NNCP_CLEANUP_TIMEOUT	?= 120s
 NNCP_CTLPLANE_IP_ADDRESS_SUFFIX     ?=10
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
