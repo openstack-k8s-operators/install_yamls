@@ -113,6 +113,7 @@ os_net_config_iface: ${OS_NET_CONFIG_IFACE}
 ctlplane_vip: ${IP%.*}.99
 ip_address_suffix: ${IP_ADRESS_SUFFIX}
 interface_mtu: ${INTERFACE_MTU:-1500}
+ntp_server: ${NTP_SERVER}
 gateway_ip: ${GATEWAY}
 dns_server: ${PRIMARY_RESOLV_CONF_ENTRY}
 user_home: ${HOME}
