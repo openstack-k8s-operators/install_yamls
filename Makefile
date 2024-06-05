@@ -749,6 +749,12 @@ openstack_deploy_cleanup: namespace netconfig_deploy_cleanup ## cleans up the se
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f - || true
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/openstack-operator ${DEPLOY_DIR}
 
+.PHONY: openstack_update_run
+openstack_update_run:
+	$(eval $(call vars,$@,openstack))
+	bash scripts/openstack-update.sh
+
+
 .PHONY: edpm_deploy_generate_keys
 edpm_deploy_generate_keys:
 	$(eval $(call vars,$@,dataplane))
