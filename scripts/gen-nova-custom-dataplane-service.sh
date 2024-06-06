@@ -27,9 +27,10 @@ cat <<EOF >>kustomization.yaml
       path: /metadata/name
       value: nova-custom
     - op: add
-      path: /spec/configMaps
+      path: /spec/dataSources
       value:
-        - nova-extra-config
+        - configMapRef:
+            name: nova-extra-config
 EOF
 
 # Create the nova-extra-config CM based on the provided config file
