@@ -8,6 +8,7 @@ DOWNLOAD_TOOLS_SELECTION ?= all
 OCP_NETWORK_NAME ?=crc
 NETWORK_ISOLATION_USE_DEFAULT_NETWORK ?= true
 
+NETWORK_ISOLATION_MAC ?= 52:54:00:11:11:10
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
 NETWORK_ISOLATION_NET_NAME ?= default
 NETWORK_ISOLATION_IP_ADDRESS ?= 192.168.122.10
@@ -277,6 +278,7 @@ endif
 attach_default_interface: export IP_ADDRESS=${NETWORK_ISOLATION_IP_ADDRESS}
 attach_default_interface: export NETWORK_NAME=${NETWORK_ISOLATION_NET_NAME}
 attach_default_interface: export INSTANCE_NAME=${NETWORK_ISOLATION_INSTANCE_NAME}
+attach_default_interface: export MAC_ADDRESS=${NETWORK_ISOLATION_MAC}
 attach_default_interface: attach_default_interface_cleanup ## Attach default libvirt network to CRC
 	bash scripts/interfaces-setup.sh
 
