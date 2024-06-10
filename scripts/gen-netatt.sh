@@ -224,6 +224,101 @@ spec:
     }
 EOF_CAT
 
+cat > ${DEPLOY_DIR}/data1.yaml <<EOF_CAT
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  labels:
+    osp/net: data1
+  name: data1
+  namespace: ${NAMESPACE}
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "data1",
+      "type": "bridge",
+      "bridge": "${BRIDGE_NAME}",
+      "ipam": {}
+    }
+EOF_CAT
+
+cat > ${DEPLOY_DIR}/data2.yaml <<EOF_CAT
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  labels:
+    osp/net: data2
+  name: data2
+  namespace: ${NAMESPACE}
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "data2",
+      "type": "bridge",
+      "bridge": "${BRIDGE_NAME}",
+      "ipam": {}
+    }
+EOF_CAT
+
+cat > ${DEPLOY_DIR}/data3.yaml <<EOF_CAT
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  labels:
+    osp/net: data3
+  name: data3
+  namespace: ${NAMESPACE}
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "data3",
+      "type": "bridge",
+      "bridge": "${BRIDGE_NAME}",
+      "ipam": {}
+    }
+EOF_CAT
+
+cat > ${DEPLOY_DIR}/data4.yaml <<EOF_CAT
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  labels:
+    osp/net: data4
+  name: data4
+  namespace: ${NAMESPACE}
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "data4",
+      "type": "bridge",
+      "bridge": "${BRIDGE_NAME}",
+      "ipam": {}
+    }
+EOF_CAT
+
+cat > ${DEPLOY_DIR}/data5.yaml <<EOF_CAT
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  labels:
+    osp/net: data5
+  name: data5
+  namespace: ${NAMESPACE}
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "data5",
+      "type": "bridge",
+      "bridge": "${BRIDGE_NAME}",
+      "ipam": {}
+    }
+EOF_CAT
+
 cat > ${DEPLOY_DIR}/storagemgmt.yaml <<EOF_CAT
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition

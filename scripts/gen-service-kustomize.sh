@@ -394,6 +394,11 @@ cat <<EOF >>kustomization.yaml
           ovnController:
             nicMappings:
               datacentre: ${BRIDGE_NAME}
+              data1: ${BRIDGE_NAME}
+              data2: ${BRIDGE_NAME}
+              data3: ${BRIDGE_NAME}
+              data4: ${BRIDGE_NAME}
+              data5: ${BRIDGE_NAME}
   target:
     kind: ${KIND}
 EOF
