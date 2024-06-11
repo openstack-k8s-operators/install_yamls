@@ -26,9 +26,15 @@ cat <<EOF >>kustomization.yaml
     - op: replace
       path: /metadata/name
       value: nova-custom
+    - op: remove
+      path: /spec/secrets
     - op: add
       path: /spec/dataSources
       value:
+        - secretRef:
+            name: nova-cell1-compute-config
+        - secretRef:
+            name: nova-migration-ssh-key
         - configMapRef:
             name: nova-extra-config
 EOF
