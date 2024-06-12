@@ -424,6 +424,7 @@ MANILA_KUTTL_NAMESPACE  ?= manila-kuttl-tests
 CEPH_IMG            ?= quay.io/ceph/demo:latest-reef
 
 # NNCP
+NNCP_NODES          ?=
 NNCP_INTERFACE      ?= enp6s0
 NNCP_BRIDGE         ?= ospbr
 NNCP_TIMEOUT		?= 240s
@@ -2242,8 +2243,12 @@ nncp: export STORAGE_MACVLAN=${NETWORK_STORAGE_MACVLAN}
 ## NOTE(ldenny): When applying the nncp resource the OCP API can momentarly drop, below retry is added to aviod checking status while API is down and failing.
 nncp: ## installs the nncp resources to configure the interface connected to the edpm node, right now only single nic vlan. Interface referenced via NNCP_INTERFACE
 	$(eval $(call vars,$@,nncp))
+ifeq ($(NNCP_NODES),)
 	WORKERS='$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}")' \
 	bash scripts/gen-nncp.sh
+else
+	WORKERS=${NNCP_NODES} bash scripts/gen-nncp.sh
+endif
 	oc apply -f ${DEPLOY_DIR}/
 	timeout ${NNCP_TIMEOUT} bash -c "while ! (oc wait nncp -l osp/interface=${NNCP_INTERFACE} --for jsonpath='{.status.conditions[0].reason}'=SuccessfullyConfigured); do sleep 10; done"
 
