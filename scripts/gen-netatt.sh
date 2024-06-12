@@ -39,15 +39,6 @@ if [ -z "${VLAN_STEP}" ]; then
     echo "Please set VLAN_STEP"; exit 1
 fi
 
-if [ -z "$IPV4_ENABLED" ] && [ -z "$IPV6_ENABLED" ]; then
-    echo "Please enable either IPv4 or IPv6 by setting IPV4_ENABLED or IPV6_ENABLED"; exit 1
-fi
-
-if [ -n "$IPV4_ENABLED" ] && [ -n "$IPV6_ENABLED" ]; then
-    echo "Dual stack not supported, cannot enable both IPv4 and IPv6"; exit 1
-fi
-
-
 echo DEPLOY_DIR ${DEPLOY_DIR}
 echo INTERFACE ${INTERFACE}
 echo VLAN_START ${VLAN_START}
@@ -78,21 +69,36 @@ spec:
       "master": "${BRIDGE_NAME}",
       "ipam": {
         "type": "whereabouts",
+        "ipRanges": [
 EOF_CAT
 if [ -n "$IPV4_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/ctlplane.yaml <<EOF_CAT
-        "range": "${CTLPLANE_IP_ADDRESS_PREFIX}.0/24",
-        "range_start": "${CTLPLANE_IP_ADDRESS_PREFIX}.30",
-        "range_end": "${CTLPLANE_IP_ADDRESS_PREFIX}.70"
+          {
+            "range": "${CTLPLANE_IP_ADDRESS_PREFIX}.0/24",
+            "range_start": "${CTLPLANE_IP_ADDRESS_PREFIX}.30",
+            "range_end": "${CTLPLANE_IP_ADDRESS_PREFIX}.70"
 EOF_CAT
-elif [ -n "$IPV6_ENABLED" ]; then
+fi
+if [ -n "$IPV4_ENABLED" ] && [ -n "$IPV6_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/ctlplane.yaml <<EOF_CAT
-        "range": "${CTLPLANE_IPV6_ADDRESS_PREFIX}0/64",
-        "range_start": "${CTLPLANE_IPV6_ADDRESS_PREFIX}30",
-        "range_end": "${CTLPLANE_IPV6_ADDRESS_PREFIX}70"
+          },
+EOF_CAT
+elif [ -n "$IPV4_ENABLED" ] && [ -z "$IPV6_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/ctlplane.yaml <<EOF_CAT
+          }
+EOF_CAT
+fi
+if [ -n "$IPV6_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/ctlplane.yaml <<EOF_CAT
+          {
+            "range": "${CTLPLANE_IPV6_ADDRESS_PREFIX}0/64",
+            "range_start": "${CTLPLANE_IPV6_ADDRESS_PREFIX}30",
+            "range_end": "${CTLPLANE_IPV6_ADDRESS_PREFIX}70"
+          }
 EOF_CAT
 fi
 cat >> ${DEPLOY_DIR}/ctlplane.yaml <<EOF_CAT
+        ]
       }
     }
 EOF_CAT
@@ -114,21 +120,36 @@ spec:
       "master": "${INTERFACE}.${VLAN_START}",
       "ipam": {
         "type": "whereabouts",
+        "ipRanges": [
 EOF_CAT
 if [ -n "$IPV4_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/internalapi.yaml <<EOF_CAT
-        "range": "172.17.0.0/24",
-        "range_start": "172.17.0.30",
-        "range_end": "172.17.0.70"
+          {
+            "range": "172.17.0.0/24",
+            "range_start": "172.17.0.30",
+            "range_end": "172.17.0.70"
 EOF_CAT
-elif [ -n "$IPV6_ENABLED" ]; then
+fi
+if [ -n "$IPV4_ENABLED" ] && [ -n "$IPV6_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/internalapi.yaml <<EOF_CAT
-        "range": "fd00:bbbb::/64",
-        "range_start": "fd00:bbbb::30",
-        "range_end": "fd00:bbbb::70"
+          },
+EOF_CAT
+elif [ -n "$IPV4_ENABLED" ] && [ -z "$IPV6_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/internalapi.yaml <<EOF_CAT
+          }
+EOF_CAT
+fi
+if [ -n "$IPV6_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/internalapi.yaml <<EOF_CAT
+          {
+            "range": "fd00:bbbb::/64",
+            "range_start": "fd00:bbbb::30",
+            "range_end": "fd00:bbbb::70"
+          }
 EOF_CAT
 fi
 cat >> ${DEPLOY_DIR}/internalapi.yaml <<EOF_CAT
+        ]
       }
     }
 EOF_CAT
@@ -150,21 +171,36 @@ spec:
       "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}))",
       "ipam": {
         "type": "whereabouts",
+        "ipRanges": [
 EOF_CAT
 if [ -n "$IPV4_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/storage.yaml <<EOF_CAT
-        "range": "172.18.0.0/24",
-        "range_start": "172.18.0.30",
-        "range_end": "172.18.0.70"
+          {
+            "range": "172.18.0.0/24",
+            "range_start": "172.18.0.30",
+            "range_end": "172.18.0.70"
 EOF_CAT
-elif [ -n "$IPV6_ENABLED" ]; then
+fi
+if [ -n "$IPV4_ENABLED" ] && [ -n "$IPV6_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/storage.yaml <<EOF_CAT
-        "range": "fd00:cccc::/64",
-        "range_start": "fd00:cccc::30",
-        "range_end": "fd00:cccc::70"
+          },
+EOF_CAT
+elif [ -n "$IPV4_ENABLED" ] && [ -z "$IPV6_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/storage.yaml <<EOF_CAT
+          }
+EOF_CAT
+fi
+if [ -n "$IPV6_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/storage.yaml <<EOF_CAT
+          {
+            "range": "fd00:cccc::/64",
+            "range_start": "fd00:cccc::30",
+            "range_end": "fd00:cccc::70"
+          }
 EOF_CAT
 fi
 cat >> ${DEPLOY_DIR}/storage.yaml <<EOF_CAT
+        ]
       }
     }
 EOF_CAT
@@ -186,21 +222,36 @@ spec:
       "master": "${INTERFACE}.$((${VLAN_START}+$((${VLAN_STEP}*2))))",
       "ipam": {
         "type": "whereabouts",
+        "ipRanges": [
 EOF_CAT
 if [ -n "$IPV4_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/tenant.yaml <<EOF_CAT
-        "range": "172.19.0.0/24",
-        "range_start": "172.19.0.30",
-        "range_end": "172.19.0.70"
+          {
+            "range": "172.19.0.0/24",
+            "range_start": "172.19.0.30",
+            "range_end": "172.19.0.70"
 EOF_CAT
-elif [ -n "$IPV6_ENABLED" ]; then
+fi
+if [ -n "$IPV4_ENABLED" ] && [ -n "$IPV6_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/tenant.yaml <<EOF_CAT
-        "range": "fd00:dddd::/64",
-        "range_start": "fd00:dddd::30",
-        "range_end": "fd00:dddd::70"
+          },
+EOF_CAT
+elif [ -n "$IPV4_ENABLED" ] && [ -z "$IPV6_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/tenant.yaml <<EOF_CAT
+          }
+EOF_CAT
+fi
+if [ -n "$IPV6_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/tenant.yaml <<EOF_CAT
+          {
+            "range": "fd00:dddd::/64",
+            "range_start": "fd00:dddd::30",
+            "range_end": "fd00:dddd::70"
+          }
 EOF_CAT
 fi
 cat >> ${DEPLOY_DIR}/tenant.yaml <<EOF_CAT
+        ]
       }
     }
 EOF_CAT
