@@ -2305,6 +2305,9 @@ ifeq ($(OKD), true)
 	oc apply -f ${OPERATOR_DIR}
 	timeout ${TIMEOUT} bash -c "while ! (oc get deployment metallb-operator-controller-manager --no-headers=true -n ${NAMESPACE}| grep metallb-operator-controller-manager); do sleep 10; done"
 	oc apply -f ${OPERATOR_DIR}/patches
+	oc wait -n ${NAMESPACE} --for=condition=Available deployment/metallb-operator-controller-manager --timeout=${TIMEOUT}
+	# we ensure the outdated replica is terminated (i.e only one replica available)
+	timeout ${TIMEOUT} bash -c "while ! (oc get pod --no-headers=true -l control-plane=controller-manager -n ${NAMESPACE}| grep metallb-operator-controller | wc -l | grep -q -e 1); do sleep 10; done"
 else
 	bash scripts/gen-olm-metallb.sh
 	oc apply -f ${OPERATOR_DIR}
