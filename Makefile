@@ -359,10 +359,6 @@ BMH_NAMESPACE           ?= ${NAMESPACE}
 BAREMETAL_OS_CONTAINER_IMG ?=
 
 # Dataplane Operator
-DATAPLANE_IMG                                    ?= quay.io/openstack-k8s-operators/dataplane-operator-index:${OPENSTACK_K8S_TAG}
-DATAPLANE_REPO                                   ?= https://github.com/openstack-k8s-operators/dataplane-operator.git
-DATAPLANE_BRANCH                                 ?= ${OPENSTACK_K8S_BRANCH}
-DATAPLANE_COMMIT_HASH                            ?=
 DATAPLANE_TIMEOUT                                ?= 20m
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
@@ -373,8 +369,6 @@ endif
 else
 DATAPLANE_KUSTOMIZE_SCENARIO                     ?= preprovisioned
 endif
-OPENSTACK_DATAPLANESERVICE_NOVA                  ?= config/services/dataplane_v1beta1_openstackdataplaneservice_nova.yaml
-DATAPLANE_SERVICE_NOVA_CR                        ?= ${OPERATOR_BASE_DIR}/dataplane-operator/${OPENSTACK_DATAPLANESERVICE_NOVA}
 DATAPLANE_ANSIBLE_SECRET                         ?=dataplane-ansible-ssh-private-key-secret
 DATAPLANE_ANSIBLE_USER                           ?=
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
@@ -397,9 +391,6 @@ DATAPLANE_NTP_SERVER                             ?=pool.ntp.org
 DATAPLANE_REGISTRY_URL                           ?=quay.io/podified-antelope-centos9
 DATAPLANE_CONTAINER_TAG                          ?=current-podified
 DATAPLANE_CONTAINER_PREFIX			 ?=openstack
-DATAPLANE_KUTTL_CONF                             ?= ${OPERATOR_BASE_DIR}/dataplane-operator/kuttl-test.yaml
-DATAPLANE_KUTTL_DIR                              ?= ${OPERATOR_BASE_DIR}/dataplane-operator/tests/kuttl/tests
-DATAPLANE_KUTTL_NAMESPACE                        ?= dataplane-kuttl-tests
 BM_CTLPLANE_INTERFACE                            ?= enp1s0
 BM_ROOT_PASSWORD                                 ?=
 GENERATE_SSH_KEYS				 ?= true
@@ -784,9 +775,9 @@ edpm_deploy_prep: export EDPM_CONTAINER_PREFIX=${DATAPLANE_CONTAINER_PREFIX}
 edpm_deploy_prep: export EDPM_EXTRA_NOVA_CONFIG_FILE=${DEPLOY_DIR}/25-nova-extra.conf
 edpm_deploy_prep: export EDPM_DEPLOY_DIR=${DEPLOY_DIR}
 edpm_deploy_prep: export EDPM_SERVER_ROLE=${DATAPLANE_SERVER_ROLE}
-edpm_deploy_prep: export REPO=${DATAPLANE_REPO}
-edpm_deploy_prep: export BRANCH=${DATAPLANE_BRANCH}
-edpm_deploy_prep: export HASH=${DATAPLANE_COMMIT_HASH}
+edpm_deploy_prep: export REPO=${OPENSTACK_REPO}
+edpm_deploy_prep: export BRANCH=${OPENSTACK_BRANCH}
+edpm_deploy_prep: export HASH=${OPENSTACK_COMMIT_HASH}
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
 edpm_deploy_prep: export BGP=ovn
@@ -798,9 +789,8 @@ edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data pla
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	bash scripts/clone-operator-repo.sh
-	cp ${DATAPLANE_SERVICE_NOVA_CR} ${DEPLOY_DIR}
 	cp ${DATAPLANE_EXTRA_NOVA_CONFIG_FILE} ${EDPM_EXTRA_NOVA_CONFIG_FILE}
-	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/dataplane-operator/examples/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
+	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/dataplane/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
 	bash scripts/gen-edpm-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
@@ -814,7 +804,7 @@ edpm_deploy_cleanup: namespace ## cleans up the edpm instance, Does not affect t
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/dataplane-operator ${DEPLOY_DIR}
 
 .PHONY: edpm_deploy
-edpm_deploy: input edpm_deploy_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
+edpm_deploy: input edpm_deploy_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,dataplane))
 ifneq ($(DATAPLANE_RUNNER_IMG),)
 	make edpm_patch_ansible_runner_image
@@ -837,9 +827,9 @@ edpm_deploy_baremetal_prep: export EDPM_REGISTRY_URL=${DATAPLANE_REGISTRY_URL}
 edpm_deploy_baremetal_prep: export EDPM_CONTAINER_TAG=${DATAPLANE_CONTAINER_TAG}
 edpm_deploy_baremetal_prep: export EDPM_CONTAINER_PREFIX=${DATAPLANE_CONTAINER_PREFIX}
 edpm_deploy_baremetal_prep: export EDPM_GROWVOLS_ARGS=${DATAPLANE_GROWVOLS_ARGS}
-edpm_deploy_baremetal_prep: export REPO=${DATAPLANE_REPO}
-edpm_deploy_baremetal_prep: export BRANCH=${DATAPLANE_BRANCH}
-edpm_deploy_baremetal_prep: export HASH=${DATAPLANE_COMMIT_HASH}
+edpm_deploy_baremetal_prep: export REPO=${OPENSTACK_REPO}
+edpm_deploy_baremetal_prep: export BRANCH=${OPENSTACK_BRANCH}
+edpm_deploy_baremetal_prep: export HASH=${OPENSTACK_COMMIT_HASH}
 edpm_deploy_baremetal_prep: export DATAPLANE_KUSTOMIZE_SCENARIO=baremetal
 edpm_deploy_baremetal_prep: export EDPM_ROOT_PASSWORD=${BM_ROOT_PASSWORD}
 edpm_deploy_baremetal_prep: export EDPM_EXTRA_NOVA_CONFIG_FILE=${DEPLOY_DIR}/25-nova-extra.conf
@@ -848,9 +838,8 @@ edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install th
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	bash scripts/clone-operator-repo.sh
-	cp ${DATAPLANE_SERVICE_NOVA_CR} ${DEPLOY_DIR}
 	cp ${DATAPLANE_EXTRA_NOVA_CONFIG_FILE} ${EDPM_EXTRA_NOVA_CONFIG_FILE}
-	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/dataplane-operator/examples/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
+	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/dataplane/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
 	bash scripts/gen-edpm-baremetal-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
@@ -858,7 +847,7 @@ endif
 	oc apply -f devsetup/edpm/services
 
 .PHONY: edpm_deploy_baremetal
-edpm_deploy_baremetal: input edpm_deploy_baremetal_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
+edpm_deploy_baremetal: input edpm_deploy_baremetal_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,dataplane))
 ifneq ($(DATAPLANE_RUNNER_IMG),)
 	make edpm_patch_ansible_runner_image
@@ -867,13 +856,13 @@ endif
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 
 .PHONY: edpm_wait_deploy_baremetal
-edpm_wait_deploy_baremetal: edpm_deploy_baremetal ## waits for dataplane readiness. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
+edpm_wait_deploy_baremetal: edpm_deploy_baremetal ## waits for dataplane readiness. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,dataplane))
 	oc kustomize ${DEPLOY_DIR} | yq '. | select(.kind == "OpenStackDataPlaneNodeSet"), select(.kind == "OpenStackDataPlaneDeployment")' | oc wait --for condition=Ready --timeout=$(BAREMETAL_TIMEOUT) -f -
 	$(MAKE) edpm_nova_discover_hosts
 
 .PHONY: edpm_wait_deploy
-edpm_wait_deploy: edpm_deploy ## waits for dataplane readiness. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
+edpm_wait_deploy: edpm_deploy ## waits for dataplane readiness. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,dataplane))
 	oc kustomize ${DEPLOY_DIR} | yq '. | select(.kind == "OpenStackDataPlaneNodeSet"), select(.kind == "OpenStackDataPlaneDeployment")' | oc wait --for condition=Ready --timeout=$(DATAPLANE_TIMEOUT) -f -
 	$(MAKE) edpm_nova_discover_hosts
@@ -908,9 +897,9 @@ edpm_deploy_networker_prep: export EDPM_CONTAINER_PREFIX=${DATAPLANE_CONTAINER_P
 edpm_deploy_networker_prep: export EDPM_DEPLOY_DIR=${DEPLOY_DIR_EDPM_NETWORKER}
 edpm_deploy_networker_prep: export EDPM_IP_ADDRESS_OFFSET=200
 edpm_deploy_networker_prep: export EDPM_SERVER_ROLE=networker
-edpm_deploy_networker_prep: export REPO=${DATAPLANE_REPO}
-edpm_deploy_networker_prep: export BRANCH=${DATAPLANE_BRANCH}
-edpm_deploy_networker_prep: export HASH=${DATAPLANE_COMMIT_HASH}
+edpm_deploy_networker_prep: export REPO=${OPENSTACK_REPO}
+edpm_deploy_networker_prep: export BRANCH=${OPENSTACK_BRANCH}
+edpm_deploy_networker_prep: export HASH=${OPENSTACK_COMMIT_HASH}
 edpm_deploy_networker_prep: export DATAPLANE_KUSTOMIZE_SCENARIO=networker
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
@@ -925,7 +914,7 @@ edpm_deploy_networker_prep: edpm_deploy_networker_cleanup ## prepares the CR to 
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR_EDPM_NETWORKER}
 	bash scripts/clone-operator-repo.sh
 	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
-	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/dataplane-operator/examples/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR_EDPM_NETWORKER}/dataplane.yaml
+	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/dataplane/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR_EDPM_NETWORKER}/dataplane.yaml
 	bash scripts/gen-edpm-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
@@ -940,7 +929,7 @@ edpm_deploy_networker_cleanup: namespace ## cleans up the edpm instance, Does no
 	echo "CLEANUP DONE"
 
 .PHONY: edpm_deploy_networker
-edpm_deploy_networker: input edpm_deploy_networker_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set DATAPLANE_REPO and DATAPLANE_BRANCH to deploy from a custom repo.
+edpm_deploy_networker: input edpm_deploy_networker_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,dataplane))
 	oc apply -f ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
 ifneq ($(DATAPLANE_RUNNER_IMG),)
@@ -1883,35 +1872,6 @@ ansibleee_kuttl: input ansibleee_kuttl_prep ansibleee ## runs kuttl tests for th
 	make ansibleee_cleanup
 	bash scripts/restore-namespace.sh
 
-.PHONY: dataplane_kuttl_run
-dataplane_kuttl_run: ## runs kuttl tests for the dataplane operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${DATAPLANE_KUTTL_CONF} ${DATAPLANE_KUTTL_DIR} ${DATAPLANE_KUTTL_ARGS}
-
-.PHONY: dataplane_kuttl_cleanup
-dataplane_kuttl_cleanup: openstack_deploy_cleanup openstack_cleanup certmanager_cleanup
-	$(eval $(call vars,$@,dataplane))
-	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/dataplane-operator
-
-.PHONY: dataplane_kuttl_prep
-dataplane_kuttl_prep: export REPO=${DATAPLANE_REPO}
-dataplane_kuttl_prep: export BRANCH=${DATAPLANE_BRANCH}
-dataplane_kuttl_prep: export HASH=${DATAPLANE_COMMIT_HASH}
-dataplane_kuttl_prep: dataplane_kuttl_cleanup input openstack ## Prepares all dependencies for running the dataplane-operator kuttl tests
-	$(eval $(call vars,$@,dataplane))
-	# Kuttl tests require the SSH key secret to exist
-	devsetup/scripts/gen-ansibleee-ssh-key.sh
-	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR}
-	bash scripts/clone-operator-repo.sh
-	make wait OPERATOR_NAME=openstack
-	make wait OPERATOR_NAME=openstack-ansibleee
-	make wait OPERATOR_NAME=infra
-	make wait OPERATOR_NAME=openstack-baremetal
-
-.PHONY: dataplane_kuttl
-dataplane_kuttl: dataplane_kuttl_prep ## runs kuttl tests for the openstack-dataplane operator and cleans up
-	make dataplane_kuttl_run
-	make dataplane_kuttl_cleanup
-
 .PHONY: glance_kuttl_run
 glance_kuttl_run: ## runs kuttl tests for the glance operator, assumes that everything needed for running the test was deployed beforehand.
 	kubectl-kuttl test --config ${GLANCE_KUTTL_CONF} ${GLANCE_KUTTL_DIR} --namespace ${NAMESPACE}
@@ -2120,24 +2080,6 @@ baremetal_cleanup: ## deletes the operator, but does not cleanup the service res
 	bash scripts/operator-cleanup.sh
 	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 	test -d ${OPERATOR_BASE_DIR}/baremetal-operator && make crc_bmo_cleanup || true
-
-##@ DATAPLANE
-.PHONY: dataplane_prep
-dataplane_prep: export IMAGE=${DATAPLANE_IMG}
-dataplane_prep: ## creates the files to install the operator using olm
-	$(eval $(call vars,$@,dataplane))
-	bash scripts/gen-olm.sh
-
-.PHONY: dataplane
-dataplane: operator_namespace dataplane_prep ## installs the operator, also runs the prep step. Set DATAPLANE_IMG for custom image.
-	$(eval $(call vars,$@,dataplane))
-	oc apply -f ${OPERATOR_DIR}
-
-.PHONY: dataplane_cleanup
-dataplane_cleanup: ## deletes the operator, but does not cleanup the service resources
-	$(eval $(call vars,$@,dataplane))
-	bash scripts/operator-cleanup.sh
-	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 ##@ CEPH
 .PHONY: ceph_help
