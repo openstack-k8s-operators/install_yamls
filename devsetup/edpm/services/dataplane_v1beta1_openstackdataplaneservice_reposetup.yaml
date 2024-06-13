@@ -11,7 +11,7 @@ metadata:
   name: repo-setup
 spec:
   label: repo-setup
-  play: |
+  playbookContents: |
     - hosts: all
       strategy: linear
       tasks:
