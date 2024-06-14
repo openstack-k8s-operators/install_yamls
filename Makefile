@@ -533,7 +533,7 @@ help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 .PHONY: cleanup
-cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup designate_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup swift_cleanup barbican_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup dataplane_cleanup ansibleee_cleanup rabbitmq_cleanup infra_cleanup ## Delete all operators
+cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup designate_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup swift_cleanup barbican_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup ansibleee_cleanup rabbitmq_cleanup infra_cleanup ## Delete all operators
 
 .PHONY: deploy_cleanup
 deploy_cleanup: manila_deploy_cleanup heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup designate_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup swift_deploy_cleanup barbican_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
