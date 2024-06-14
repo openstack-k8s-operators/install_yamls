@@ -802,7 +802,7 @@ endif
 edpm_deploy_cleanup: namespace ## cleans up the edpm instance, Does not affect the operator.
 	$(eval $(call vars,$@,dataplane))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/dataplane-operator ${DEPLOY_DIR}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/openstack-operator ${DEPLOY_DIR}
 
 .PHONY: edpm_deploy
 edpm_deploy: input edpm_deploy_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
@@ -926,7 +926,7 @@ edpm_deploy_networker_cleanup: namespace ## cleans up the edpm instance, Does no
 	echo "START CLEANUP"
 	$(eval $(call vars,$@,dataplane))
 	oc kustomize ${DEPLOY_DIR_EDPM_NETWORKER} | oc delete --ignore-not-found=true -f -
-	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/dataplane-operator ${DEPLOY_DIR_EDPM_NETWORKER}
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/openstack-operator ${DEPLOY_DIR_EDPM_NETWORKER}
 	echo "CLEANUP DONE"
 
 .PHONY: edpm_deploy_networker
