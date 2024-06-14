@@ -17,28 +17,6 @@
 set -e
 
 if [ "${EDPM_SERVER_ROLE}" == "compute" ]; then
-# Create a nova-custom service with a reference to nova-extra-config CM
-cat <<EOF >>kustomization.yaml
-- target:
-    kind: OpenStackDataPlaneService
-    name: nova
-  patch: |-
-    - op: replace
-      path: /metadata/name
-      value: nova-custom
-    - op: remove
-      path: /spec/secrets
-    - op: add
-      path: /spec/dataSources
-      value:
-        - secretRef:
-            name: nova-cell1-compute-config
-        - secretRef:
-            name: nova-migration-ssh-key
-        - configMapRef:
-            name: nova-extra-config
-EOF
-
 # Create the nova-extra-config CM based on the provided config file
 cat <<EOF >>kustomization.yaml
 configMapGenerator:
@@ -48,18 +26,4 @@ configMapGenerator:
   options:
     disableNameSuffixHash: true
 EOF
-
-# Replace the nova service in the nodeset with the new nova-custom service
-#
-# NOTE(gibi): This is hard to do with kustomize as it only allows
-# list item replacemnet by index and not by value, but we cannot
-# be sure that the index is not changing in the future by
-# adding more services or splitting existing services.
-# The kustozmization would be something like:
-#     - op: replace
-#      path: /spec/services/11
-#      value: nova-custom
-#
-# So we do a replace by value with yq (assuming golang implementation of yq)
-yq -i '(.spec.services[] | select(. == "nova")) |= "nova-custom"' dataplane.yaml
 fi
