@@ -435,6 +435,7 @@ NNCP_CTLPLANE_IPV6_ADDRESS_SUFFIX   ?=10
 NNCP_GATEWAY_IPV6                   ?=fd00:aaaa::1
 NNCP_DNS_SERVER_IPV6                ?=fd00:aaaa::1
 NNCP_ADDITIONAL_HOST_ROUTES         ?=
+NNCP_RETRIES ?= 5
 
 # MetalLB
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
@@ -667,8 +668,8 @@ endif
 
 OPENSTACK_PREP_DEPS := validate_marketplace
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_CERT_MANAGER)), certmanager)
-OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp netattach metallb metallb_config)
-OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_BGP)), nmstate nncp netattach metallb metallb_config)
+OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_ISOLATION)), nmstate nncp_with_retries netattach metallb metallb_config)
+OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_BGP)), nmstate nncp_with_retries netattach metallb metallb_config)
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(BMO_SETUP)), crc_bmo_setup)
 
 .PHONY: openstack_prep
@@ -2153,6 +2154,12 @@ else
 	timeout ${TIMEOUT} bash -c "while ! (oc get deployments/nmstate-webhook -n ${NAMESPACE}); do sleep 10; done"
 	oc wait deployments/nmstate-webhook -n ${NAMESPACE} --for condition=Available --timeout=${TIMEOUT}
 endif
+
+.PHONY: nncp_with_retries
+nncp_with_retries: ## Deploy NNCP with retries
+	 $(eval $(call vars,$@))
+	bash scripts/retry_make_nncp.sh $(NNCP_RETRIES)
+
 
 .PHONY: nncp
 nncp: export INTERFACE=${NNCP_INTERFACE}
