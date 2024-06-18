@@ -1949,6 +1949,12 @@ openstack_kuttl_run: ## runs kuttl tests for the openstack operator, assumes tha
 .PHONY: openstack_kuttl
 openstack_kuttl: export NAMESPACE = ${OPENSTACK_KUTTL_NAMESPACE}
 openstack_kuttl: input deploy_cleanup openstack openstack_deploy_prep ## runs kuttl tests for the openstack operator. Installs openstack operator and cleans up previous deployments before running the tests, cleans up after running the tests.
+	$(eval $(call vars,$@,ansibleee))
+	make wait
+	$(eval $(call vars,$@,infra))
+	make wait
+	$(eval $(call vars,$@,openstack-baremetal))
+	make wait
 	$(eval $(call vars,$@,openstack))
 	make wait
 	make openstack_kuttl_run
