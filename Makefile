@@ -746,7 +746,7 @@ openstack_deploy_cleanup: namespace netconfig_deploy_cleanup ## cleans up the se
 
 .PHONY: edpm_deploy_generate_keys
 edpm_deploy_generate_keys:
-	$(eval $(call vars,$@,dataplane))
+	$(eval $(call vars,$@,openstack))
 	devsetup/scripts/gen-ansibleee-ssh-key.sh
 	bash scripts/gen-edpm-nova-migration-ssh-key.sh
 ifneq (${EDPM_ROOT_PASSWORD},)
@@ -787,8 +787,8 @@ edpm_deploy_prep: export BGP=kernel
 endif
 endif
 edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data plane
-	$(eval $(call vars,$@,dataplane))
-	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	$(eval $(call vars,$@,openstack))
+	mkdir -p ${OPERATOR_BASE_DIR} ${DEPLOY_DIR}
 	bash scripts/clone-operator-repo.sh
 	cp ${DATAPLANE_EXTRA_NOVA_CONFIG_FILE} ${EDPM_EXTRA_NOVA_CONFIG_FILE}
 	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/dataplane/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
@@ -800,13 +800,11 @@ endif
 
 .PHONY: edpm_deploy_cleanup
 edpm_deploy_cleanup: namespace ## cleans up the edpm instance, Does not affect the operator.
-	$(eval $(call vars,$@,dataplane))
-	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/openstack-operator ${DEPLOY_DIR}
+	oc delete osdpns --all -n ${NAMESPACE}; oc delete osdpd --all -n ${NAMESPACE}; oc delete osdps --all -n ${NAMESPACE}
 
 .PHONY: edpm_deploy
 edpm_deploy: input edpm_deploy_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
-	$(eval $(call vars,$@,dataplane))
+	$(eval $(call vars,$@,openstack))
 ifneq ($(DATAPLANE_RUNNER_IMG),)
 	make edpm_patch_ansible_runner_image
 endif
@@ -836,7 +834,7 @@ edpm_deploy_baremetal_prep: export EDPM_ROOT_PASSWORD=${BM_ROOT_PASSWORD}
 edpm_deploy_baremetal_prep: export EDPM_EXTRA_NOVA_CONFIG_FILE=${DEPLOY_DIR}/25-nova-extra.conf
 edpm_deploy_baremetal_prep: export EDPM_SERVER_ROLE=compute
 edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install the data plane
-	$(eval $(call vars,$@,dataplane))
+	$(eval $(call vars,$@,openstack))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
 	bash scripts/clone-operator-repo.sh
 	cp ${DATAPLANE_EXTRA_NOVA_CONFIG_FILE} ${EDPM_EXTRA_NOVA_CONFIG_FILE}
@@ -849,7 +847,7 @@ endif
 
 .PHONY: edpm_deploy_baremetal
 edpm_deploy_baremetal: input edpm_deploy_baremetal_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
-	$(eval $(call vars,$@,dataplane))
+	$(eval $(call vars,$@,openstack))
 ifneq ($(DATAPLANE_RUNNER_IMG),)
 	make edpm_patch_ansible_runner_image
 endif
@@ -911,8 +909,8 @@ endif
 endif
 edpm_deploy_networker_prep: edpm_deploy_networker_cleanup ## prepares the CR to install the data plane
 	echo "START PREP"
-	$(eval $(call vars,$@,dataplane))
-	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR_EDPM_NETWORKER}
+	$(eval $(call vars,$@,openstack))
+	mkdir -p ${OPERATOR_BASE_DIR} ${DEPLOY_DIR_EDPM_NETWORKER}
 	bash scripts/clone-operator-repo.sh
 	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
 	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/dataplane/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR_EDPM_NETWORKER}/dataplane.yaml
@@ -924,14 +922,14 @@ endif
 .PHONY: edpm_deploy_networker_cleanup
 edpm_deploy_networker_cleanup: namespace ## cleans up the edpm instance, Does not affect the operator.
 	echo "START CLEANUP"
-	$(eval $(call vars,$@,dataplane))
+	$(eval $(call vars,$@,openstack))
 	oc kustomize ${DEPLOY_DIR_EDPM_NETWORKER} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/openstack-operator ${DEPLOY_DIR_EDPM_NETWORKER}
 	echo "CLEANUP DONE"
 
 .PHONY: edpm_deploy_networker
 edpm_deploy_networker: input edpm_deploy_networker_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
-	$(eval $(call vars,$@,dataplane))
+	$(eval $(call vars,$@,openstack))
 	oc apply -f ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
 ifneq ($(DATAPLANE_RUNNER_IMG),)
 	make edpm_patch_ansible_runner_image
