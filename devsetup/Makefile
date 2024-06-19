@@ -176,9 +176,10 @@ crc_cleanup: ## Destroys the CRC env, but does NOT clear ( --clear-cache ) the c
 	sudo update-ca-trust
 
 .PHONY: crc_scrub
-crc_scrub: crc_cleanup
+crc_scrub:
+	make crc_cleanup || true
 	rm -rf ~/.crc
-	sudo rm $(which crc)
+	sudo rm $$(which crc)
 
 .PHONY: crc_attach_default_interface
 crc_attach_default_interface:
