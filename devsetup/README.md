@@ -10,6 +10,9 @@ cd <install_yamls_root_path>/devsetup
 CPUS=12 MEMORY=25600 DISK=100 make crc
 ```
 
+**Note**
+To configure a http and/or https proxy on the crc instance, use `CRC_HTTP_PROXY` and `CRC_HTTPS_PROXY`.
+
 After the installation is complete, proceed with the OpenStack service provisioning.
 
 The steps it runs are the following:

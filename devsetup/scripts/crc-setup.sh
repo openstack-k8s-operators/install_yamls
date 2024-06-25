@@ -13,6 +13,8 @@ CRC_BUNDLE=${CRC_BUNDLE:-""}
 CPUS=${CPUS:-4}
 MEMORY=${MEMORY:-10752}
 DISK=${DISK:-31}
+HTTP_PROXY=${CRC_HTTP_PROXY:-""}
+HTTPS_PROXY=${CRC_HTTPS_PROXY:-""}
 
 if [ -z "${CRC_URL}" ]; then
     echo "Please set CRC_URL as ARG1"; exit 1
@@ -49,6 +51,12 @@ ${CRC_BIN} config set skip-check-daemon-systemd-sockets true
 ${CRC_BIN} config set cpus ${CPUS}
 ${CRC_BIN} config set memory ${MEMORY}
 ${CRC_BIN} config set disk-size ${DISK}
+if [ -n ${HTTP_PROXY} ]; then
+    ${CRC_BIN} config set http-proxy ${HTTP_PROXY}
+fi
+if [ -n ${HTTPS_PROXY} ]; then
+    ${CRC_BIN} config set https-proxy ${HTTPS_PROXY}
+fi
 if [ -n ${CRC_BUNDLE} ]; then
     ${CRC_BIN} config set bundle ${CRC_BUNDLE}
 fi
