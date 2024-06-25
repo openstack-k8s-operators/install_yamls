@@ -697,6 +697,15 @@ openstack_cleanup: operator_namespace## deletes the operator, but does not clean
 	oc delete catalogsource --all=true
 	test -d ${OPERATOR_BASE_DIR}/baremetal-operator && make crc_bmo_cleanup || true
 
+.PHONY: openstack_repo
+openstack_repo: export REPO=${OPENSTACK_REPO}
+openstack_repo: export BRANCH=${OPENSTACK_BRANCH}
+openstack_repo: export HASH=${OPENSTACK_COMMIT_HASH}
+openstack_repo: ## clones the openstack-operator repo
+	$(eval $(call vars,$@,openstack))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	bash -c "CHECKOUT_FROM_OPENSTACK_REF=false scripts/clone-operator-repo.sh"
+
 .PHONY: openstack_deploy_prep
 openstack_deploy_prep: export KIND=OpenStackControlPlane
 openstack_deploy_prep: export OVN_NICMAPPING=${OVNCONTROLLER_NMAP}
@@ -712,13 +721,8 @@ openstack_deploy_prep: export CTLPLANE_IPV6_ADDRESS_PREFIX=${NNCP_CTLPLANE_IPV6_
 openstack_deploy_prep: export CTLPLANE_IPV6_ADDRESS_SUFFIX=${NNCP_CTLPLANE_IPV6_ADDRESS_SUFFIX}
 openstack_deploy_prep: export CTLPLANE_IPV6_DNS_SERVER=${NNCP_DNS_SERVER_IPV6}
 endif
-openstack_deploy_prep: export REPO=${OPENSTACK_REPO}
-openstack_deploy_prep: export BRANCH=${OPENSTACK_BRANCH}
-openstack_deploy_prep: export HASH=${OPENSTACK_COMMIT_HASH}
-openstack_deploy_prep: openstack_deploy_cleanup ## prepares the CR to install the service based on the service sample file OPENSTACK
+openstack_deploy_prep: openstack_deploy_cleanup openstack_repo ## prepares the CR to install the service based on the service sample file OPENSTACK
 	$(eval $(call vars,$@,openstack))
-	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	bash -c "CHECKOUT_FROM_OPENSTACK_REF=false scripts/clone-operator-repo.sh"
 	cp ${OPENSTACK_CR} ${DEPLOY_DIR}
 ifneq (${OPENSTACK_NEUTRON_CUSTOM_CONF},)
 	cp ${OPENSTACK_NEUTRON_CUSTOM_CONF} ${NEUTRON_CUSTOM_CONF}
@@ -787,10 +791,9 @@ else
 edpm_deploy_prep: export BGP=kernel
 endif
 endif
-edpm_deploy_prep: edpm_deploy_cleanup ## prepares the CR to install the data plane
+edpm_deploy_prep: edpm_deploy_cleanup openstack_repo ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
-	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	bash scripts/clone-operator-repo.sh
+	mkdir -p ${DEPLOY_DIR}
 	cp ${DATAPLANE_EXTRA_NOVA_CONFIG_FILE} ${EDPM_EXTRA_NOVA_CONFIG_FILE}
 	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/dataplane/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
 	bash scripts/gen-edpm-kustomize.sh
@@ -836,10 +839,9 @@ edpm_deploy_baremetal_prep: export DATAPLANE_KUSTOMIZE_SCENARIO=baremetal
 edpm_deploy_baremetal_prep: export EDPM_ROOT_PASSWORD=${BM_ROOT_PASSWORD}
 edpm_deploy_baremetal_prep: export EDPM_EXTRA_NOVA_CONFIG_FILE=${DEPLOY_DIR}/25-nova-extra.conf
 edpm_deploy_baremetal_prep: export EDPM_SERVER_ROLE=compute
-edpm_deploy_baremetal_prep: edpm_deploy_cleanup ## prepares the CR to install the data plane
+edpm_deploy_baremetal_prep: edpm_deploy_cleanup openstack_repo ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
-	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	bash scripts/clone-operator-repo.sh
+	mkdir -p ${DEPLOY_DIR}
 	cp ${DATAPLANE_EXTRA_NOVA_CONFIG_FILE} ${EDPM_EXTRA_NOVA_CONFIG_FILE}
 	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/dataplane/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
 	bash scripts/gen-edpm-baremetal-kustomize.sh
@@ -910,12 +912,10 @@ else
 edpm_deploy_networker_prep: export BGP=kernel
 endif
 endif
-edpm_deploy_networker_prep: edpm_deploy_networker_cleanup ## prepares the CR to install the data plane
+edpm_deploy_networker_prep: edpm_deploy_networker_cleanup openstack_repo ## prepares the CR to install the data plane
 	echo "START PREP"
 	$(eval $(call vars,$@,dataplane))
-	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR_EDPM_NETWORKER}
-	bash scripts/clone-operator-repo.sh
-	cp devsetup/edpm/services/* ${OPERATOR_BASE_DIR}/${OPERATOR_NAME}-operator/config/services
+	mkdir -p ${DEPLOY_DIR_EDPM_NETWORKER}
 	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/dataplane/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR_EDPM_NETWORKER}/dataplane.yaml
 	bash scripts/gen-edpm-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
