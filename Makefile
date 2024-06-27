@@ -795,6 +795,7 @@ edpm_deploy_prep: edpm_deploy_cleanup openstack_repo ## prepares the CR to insta
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${DEPLOY_DIR}
 	cp ${DATAPLANE_EXTRA_NOVA_CONFIG_FILE} ${EDPM_EXTRA_NOVA_CONFIG_FILE}
+	bash -c "CHECKOUT_FROM_OPENSTACK_REF=false OPERATOR_NAME=openstack scripts/clone-operator-repo.sh"
 	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/dataplane/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
 	bash scripts/gen-edpm-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
@@ -843,6 +844,7 @@ edpm_deploy_baremetal_prep: edpm_deploy_cleanup openstack_repo ## prepares the C
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${DEPLOY_DIR}
 	cp ${DATAPLANE_EXTRA_NOVA_CONFIG_FILE} ${EDPM_EXTRA_NOVA_CONFIG_FILE}
+	bash -c "CHECKOUT_FROM_OPENSTACK_REF=false OPERATOR_NAME=openstack scripts/clone-operator-repo.sh"
 	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/dataplane/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
 	bash scripts/gen-edpm-baremetal-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
@@ -916,6 +918,7 @@ edpm_deploy_networker_prep: edpm_deploy_networker_cleanup openstack_repo ## prep
 	echo "START PREP"
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${DEPLOY_DIR_EDPM_NETWORKER}
+	bash -c "CHECKOUT_FROM_OPENSTACK_REF=false OPERATOR_NAME=openstack scripts/clone-operator-repo.sh"
 	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/dataplane/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR_EDPM_NETWORKER}/dataplane.yaml
 	bash scripts/gen-edpm-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
