@@ -1,6 +1,6 @@
 ---
 # kuttl version to use (must be specific version)
-kuttl_version: 0.15.0
+kuttl_version: 0.17.0
 
 # Released version of the opm package (can be set to 'latest')
 opm_version: latest
