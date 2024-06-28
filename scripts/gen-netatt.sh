@@ -275,7 +275,6 @@ spec:
       "name": "octavia",
       "type": "bridge",
       "bridge": "octbr",
-      "vlan": $((${VLAN_START}+${VLAN_STEP}*4)),
       "ipam": {
         "type": "whereabouts",
 EOF_CAT
