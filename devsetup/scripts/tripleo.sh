@@ -29,6 +29,7 @@ SSH_OPT="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $SSH_KEY
 REPO_SETUP_CMDS=${REPO_SETUP_CMDS:-"${MY_TMP_DIR}/standalone_repos"}
 CMDS_FILE=${CMDS_FILE:-"${MY_TMP_DIR}/standalone_cmds"}
 SKIP_TRIPLEO_REPOS=${SKIP_TRIPLEO_REPOS:="false"}
+MANILA_ENABLED=${MANILA_ENABLED:-true}
 
 if [[ ! -f $SSH_KEY_FILE ]]; then
     echo "$SSH_KEY_FILE is missing"
@@ -63,6 +64,7 @@ export IP=${IP}
 export GATEWAY=${GATEWAY}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-false}
 export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm.yaml}"
+export MANILA_ENABLED=${MANILA_ENABLED:-true}
 
 if [[ -f \$HOME/containers-prepare-parameters.yaml ]]; then
     echo "Using existing containers-prepare-parameters.yaml - contents:"
@@ -139,7 +141,6 @@ scp $SSH_OPT tripleo/ansible_config.cfg zuul@$IP:$HOME/ansible_config.cfg
 if [[ "$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]]; then
     scp $SSH_OPT tripleo/ceph.sh root@$IP:/tmp/ceph.sh
     scp $SSH_OPT tripleo/generate_ceph_inventory.py root@$IP:/tmp/generate_ceph_inventory.py
-    scp $SSH_OPT tripleo/initial-ceph.conf root@$IP:$HOME/initial-ceph.conf
 fi
 
 if [[ -f $HOME/containers-prepare-parameters.yaml ]]; then
