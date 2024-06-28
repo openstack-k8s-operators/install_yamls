@@ -40,7 +40,7 @@ parameter_defaults:
   DockerPuppetDebug: true
   ContainerCli: podman
   ControllerCount: 3
-  ComputeCount: 1
+  ComputeCount: 3
   NeutronGlobalPhysnetMtu: 1350
   CinderLVMLoopDeviceSize: 20480
   CloudName: overcloud.localdomain
