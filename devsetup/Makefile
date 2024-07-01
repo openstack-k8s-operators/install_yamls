@@ -61,7 +61,10 @@ TLS_ENABLED ?= false
 DNS_DOMAIN ?= localdomain
 
 EDPM_TOTAL_NODES ?= 1
+RH_REGISTRY_USER ?= ""
+RH_REGISTRY_PWD ?= ""
 EDPM_COMPUTE_CEPH_ENABLED ?= true
+EDPM_COMPUTE_CELLS ?= 1
 EDPM_COMPUTE_CEPH_NOVA ?= true
 EDPM_COMPUTE_SRIOV_ENABLED ?= true
 EDPM_COMPUTE_DHCP_AGENT_ENABLED ?= true
@@ -425,6 +428,11 @@ edpm_deploy_instance: ## Spin a instance on edpm node
 .PHONY: tripleo_deploy
 tripleo_deploy: export CLOUD_DOMAIN=${DNS_DOMAIN}
 tripleo_deploy: export INTERFACE_MTU=${NETWORK_MTU}
+tripleo_deploy: export COMPUTE_CELLS=${EDPM_COMPUTE_CELLS}
+tripleo_deploy: export REGISTRY_USER ?= ${RH_REGISTRY_USER}
+tripleo_deploy: export REGISTRY_PWD ?= ${RH_REGISTRY_PWD}
+tripleo_deploy: export COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED}
+tripleo_deploy: export COMPUTE_CEPH_NOVA=${EDPM_COMPUTE_CEPH_NOVA}
 tripleo_deploy:
 	$(eval $(call vars))
 	scripts/tripleo.sh
