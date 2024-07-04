@@ -13,8 +13,8 @@
               - openstack-k8s-operators-content-provider
             files:
               - ^devsetup/Makefile
-              - ^devsetup/scripts/*
+              - ^devsetup/scripts/standalone.sh
+              - ^devsetup/scripts/common.sh
               - ^devsetup/standalone/*
-              - ^Makefile
               - ^zuul.d/projects.yaml
         - cifmw-data-plane-adoption-osp-17-to-extracted-crc-minimal-no-ceph: *adoption_vars
