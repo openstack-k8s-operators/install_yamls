@@ -20,7 +20,7 @@ CONTAINERS_TARGET_TAG=${CONTAINERS_TARGET_TAG:-current-podified}
 FAKE_UPDATE=${FAKE_UPDATE:-false}
 OPENSTACK_VERSION=${OPENSTACK_VERSION:-0.0.2}
 OUTFILE=${OUTFILE:-csv.yaml}
-TIMEOUT=${TIMEOUT:-300s}
+TIMEOUT=${TIMEOUT:-600s}
 
 if [ -z "$OPERATOR_NAMESPACE" ]; then
     echo "Please set OPERATOR_NAMESPACE"; exit 1
@@ -32,9 +32,9 @@ fi
 OPENSTACK_OPERATOR_CSV=$(oc get csv -n $OPERATOR_NAMESPACE -o name | grep openstack-operator)
 OPENSTACK_VERSION_CR=$(oc get openstackversion -n $NAMESPACE -o name)
 
-if [ ${FAKE_UPDATE} = "true" ]; then
+if [ "${FAKE_UPDATE}" != "false" ]; then
     oc get $OPENSTACK_OPERATOR_CSV -o yaml -n $OPERATOR_NAMESPACE  > $OUTFILE
-    sed -i $OUTFILE -e "s|value: .*/$CONTAINERS_NAMESPACE/\(.*\)@.*|value: quay.io/$CONTAINERS_NAMESPACE/\1:$CONTAINERS_TARGET_TAG|g"
+    sed -i $OUTFILE -e "s|value: .*/$CONTAINERS_NAMESPACE/\(.*\)[@:].*|value: quay.io/$CONTAINERS_NAMESPACE/\1:$CONTAINERS_TARGET_TAG|g"
     OPENSTACK_DEPLOYED_VERSION=$(oc get -n $NAMESPACE $OPENSTACK_VERSION_CR --template={{.spec.targetVersion}})
     sed -i $OUTFILE -e "s|value: $OPENSTACK_DEPLOYED_VERSION|value: $OPENSTACK_VERSION|"
 
@@ -61,7 +61,7 @@ oc wait $OPENSTACK_VERSION_CR --for=condition=MinorUpdateOVNControlplane --timeo
 
 # start ovn update on data plane
 DATAPLANE_NODESET=$(oc get openstackdataplanenodeset -o name | awk -F'/' '{print $2}')
-DATAPLANE_DEPLOYMENT=$(oc get openstackdataplanedeployment -o name | awk -F'/' '{print $2}')
+DATAPLANE_DEPLOYMENT=$(oc get openstackdataplanedeployment -o name | awk -F'/' '{print $2; exit}')
 
 cat <<EOF >edpm-deployment-ovn-update.yaml
 apiVersion: dataplane.openstack.org/v1beta1
