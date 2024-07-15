@@ -294,6 +294,7 @@ if [ ! -f ${DISK_FILEPATH} ]; then
         --run-command "mkdir -p /root/.ssh; chmod 0700 /root/.ssh" \
         --run-command "ssh-keygen -f /root/.ssh/id_rsa -N ''" \
         --ssh-inject root:string:"$(cat $SSH_PUBLIC_KEY)" \
+        --no-network \
         --selinux-relabel || rm -f ${DISK_FILEPATH}
     if [ ! -f ${DISK_FILEPATH} ]; then
         exit 1
