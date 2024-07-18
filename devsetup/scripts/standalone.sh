@@ -97,11 +97,6 @@ if [[ ! -f $CMDS_FILE ]]; then
 set -ex
 sudo dnf install -y podman python3-tripleoclient util-linux lvm2 cephadm
 
-# Pin Podman to work around a Podman regression where env variables
-# containing newlines get trimmed to the first line only, breaking
-# STEP_CONFIG in container-puppet-* containers.
-sudo dnf install -y https://kojihub.stream.centos.org/kojifiles/packages/podman/4.6.0/1.el9/x86_64/podman-4.6.0-1.el9.x86_64.rpm
-
 sudo hostnamectl set-hostname standalone.${CLOUD_DOMAIN}
 sudo hostnamectl set-hostname standalone.${CLOUD_DOMAIN} --transient
 
