@@ -608,6 +608,7 @@ namespace_cleanup: ## deletes the namespace specified via NAMESPACE env var, als
 	$(eval $(call vars,$@))
 	make keystone_cleanup
 	make mariadb_cleanup
+	oc patch project ${NAMESPACE} --type=merge -p '{"metadata": {"finalizers":null}}'
 	oc delete project ${NAMESPACE}
 	${CLEANUP_DIR_CMD} ${OUT}/${NAMESPACE}
 
