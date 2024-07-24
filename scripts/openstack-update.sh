@@ -60,7 +60,7 @@ oc patch $OPENSTACK_VERSION_CR  --type=merge  --patch-file openstackversionpatch
 oc wait $OPENSTACK_VERSION_CR --for=condition=MinorUpdateOVNControlplane --timeout=$TIMEOUT
 
 # start ovn update on data plane
-DATAPLANE_NODESET=$(oc get openstackdataplanenodeset -o name | awk -F'/' '{print $2}')
+DATAPLANE_NODESET=$(oc get openstackdataplanenodeset -o name | awk -F'/' '{print "    - "  $2}')
 DATAPLANE_DEPLOYMENT=$(oc get openstackdataplanedeployment -o name | awk -F'/' '{print $2; exit}')
 
 cat <<EOF >edpm-deployment-ovn-update.yaml
@@ -70,7 +70,7 @@ metadata:
   name: $DATAPLANE_DEPLOYMENT-ovn-update
 spec:
   nodeSets:
-    - $DATAPLANE_NODESET
+$DATAPLANE_NODESET
   servicesOverride:
     - ovn
 EOF
@@ -94,7 +94,7 @@ metadata:
   name: $DATAPLANE_DEPLOYMENT-update
 spec:
   nodeSets:
-    - $DATAPLANE_NODESET
+$DATAPLANE_NODESET
   servicesOverride:
     - update
 EOF
