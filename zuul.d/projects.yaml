@@ -8,7 +8,7 @@
             dependencies:
               - openstack-k8s-operators-content-provider
         - podified-multinode-edpm-deployment-crc: *content_provider
-        - cifmw-data-plane-adoption-osp-17-to-extracted-crc: &adoption_vars
+        - adoption-standalone-to-crc-ceph-provider: &adoption_vars
             dependencies:
               - openstack-k8s-operators-content-provider
             files:
@@ -17,4 +17,4 @@
               - ^devsetup/scripts/common.sh
               - ^devsetup/standalone/*
               - ^zuul.d/projects.yaml
-        - cifmw-data-plane-adoption-osp-17-to-extracted-crc-minimal-no-ceph: *adoption_vars
+        - adoption-standalone-to-crc-no-ceph-provider: *adoption_vars
