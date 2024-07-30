@@ -47,7 +47,7 @@ fi
 if [[ ! -f $CMDS_FILE ]]; then
     cat <<EOF > $CMDS_FILE
 set -ex
-sudo dnf install -y podman python3-tripleoclient util-linux lvm2
+sudo dnf install -y podman python3-tripleoclient util-linux lvm2 openstack-tempest
 
 sudo hostnamectl set-hostname undercloud.localdomain
 sudo hostnamectl set-hostname undercloud.localdomain --transient

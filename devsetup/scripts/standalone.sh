@@ -95,7 +95,7 @@ fi
 if [[ ! -f $CMDS_FILE ]]; then
     cat <<EOF > $CMDS_FILE
 set -ex
-sudo dnf install -y podman python3-tripleoclient util-linux lvm2 cephadm
+sudo dnf install -y podman python3-tripleoclient util-linux lvm2 cephadm openstack-tempest
 
 sudo hostnamectl set-hostname standalone.${CLOUD_DOMAIN}
 sudo hostnamectl set-hostname standalone.${CLOUD_DOMAIN} --transient
