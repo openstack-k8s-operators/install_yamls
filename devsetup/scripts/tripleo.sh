@@ -22,6 +22,7 @@ SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADRESS_SUFFIX}"}
 OS_NET_CONFIG_IFACE=${OS_NET_CONFIG_IFACE:-"nic1"}
+CLOUD_DOMAIN=${CLOUD_DOMAIN:-localdomain}
 GATEWAY=${GATEWAY:-"${EDPM_COMPUTE_NETWORK_IP}"}
 OUTPUT_DIR=${OUTPUT_DIR:-"${SCRIPTPATH}/../../out/edpm/"}
 SSH_KEY_FILE=${SSH_KEY_FILE:-"${OUTPUT_DIR}/ansibleee-ssh-key-id_rsa"}
@@ -29,6 +30,7 @@ SSH_OPT="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $SSH_KEY
 REPO_SETUP_CMDS=${REPO_SETUP_CMDS:-"${MY_TMP_DIR}/standalone_repos"}
 CMDS_FILE=${CMDS_FILE:-"${MY_TMP_DIR}/standalone_cmds"}
 SKIP_TRIPLEO_REPOS=${SKIP_TRIPLEO_REPOS:="false"}
+TRIPLEO_NETWORKING=${TRIPLEO_NETWORKING:-true}
 MANILA_ENABLED=${MANILA_ENABLED:-true}
 
 if [[ ! -f $SSH_KEY_FILE ]]; then
@@ -36,7 +38,28 @@ if [[ ! -f $SSH_KEY_FILE ]]; then
     exit 1
 fi
 
+sudo dnf install -y python-jinja2
 source ${SCRIPTPATH}/common.sh
+
+# Clock synchronization is important for both Ceph and OpenStack services, so both ceph deploy and tripleo deploy commands will make use of chrony to ensure the clock is properly in sync.
+# We'll use the NTP_SERVER environmental variable to define the NTP server to use.
+# If we are running alls these commands in a system inside the Red Hat network we should use the clock.corp.redhat.com server:
+# export NTP_SERVER=clock.corp.redhat.com
+# And when running it from our own systems outside of the Red Hat network we can use any available server:
+# export NTP_SERVER=pool.ntp.org
+
+if [ $EDPM_COMPUTE_CELLS -eq 2 ] || [ $EDPM_COMPUTE_CELLS -gt 3 ] || [ $EDPM_COMPUTE_CELLS -eq 0 ] ; then
+    echo "Only a main cell0 plus a 2 additional compute cells supported yet!"
+    exit 1
+fi
+
+# TODO(bogdando): multi-cell with ceph HCI
+if [ $EDPM_COMPUTE_CELLS -eq 3 ] && [[ "$EDPM_COMPUTE_CEPH_ENABLED" =~ "rue" ]]; then
+    echo "Ceph storage is not supported for multi-cell setup yet! Deploying with a local storage."
+    COMPUTE_CEPH_ENABLED=False
+    EDPM_COMPUTE_CEPH_ENABLED=False
+    CEPH_ARGS=" "
+fi
 
 if [[ -e /run/systemd/resolve/resolv.conf ]]; then
     HOST_PRIMARY_RESOLV_CONF_ENTRY=$(cat /run/systemd/resolve/resolv.conf | grep ^nameserver | grep -v "${EDPM_COMPUTE_NETWORK_IP%.*}" | head -n1 | cut -d' ' -f2)
@@ -44,32 +67,73 @@ else
     HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY:-$GATEWAY}
 fi
 
+set +x
+cat <<EOF > $MY_TMP_DIR/.standalone_env_file
+export RH_REGISTRY_USER="$REGISTRY_USER"
+export RH_REGISTRY_PWD="$RH_REGISTRY_PWD"
+EOF
+chmod 0600 $MY_TMP_DIR/.standalone_env_file
+
 if [[ ! -f $CMDS_FILE ]]; then
     cat <<EOF > $CMDS_FILE
+. \$HOME/.standalone_env_file
+
 set -ex
 sudo dnf install -y podman python3-tripleoclient util-linux lvm2
 
 sudo hostnamectl set-hostname undercloud.localdomain
 sudo hostnamectl set-hostname undercloud.localdomain --transient
 
+cat >\$HOME/nova_noceph.yaml <<__EOF__
+parameter_defaults:
+    NovaEnableRbdBackend: false
+__EOF__
+
+cat >\$HOME/nopingtests.yaml <<__EOF__
+parameter_defaults:
+    ValidateControllersIcmp: false
+    ValidateGatewaysIcmp: false
+    PingTestGatewayIPsMap: false
+    PingTestIpsMap: false
+__EOF__
+
 export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
 export INTERFACE_MTU=${INTERFACE_MTU:-1500}
 export NTP_SERVER=${NTP_SERVER:-"clock.corp.redhat.com"}
 export IP=${IP}
+export IP_ADRESS_SUFFIX=${IP_ADRESS_SUFFIX}
 export GATEWAY=${GATEWAY}
-export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-false}
-export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm.yaml}"
+export EDPM_COMPUTE_CEPH_ENABLED=${COMPUTE_CEPH_ENABLED:-False}
+export EDPM_COMPUTE_CEPH_NOVA=${COMPUTE_CEPH_NOVA:-False}
+export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml}"
+[[ "\$EDPM_COMPUTE_CEPH_NOVA" =~ "alse" ]] && export CEPH_ARGS="\${CEPH_ARGS} -e \$HOME/nova_noceph.yaml"
+export VALIDATION_ARGS="${VALIDATION_ARGS:-' '}"
+[[ "\$TRIPLEO_NETWORKING" =~ "alse" ]] && export VALIDATION_ARGS="\${VALIDATION_ARGS} -e \$HOME/nopingtests.yaml"
+export EDPM_COMPUTE_CELLS=${COMPUTE_CELLS:-1}
 export MANILA_ENABLED=${MANILA_ENABLED:-true}
 
+set +x
 if [[ -f \$HOME/containers-prepare-parameters.yaml ]]; then
     echo "Using existing containers-prepare-parameters.yaml - contents:"
     cat \$HOME/containers-prepare-parameters.yaml
 else
+    login_args=" "
+    [ "\$RH_REGISTRY_USER" ] && [ -n "\$RH_REGISTRY_PWD" ] && login_args="--enable-registry-login"
     openstack tripleo container image prepare default \
-        --output-env-file \$HOME/containers-prepare-parameters.yaml
+        --output-env-file \$HOME/containers-prepare-parameters.yaml \${login_args}
     # Use wallaby el9 container images
     sed -i 's|quay.io/tripleowallaby$|quay.io/tripleowallabycentos9|' \$HOME/containers-prepare-parameters.yaml
 fi
+
+if [ "\$RH_REGISTRY_USER" ] && [ -n "\$RH_REGISTRY_PWD" ]; then
+    grep -q ContainerImageRegistryCredentials /home/zuul/containers-prepare-parameters.yaml || \
+    cat >> /home/zuul/containers-prepare-parameters.yaml <<__EOF__
+  ContainerImageRegistryCredentials:
+    registry.redhat.io:
+      \${RH_REGISTRY_USER}: \$RH_REGISTRY_PWD
+__EOF__
+fi
+set -x
 
 # Use os-net-config to add VLAN interfaces which connect edpm-compute-0 to the isolated networks configured by install_yamls.
 sudo mkdir -p /etc/os-net-config
@@ -79,6 +143,7 @@ network:
     config: disabled
 __EOF__
 
+cell=\$(( IP_ADRESS_SUFFIX - 100 ))
 sudo systemctl enable network
 sudo cp /tmp/net_config.yaml /etc/os-net-config/config.yaml
 sudo os-net-config -c /etc/os-net-config/config.yaml
@@ -100,6 +165,7 @@ while [[ $(ssh -o BatchMode=yes -o ConnectTimeout=5 $SSH_OPT root@$IP echo ok) !
 done
 
 # Render Jinja2 files
+# FIXME: .99 undercloud IP cannot be changed https://review.rdoproject.org/cgit/rdo-jobs/tree/playbooks/data_plane_adoption/setup_tripleo_os_net_config.yaml#n6
 PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
 J2_VARS_FILE=$(mktemp --suffix=".yaml" --tmpdir="${MY_TMP_DIR}")
 cat << EOF > ${J2_VARS_FILE}
@@ -113,37 +179,89 @@ interface_mtu: ${INTERFACE_MTU:-1500}
 ntp_server: ${NTP_SERVER}
 gateway_ip: ${GATEWAY}
 dns_server: ${PRIMARY_RESOLV_CONF_ENTRY}
-user_home: ${HOME}
+user_home: /home/zuul
 EOF
 
-jinja2_render tripleo/net_config.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/net_config.yaml
-jinja2_render tripleo/undercloud.conf.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/undercloud.conf
+jinja2_render ${SCRIPTPATH}/../tripleo/undercloud.conf.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/undercloud.conf
+jinja2_render ${SCRIPTPATH}/../tripleo/net_config.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/net_config.yaml
+# NOTE(bogdando): no computes supported in the cetnral overcloud stack in OSP.
+# Reduced footprint for adoption dev envs: no HA controllers, an all-in-one host in the cell 2
+ind=0
+if [ $EDPM_COMPUTE_CELLS -gt 1 ]; then
+    for cell in $(seq 0 $(( EDPM_COMPUTE_CELLS - 1))); do
+        aio_count=0
+        contr_count=0
+        cell_contr_count=1
+        comp_count=1
+        if [ $cell -eq 0 ]; then
+            contr_count=1
+            cell_contr_count=0
+            comp_count=0
+        fi
+        if [ $cell -ge 2 ]; then
+            aio_count=1
+            cell_contr_count=0
+            comp_count=0
+        fi
+
+        J2_VARS_FILE=$(mktemp --suffix=".yaml" --tmpdir="${MY_TMP_DIR}")
+        cat << EOF > ${J2_VARS_FILE}
+---
+cell: ${cell}
+ind: ${ind}
+max_cells: ${EDPM_COMPUTE_CELLS}
+cloud_domain: ${CLOUD_DOMAIN}
+aio_count: ${aio_count}
+comp_count: ${comp_count}
+cell_contr_count: ${cell_contr_count}
+contr_count: ${contr_count}
+gateway_ip: ${GATEWAY}
+dns_server: ${PRIMARY_RESOLV_CONF_ENTRY}
+tripleo_networking: ${TRIPLEO_NETWORKING}
+EOF
+        jinja2_render "${SCRIPTPATH}/../tripleo/network_data_cell.j2" "${J2_VARS_FILE}" > ${MY_TMP_DIR}/network_data${cell}.yaml
+        jinja2_render "${SCRIPTPATH}/../tripleo/vips_data_cell.j2" "${J2_VARS_FILE}" > ${MY_TMP_DIR}/vips_data${cell}.yaml
+        jinja2_render "${SCRIPTPATH}/../tripleo/overcloud_services_cell.j2" "${J2_VARS_FILE}" > ${MY_TMP_DIR}/overcloud_services_cell${cell}.yaml
+        jinja2_render "${SCRIPTPATH}/../tripleo/config-download-multistack.j2" "${J2_VARS_FILE}" > ${MY_TMP_DIR}/config-download-cell${cell}.yaml
+        ind=$(( ind + 1 ))
+    done
+fi
 
 # Copying files
-scp $SSH_OPT $REPO_SETUP_CMDS root@$IP:/tmp/repo-setup.sh
+[ -f $REPO_SETUP_CMDS ] && scp $SSH_OPT $REPO_SETUP_CMDS root@$IP:/tmp/repo-setup.sh
+scp $SSH_OPT $MY_TMP_DIR/.standalone_env_file zuul@$IP:.standalone_env_file
 scp $SSH_OPT $CMDS_FILE zuul@$IP:/tmp/undercloud-deploy-cmds.sh
 scp $SSH_OPT ${MY_TMP_DIR}/net_config.yaml root@$IP:/tmp/net_config.yaml
-scp $SSH_OPT tripleo/tripleo_install.sh zuul@$IP:$HOME/tripleo_install.sh
-scp $SSH_OPT tripleo/hieradata_overrides_undercloud.yaml zuul@$IP:$HOME/hieradata_overrides_undercloud.yaml
-scp $SSH_OPT tripleo/undercloud-parameter-defaults.yaml zuul@$IP:$HOME/undercloud-parameter-defaults.yaml
-scp $SSH_OPT ${MY_TMP_DIR}/undercloud.conf zuul@$IP:$HOME/undercloud.conf
-scp $SSH_OPT tripleo/network_data.yaml zuul@$IP:$HOME/network_data.yaml
-scp $SSH_OPT tripleo/vips_data.yaml zuul@$IP:$HOME/vips_data.yaml
-scp $SSH_OPT tripleo/config-download.yaml zuul@$IP:$HOME/config-download.yaml
-scp $SSH_OPT tripleo/overcloud_roles.yaml zuul@$IP:$HOME/overcloud_roles.yaml
-scp $SSH_OPT tripleo/overcloud_services.yaml zuul@$IP:$HOME/overcloud_services.yaml
-scp $SSH_OPT tripleo/ansible_config.cfg zuul@$IP:$HOME/ansible_config.cfg
+scp $SSH_OPT ${SCRIPTPATH}/../tripleo/tripleo_install.sh zuul@$IP:tripleo_install.sh
+scp $SSH_OPT ${SCRIPTPATH}/../tripleo/hieradata_overrides_undercloud.yaml zuul@$IP:hieradata_overrides_undercloud.yaml
+scp $SSH_OPT ${SCRIPTPATH}/../tripleo/undercloud-parameter-defaults.yaml zuul@$IP:undercloud-parameter-defaults.yaml
+scp $SSH_OPT ${MY_TMP_DIR}/undercloud.conf zuul@$IP:undercloud.conf
+scp $SSH_OPT ${MY_TMP_DIR}/vips_data0.yaml zuul@$IP:vips_data.yaml
+scp $SSH_OPT ${MY_TMP_DIR}/network_data0.yaml zuul@$IP:network_data.yaml
+if [ $EDPM_COMPUTE_CELLS -gt 1 ]; then
+    for cell in $(seq 0 $(( EDPM_COMPUTE_CELLS - 1))); do
+        scp $SSH_OPT ${MY_TMP_DIR}/vips_data${cell}.yaml zuul@$IP:vips_data${cell}.yaml
+        scp $SSH_OPT ${MY_TMP_DIR}/network_data${cell}.yaml zuul@$IP:network_data${cell}.yaml
+        scp $SSH_OPT ${MY_TMP_DIR}/overcloud_services_cell${cell}.yaml zuul@$IP:overcloud_services_cell${cell}.yaml
+        scp $SSH_OPT ${MY_TMP_DIR}/config-download-cell${cell}.yaml zuul@$IP:config-download-cell${cell}.yaml
+    done
+else
+    scp $SSH_OPT ${SCRIPTPATH}/../tripleo/config-download.yaml zuul@$IP:config-download.yaml
+fi
+scp $SSH_OPT ${SCRIPTPATH}/../tripleo/overcloud_roles.yaml zuul@$IP:overcloud_roles.yaml
+scp $SSH_OPT ${SCRIPTPATH}/../tripleo/overcloud_services.yaml zuul@$IP:overcloud_services.yaml
+scp $SSH_OPT ${SCRIPTPATH}/../tripleo/ansible_config.cfg zuul@$IP:ansible_config.cfg
 if [[ "$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]]; then
-    scp $SSH_OPT tripleo/ceph.sh root@$IP:/tmp/ceph.sh
-    scp $SSH_OPT tripleo/generate_ceph_inventory.py root@$IP:/tmp/generate_ceph_inventory.py
+    scp $SSH_OPT ${SCRIPTPATH}/../tripleo/ceph.sh root@$IP:/tmp/ceph.sh
+    scp $SSH_OPT ${SCRIPTPATH}/../tripleo/generate_ceph_inventory.py root@$IP:/tmp/generate_ceph_inventory.py
 fi
 
 if [[ -f $HOME/containers-prepare-parameters.yaml ]]; then
-    scp $SSH_OPT $HOME/containers-prepare-parameters.yaml zuul@$IP:$HOME/containers-prepare-parameters.yaml
+    scp $SSH_OPT $HOME/containers-prepare-parameters.yaml zuul@$IP:containers-prepare-parameters.yaml
 fi
 
 # Running
 if [[ -z ${SKIP_TRIPLEO_REPOS} || ${SKIP_TRIPLEO_REPOS} == "false" ]]; then
-    ssh $SSH_OPT root@$IP "bash /tmp/repo-setup.sh"
+    [ -f $REPO_SETUP_CMDS ] && ssh $SSH_OPT root@$IP "bash /tmp/repo-setup.sh"
 fi
 ssh $SSH_OPT zuul@$IP "bash /tmp/undercloud-deploy-cmds.sh"
