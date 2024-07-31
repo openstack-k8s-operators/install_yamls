@@ -39,7 +39,7 @@ function install_dependencies {
         dependencies="$dependencies virt-install"
     fi
     if [ -n "$dependencies" ]; then
-        sudo dnf -y install "$dependencies" || { echo "Unable to install dependencies: $dependencies"; exit 1; }
+        sudo dnf -y install $dependencies || { echo "Unable to install dependencies: $dependencies"; exit 1; }
     fi
 }
 
@@ -193,6 +193,7 @@ EOF
 function create_sno_instance {
     virt-install --connect ${LIBVIRT_URL} \
         --name ${SNO_INSTANCE_NAME} \
+        --cpu host \
         --memory ${MEMORY} \
         --vcpus ${VCPUS} \
         --boot uefi,hd,cdrom,bootmenu.enable=yes,firmware.feature0.name=secure-boot,firmware.feature0.enabled=no \
