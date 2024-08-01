@@ -132,6 +132,7 @@ scp $SSH_OPT ${MY_TMP_DIR}/undercloud.conf zuul@$IP:$HOME/undercloud.conf
 scp $SSH_OPT tripleo/network_data.yaml zuul@$IP:$HOME/network_data.yaml
 scp $SSH_OPT tripleo/vips_data.yaml zuul@$IP:$HOME/vips_data.yaml
 scp $SSH_OPT tripleo/config-download.yaml zuul@$IP:$HOME/config-download.yaml
+scp $SSH_OPT tripleo/config-download-networker.yaml zuul@$IP:$HOME/config-download-networker.yaml
 scp $SSH_OPT tripleo/overcloud_roles.yaml zuul@$IP:$HOME/overcloud_roles.yaml
 scp $SSH_OPT tripleo/overcloud_services.yaml zuul@$IP:$HOME/overcloud_services.yaml
 scp $SSH_OPT tripleo/ansible_config.cfg zuul@$IP:$HOME/ansible_config.cfg
