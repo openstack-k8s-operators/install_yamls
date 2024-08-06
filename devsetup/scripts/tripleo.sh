@@ -30,6 +30,7 @@ REPO_SETUP_CMDS=${REPO_SETUP_CMDS:-"${MY_TMP_DIR}/standalone_repos"}
 CMDS_FILE=${CMDS_FILE:-"${MY_TMP_DIR}/standalone_cmds"}
 SKIP_TRIPLEO_REPOS=${SKIP_TRIPLEO_REPOS:="false"}
 MANILA_ENABLED=${MANILA_ENABLED:-true}
+OCTAVIA_ENABLED=${OCTAVIA_ENABLED:-true}
 
 if [[ ! -f $SSH_KEY_FILE ]]; then
     echo "$SSH_KEY_FILE is missing"
@@ -60,6 +61,7 @@ export GATEWAY=${GATEWAY}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-false}
 export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm.yaml}"
 export MANILA_ENABLED=${MANILA_ENABLED:-true}
+export OCTAVIA_ENABLED=${OCTAVIA_ENABLED:-true}
 
 if [[ -f \$HOME/containers-prepare-parameters.yaml ]]; then
     echo "Using existing containers-prepare-parameters.yaml - contents:"
