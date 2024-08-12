@@ -20,6 +20,7 @@ IMG=cirros-0.5.2-x86_64-disk.img
 URL=http://download.cirros-cloud.net/0.5.2/$IMG
 DISK_FORMAT=qcow2
 RAW=$IMG
+NUMBER_OF_INSTANCES=${1:-1}
 curl -L -# $URL > /tmp/$IMG
 if type qemu-img >/dev/null 2>&1; then
     RAW=$(echo $IMG | sed s/img/raw/g)
@@ -57,12 +58,15 @@ openstack compute service list
 openstack network agent list
 
 # Create an instance
-openstack server show test || {
-    openstack server create --flavor m1.small --image cirros --nic net-id=private test --security-group basic --wait
-    fip=$(openstack floating ip create public -f value -c floating_ip_address)
-    openstack server add floating ip test $fip
-}
-openstack server list
+for (( i=0; i<${NUMBER_OF_INSTANCES}; i++ )); do
+    NAME=test_${i}
+    openstack server show ${NAME} || {
+        openstack server create --flavor m1.small --image cirros --nic net-id=private ${NAME} --security-group basic --wait
+        fip=$(openstack floating ip create public -f value -c floating_ip_address)
+        openstack server add floating ip ${NAME} $fip
+    }
+    openstack server list --long
 
-# check connectivity via FIP
-ping -c4 $fip
+    # check connectivity via FIP
+    ping -c4 $fip
+done

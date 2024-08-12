@@ -133,6 +133,8 @@ IPV6_LAB_SNO_HOST_IP              ?= fd00:abcd:abcd:fc00::11
 IPV6_LAB_SNO_OCP_VERSION          ?= latest-4.14
 IPV6_LAB_SNO_OCP_MIRROR_URL       ?= https://mirror.openshift.com/pub/openshift-v4/clients/ocp
 
+# default number of instances to deploy via edpm_deploy_instance
+NUMBER_OF_INSTANCES    ?=1
 
 STANDALONE_COMPUTE_DRIVER ?= libvirt
 
@@ -418,9 +420,10 @@ edpm_networker_cleanup: ## Delete EDPM networker node VM
 	fi
 
 .PHONY: edpm_deploy_instance
+edpm_deploy_instance: export NO_OF_INSTANCES=${NUMBER_OF_INSTANCES}
 edpm_deploy_instance: ## Spin a instance on edpm node
 	-oc cp scripts/edpm-deploy-instance.sh openstackclient:/tmp/
-	-oc rsh openstackclient bash /tmp/edpm-deploy-instance.sh
+	-oc rsh openstackclient bash /tmp/edpm-deploy-instance.sh ${NO_OF_INSTANCES}
 
 .PHONY: tripleo_deploy
 tripleo_deploy: export CLOUD_DOMAIN=${DNS_DOMAIN}
