@@ -76,6 +76,9 @@ patches:
           subnetName: subnet1
         - name: tenant
           subnetName: subnet1
+    - op: replace
+      path: /spec/tlsEnabled
+      value: ${EDPM_TLS_ENABLED}
 EOF
 
 if [ -n "$BGP" ]; then
