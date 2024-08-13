@@ -359,7 +359,7 @@ BMH_NAMESPACE           ?= ${NAMESPACE}
 BAREMETAL_OS_CONTAINER_IMG ?=
 
 # Dataplane Operator
-DATAPLANE_TIMEOUT                                ?= 20m
+DATAPLANE_TIMEOUT                                ?= 30m
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
 DATAPLANE_KUSTOMIZE_SCENARIO                     ?= bgp_ovn_cluster
