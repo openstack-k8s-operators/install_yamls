@@ -76,9 +76,6 @@ patches:
           subnetName: subnet1
         - name: tenant
           subnetName: subnet1
-    - op: replace
-      path: /spec/tlsEnabled
-      value: ${EDPM_TLS_ENABLED}
 EOF
 
 if [ -n "$BGP" ]; then
@@ -127,6 +124,9 @@ cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleUser
       value: ${EDPM_ANSIBLE_USER:-"cloud-admin"}
+    - op: replace
+      path: /spec/tlsEnabled
+      value: ${EDPM_TLS_ENABLED}
 EOF
 
 if oc get pvc ansible-ee-logs -n ${NAMESPACE} 2>&1 1>/dev/null; then
