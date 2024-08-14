@@ -129,6 +129,18 @@ cat <<EOF >>kustomization.yaml
       value: ${EDPM_TLS_ENABLED}
 EOF
 
+if [ -n "$EDPM_NOVA_NFS_PATH" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_extra_mounts
+      value:
+        - fstype: nfs4
+          name: /var/lib/nova/instances
+          opts: context=system_u:object_r:nfs_t:s0
+          path: ${EDPM_NOVA_NFS_PATH}
+EOF
+fi
+
 if oc get pvc ansible-ee-logs -n ${NAMESPACE} 2>&1 1>/dev/null; then
 cat <<EOF >>kustomization.yaml
     - op: replace
