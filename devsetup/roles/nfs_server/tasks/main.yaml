@@ -1,0 +1,54 @@
+---
+- name: Install NFS packages
+  ansible.builtin.yum:
+    name: nfs-utils
+    state: present
+
+- name: Start and enable NFS services
+  ansible.builtin.systemd:
+    name: nfs-server
+    state: started
+    enabled: true
+
+- name: Open nfsv4 port 2049/tcp (running config, non permanent)
+  ansible.builtin.iptables:
+    chain: INPUT
+    destination_port: 2049
+    protocol: tcp
+    ctstate: NEW
+    syn: match
+    jump: ACCEPT
+    comment: Accept new NFS connections.
+
+- name: Create NFS shares
+  ansible.builtin.file:
+    path: "{{ nfs_home }}/{{ item }}"
+    state: directory
+    mode: '0777'
+    group: nobody
+    owner: nobody
+  with_items:
+    - glance
+    - glance-staging
+    - nova
+    - cinder
+    - cinder_image_conversion
+
+- name: Configure exports
+  ansible.builtin.lineinfile:
+    path: /etc/exports.d/osp.exports
+    line: "{{ nfs_home }}/{{ item }} *(rw,sync,no_root_squash)"
+    create: true
+    mode: '0644'
+  with_items:
+    - glance
+    - glance-staging
+    - nova
+    - cinder
+    - cinder_image_conversion
+  register: _export_shares
+
+- name: Export NFS share to the server
+  when:
+    - _export_shares.changed
+  ansible.builtin.command: "exportfs -r"
