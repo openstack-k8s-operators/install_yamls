@@ -397,6 +397,7 @@ GENERATE_SSH_KEYS				 ?= true
 DATAPLANE_EXTRA_NOVA_CONFIG_FILE                 ?= /dev/null
 DATAPLANE_SERVER_ROLE                            ?= compute
 DATAPLANE_TLS_ENABLED                            ?= true
+DATAPLANE_NOVA_NFS_PATH                          ?=
 
 # Manila
 MANILA_IMG              ?= quay.io/openstack-k8s-operators/manila-operator-index:${OPENSTACK_K8S_TAG}
@@ -792,6 +793,7 @@ edpm_deploy_prep: export REPO=${OPENSTACK_REPO}
 edpm_deploy_prep: export BRANCH=${OPENSTACK_BRANCH}
 edpm_deploy_prep: export HASH=${OPENSTACK_COMMIT_HASH}
 edpm_deploy_prep: export EDPM_TLS_ENABLED=${DATAPLANE_TLS_ENABLED}
+edpm_deploy_prep: export EDPM_NOVA_NFS_PATH=${DATAPLANE_NOVA_NFS_PATH}
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
 edpm_deploy_prep: export BGP=ovn
