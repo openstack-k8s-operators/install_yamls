@@ -136,12 +136,16 @@ IPV6_LAB_SNO_OCP_MIRROR_URL       ?= https://mirror.openshift.com/pub/openshift-
 # default number of instances to deploy via edpm_deploy_instance
 NUMBER_OF_INSTANCES    ?=1
 
+# base directory used for the nfs server
+NFS_HOME	?= /home/nfs
+
 STANDALONE_COMPUTE_DRIVER ?= libvirt
 
 CLEANUP_DIR_CMD ?= rm -Rf
 
 define vars
 ${1}: export CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD}
+${1}: export NFS_HOME=${NFS_HOME}
 endef
 
 ##@ General
@@ -167,6 +171,20 @@ download_tools: ## Runs an ansible playbook to install required tools with the v
 	ANSIBLE_FORCE_COLOR=true ansible-playbook \
 	-v -i hosts --tags ${DOWNLOAD_TOOLS_SELECTION} \
 	download_tools.yaml
+
+##@ Configure nfs server on the host
+.PHONY: nfs
+nfs: ## Runs an ansible playbook to install nfs rpms, uses per default /home/nfs as the data dir and exports shared for OSP services.
+	$(eval $(call vars))
+	ANSIBLE_FORCE_COLOR=true ansible-playbook \
+	-v -i hosts nfs.yaml
+
+.PHONY: nfs_cleanup
+nfs_cleanup: ## removes /etc/exports.d/osp.exports, reloads nfs exports and deletes /home/nfs
+	$(eval $(call vars))
+	sudo rm -f /etc/exports.d/osp.exports
+	sudo exportfs -ra
+	sudo ${CLEANUP_DIR_CMD} ${NFS_HOME}
 
 ##@ CRC
 .PHONY: crc

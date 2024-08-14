@@ -1,0 +1,10 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Configure nfs server and exports
+  become: true
+  hosts: localhost
+  gather_facts: true
+  roles:
+    - role: nfs_server
+      vars:
+        nfs_home: "{{ lookup('ansible.builtin.env', 'NFS_HOME')|default('/home/nfs', True) }}"
