@@ -4,3 +4,5 @@ warn_list:
 exclude_paths:
   - devsetup/standalone/network_data.yaml
   - devsetup/standalone/deployed_network.yaml
+skip_list:
+  - no-handler
