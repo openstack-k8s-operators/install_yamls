@@ -26,7 +26,7 @@ SWIFT_REPLICATED=${SWIFT_REPLICATED:-false}
 TLSE_ENABLED=${TLSE_ENABLED:-false}
 CLOUD_DOMAIN=${CLOUD_DOMAIN:-localdomain}
 TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
-OCTAVIA_ENABLED=${OCTAVIA_ENABLED:-true}
+OCTAVIA_ENABLED=${OCTAVIA_ENABLED:-false}
 
 # Use the files created in the previous steps including the network_data.yaml file and thw deployed_network.yaml file.
 # The deployed_network.yaml file hard codes the IPs and VIPs configured from the network.sh
