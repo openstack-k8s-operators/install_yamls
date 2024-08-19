@@ -53,6 +53,7 @@ MANILA_ENABLED=${MANILA_ENABLED:-true}
 SWIFT_REPLICATED=${SWIFT_REPLICATED:-false}
 TLSE_ENABLED=${TLSE_ENABLED:-false}
 CLOUD_DOMAIN=${CLOUD_DOMAIN:-localdomain}
+OCTAVIA_ENABLED=${OCTAVIA_ENABLED:-false}
 
 
 if [[ ! -f $SSH_KEY_FILE ]]; then
@@ -136,6 +137,7 @@ export STANDALONE_VM=${STANDALONE_VM}
 export SWIFT_REPLICATED=${SWIFT_REPLICATED}
 export TLSE_ENABLED=${TLSE_ENABLED}
 export CLOUD_DOMAIN=${CLOUD_DOMAIN}
+export OCTAVIA_ENABLED=${OCTAVIA_ENABLED}
 
 if [[ -f \$HOME/containers-prepare-parameters.yaml ]]; then
     echo "Using existing containers-prepare-parameters.yaml - contents:"
