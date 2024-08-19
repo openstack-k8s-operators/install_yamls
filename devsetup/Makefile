@@ -57,6 +57,8 @@ EDPM_COMPUTE_ADDITIONAL_NETWORKS ?= '[]'
 # EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES="[172.31.0.0/24,172.32.0.0/24]"
 EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES ?= '[]'
 
+EDPM_FIRSTBOOT_EXTRA ?= '/tmp/edpm-firstboot-extra'
+
 TLS_ENABLED ?= false
 DNS_DOMAIN ?= localdomain
 
@@ -373,6 +375,7 @@ edpm_baremetal_compute_cleanup:  ## Cleanup dataplane with BMAAS
 
 .PHONY: edpm_compute
 edpm_compute: export EDPM_COMPUTE_NETWORK = ${NETWORK_ISOLATION_NET_NAME}
+edpm_compute: export FIRSTBOOT_EXTRA = ${EDPM_FIRSTBOOT_EXTRA}
 edpm_compute: ## Create EDPM compute VM
 	$(eval $(call vars))
 	scripts/gen-ansibleee-ssh-key.sh
