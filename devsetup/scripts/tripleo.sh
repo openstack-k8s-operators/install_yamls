@@ -20,6 +20,7 @@ trap 'rv=$?; rm -rf -- "$MY_TMP_DIR"; exit $rv' EXIT
 
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
+IP_ADRESS_SUFFIX=${IP_ADRESS_SUFFIX:-100}
 IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADRESS_SUFFIX}"}
 OS_NET_CONFIG_IFACE=${OS_NET_CONFIG_IFACE:-"nic1"}
 GATEWAY=${GATEWAY:-"${EDPM_COMPUTE_NETWORK_IP}"}

@@ -24,7 +24,7 @@ STANDALONE_VM=${STANDALONE_VM:-"true"}
 if [[ ${STANDALONE_VM} == "true" ]]; then
     EDPM_COMPUTE_NETWORK_IP=$(virsh net-dumpxml ${EDPM_COMPUTE_NETWORK} | xmllint --xpath 'string(/network/ip/@address)' -)
 fi
-IP_ADRESS_SUFFIX=${IP_ADRESS_SUFFIX:-"$((100+${EDPM_COMPUTE_SUFFIX}))"}
+IP_ADRESS_SUFFIX=$((100+${EDPM_COMPUTE_SUFFIX}))
 IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADRESS_SUFFIX}"}
 
 OUTPUT_DIR=${OUTPUT_DIR:-"${SCRIPTPATH}/../../out/edpm/"}
