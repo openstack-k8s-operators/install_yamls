@@ -19,6 +19,15 @@ METADATA_SHARED_SECRET   ?= 1234567842
 HEAT_AUTH_ENCRYPTION_KEY ?= 767c3ed056cbaa3b9dfedb8c6f825bf0
 OPENSTACK_K8S_BRANCH     ?= main
 OPENSTACK_K8S_TAG        ?= latest
+
+# Use Red Hat operators from OpenShift Marketplace
+REDHAT_OPERATORS		 ?= false
+ifeq ($(REDHAT_OPERATORS), true)
+	OPERATOR_CHANNEL		 	?= stable-v1.0
+	OPERATOR_SOURCE		 		?= redhat-operators
+	OPERATOR_SOURCE_NAMESPACE	?= openshift-marketplace
+endif
+
 # Barbican encryption key should be a random 32-byte string that is base64
 # encoded.  e.g. head --bytes=32 /dev/urandom | base64
 BARBICAN_SIMPLE_CRYPTO_ENCRYPTION_KEY ?= sEFmdFjDUqRM2VemYslV5yGNWjokioJXsg8Nrlc3drU=
@@ -513,6 +522,9 @@ ${1}: export OPENSTACK_COMMIT_HASH=${OPENSTACK_COMMIT_HASH}
 ${1}: export GIT_CLONE_OPTS=${GIT_CLONE_OPTS}
 ${1}: export CHECKOUT_FROM_OPENSTACK_REF=${CHECKOUT_FROM_OPENSTACK_REF}
 ${1}: export TIMEOUT=$(TIMEOUT)
+${1}: export OPERATOR_CHANNEL=$(OPERATOR_CHANNEL)
+${1}: export OPERATOR_SOURCE=$(OPERATOR_SOURCE)
+${1}: export OPERATOR_SOURCE_NAMESPACE=$(OPERATOR_SOURCE_NAMESPACE)
 endef
 
 .PHONY: all
