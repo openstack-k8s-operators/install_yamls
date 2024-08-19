@@ -90,6 +90,11 @@ if [ "$OCTAVIA_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/octavia.yaml"
 fi
 
+TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
+if [ "$TELEMETRY_ENABLED" = "true" ]; then
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/enable-legacy-telemetry.yaml"
+fi
+
 # defaults for non-ceph case
 CEPH_OVERCLOUD_ARGS=""
 ROLES_FILE="/home/zuul/overcloud_roles.yaml"
