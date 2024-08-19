@@ -88,9 +88,15 @@ make crc_storage
 make input
 ```
 
-* install opentack-operator
+* install openstack-operator either from quay.io or the redhat-marketplace
+
+install using the latest openstack-operator-index from quay.io
 ```bash
 make openstack
+```
+install using the redhat-marketplace
+```bash
+REDHAT_OPERATORS=true make openstack
 ```
 
 **Note** this will also run the openstack_prep target, which if NETWORK_ISOLATION == true will install nmstate and metallb operator, configure the secondary interface of the crc VM via nncp, creates the network-attachment-definitions for datacentre, internalapi, storage and tenant network. Also the metallb l2advertisement and the ipaddresspools get created.

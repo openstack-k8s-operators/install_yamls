@@ -32,7 +32,14 @@ if [ ! -d ${OPERATOR_DIR} ]; then
     mkdir -p ${OPERATOR_DIR}
 fi
 
+OPERATOR_CHANNEL=${OPERATOR_CHANNEL:-"alpha"}
+OPERATOR_SOURCE=${OPERATOR_SOURCE:-"${OPERATOR_NAME}-operator-index"}
+OPERATOR_SOURCE_NAMESPACE=${OPERATOR_SOURCE_NAMESPACE:-"${OPERATOR_NAMESPACE}"}
+
 echo OPERATOR_DIR ${OPERATOR_DIR}
+echo OPERATOR_CHANNEL ${OPERATOR_CHANNEL}
+echo OPERATOR_SOURCE ${OPERATOR_SOURCE}
+echo OPERATOR_SOURCE_NAMESPACE ${OPERATOR_SOURCE_NAMESPACE}
 
 # can share this for all the operators, won't get re-applied if it already exists
 cat > ${OPERATOR_DIR}/operatorgroup.yaml <<EOF_CAT
@@ -62,7 +69,7 @@ metadata:
   namespace: ${OPERATOR_NAMESPACE}
 spec:
   name: ${OPERATOR_NAME}-operator
-  channel: alpha
-  source: ${OPERATOR_NAME}-operator-index
-  sourceNamespace: ${OPERATOR_NAMESPACE}
+  channel: ${OPERATOR_CHANNEL}
+  source: ${OPERATOR_SOURCE}
+  sourceNamespace: ${OPERATOR_SOURCE_NAMESPACE}
 EOF_CAT
