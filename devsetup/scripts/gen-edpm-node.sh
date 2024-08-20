@@ -23,6 +23,7 @@ MY_TMP_DIR="$(mktemp -d)"
 trap 'rm -rf -- "$MY_TMP_DIR"' EXIT
 
 EDPM_SERVER_ROLE=${EDPM_SERVER_ROLE:-"compute"}
+FIRSTBOOT_EXTRA=${FIRSTBOOT_EXTRA:-"/tmp/edpm-firstboot-extra"}
 
 STANDALONE=${STANDALONE:-false}
 SWIFT_REPLICATED=${SWIFT_REPLICATED:-false}
@@ -271,7 +272,13 @@ echo GATEWAY=$GATEWAY >> $NETSCRIPT
 echo DNS1=$DNS >> $NETSCRIPT
 sed -i s/dhcp/none/g $NETSCRIPT
 sed -i /PERSISTENT_DHCLIENT/d $NETSCRIPT
+
+# Additional commands
+
 EOF
+
+touch $FIRSTBOOT_EXTRA
+cat "$FIRSTBOOT_EXTRA" >> ${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
 
 chmod +x ${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
 
