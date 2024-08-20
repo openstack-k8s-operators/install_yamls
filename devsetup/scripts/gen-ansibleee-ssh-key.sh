@@ -18,7 +18,7 @@ set -ex
 # expect that the common.sh is in the same dir as the calling script
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 NAMESPACE=${NAMESPACE:-"openstack"}
-METADATA_NAME=${METADATA_NAME:-"dataplane-ansible-ssh-private-key-secret"}
+DATAPLANE_ANSIBLE_SECRET=${DATAPLANE_ANSIBLE_SECRET:-"dataplane-ansible-ssh-private-key-secret"}
 OUTPUT_DIR=${OUTPUT_DIR:-"../../out/edpm"}
 SSH_ALGORITHM=${SSH_ALGORITHM:-"rsa"}
 SSH_KEY_FILE=${SSH_KEY_FILE:-"ansibleee-ssh-key-id_rsa"}
@@ -32,10 +32,10 @@ fi
 
 pushd ${OUTPUT_DIR}
 
-if oc get secret dataplane-ansible-ssh-private-key-secret -n ${NAMESPACE} 2>&1 1>/dev/null; then
-    echo "Secret dataplane-ansible-ssh-private-key-secret already exists."
+if oc get secret ${DATAPLANE_ANSIBLE_SECRET} -n ${NAMESPACE} 2>&1 1>/dev/null; then
+    echo "Secret ${DATAPLANE_ANSIBLE_SECRET} already exists."
     echo "Delete it first to recreate:"
-    echo "oc delete secret dataplane-ansible-ssh-private-key-secret"
+    echo "oc delete secret ${DATAPLANE_ANSIBLE_SECRET}"
     exit 0
 fi
 
@@ -55,7 +55,7 @@ EOF
 
 oc apply -f namespace.yaml
 
-oc create secret generic ${METADATA_NAME} \
+oc create secret generic ${DATAPLANE_ANSIBLE_SECRET} \
 --save-config \
 --dry-run=client \
 --from-file=authorized_keys=${SSH_KEY_FILE}.pub \
