@@ -267,11 +267,13 @@ while true; do
   sleep 5
 done
 # Set network to survive reboots
+echo DEVICE=$NETDEV >> $NETSCRIPT
 echo IPADDR=$IP >> $NETSCRIPT
 echo PREFIX=$PREFIX >> $NETSCRIPT
 echo GATEWAY=$GATEWAY >> $NETSCRIPT
 echo DNS1=$DNS >> $NETSCRIPT
-sed -i s/dhcp/none/g $NETSCRIPT
+sed -i /BOOTPROTO/d $NETSCRIPT
+echo BOOTPROTO=none >> $NETSCRIPT
 sed -i /PERSISTENT_DHCLIENT/d $NETSCRIPT
 
 # Remove NVMe artifacts that are auto-generated when nvme-cli RPM is installed
