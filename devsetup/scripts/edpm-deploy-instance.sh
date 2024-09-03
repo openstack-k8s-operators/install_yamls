@@ -39,7 +39,7 @@ openstack network show private || openstack network create private --share
 openstack subnet show priv_sub || openstack subnet create priv_sub --subnet-range 192.168.0.0/24 --network private
 openstack network show public || openstack network create public --external --provider-network-type flat --provider-physical-network datacentre
 openstack subnet show pub_sub || \
-    openstack subnet create pub_sub --subnet-range 192.168.122.0/24 --allocation-pool start=192.168.122.200,end=192.168.122.210 --gateway 192.168.122.1 --no-dhcp --network public
+    openstack subnet create pub_sub --subnet-range 192.168.122.0/24 --allocation-pool start=192.168.122.200,end=192.168.122.250 --gateway 192.168.122.1 --no-dhcp --network public
 openstack router show priv_router || {
     openstack router create priv_router
     openstack router add subnet priv_router priv_sub
