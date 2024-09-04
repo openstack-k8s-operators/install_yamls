@@ -65,8 +65,6 @@ cat > ${DEPLOY_DIR}/ctlplane.yaml <<EOF_CAT
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
-  labels:
-    osp/net: ctlplane
   name: ctlplane
   namespace: ${NAMESPACE}
 spec:
@@ -101,8 +99,6 @@ cat > ${DEPLOY_DIR}/internalapi.yaml <<EOF_CAT
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
-  labels:
-    osp/net: internalapi
   name: internalapi
   namespace: ${NAMESPACE}
 spec:
@@ -137,8 +133,6 @@ cat > ${DEPLOY_DIR}/storage.yaml <<EOF_CAT
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
-  labels:
-    osp/net: storage
   name: storage
   namespace: ${NAMESPACE}
 spec:
@@ -173,8 +167,6 @@ cat > ${DEPLOY_DIR}/tenant.yaml <<EOF_CAT
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
-  labels:
-    osp/net: tenant
   name: tenant
   namespace: ${NAMESPACE}
 spec:
@@ -209,8 +201,6 @@ cat > ${DEPLOY_DIR}/datacentre.yaml <<EOF_CAT
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
-  labels:
-    osp/net: datacentre
   name: datacentre
   namespace: ${NAMESPACE}
 spec:
@@ -228,8 +218,6 @@ cat > ${DEPLOY_DIR}/storagemgmt.yaml <<EOF_CAT
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
-  labels:
-    osp/net: storagemgmt
   name: storagemgmt
   namespace: ${NAMESPACE}
 spec:
@@ -264,8 +252,6 @@ cat > ${DEPLOY_DIR}/octavia.yaml <<EOF_CAT
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
-  labels:
-    osp/net: octavia
   name: octavia
   namespace: ${NAMESPACE}
 spec:
@@ -312,8 +298,6 @@ cat > ${DEPLOY_DIR}/designate.yaml <<EOF_CAT
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
-  labels:
-    osp/net: designate
   name: designate
   namespace: ${NAMESPACE}
 spec:
@@ -337,8 +321,6 @@ if [ -n "$INTERFACE_BGP_1" ]; then
     apiVersion: k8s.cni.cncf.io/v1
     kind: NetworkAttachmentDefinition
     metadata:
-      labels:
-        osp/net: bgpnet1
       name: bgpnet1
       namespace: openstack
     spec:
@@ -363,8 +345,6 @@ if [ -n "$INTERFACE_BGP_2" ]; then
     apiVersion: k8s.cni.cncf.io/v1
     kind: NetworkAttachmentDefinition
     metadata:
-      labels:
-        osp/net: bgpnet2
       name: bgpnet2
       namespace: openstack
     spec:
