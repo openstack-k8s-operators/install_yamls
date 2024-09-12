@@ -186,6 +186,156 @@
     - OS::TripleO::Services::Unbound
     - OS::TripleO::Services::Vpp
 ###############################################################################
+# Role: CellController                                                        #
+###############################################################################
+- name: CellController
+  description: |
+    Controller role that has the cell controler specific
+    services and handles Database, Messaging and Network functions.
+  CountDefault: 1
+  tags:
+    - primary
+    - controller
+  networks:
+    InternalApi:
+      subnet: internal_api_subnet
+    Storage:
+      subnet: storage_subnet
+    StorageMgmt:
+      subnet: storage_mgmt_subnet
+    Tenant:
+      subnet: tenant_subnet
+  # For systems with both IPv4 and IPv6, you may specify a gateway network for
+  # each, such as ['ControlPlane', 'External']
+  default_route_networks: ['ControlPlane']
+  HostnameFormatDefault: '%stackname%-controller-%index%'
+  RoleParametersDefault:
+    OVNCMSOptions: "enable-chassis-as-gw"
+  # Deprecated & backward-compatible values (FIXME: Make parameters consistent)
+  # Set uses_deprecated_params to true if any deprecated params are used.
+  uses_deprecated_params: true
+  deprecated_param_extraconfig: 'controllerExtraConfig'
+  deprecated_param_flavor: 'OvercloudControlFlavor'
+  deprecated_param_image: 'controllerImage'
+  deprecated_nic_config_name: 'controller.yaml'
+  update_serial: 1
+  ServicesDefault:
+    - OS::TripleO::Services::Aide
+    - OS::TripleO::Services::AuditD
+    - OS::TripleO::Services::BootParams
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::Clustercheck
+    - OS::TripleO::Services::ContainerImagePrepare
+    - OS::TripleO::Services::ContainersLogrotateCrond
+    - OS::TripleO::Services::HAproxy
+    - OS::TripleO::Services::IpaClient
+    - OS::TripleO::Services::Ipsec
+    - OS::TripleO::Services::Iscsid
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::LoginDefs
+    - OS::TripleO::Services::MySQL
+    - OS::TripleO::Services::MySQLClient
+    - OS::TripleO::Services::NeutronMetadataAgent
+    - OS::TripleO::Services::NovaConductor
+    - OS::TripleO::Services::NovaMetadata
+    - OS::TripleO::Services::NovaVncProxy
+    - OS::TripleO::Services::OsloMessagingRpc
+    - OS::TripleO::Services::Pacemaker
+    - OS::TripleO::Services::Podman
+    - OS::TripleO::Services::Rhsm
+    - OS::TripleO::Services::Securetty
+    - OS::TripleO::Services::Snmp
+    - OS::TripleO::Services::Sshd
+    - OS::TripleO::Services::Timesync
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::Tuned
+###############################################################################
+# Role: CellControllerCompute                                                 #
+###############################################################################
+- name: CellControllerCompute
+  description: |
+    Controller and Compute AIO role that has compute and cell controler specific
+    services loaded and handles Database, Messaging and Network functions.
+  CountDefault: 1
+  tags:
+    - primary
+    - controller
+    # Create external Neutron bridge for SNAT (and floating IPs when using
+    # ML2/OVS without DVR)
+    - external_bridge
+  networks:
+    InternalApi:
+      subnet: internal_api_subnet
+    Storage:
+      subnet: storage_subnet
+    StorageMgmt:
+      subnet: storage_mgmt_subnet
+    Tenant:
+      subnet: tenant_subnet
+  # For systems with both IPv4 and IPv6, you may specify a gateway network for
+  # each, such as ['ControlPlane', 'External']
+  default_route_networks: ['ControlPlane']
+  HostnameFormatDefault: '%stackname%-controller-compute-%index%'
+  RoleParametersDefault:
+    OVNCMSOptions: "enable-chassis-as-gw"
+  # Deprecated & backward-compatible values (FIXME: Make parameters consistent)
+  # Set uses_deprecated_params to true if any deprecated params are used.
+  uses_deprecated_params: true
+  deprecated_param_extraconfig: 'controllerExtraConfig'
+  deprecated_param_flavor: 'OvercloudControlFlavor'
+  deprecated_param_image: 'controllerImage'
+  deprecated_nic_config_name: 'controller.yaml'
+  update_serial: 1
+  ServicesDefault:
+    - OS::TripleO::Services::Aide
+    - OS::TripleO::Services::AuditD
+    - OS::TripleO::Services::BootParams
+    - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::Clustercheck
+    - OS::TripleO::Services::ContainerImagePrepare
+    - OS::TripleO::Services::HAproxy
+    - OS::TripleO::Services::ComputeNeutronCorePlugin
+    - OS::TripleO::Services::ComputeNeutronL3Agent
+    - OS::TripleO::Services::ComputeNeutronMetadataAgent
+    - OS::TripleO::Services::ComputeNeutronOvsAgent
+    - OS::TripleO::Services::IpaClient
+    - OS::TripleO::Services::Ipsec
+    - OS::TripleO::Services::Iscsid
+    - OS::TripleO::Services::Kernel
+    - OS::TripleO::Services::LoginDefs
+    - OS::TripleO::Services::Multipathd
+    - OS::TripleO::Services::MySQL
+    - OS::TripleO::Services::MySQLClient
+    - OS::TripleO::Services::NeutronBgpVpnBagpipe
+    - OS::TripleO::Services::NeutronLinuxbridgeAgent
+    - OS::TripleO::Services::NeutronVppAgent
+    - OS::TripleO::Services::NovaAZConfig
+    - OS::TripleO::Services::NovaCompute
+    - OS::TripleO::Services::NovaLibvirt
+    - OS::TripleO::Services::NovaLibvirtGuests
+    - OS::TripleO::Services::NovaMigrationTarget
+    - OS::TripleO::Services::ContainersLogrotateCrond
+    - OS::TripleO::Services::NeutronMetadataAgent
+    - OS::TripleO::Services::NovaConductor
+    - OS::TripleO::Services::NovaMetadata
+    - OS::TripleO::Services::NovaVncProxy
+    - OS::TripleO::Services::OVNController
+    - OS::TripleO::Services::OVNMetadataAgent
+    - OS::TripleO::Services::Pacemaker
+    - OS::TripleO::Services::OsloMessagingRpc
+    - OS::TripleO::Services::Podman
+    - OS::TripleO::Services::Rhsm
+    - OS::TripleO::Services::Securetty
+    - OS::TripleO::Services::Snmp
+    - OS::TripleO::Services::Sshd
+    - OS::TripleO::Services::Timesync
+    - OS::TripleO::Services::Timezone
+    - OS::TripleO::Services::TripleoFirewall
+    - OS::TripleO::Services::TripleoPackages
+    - OS::TripleO::Services::Tuned
+###############################################################################
 # Role: Compute                                                               #
 ###############################################################################
 - name: Compute
@@ -203,6 +353,7 @@
       subnet: tenant_subnet
     Storage:
       subnet: storage_subnet
+  default_route_networks: ['ControlPlane']
   HostnameFormatDefault: '%stackname%-novacompute-%index%'
   RoleParametersDefault:
     FsAioMaxNumber: 1048576
