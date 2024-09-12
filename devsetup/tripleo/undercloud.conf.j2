@@ -259,7 +259,7 @@ dhcp_end = 192.168.122.130
 # Network gateway for the Neutron-managed network for Overcloud
 # instances on this network. (string value)
 # Deprecated group/name - [DEFAULT]/network_gateway
-gateway = 192.168.122.10
+gateway = {{ gateway_ip }}
 
 # Temporary IP range that will be given to nodes on this network
 # during the inspection process. Should not overlap with the range
