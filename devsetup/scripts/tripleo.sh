@@ -48,8 +48,8 @@ source ${SCRIPTPATH}/common.sh
 # We'll use the NTP_SERVER environmental variable to define the NTP server to use, e.g.:
 # export NTP_SERVER=pool.ntp.org
 
-if [ $EDPM_COMPUTE_CELLS -eq 2 ] || [ $EDPM_COMPUTE_CELLS -gt 3 ] || [ $EDPM_COMPUTE_CELLS -eq 0 ] ; then
-    echo "Only a main cell0 plus a 2 additional compute cells supported yet!"
+if [ $EDPM_COMPUTE_CELLS -ne 1 -a $EDPM_COMPUTE_CELLS -ne 3 ]; then
+    echo "Only a main cell1 plus a 2 additional compute cells supported yet!"
     exit 1
 fi
 
@@ -81,11 +81,6 @@ sudo dnf install -y podman python3-tripleoclient util-linux lvm2
 sudo hostnamectl set-hostname undercloud.localdomain
 sudo hostnamectl set-hostname undercloud.localdomain --transient
 
-cat >\$HOME/nova_noceph.yaml <<__EOF__
-parameter_defaults:
-    NovaEnableRbdBackend: false
-__EOF__
-
 export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
 export INTERFACE_MTU=${INTERFACE_MTU:-1500}
 export NTP_SERVER=${NTP_SERVER:-"pool.ntp.org"}
@@ -101,16 +96,13 @@ export OCTAVIA_ENABLED=${OCTAVIA_ENABLED}
 export TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
 
 set +x
-if [[ -f \$HOME/containers-prepare-parameters.yaml ]]; then
-    echo "Using existing containers-prepare-parameters.yaml - contents:"
-    cat \$HOME/containers-prepare-parameters.yaml
-else
+if [ ! -f \$HOME/containers-prepare-parameters.yaml ]; then
     login_args=" "
     [ "\$RH_REGISTRY_USER" ] && [ -n "\$RH_REGISTRY_PWD" ] && login_args="--enable-registry-login"
     openstack tripleo container image prepare default \
         --output-env-file \$HOME/containers-prepare-parameters.yaml \${login_args}
-    # Use wallaby el9 container images
-    sed -i 's|quay.io/tripleowallaby$|quay.io/tripleowallabycentos9|' \$HOME/containers-prepare-parameters.yaml
+else
+    echo "Using existing containers-prepare-parameters.yaml"
 fi
 
 if [ "\$RH_REGISTRY_USER" ] && [ -n "\$RH_REGISTRY_PWD" ]; then
@@ -226,6 +218,7 @@ scp $SSH_OPT ${SCRIPTPATH}/../tripleo/hieradata_overrides_undercloud.yaml zuul@$
 scp $SSH_OPT ${SCRIPTPATH}/../tripleo/undercloud-parameter-defaults.yaml zuul@$IP:undercloud-parameter-defaults.yaml
 scp $SSH_OPT ${MY_TMP_DIR}/undercloud.conf zuul@$IP:undercloud.conf
 scp $SSH_OPT ${SCRIPTPATH}/../tripleo/config-download-networker.yaml zuul@$IP:config-download-networker.yaml
+scp $SSH_OPT ${SCRIPTPATH}/../tripleo/nova_noceph.yaml zuul@$IP:nova_noceph.yaml
 if [ $EDPM_COMPUTE_CELLS -gt 1 ]; then
     for cell in $(seq 0 $(( EDPM_COMPUTE_CELLS - 1))); do
         scp $SSH_OPT ${MY_TMP_DIR}/vips_data${cell}.yaml zuul@$IP:vips_data${cell}.yaml
@@ -248,6 +241,9 @@ if [[ "$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]]; then
 fi
 
 if [[ -f $HOME/containers-prepare-parameters.yaml ]]; then
+    echo "Using existing containers-prepare-parameters.yaml - contents:"
+    # requires 'make download_tools'
+    yq '.parameter_defaults.ContainerImageRegistryCredentials="{ ...snip... }"' $HOME/containers-prepare-parameters.yaml
     scp $SSH_OPT $HOME/containers-prepare-parameters.yaml zuul@$IP:containers-prepare-parameters.yaml
 fi
 
