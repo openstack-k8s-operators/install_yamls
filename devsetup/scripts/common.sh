@@ -37,12 +37,22 @@ import jinja2
 import os
 import yaml
 
+def to_bool(a):
+    ''' return a bool for the arg '''
+    if a is None or isinstance(a, bool):
+        return a
+    if isinstance(a, str):
+        a = a.lower()
+    if a in ('yes', 'on', '1', 'true', 1):
+        return True
+    return False
+
 with open('$j2_vars_file', 'r') as f:
     vars = yaml.safe_load(f.read())
 
 loader = jinja2.FileSystemLoader(os.path.dirname('$j2_template_file'))
 env = jinja2.Environment(autoescape=True, loader=loader)
-env.filters['bool'] = bool
+env.filters['bool'] = to_bool
 
 print(env.get_template(os.path.basename('$j2_template_file')).render(**vars))
 "
