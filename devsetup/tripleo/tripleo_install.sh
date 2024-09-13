@@ -42,14 +42,6 @@ if [ $EDPM_COMPUTE_CELLS -gt 1 ] ; then
     done
 fi
 
-# check if hostnamemap contains networkers
-networker_nodes="FALSE"
-config_download="config-download.yaml"
-if (grep -q networker hostnamemap.yaml); then
-    networker_nodes="TRUE"
-    config_download="config-download-networker.yaml"
-fi
-
 # provide a default layout for local development envs outside of CI
 test -f /home/zuul/hostnamemap.yaml || cat > /home/zuul/hostnamemap.yaml << EOF
 parameter_defaults:
@@ -59,6 +51,18 @@ parameter_defaults:
     cell1-compute-0: edpm-compute-3
     cell2-controller-compute-0: edpm-compute-4
 EOF
+
+# check if hostnamemap contains networkers
+networker_nodes="FALSE"
+config_download="config-download.yaml"
+if (grep -q networker hostnamemap.yaml); then
+    networker_nodes="TRUE"
+    config_download="config-download-networker.yaml"
+fi
+
+# use default role name for ComputeHCI in hostnamemap
+[ "$EDPM_COMPUTE_CEPH_ENABLED" = "true" ] && sed -i "s/-novacompute-/-computehci-/" hostnamemap.yaml
+
 # update the config-download with proper overcloud hostnames
 # TODO(bogdando): make config-download.yaml for standard multi-node single cell cases consistent with multstack scenarios,
 # also providing both enough flexibility for local deployments, by j2 renderinig it (and hostnamemap.yaml) in tripleo.sh.
@@ -72,13 +76,13 @@ if [ $EDPM_COMPUTE_CELLS -eq 1 ] ; then
     sed -i "s/controller-0/${control0}/" $config_download
     sed -i "s/controller-1/${control1}/" $config_download
     sed -i "s/controller-2/${control2}/" $config_download
-    compute0=$(grep "overcloud-novacompute-0" hostnamemap.yaml  | awk '{print $2}')
-    compute1=$(grep "overcloud-novacompute-1" hostnamemap.yaml  | awk '{print $2}')
+    compute0=$(grep -E "overcloud-(novacompute|computehci)-0" hostnamemap.yaml  | awk '{print $2}')
+    compute1=$(grep -E "overcloud-(novacompute|computehci)-1" hostnamemap.yaml  | awk '{print $2}')
     sed -i "s/compute-0/${compute0}/" $config_download
     sed -i "s/compute-1/${compute1}/" $config_download
 
     if [ $networker_nodes == "FALSE" ]; then
-        compute2=$(grep "overcloud-novacompute-2" hostnamemap.yaml  | awk '{print $2}')
+        compute2=$(grep -E "overcloud-(novacompute|computehci)-2" hostnamemap.yaml  | awk '{print $2}')
         sed -i "s/compute-2/${compute2}/" $config_download
     elif [ $networker_nodes == "TRUE" ]; then
         networker0=$(grep "overcloud-networker-0" hostnamemap.yaml  | awk '{print $2}')
@@ -101,8 +105,6 @@ set -e
 hostnamemap=$(grep -v "\---" hostnamemap.yaml | tr '\n' '\r')
 hostnamemap="$hostnamemap\r  ControllerHostnameFormat: '%stackname%-controller-%index%'\r"
 if [ "$EDPM_COMPUTE_CEPH_ENABLED" = "true" ] ; then
-    # use default role name for ComputeHCI in hostnamemap
-    sed -i "s/-novacompute-/-computehci-/" hostnamemap.yaml
     # add hci role for ceph nodes
     hostnamemap="$hostnamemap\r  ComputeHCIHostnameFormat: '%stackname%-computehci-%index%'"
 fi
@@ -119,14 +121,7 @@ else
 fi
 
 for config_download in ${cdfiles[@]}; do
-    # insert hostnamemap contents into config-download.yaml, we need it to generate
-    # the inventory for ceph deployment
-    sed -i "s/parameter_defaults:/${hostnamemap}/" "$config_download"
     if [ "$EDPM_COMPUTE_CEPH_ENABLED" = "true"  ] ; then
-        # use default role name for ComputeHCI in hostnamemap
-        sed -i "s/-novacompute-/-computehci-/" hostnamemap.yaml
-        # add hci role for ceph nodes
-        hostnamemap="$hostnamemap\r  ComputeHCIHostnameFormat: '%stackname%-computehci-%index%'"
         # insert hostnamemap contents into config-download.yaml, we need it to generate
         # the inventory for ceph deployment
         sed -i "s/parameter_defaults:/${hostnamemap}/" "$config_download"
