@@ -707,8 +707,7 @@ openstack_cleanup: operator_namespace## deletes the operator, but does not clean
 	$(eval $(call vars,$@,openstack))
 	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 	oc delete subscription --all=true
-	oc delete csv --all=true
-	oc delete catalogsource --all=true
+	oc delete olm --all=true -A
 	test -d ${OPERATOR_BASE_DIR}/baremetal-operator && make crc_bmo_cleanup || true
 
 .PHONY: openstack_repo
