@@ -100,6 +100,15 @@ cat <<EOF >>kustomization.yaml
       path: /spec/services/0
       value: repo-setup
     - op: replace
+      path: /spec/env
+      value:
+        - name: ANSIBLE_CALLBACKS_ENABLED
+          value: "profile_tasks"
+        - name: ANSIBLE_FORCE_COLOR
+          value: "True"
+        - name: ANSIBLE_VERBOSITY
+          value: "2"
+    - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/timesync_ntp_servers
       value:
         - {hostname: ${EDPM_NTP_SERVER}}
