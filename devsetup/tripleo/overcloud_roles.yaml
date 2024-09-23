@@ -30,7 +30,7 @@
   default_route_networks: ['ControlPlane']
   HostnameFormatDefault: '%stackname%-controller-%index%'
   RoleParametersDefault:
-    OVNCMSOptions: "enable-chassis-as-gw"
+    OVNCMSOptions: "disable-chassis-as-gw"
   # Deprecated & backward-compatible values (FIXME: Make parameters consistent)
   # Set uses_deprecated_params to true if any deprecated params are used.
   uses_deprecated_params: true
@@ -210,7 +210,7 @@
   default_route_networks: ['ControlPlane']
   HostnameFormatDefault: '%stackname%-controller-%index%'
   RoleParametersDefault:
-    OVNCMSOptions: "enable-chassis-as-gw"
+    OVNCMSOptions: "disable-chassis-as-gw"
   # Deprecated & backward-compatible values (FIXME: Make parameters consistent)
   # Set uses_deprecated_params to true if any deprecated params are used.
   uses_deprecated_params: true
@@ -279,7 +279,7 @@
   default_route_networks: ['ControlPlane']
   HostnameFormatDefault: '%stackname%-controller-compute-%index%'
   RoleParametersDefault:
-    OVNCMSOptions: "enable-chassis-as-gw"
+    OVNCMSOptions: "disable-chassis-as-gw"
   # Deprecated & backward-compatible values (FIXME: Make parameters consistent)
   # Set uses_deprecated_params to true if any deprecated params are used.
   uses_deprecated_params: true
