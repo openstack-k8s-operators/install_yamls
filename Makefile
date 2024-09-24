@@ -781,9 +781,9 @@ endif
 .PHONY: edpm_patch_ansible_runner_image
 edpm_patch_ansible_runner_image:
 	$(eval $(call vars,$@,dataplane))
-	oc patch $(shell oc get csv -n ${OPERATOR_NAMESPACE} -o name | grep ansibleee) \
+	oc patch $(shell oc get csv -n ${OPERATOR_NAMESPACE} -o name | grep openstack-operator) \
 	-n ${OPERATOR_NAMESPACE} --type='json' \
-	-p='[{"op":"replace", "path":"/spec/install/spec/deployments/0/spec/template/spec/containers/1/env/0", "value": {"name": "RELATED_IMAGE_ANSIBLEEE_IMAGE_URL_DEFAULT", "value": "${DATAPLANE_RUNNER_IMG}"}}]'
+	-p='[{"op":"replace", "path":"/spec/install/spec/deployments/0/spec/template/spec/containers/1/env/1", "value": {"name": "RELATED_IMAGE_ANSIBLEEE_IMAGE_URL_DEFAULT", "value": "${DATAPLANE_RUNNER_IMG}"}}]'
 
 .PHONY: edpm_deploy_prep
 edpm_deploy_prep: export KIND=OpenStackDataPlaneNodeSet
