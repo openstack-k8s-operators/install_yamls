@@ -1748,7 +1748,7 @@ cinder_kuttl: kuttl_common_prep cinder cinder_deploy_prep ## runs kuttl tests fo
 
 .PHONY: neutron_kuttl_run
 neutron_kuttl_run: ## runs kuttl tests for the neutron operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${NEUTRON_KUTTL_CONF} ${NEUTRON_KUTTL_DIR} --namespace ${NAMESPACE}
+	NEUTRON_KUTTL_DIR=${NEUTRON_KUTTL_DIR} kubectl-kuttl test --config ${NEUTRON_KUTTL_CONF} ${NEUTRON_KUTTL_DIR} --namespace ${NAMESPACE}
 
 .PHONY: neutron_kuttl
 neutron_kuttl: export NAMESPACE = ${NEUTRON_KUTTL_NAMESPACE}
