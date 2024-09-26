@@ -273,6 +273,9 @@ echo DNS1=$DNS >> $NETSCRIPT
 sed -i s/dhcp/none/g $NETSCRIPT
 sed -i /PERSISTENT_DHCLIENT/d $NETSCRIPT
 
+# Remove NVMe artifacts that are auto-generated when nvme-cli RPM is installed
+rm -f /etc/nvme/hostid /etc/nvme/hostnqn
+
 # Additional commands
 
 EOF
