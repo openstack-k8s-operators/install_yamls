@@ -218,6 +218,9 @@ sed -i /PERSISTENT_DHCLIENT/d /etc/sysconfig/network-scripts/ifcfg-eth0
 systemctl restart NetworkManager
 ip r add default via 192.168.122.1
 
+# Remove stale artifacts that are auto-generated during EDPM deployment
+rm -f /etc/nvme/hostid /etc/nvme/hostnqn
+
 EOF
 done
 
