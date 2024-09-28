@@ -423,7 +423,14 @@ MANILA_KUTTL_DIR        ?= ${OPERATOR_BASE_DIR}/manila-operator/test/kuttl/tests
 MANILA_KUTTL_NAMESPACE  ?= manila-kuttl-tests
 
 # Ceph
-CEPH_IMG            ?= quay.io/ceph/demo:latest-reef
+CEPH_IMG       ?= quay.io/ceph/demo:latest-reef
+CEPH_REPO      ?= https://github.com/rook/rook.git
+CEPH_BRANCH    ?= release-1.15
+CEPH_CRDS      ?= ${OPERATOR_BASE_DIR}/rook/deploy/examples/crds.yaml
+CEPH_COMMON    ?= ${OPERATOR_BASE_DIR}/rook/deploy/examples/common.yaml
+CEPH_OP        ?= ${OPERATOR_BASE_DIR}/rook/deploy/examples/operator-openshift.yaml
+CEPH_CR        ?= ${OPERATOR_BASE_DIR}/rook/deploy/examples/cluster-test.yaml
+CEPH_CLIENT    ?= ${OPERATOR_BASE_DIR}/rook/deploy/examples/toolbox.yaml
 
 # NNCP
 NNCP_NODES          ?=
@@ -2136,6 +2143,37 @@ ceph_cleanup: ## deletes the ceph pod
 	$(eval $(call vars,$@,ceph))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${DEPLOY_DIR}
+
+##@ ROOK
+.PHONY: rook_prep
+rook_prep: ### deploy rook operator
+	$(eval $(call vars,$@,ceph))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	pushd ${OPERATOR_BASE_DIR} && git clone -b ${CEPH_BRANCH} ${CEPH_REPO} && popd
+	cp ${CEPH_CR} ${DEPLOY_DIR}
+	cp ${CEPH_CLIENT} ${DEPLOY_DIR}
+
+.PHONY: rook
+rook: namespace rook_prep ## installs the CRDs and the operator, also runs the prep step.
+	$(eval $(call vars,$@,ceph))
+	# Create the Ceph related CRDs
+	oc apply -f ${CEPH_CRDS}
+	# Apply roles, sa, scc and common resources
+	oc apply -f ${CEPH_COMMON}
+	# Run the rook operator
+	oc apply -f ${CEPH_OP}
+	## Do not deploy NFS CEPH-CSI
+	oc -n rook-ceph patch configmap rook-ceph-operator-config --type='merge' -p '{"data": { "ROOK_CSI_ENABLE_CEPHFS": "false" }}'
+
+.PHONY: rook_cleanup
+rook_cleanup: ## deletes rook resources
+	$(eval $(call vars,$@,ceph))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	${CLEANUP_DIR_CMD} ${DEPLOY_DIR}
+	# Remove the operator
+	oc delete --ignore-not-found=true -f ${CEPH_OP}
+	# Delete the rook/ceph related resources
+	rm -Rf ${OPERATOR_BASE_DIR}/rook ${DEPLOY_DIR}
 
 ##@ LVMS
 .PHONY: lvms
