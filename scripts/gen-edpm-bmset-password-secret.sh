@@ -24,7 +24,7 @@ metadata:
   name: baremetalset-password-secret
   namespace: ${NAMESPACE}
 type: Opaque
-data:
+stringData:
   NodeRootPassword: ${EDPM_ROOT_PASSWORD}
 EOF
 }
