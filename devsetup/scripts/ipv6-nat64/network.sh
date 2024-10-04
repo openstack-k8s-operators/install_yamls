@@ -14,7 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-set -e
+set -ex
 
 if [ "$EUID" -eq 0 ]; then
     echo "Please do not run as root."
