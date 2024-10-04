@@ -103,7 +103,10 @@ OPENSTACK_DEPLOYED_VERSION=$(oc get $OPENSTACK_VERSION_CR --template={{.spec.tar
 
 cat <<EOF >openstackversionpatch.yaml
     "spec": {
-      "targetVersion": "$OPENSTACK_VERSION"
+      "targetVersion": "$OPENSTACK_VERSION",
+      "customContainerImages": {
+         "ansibleeeImage": "quay.io/openstack-k8s-operators/openstack-ansibleee-runner:18.0.0-proposed-latest"
+      }
       }
 EOF
 
