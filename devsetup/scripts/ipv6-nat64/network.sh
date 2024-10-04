@@ -259,7 +259,7 @@ function cleanup_firewalld_config {
         echo "firewalld.service not active, enable it or disable firewalld managment (MANAGE_FIREWALLD=false)"
         exit 1
     fi
-    sudo firewall-cmd --permanent --delete-zone=${NETWORK_NAME}
+    sudo firewall-cmd --permanent --delete-zone=${NETWORK_NAME} || true
 }
 
 function create {
