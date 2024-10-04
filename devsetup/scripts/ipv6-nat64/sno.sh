@@ -214,6 +214,7 @@ function destroy_sno_instance {
         ${VIRSH_CMD} undefine "${SNO_INSTANCE_NAME}" --nvram --remove-all-storage
         echo "OCP single-node instance: ${SNO_INSTANCE_NAME} deleted"
     fi
+    sudo virsh vol-delete --pool ${LIBVIRT_STORAGE_POOL} ${BOOTSTRAP_ISO_FILENAME} || true
 }
 
 function create_dnsmasq_config {
