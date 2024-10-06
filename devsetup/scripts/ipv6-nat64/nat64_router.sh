@@ -14,7 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-set -e
+set -ex
 
 if [ "$EUID" -eq 0 ]; then
     echo "Please do not run as root."
@@ -321,7 +321,7 @@ function create_nat64_vm {
     popd
 
     echo "NAT64 router instance ${NAT64_INSTANCE_NAME} created"
-    ${VIRSH_CMD} start ${NAT64_INSTANCE_NAME}
+    ${VIRSH_CMD} start ${NAT64_INSTANCE_NAME} || true
 }
 
 function cleanup_nat64_vm {
