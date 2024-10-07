@@ -79,6 +79,11 @@ parameter_defaults:
   NeutronTunnelTypes: geneve
   NeutronBridgeMappings: datacentre:br-ex
 
+  CellControllerComputeHostnameFormat: '%stackname%-controller-compute-%index%'
+  CellControllerHostnameFormat: '%stackname%-controller-%index%'
+  ComputeHostnameFormat: '%stackname%-compute-%index%'
+  ControllerHostnameFormat: '%stackname%-controller-%index%'
+
   # If tripleo_networking, update the existing os-net-config on deployed servers for tripleo isolnet
   # This should also work for CI, where we initially configure zuul subnodes with os-net-config,
   # but is mostly targeting local libvirt or cloud deployments (without zuul and ci-framework)

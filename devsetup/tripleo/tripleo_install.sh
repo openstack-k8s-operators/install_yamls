@@ -108,11 +108,6 @@ if [ "$EDPM_COMPUTE_CEPH_ENABLED" = "true" ] ; then
     # add hci role for ceph nodes
     hostnamemap="$hostnamemap\r  ComputeHCIHostnameFormat: '%stackname%-computehci-%index%'"
 fi
-if [ $EDPM_COMPUTE_CELLS -gt 1 ] ; then
-    hostnamemap="$hostnamemap\r  ComputeHostnameFormat: '%stackname%-compute-%index%'\r"
-    hostnamemap="$hostnamemap\r  CellControllerComputeHostnameFormat: '%stackname%-controller-compute-%index%'\r"
-    hostnamemap="$hostnamemap\r  CellControllerHostnameFormat: '%stackname%-controller-%index%'\r"
-fi
 
 if [ $networker_nodes == "TRUE" ]; then
     cdfiles=($(ls -1 config-download-networker*.yaml))
