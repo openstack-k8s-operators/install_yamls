@@ -60,8 +60,6 @@ options:
 * nftables - Firewall for IPv4 NAT (Masqurade NAT64 pool behind a single ip
   address)
 
-Note: you will have to detach from the VM console by pressing `Ctrl+]`.
-
 
 sno.sh
 ------
