@@ -1,6 +1,22 @@
 Development environment - IPv6 NAT64 lab
 ========================================
 
+Prerequisites
+-------------
+
+Network setup relies on `systemd-resolved` service enabled and used for DNS
+resolution. If it's not installed on your machine (for example, if you use
+RHEL), then:
+
+#. Install the package: `dnf install -y systemd-resolved`
+#. Enable and start the service: `systemctl enable --now systemd-resolved`
+#. Configure it as the default resolver for the system: `ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf`
+
+Further DNS requests initiated by the hypervisor should now go through the stub `systemd-resolved` resolver.
+
+Overview
+--------
+
 These scripts can be used to set up an IPv6 lab utilizing [NAT64](https://en.wikipedia.org/wiki/IPv6_transition_mechanism#NAT64) and [DNS64](https://en.wikipedia.org/wiki/IPv6_transition_mechanism#DNS64) (4 to 6 translation).
 
 To set up the lab run the scripts in order:
