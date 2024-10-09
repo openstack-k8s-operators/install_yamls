@@ -169,6 +169,48 @@ if [ "$EDPM_COMPUTE_CEPH_ENABLED" = "true" ] ; then
     /tmp/ceph.sh
 fi
 
+if [ "$TLSE_ENABLED" = "true" ]; then
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/ssl/tls-everywhere-endpoints-dns.yaml"
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/haproxy-public-tls-certmonger.yaml"
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/ssl/enable-internal-tls.yaml"
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/ssl/enable-memcached-tls.yaml"
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/ci/environments/standalone-ipa.yaml"
+    export IPA_ADMIN_USER=admin
+    export IPA_PRINCIPAL=$IPA_ADMIN_USER
+    export IPA_ADMIN_PASSWORD=fce95318204114530f31f885c9df588f
+    export IPA_PASSWORD=$IPA_ADMIN_PASSWORD
+    export UNDERCLOUD_FQDN=undercloud.$CLOUD_DOMAIN
+    export IPA_DOMAIN=$CLOUD_DOMAIN
+    export IPA_REALM=$(echo $IPA_DOMAIN | awk '{print toupper($0)}')
+    export IPA_HOST=ipa.$IPA_DOMAIN
+    export IPA_SERVER_HOSTNAME=$IPA_HOST
+    sudo mkdir /tmp/ipa-data
+    sudo podman run -d --name freeipa-server-container \
+        --sysctl net.ipv6.conf.lo.disable_ipv6=0 \
+        --security-opt seccomp=unconfined \
+        --ip 10.255.255.25 \
+        -e IPA_SERVER_IP=10.255.255.25 \
+        -e PASSWORD=$IPA_ADMIN_PASSWORD \
+        -h $IPA_SERVER_HOSTNAME \
+        -p 53:53/udp -p 53:53 -p 80:80 -p 443:443 \
+        -p 389:389 -p 636:636 -p 88:88 -p 464:464 \
+        -p 88:88/udp -p 464:464/udp \
+        --read-only --tmpfs /run --tmpfs /tmp \
+        -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+        -v /tmp/ipa-data:/data:Z quay.io/freeipa/freeipa-server:fedora-39 no-exit \
+        -U -r $IPA_REALM --setup-dns --no-reverse --no-ntp \
+        --no-dnssec-validation --auto-forwarders
+    timeout 900s grep -qEi '(INFO The ipa-server-install command was successful|ERROR The ipa-server-install command failed)' <(sudo tail -F /tmp/ipa-data/var/log/ipaserver-install.log)
+    # NOTE: the ipa_resolv.conf has already been setup on overcloud nodes
+    # see rdo-jobs playbooks/data_plane_adoption/deploy_tripleo_run_repo_tests.yaml
+    cat  <<EOF > ipa_resolv.conf
+search ${CLOUD_DOMAIN}
+nameserver 10.255.255.25
+EOF
+    sudo mv ipa_resolv.conf /etc/resolv.conf
+    ansible-playbook /usr/share/ansible/tripleo-playbooks/undercloud-ipa-install.yaml
+fi
+
 openstack overcloud deploy --stack overcloud \
     --override-ansible-cfg /home/zuul/ansible_config.cfg --templates /usr/share/openstack-tripleo-heat-templates \
     --roles-file ${ROLES_FILE} -n /home/zuul/network_data.yaml --libvirt-type qemu \

@@ -3,7 +3,7 @@
   mtu: 1500
   vip: true
   name_lower: storage
-  dns_domain: storage.mydomain.tld.
+  dns_domain: storage.{{ cloud_domain }}.
   service_net_map_replace: storage
   subnets:
     storage_subnet:
@@ -15,7 +15,7 @@
   mtu: 1500
   vip: true
   name_lower: storage_mgmt
-  dns_domain: storagemgmt.mydomain.tld.
+  dns_domain: storagemgmt.{{ cloud_domain }}.
   service_net_map_replace: storage_mgmt
   subnets:
     storage_mgmt_subnet:
@@ -27,7 +27,7 @@
   mtu: 1500
   vip: true
   name_lower: internal_api
-  dns_domain: internal-api.mydomain.tld.
+  dns_domain: internal-api.{{ cloud_domain }}.
   service_net_map_replace: internal_api
   subnets:
     internal_api_subnet:
@@ -39,7 +39,7 @@
   mtu: 1500
   vip: false  # Tenant network does not use VIPs
   name_lower: tenant
-  dns_domain: tenant.mydomain.tld.
+  dns_domain: tenant.{{ cloud_domain }}.
   service_net_map_replace: tenant
   subnets:
     tenant_subnet:
@@ -51,11 +51,10 @@
   mtu: 1500
   vip: true
   name_lower: external
-  dns_domain: external.mydomain.tld.
+  dns_domain: external.{{ cloud_domain }}.
   service_net_map_replace: external
   subnets:
     external_subnet:
-      gateway_ip: '172.21.0.1'
       vlan: 44
       ip_subnet: '172.21.0.0/24'
       allocation_pools: [{'start': '172.21.0.120', 'end': '172.21.0.250'}]

@@ -12,9 +12,6 @@ resource_registry:
   OS::TripleO::Controller::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
   OS::TripleO::Controller::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
 parameter_defaults:
-  ControllerCount: 3
-  ComputeCount: 2
-  NetworkerCount: 2
   DeployedServerPortMap:
     controller-0-ctlplane:
       fixed_ips:
@@ -56,7 +53,7 @@ parameter_defaults:
       network:
         tags:
           - 192.168.122.0/24
-    networker-0-ctlplane:
+    compute-2-ctlplane:
       fixed_ips:
         - ip_address: 192.168.122.108
       subnets:
@@ -64,15 +61,6 @@ parameter_defaults:
       network:
         tags:
           - 192.168.122.0/24
-    networker-1-ctlplane:
-      fixed_ips:
-        - ip_address: 192.168.122.109
-      subnets:
-        - cidr: 192.168.122.0/24
-      network:
-        tags:
-          - 192.168.122.0/24
-
 
   NodePortMap:
     controller-0:
@@ -180,7 +168,7 @@ parameter_defaults:
         ip_address: 172.19.0.107
         ip_address_uri: 172.19.0.107
         ip_subnet: 172.19.0.0/24
-    networker-0:
+    compute-2:
       ctlplane:
         ip_address: 192.168.122.108
         ip_address_uri: 192.168.122.108
@@ -201,31 +189,9 @@ parameter_defaults:
         ip_address: 172.19.0.108
         ip_address_uri: 172.19.0.108
         ip_subnet: 172.19.0.0/24
-    networker-1:
-      ctlplane:
-        ip_address: 192.168.122.109
-        ip_address_uri: 192.168.122.109
-        ip_subnet: 192.168.122.0/24
-      internal_api:
-        ip_address: 172.17.0.109
-        ip_address_uri: 172.17.0.109
-        ip_subnet: 172.17.0.0/24
-      storage:
-        ip_address: 172.18.0.109
-        ip_address_uri: 172.18.0.109
-        ip_subnet: 172.18.0.0/24
-      storage_mgmt:
-        ip_address: 172.20.0.109
-        ip_address_uri: 172.20.0.109
-        ip_subnet: 172.20.0.0/24
-      tenant:
-        ip_address: 172.19.0.109
-        ip_address_uri: 172.19.0.109
-        ip_subnet: 172.19.0.0/24
-
   CtlplaneNetworkAttributes:
     network:
-      dns_domain: localdomain
+      dns_domain: {{ cloud_domain }}
       mtu: 1500
       name: ctlplane
       tags:

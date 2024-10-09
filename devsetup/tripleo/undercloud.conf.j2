@@ -13,7 +13,7 @@
 # the user is responsible for configuring all system hostname settings
 # appropriately.  If set, the undercloud install will configure all
 # system hostname settings. (string value)
-undercloud_hostname = undercloud.localdomain
+undercloud_hostname = undercloud.{{ cloud_domain }}
 
 # IP information for the interface on the Undercloud that will be
 # handling the PXE boots and DHCP for Overcloud instances.  The IP
@@ -30,13 +30,13 @@ local_mtu = {{ interface_mtu }}
 # Undercloud services. Only used with SSL. (string value)
 # Deprecated group/name - [DEFAULT]/undercloud_public_vip
 #undercloud_public_host = 192.168.24.2
-undercloud_public_host = 192.168.122.122
+undercloud_public_host = 192.168.122.99
 
 # Virtual IP or DNS address to use for the admin endpoints of
 # Undercloud services. Only used with SSL. (string value)
 # Deprecated group/name - [DEFAULT]/undercloud_admin_vip
 #undercloud_admin_host = 192.168.24.3
-undercloud_admin_host = 192.168.122.123
+undercloud_admin_host = 192.168.122.99
 
 # Nameserver for the Undercloud node.
 # (string value)
@@ -51,7 +51,10 @@ undercloud_timezone = UTC
 # DNS domain name to use when deploying the overcloud. The overcloud
 # parameter "CloudDomain" must be set to a matching value. (string
 # value)
-#overcloud_domain_name = localdomain
+{% if cloud_domain != 'localdomain' %}
+overcloud_domain_name = {{ cloud_domain }}
+{% endif %}
+
 
 # Certificate file to use for OpenStack service SSL connections.
 # Setting this enables SSL for the OpenStack API endpoints, leaving it
@@ -65,8 +68,11 @@ undercloud_timezone = UTC
 # /etc/pki/tls/certs/undercloud-[undercloud_public_vip].pem.  This
 # certificate is signed by CA selected by the
 # "certificate_generation_ca" option. (boolean value)
-#generate_service_certificate = true
+{% if cloud_domain == 'localdomain' %}
 generate_service_certificate = False
+{% else %}
+generate_service_certificate = True
+{% endif %}
 
 # The certmonger nickname of the CA from which the certificate will be
 # requested. This is used only if the generate_service_certificate

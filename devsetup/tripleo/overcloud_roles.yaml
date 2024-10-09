@@ -17,6 +17,8 @@
     # ML2/OVS without DVR)
     - external_bridge
   networks:
+    External:
+      subnet: external_subnet
     InternalApi:
       subnet: internal_api_subnet
     Storage:

@@ -35,6 +35,7 @@ TRIPLEO_NETWORKING=${TRIPLEO_NETWORKING:-true}
 MANILA_ENABLED=${MANILA_ENABLED:-true}
 OCTAVIA_ENABLED=${OCTAVIA_ENABLED:-false}
 TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
+TLSE_ENABLED=${TLSE_ENABLED:-false}
 
 if [[ ! -f $SSH_KEY_FILE ]]; then
     echo "$SSH_KEY_FILE is missing"
@@ -78,8 +79,8 @@ cat <<EOF > $CMDS_FILE
 set -ex
 sudo dnf install -y podman python3-tripleoclient util-linux lvm2
 
-sudo hostnamectl set-hostname undercloud.localdomain
-sudo hostnamectl set-hostname undercloud.localdomain --transient
+sudo hostnamectl set-hostname undercloud.${CLOUD_DOMAIN}
+sudo hostnamectl set-hostname undercloud.${CLOUD_DOMAIN} --transient
 
 export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
 export INTERFACE_MTU=${INTERFACE_MTU:-1500}
@@ -94,6 +95,8 @@ export EDPM_COMPUTE_CELLS=${COMPUTE_CELLS:-1}
 export MANILA_ENABLED=${MANILA_ENABLED:-true}
 export OCTAVIA_ENABLED=${OCTAVIA_ENABLED}
 export TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
+export TLSE_ENABLED=${TLSE_ENABLED:-false}
+export CLOUD_DOMAIN=${CLOUD_DOMAIN:-localdomain}
 
 set +x
 if [ ! -f \$HOME/containers-prepare-parameters.yaml ]; then
@@ -161,10 +164,16 @@ gateway_ip: ${GATEWAY}
 manage_default_route: ${TRIPLEO_NETWORKING}
 dns_server: ${PRIMARY_RESOLV_CONF_ENTRY}
 user_home: /home/zuul
+cloud_domain: ${CLOUD_DOMAIN}
 EOF
 
 jinja2_render ${SCRIPTPATH}/../tripleo/undercloud.conf.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/undercloud.conf
 jinja2_render ${SCRIPTPATH}/../tripleo/net_config.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/net_config.yaml
+jinja2_render ${SCRIPTPATH}/../tripleo/overcloud_services.yaml.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/overcloud_services.yaml
+jinja2_render ${SCRIPTPATH}/../tripleo/config-download.yaml.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/config-download.yaml
+jinja2_render ${SCRIPTPATH}/../tripleo/config-download-networker.yaml.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/config-download-networker.yaml
+jinja2_render ${SCRIPTPATH}/../tripleo/network_data.yaml.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/network_data.yaml
+
 # NOTE(bogdando): no computes supported in the cetnral overcloud stack in OSP.
 # Reduced footprint for adoption dev envs: no HA controllers, an all-in-one host in the cell 2
 ind=0
@@ -217,7 +226,6 @@ scp $SSH_OPT ${SCRIPTPATH}/../tripleo/tripleo_install.sh zuul@$IP:tripleo_instal
 scp $SSH_OPT ${SCRIPTPATH}/../tripleo/hieradata_overrides_undercloud.yaml zuul@$IP:hieradata_overrides_undercloud.yaml
 scp $SSH_OPT ${SCRIPTPATH}/../tripleo/undercloud-parameter-defaults.yaml zuul@$IP:undercloud-parameter-defaults.yaml
 scp $SSH_OPT ${MY_TMP_DIR}/undercloud.conf zuul@$IP:undercloud.conf
-scp $SSH_OPT ${SCRIPTPATH}/../tripleo/config-download-networker.yaml zuul@$IP:config-download-networker.yaml
 scp $SSH_OPT ${SCRIPTPATH}/../tripleo/nova_noceph.yaml zuul@$IP:nova_noceph.yaml
 if [ $EDPM_COMPUTE_CELLS -gt 1 ]; then
     for cell in $(seq 0 $(( EDPM_COMPUTE_CELLS - 1))); do
@@ -228,12 +236,12 @@ if [ $EDPM_COMPUTE_CELLS -gt 1 ]; then
     done
 else
     scp $SSH_OPT ${SCRIPTPATH}/../tripleo/vips_data.yaml zuul@$IP:vips_data.yaml
-    scp $SSH_OPT ${SCRIPTPATH}/../tripleo/network_data.yaml zuul@$IP:network_data.yaml
-    scp $SSH_OPT ${SCRIPTPATH}/../tripleo/overcloud_services.yaml zuul@$IP:overcloud_services.yaml
-    scp $SSH_OPT ${SCRIPTPATH}/../tripleo/config-download.yaml zuul@$IP:config-download.yaml
+    scp $SSH_OPT ${MY_TMP_DIR}/network_data.yaml zuul@$IP:network_data.yaml
+    scp $SSH_OPT ${MY_TMP_DIR}/overcloud_services.yaml zuul@$IP:overcloud_services.yaml
+    scp $SSH_OPT  ${MY_TMP_DIR}/config-download.yaml zuul@$IP:config-download.yaml
+    scp $SSH_OPT  ${MY_TMP_DIR}/config-download-networker.yaml zuul@$IP:config-download-networker.yaml
 fi
 scp $SSH_OPT ${SCRIPTPATH}/../tripleo/overcloud_roles.yaml zuul@$IP:overcloud_roles.yaml
-scp $SSH_OPT ${SCRIPTPATH}/../tripleo/overcloud_services.yaml zuul@$IP:overcloud_services.yaml
 scp $SSH_OPT ${SCRIPTPATH}/../tripleo/ansible_config.cfg zuul@$IP:ansible_config.cfg
 if [[ "$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]]; then
     scp $SSH_OPT ${SCRIPTPATH}/../tripleo/ceph.sh root@$IP:/tmp/ceph.sh
