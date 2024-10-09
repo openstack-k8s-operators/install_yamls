@@ -455,6 +455,7 @@ edpm_deploy_instance: ## Spin a instance on edpm node
 
 .PHONY: tripleo_deploy
 tripleo_deploy: export CLOUD_DOMAIN=${DNS_DOMAIN}
+tripleo_deploy: export TLSE_ENABLED=${TLS_ENABLED}
 tripleo_deploy: export INTERFACE_MTU=${NETWORK_MTU}
 tripleo_deploy: export COMPUTE_CELLS=${EDPM_COMPUTE_CELLS}
 tripleo_deploy: export REGISTRY_USER ?= ${RH_REGISTRY_USER}
