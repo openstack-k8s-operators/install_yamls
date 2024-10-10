@@ -2145,6 +2145,7 @@ ceph_cleanup: ## deletes the ceph pod
 	${CLEANUP_DIR_CMD} ${DEPLOY_DIR}
 
 ##@ ROOK
+
 .PHONY: rook_prep
 rook_prep: ### deploy rook operator
 	$(eval $(call vars,$@,ceph))
@@ -2164,6 +2165,25 @@ rook: namespace rook_prep ## installs the CRDs and the operator, also runs the p
 	oc apply -f ${CEPH_OP}
 	## Do not deploy NFS CEPH-CSI
 	oc -n rook-ceph patch configmap rook-ceph-operator-config --type='merge' -p '{"data": { "ROOK_CSI_ENABLE_CEPHFS": "false" }}'
+
+.PHONY: rook_deploy_prep
+rook_deploy_prep: export IMAGE=${CEPH_IMG}
+rook_deploy_prep: # ceph_deploy_cleanup ## prepares the CR to install the service based on the service sample
+	$(eval $(call vars,$@,ceph))
+	# Patch the rook-ceph scc to allow using hostnetworking: this simulates an
+	# external ceph cluster
+	oc patch scc rook-ceph --type='merge' -p '{ "allowHostNetwork": true, "allowHostPID": true, "allowHostPorts": true}'
+	bash scripts/gen-rook-kustomize.sh
+
+.PHONY: rook_deploy
+rook_deploy: rook_deploy_prep ## installs the service instance using kustomize.
+	$(eval $(call vars,$@,ceph))
+	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+
+.PHONY: rook_crc_disk
+rook_crc_disk: ## Create a disk and attach to CRC / SNO VM
+	$(eval $(call vars,$@,ceph))
+	bash scripts/disk-setup.sh
 
 .PHONY: rook_cleanup
 rook_cleanup: ## deletes rook resources
