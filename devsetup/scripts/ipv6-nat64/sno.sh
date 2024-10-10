@@ -328,6 +328,7 @@ EOF
 }
 
 function print_cluster_info {
+    set +x
     API_URL="https://api.sno.lab.example.com:6443"
     echo
     echo "Source ${WORK_DIR}/sno_env to set up PATH and KUBECONFIG:"
@@ -342,6 +343,7 @@ function print_cluster_info {
     echo "      to be ready ... if you see an authentication error with"
     echo "      the admin user, wait moments and try again."
     echo
+    set -x
 }
 
 function create {
