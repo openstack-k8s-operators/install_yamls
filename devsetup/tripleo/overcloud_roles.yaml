@@ -225,14 +225,17 @@
     - OS::TripleO::Services::BootParams
     - OS::TripleO::Services::CACerts
     - OS::TripleO::Services::Clustercheck
+    - OS::TripleO::Services::Collectd
     - OS::TripleO::Services::ContainerImagePrepare
     - OS::TripleO::Services::ContainersLogrotateCrond
+    - OS::TripleO::Services::Frr
     - OS::TripleO::Services::HAproxy
     - OS::TripleO::Services::IpaClient
     - OS::TripleO::Services::Ipsec
     - OS::TripleO::Services::Iscsid
     - OS::TripleO::Services::Kernel
     - OS::TripleO::Services::LoginDefs
+    - OS::TripleO::Services::MetricsQdr
     - OS::TripleO::Services::MySQL
     - OS::TripleO::Services::MySQLClient
     - OS::TripleO::Services::NeutronMetadataAgent
@@ -242,7 +245,10 @@
     - OS::TripleO::Services::OsloMessagingRpc
     - OS::TripleO::Services::Pacemaker
     - OS::TripleO::Services::Podman
+    - OS::TripleO::Services::Ptp
     - OS::TripleO::Services::Rhsm
+    - OS::TripleO::Services::Rsyslog
+    - OS::TripleO::Services::RsyslogSidecar
     - OS::TripleO::Services::Securetty
     - OS::TripleO::Services::Snmp
     - OS::TripleO::Services::Sshd
@@ -251,6 +257,7 @@
     - OS::TripleO::Services::TripleoFirewall
     - OS::TripleO::Services::TripleoPackages
     - OS::TripleO::Services::Tuned
+    - OS::TripleO::Services::Vpp
 ###############################################################################
 # Role: CellControllerCompute                                                 #
 ###############################################################################
@@ -293,18 +300,25 @@
     - OS::TripleO::Services::AuditD
     - OS::TripleO::Services::BootParams
     - OS::TripleO::Services::CACerts
+    - OS::TripleO::Services::CephClient
+    - OS::TripleO::Services::CephExternal
     - OS::TripleO::Services::Clustercheck
+    - OS::TripleO::Services::Collectd
+    - OS::TripleO::Services::ComputeCeilometerAgent
+    - OS::TripleO::Services::CeilometerAgentIpmi
     - OS::TripleO::Services::ContainerImagePrepare
     - OS::TripleO::Services::HAproxy
     - OS::TripleO::Services::ComputeNeutronCorePlugin
     - OS::TripleO::Services::ComputeNeutronL3Agent
     - OS::TripleO::Services::ComputeNeutronMetadataAgent
     - OS::TripleO::Services::ComputeNeutronOvsAgent
+    - OS::TripleO::Services::Frr
     - OS::TripleO::Services::IpaClient
     - OS::TripleO::Services::Ipsec
     - OS::TripleO::Services::Iscsid
     - OS::TripleO::Services::Kernel
     - OS::TripleO::Services::LoginDefs
+    - OS::TripleO::Services::MetricsQdr
     - OS::TripleO::Services::Multipathd
     - OS::TripleO::Services::MySQL
     - OS::TripleO::Services::MySQLClient
@@ -326,7 +340,10 @@
     - OS::TripleO::Services::Pacemaker
     - OS::TripleO::Services::OsloMessagingRpc
     - OS::TripleO::Services::Podman
+    - OS::TripleO::Services::Ptp
     - OS::TripleO::Services::Rhsm
+    - OS::TripleO::Services::Rsyslog
+    - OS::TripleO::Services::RsyslogSidecar
     - OS::TripleO::Services::Securetty
     - OS::TripleO::Services::Snmp
     - OS::TripleO::Services::Sshd
@@ -335,6 +352,7 @@
     - OS::TripleO::Services::TripleoFirewall
     - OS::TripleO::Services::TripleoPackages
     - OS::TripleO::Services::Tuned
+    - OS::TripleO::Services::Vpp
 ###############################################################################
 # Role: Compute                                                               #
 ###############################################################################
