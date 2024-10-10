@@ -300,6 +300,10 @@ ipv6_lab_cleanup: ## Deploys IPv6 lab environment
 	make ipv6_lab_nat64_router_cleanup
 	make ipv6_lab_network_cleanup
 
+	# some files in the work directory can get obsolete after a short time
+	# and break further deployment attempts
+	rm -rf ${IPV6_LAB_WORK_DIR}
+
 ##@ Attach interface
 
 .PHONY: attach_default_interface

@@ -101,7 +101,7 @@ function build_dnsmasq {
         git clone http://thekelleys.org.uk/git/dnsmasq.git
         pushd ./dnsmasq
         make
-        sudo make install PREFIX=${WORK_DIR}
+        make install PREFIX=${WORK_DIR}
         # Set selinux context to bin_t
         sudo chcon -t bin_t ${WORK_DIR}/sbin/dnsmasq
         popd
