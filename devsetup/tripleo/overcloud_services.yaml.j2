@@ -51,15 +51,15 @@ parameter_defaults:
   CloudNameStorageManagement: overcloud.storagemgmt.{{ cloud_domain }}
   CloudNameCtlplane: overcloud.ctlplane.{{ cloud_domain }}
   CloudDomain: {{ cloud_domain }}
-  NetworkConfigWithAnsible: false
-  ControllerNetworkConfigUpdate: false
-  ComputeNetworkConfigUpdate: false
-  BlockStorageNetworkConfigUpdate: false
-  ObjectStorageNetworkConfigUpdate: false
-  CephStorageNetworkConfigUpdate: false
-  NetworkerNetworkConfigUpdate: false
-  CellControllerNetworkConfigUpdate: false
-  CellControllerComputeNetworkConfigUpdate: false
+  NetworkConfigWithAnsible: {{ tripleo_networking }}
+  ControllerNetworkConfigUpdate: {{ tripleo_networking }}
+  ComputeNetworkConfigUpdate: {{ tripleo_networking }}
+  BlockStorageNetworkConfigUpdate: {{ tripleo_networking }}
+  ObjectStorageNetworkConfigUpdate: {{ tripleo_networking }}
+  CephStorageNetworkConfigUpdate: {{ tripleo_networking }}
+  NetworkerNetworkConfigUpdate: {{ tripleo_networking }}
+  CellControllerNetworkConfigUpdate: {{ tripleo_networking }}
+  CellControllerComputeNetworkConfigUpdate: {{ tripleo_networking }}
 
   ControllerNetworkConfigTemplate: templates/single_nic_vlans/single_nic_vlans.j2
   ComputeNetworkConfigTemplate: templates/single_nic_vlans/single_nic_vlans.j2

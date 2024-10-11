@@ -39,13 +39,16 @@ data_devices:
     - /dev/ceph_vg1/ceph_lv1
 EOF
 
-# create roles file
+# create overriden Contoller and HCI roles file
 openstack overcloud roles generate Controller ComputeHCI > roles.yaml
 
-# disable external gateway for controller nodes
+# always disable external gateway for controller nodes (ignore TRIPLEO_ATTACH_EXTNET for reasons)
 sed -i "s/default_route_networks: \['External'\]/default_route_networks: \['ControlPlane'\]/" roles.yaml
 sed -i "/External:/d" roles.yaml
 sed -i "/subnet: external_subnet/d" roles.yaml
+
+# update the main roles file
+cat roles.yaml >> $ROLES_FILE
 
 # NOTE: TripleO has the hardcoded --yes-i-know option that is not valid anymore
 # in RHCS 7. TripleO does not receive any new patch both upstream and downstream

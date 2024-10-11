@@ -128,7 +128,7 @@ for config_download in ${cdfiles[@]}; do
         stg_mgmt_line="OS::TripleO::ComputeHCI::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage_mgmt.yaml"
         sed -i "s#$stg_line#$stg_line\r  $stg_mgmt_line\r#" $config_download
         # correct RoleCount var in overcloud_services
-        sed -i "s/ComputeCount/ComputeHCICount/" overcloud_services.yaml
+        sed -i -r "s/\bComputeCount(.*)$/ComputeHCICount\1\n  ComputeCount: 0/g" overcloud_services.yaml
     fi
     # Remove any quotes e.g. "np10002"-ctlplane -> np10002-ctlplane
     sed -i 's/\"//g' "$config_download"
@@ -156,12 +156,18 @@ fi
 
 # defaults for non-ceph case
 CEPH_OVERCLOUD_ARGS=""
-ROLES_FILE="/home/zuul/overcloud_roles.yaml"
+export ROLES_FILE="/home/zuul/overcloud_roles.yaml"
 if [ "$EDPM_COMPUTE_CEPH_ENABLED" = "true" ] ; then
     CEPH_OVERCLOUD_ARGS="${CEPH_ARGS}"
     [[ "$MANILA_ENABLED" == "true" ]] && CEPH_OVERCLOUD_ARGS+=' -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/ceph-mds.yaml'
-    ROLES_FILE="/home/zuul/roles.yaml"
     /tmp/ceph.sh
+fi
+
+if [ "$TRIPLEO_ATTACH_EXTNET" = "false" ]; then
+    # disable external gateway for all roles
+    sed -i "s/default_route_networks: \['External'\]/default_route_networks: \['ControlPlane'\]/" $ROLES_FILE
+    sed -i "/External:/d" $ROLES_FILE
+    sed -i "/subnet: external_subnet/d" $ROLES_FILE
 fi
 
 if [ "$TLSE_ENABLED" = "true" ]; then
