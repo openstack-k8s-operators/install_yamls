@@ -56,8 +56,8 @@ openstack overcloud ceph spec config-download.yaml \
 # deploy ceph
 openstack overcloud ceph deploy \
     --tld localdomain \
-    --ntp-server $NTP_SERVER \
+    --ntp-server "$NTP_SERVER" \
     --ceph-spec ceph_spec.yaml \
     --network-data network_data.yaml \
-    --cephadm-default-container \
+    --container-image-prepare "$HOME"/containers-prepare-parameters.yaml \
     --output deployed_ceph.yaml
