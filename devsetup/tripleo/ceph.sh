@@ -46,6 +46,12 @@ sed -i "s/default_route_networks: \['External'\]/default_route_networks: \['Cont
 sed -i "/External:/d" roles.yaml
 sed -i "/subnet: external_subnet/d" roles.yaml
 
+# NOTE: TripleO has the hardcoded --yes-i-know option that is not valid anymore
+# in RHCS 7. TripleO does not receive any new patch both upstream and downstream
+# (it is a retired project), hence the only option we have is to patch the
+# current code to not have that line.
+sudo sed -i "/--yes-i-know/d" /usr/share/ansible/roles/tripleo_cephadm/tasks/bootstrap.yaml
+
 # generate ceph_spec file
 openstack overcloud ceph spec config-download.yaml \
     --tld localdomain \
@@ -56,8 +62,8 @@ openstack overcloud ceph spec config-download.yaml \
 # deploy ceph
 openstack overcloud ceph deploy \
     --tld localdomain \
-    --ntp-server $NTP_SERVER \
+    --ntp-server "$NTP_SERVER" \
     --ceph-spec ceph_spec.yaml \
     --network-data network_data.yaml \
-    --cephadm-default-container \
+    --container-image-prepare "$HOME"/containers-prepare-parameters.yaml \
     --output deployed_ceph.yaml
