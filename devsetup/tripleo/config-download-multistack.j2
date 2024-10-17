@@ -7,22 +7,25 @@ resource_registry:
   OS::TripleO::Compute::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage_mgmt.yaml
   OS::TripleO::Compute::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
   OS::TripleO::Compute::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
-  OS::TripleO::Compute::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
   OS::TripleO::Controller::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_internal_api.yaml
   OS::TripleO::Controller::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage_mgmt.yaml
   OS::TripleO::Controller::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
   OS::TripleO::Controller::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
-  OS::TripleO::Controller::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
   OS::TripleO::CellController::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_internal_api.yaml
   OS::TripleO::CellController::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage_mgmt.yaml
   OS::TripleO::CellController::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
   OS::TripleO::CellController::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
-  OS::TripleO::CellController::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
   OS::TripleO::CellControllerCompute::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_internal_api.yaml
   OS::TripleO::CellControllerCompute::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage_mgmt.yaml
   OS::TripleO::CellControllerCompute::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
   OS::TripleO::CellControllerCompute::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
+  {% if attach_external_net|bool %}
+  OS::TripleO::Compute::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
+  OS::TripleO::Controller::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
+  OS::TripleO::CellController::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
   OS::TripleO::CellControllerCompute::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
+  {% endif %}
+
 parameter_defaults:
   DeployedServerPortMap:
     controller-0-ctlplane:
@@ -83,10 +86,13 @@ parameter_defaults:
         ip_address: 172.20.0.103
         ip_address_uri: 172.20.0.103
         ip_subnet: 172.20.0.0/24
+      {% if attach_external_net|bool %}
       external:
         ip_address: 172.21.0.103
         ip_address_uri: 172.21.0.103
         ip_subnet: 172.21.0.0/24
+      {% endif %}
+
     compute-0: # cell1-controller-0 (cell1, ind0)
       ctlplane:
         ip_address: 192.168.122.106
@@ -108,10 +114,13 @@ parameter_defaults:
         ip_address: 172.20.0.106
         ip_address_uri: 172.20.0.106
         ip_subnet: 172.20.0.0/24
+      {% if attach_external_net|bool %}
       external:
         ip_address: 172.21.0.106
         ip_address_uri: 172.21.0.106
         ip_subnet: 172.21.0.0/24
+      {% endif %}
+
     compute-1: # cell1-compute-0 (cell1, ind1)
       ctlplane:
         ip_address: 192.168.122.107
@@ -133,10 +142,13 @@ parameter_defaults:
         ip_address: 172.20.0.107
         ip_address_uri: 172.20.0.107
         ip_subnet: 172.20.0.0/24
+      {% if attach_external_net|bool %}
       external:
         ip_address: 172.21.0.107
         ip_address_uri: 172.21.0.107
         ip_subnet: 172.21.0.0/24
+      {% endif %}
+
     compute-2: # cell2-controller-compute-0 AIO (cell2, ind0)
       ctlplane:
         ip_address: 192.168.122.109
@@ -158,10 +170,13 @@ parameter_defaults:
         ip_address: 172.20.0.109
         ip_address_uri: 172.20.0.109
         ip_subnet: 172.20.0.0/24
+      {% if attach_external_net|bool %}
       external:
         ip_address: 172.21.0.109
         ip_address_uri: 172.21.0.109
         ip_subnet: 172.21.0.0/24
+      {% endif %}
+
   CtlplaneNetworkAttributes:
     network:
       dns_domain: localdomain
