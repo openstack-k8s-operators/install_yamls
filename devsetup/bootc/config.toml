@@ -1,0 +1,4 @@
+[[customizations.user]]
+name = "root"
+password = "12345678"
+key = "${SSH_PUBLIC_KEY_CONTENTS}"
