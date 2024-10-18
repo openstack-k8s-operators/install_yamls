@@ -432,6 +432,11 @@ CEPH_OP        ?= ${OPERATOR_BASE_DIR}/rook/deploy/examples/operator-openshift.y
 CEPH_CR        ?= ${OPERATOR_BASE_DIR}/rook/deploy/examples/cluster-test.yaml
 CEPH_CLIENT    ?= ${OPERATOR_BASE_DIR}/rook/deploy/examples/toolbox.yaml
 
+# NNstate
+NMSTATE_NAMESPACE      ?= openshift-nmstate
+NMSTATE_OPERATOR_GROUP ?= openshift-nmstate-tn6k8
+NMSTATE_SUBSCRIPTION   ?= kubernetes-nmstate-operator
+
 # NNCP
 NNCP_NODES          ?=
 NNCP_INTERFACE      ?= enp6s0
@@ -2216,7 +2221,9 @@ lvms_deploy_cleanup: ## delete the lvms cluster
 
 ##@ NMSTATE
 .PHONY: nmstate
-nmstate: export NAMESPACE=openshift-nmstate
+nmstate: export NAMESPACE=${NMSTATE_NAMESPACE}
+nmstate: export OPERATOR_GROUP=${NMSTATE_OPERATOR_GROUP}
+nmstate: export SUBSCRIPTION=${NMSTATE_SUBSCRIPTION}
 nmstate: ## installs nmstate operator in the openshift-nmstate namespace
 	$(eval $(call vars,$@,nmstate))
 	bash scripts/gen-namespace.sh
