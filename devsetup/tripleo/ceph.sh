@@ -41,11 +41,6 @@ EOF
 # create roles file
 openstack overcloud roles generate Controller ComputeHCI > roles.yaml
 
-# disable external gateway for controller nodes
-sed -i "s/default_route_networks: \['External'\]/default_route_networks: \['ControlPlane'\]/" roles.yaml
-sed -i "/External:/d" roles.yaml
-sed -i "/subnet: external_subnet/d" roles.yaml
-
 # generate ceph_spec file
 openstack overcloud ceph spec config-download.yaml \
     --tld localdomain \
