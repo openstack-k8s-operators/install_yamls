@@ -1,7 +1,7 @@
 #jinja2: trim_blocks:False
 network_config:
 - type: ovs_bridge
-  name: br-ctlplane
+  name: br-ex
   mtu: {{ interface_mtu }}
   use_dhcp: false
   dns_servers:
@@ -12,16 +12,7 @@ network_config:
   domain: []
   addresses:
   - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_cidr }}
-  - ip_netmask: {{ ctlplane_ip }}/32
-  - ip_netmask: {{ ctlplane_vip }}/32
-  {% if manage_default_route|bool %}
-  routes:
-    - ip_netmask: 0.0.0.0/0
-      next_hop: 192.168.122.1
-      default: true
-  {% else %}
   routes: []
-  {% endif %}
   members:
   - type: interface
     name: {{ os_net_config_iface | default(nic1) }}
@@ -34,7 +25,6 @@ network_config:
     vlan_id: 44
     addresses:
     - ip_netmask: {{ standalone_external_prefix | default("172.21.0", true)}}.{{ ip_address_suffix }}/24
-    - ip_netmask: {{ standalone_external_prefix | default("172.21.0", true)}}.2/32
     {% if adopted_external_net|default %}
     routes:
       - ip_netmask: {{ adopted_external_net }}
@@ -48,7 +38,6 @@ network_config:
     vlan_id: 20
     addresses:
     - ip_netmask: {{ standalone_internal_prefix | default("172.17.0", true)}}.{{ ip_address_suffix }}/24
-    - ip_netmask: {{ standalone_internal_prefix | default("172.17.0", true)}}.2/32
     {% if adopted_internal_net|default %}
     routes:
       - ip_netmask: {{ adopted_internal_net }}
@@ -62,7 +51,6 @@ network_config:
     vlan_id: 21
     addresses:
     - ip_netmask: {{ standalone_storage_prefix | default("172.18.0", true) }}.{{ ip_address_suffix }}/24
-    - ip_netmask: {{ standalone_storage_prefix | default("172.18.0", true) }}.2/32
     {% if adopted_storage_net|default %}
     routes:
       - ip_netmask: {{ adopted_storage_net }}
@@ -76,7 +64,6 @@ network_config:
     vlan_id: 23
     addresses:
     - ip_netmask: {{ standalone_storage_mgmt_prefix | default("172.20.0", true) }}.{{ ip_address_suffix }}/24
-    - ip_netmask: {{ standalone_storage_mgmt_prefix | default("172.20.0", true) }}.2/32
     {% if adopted_storage_mgmt_net|default %}
     routes:
       - ip_netmask: {{ adopted_storage_mgmt_net }}
