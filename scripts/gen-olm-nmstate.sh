@@ -41,7 +41,7 @@ metadata:
   annotations:
     olm.providedAPIs: NMState.v1.nmstate.io
   generateName: openshift-nmstate-
-  name: openshift-nmstate-tn6k8
+  name: ${OPERATOR_GROUP}
   namespace: ${NAMESPACE}
 spec:
   targetNamespaces:
@@ -54,12 +54,12 @@ kind: Subscription
 metadata:
   labels:
     operators.coreos.com/kubernetes-nmstate-operator.openshift-nmstate: ""
-  name: kubernetes-nmstate-operator
+  name: ${SUBSCRIPTION}
   namespace: ${NAMESPACE}
 spec:
   channel: stable
   installPlanApproval: Automatic
-  name: kubernetes-nmstate-operator
+  name: ${SUBSCRIPTION}
   source: redhat-operators
   sourceNamespace: openshift-marketplace
 EOF_CAT
