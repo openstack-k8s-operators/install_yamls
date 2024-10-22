@@ -73,7 +73,7 @@ parameter_defaults:
   CloudNameCtlplane: multicell.ctlplane.localdomain # ctlplane.cell{{ cell }}.{{ cloud_domain }}
   CloudDomain: {{ cloud_domain }}
 
-  OVNCMSOptions: enable-chassis-as-gw
+  OVNCMSOptions: disable-chassis-as-gw
   NeutronPhysicalBridge: br-ex
   NeutronNetworkType: geneve
   NeutronTunnelTypes: geneve
