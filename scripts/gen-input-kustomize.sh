@@ -40,6 +40,14 @@ if [ -z "$BARBICAN_SIMPLE_CRYPTO_ENCRYPTION_KEY" ]; then
     echo "Please set BARBICAN_SIMPLE_CRYPTO_ENCRYPTION_KEY"; exit 1
 fi
 
+if [ -z "$KEYSTONE_FEDERATION_CLIENT_SECRET" ]; then
+    echo "Please set KEYSTONE_FEDERATION_CLIENT_SECRET"; exit 1
+fi
+
+if [ -z "$KEYSTONE_CRYPTO_PASSPHRASE" ]; then
+    echo "Please set KEYSTONE_CRYPTO_PASSPHRASE"; exit 1
+fi
+
 if [ -z "$LIBVIRT_SECRET" ]; then
     echo "Please set LIBVIRT_SECRET"; exit 1
 fi
@@ -76,6 +84,8 @@ secretGenerator:
   - CinderPassword=${PASSWORD}
   - IronicPassword=${PASSWORD}
   - IronicInspectorPassword=${PASSWORD}
+  - KeystoneClientSecret=${KEYSTONE_FEDERATION_CLIENT_SECRET}
+  - KeystoneCryptoPassphrase=${KEYSTONE_CRYPTO_PASSPHRASE}
   - OctaviaPassword=${PASSWORD}
   - OctaviaHeartbeatKey=${PASSWORD}
   - NovaPassword=${PASSWORD}
