@@ -60,6 +60,12 @@ osd pool default size = 1
 mon_warn_on_pool_no_redundancy = false
 EOF
 
+# NOTE: TripleO has the hardcoded --yes-i-know option that is not valid anymore
+# in RHCS 7. TripleO does not receive any new patch both upstream and downstream
+# (it is a retired project), hence the only option we have is to patch the
+# current code to not have that line.
+sudo sed -i "/--yes-i-know/d" /usr/share/ansible/roles/tripleo_cephadm/tasks/bootstrap.yaml
+
 # Use the files created in the previous steps to install Ceph.
 # Use thw network_data.yaml file so that Ceph uses the isolated networks for storage and storage management.
 sudo openstack overcloud ceph deploy \
@@ -73,7 +79,7 @@ sudo openstack overcloud ceph deploy \
     --skip-container-registry-config \
     --skip-user-create \
     --network-data /tmp/network_data.yaml \
-    --ntp-server $NTP_SERVER \
+    --ntp-server "$NTP_SERVER" \
     --output $HOME/deployed_ceph.yaml
 
 # Ceph should now be installed. Use sudo cephadm shell -- ceph -s to confirm the Ceph cluster health.
