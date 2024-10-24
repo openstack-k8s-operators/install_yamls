@@ -83,6 +83,7 @@ secretGenerator:
   - MetadataSecret=${METADATA_SHARED_SECRET}
   - HeatPassword=${PASSWORD}
   - HeatAuthEncryptionKey=${HEAT_AUTH_ENCRYPTION_KEY}
+  - HeatStackDomainAdminPassword=${PASSWORD}
   - SwiftPassword=${PASSWORD}
 - name: ${LIBVIRT_SECRET}
   literals:
