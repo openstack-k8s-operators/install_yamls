@@ -831,6 +831,7 @@ edpm_deploy_prep: edpm_deploy_cleanup openstack_repo ## prepares the CR to insta
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${DEPLOY_DIR}
 	cp ${DATAPLANE_EXTRA_NOVA_CONFIG_FILE} ${EDPM_EXTRA_NOVA_CONFIG_FILE}
+	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
 	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/dataplane/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
 	bash scripts/gen-edpm-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
@@ -851,7 +852,6 @@ edpm_deploy: input edpm_deploy_prep ## installs the dataplane instance using kus
 ifneq ($(DATAPLANE_RUNNER_IMG),)
 	make edpm_patch_ansible_runner_image
 endif
-	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 
 .PHONY: edpm_deploy_baremetal_prep
@@ -880,6 +880,7 @@ edpm_deploy_baremetal_prep: edpm_deploy_cleanup openstack_repo ## prepares the C
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${DEPLOY_DIR}
 	cp ${DATAPLANE_EXTRA_NOVA_CONFIG_FILE} ${EDPM_EXTRA_NOVA_CONFIG_FILE}
+	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
 	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/dataplane/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
 	bash scripts/gen-edpm-baremetal-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
@@ -893,7 +894,6 @@ edpm_deploy_baremetal: input edpm_deploy_baremetal_prep ## installs the dataplan
 ifneq ($(DATAPLANE_RUNNER_IMG),)
 	make edpm_patch_ansible_runner_image
 endif
-	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
 
 .PHONY: edpm_wait_deploy_baremetal
@@ -953,6 +953,7 @@ edpm_deploy_networker_prep: edpm_deploy_networker_cleanup openstack_repo ## prep
 	echo "START PREP"
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${DEPLOY_DIR_EDPM_NETWORKER}
+	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
 	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/dataplane/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR_EDPM_NETWORKER}/dataplane.yaml
 	bash scripts/gen-edpm-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
@@ -974,7 +975,6 @@ edpm_deploy_networker: input edpm_deploy_networker_prep ## installs the dataplan
 ifneq ($(DATAPLANE_RUNNER_IMG),)
 	make edpm_patch_ansible_runner_image
 endif
-	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
 	oc kustomize ${DEPLOY_DIR_EDPM_NETWORKER} | oc apply -f -
 
 ##@ INFRA
