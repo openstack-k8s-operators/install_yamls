@@ -15,54 +15,35 @@
 # under the License.
 set -ex
 
-if [ -z "${DEPLOY_DIR}" ]; then
-    echo "Please set DEPLOY_DIR"; exit 1
-fi
+function check_var_set {
+    if [[ ! -v $1 ]]; then
+        echo "Please set $1"; exit 1
+    fi
+}
+
+check_var_set DEPLOY_DIR
 
 if [ ! -d ${DEPLOY_DIR} ]; then
     mkdir -p ${DEPLOY_DIR}
 fi
 
-if [ -z "${WORKERS}" ]; then
-    echo "Please set WORKERS"; exit 1
-fi
-
-if [ -z "${INTERFACE}" ]; then
-    echo "Please set INTERFACE"; exit 1
-fi
-
-if [ -z "${BRIDGE_NAME}" ]; then
-    echo "Please set BRIDGE_NAME"; exit 1
-fi
-
-if [ -z "${INTERFACE_MTU}" ]; then
-    echo "Please set INTERFACE_MTU"; exit 1
-fi
-
-if [ -z "${VLAN_START}" ]; then
-    echo "Please set VLAN_START"; exit 1
-fi
-
-if [ -z "${VLAN_STEP}" ]; then
-    echo "Please set VLAN_STEP"; exit 1
-fi
-
+check_var_set WORKERS
+check_var_set INTERFACE
+check_var_set BRIDGE_NAME
+check_var_set INTERFACE_MTU
+check_var_set VLAN_START
+check_var_set VLAN_STEP
+check_var_set VLAN_STEP
+check_var_set INTERNALAPI_PREFIX
+check_var_set STORAGE_PREFIX
+check_var_set STORAGEMGMT_PREFIX
+check_var_set TENANT_PREFIX
+check_var_set DESIGNATE_PREFIX
 if [ -n "$BGP" ]; then
-if [ -z "${INTERFACE_BGP_1}" ]; then
-    echo "Please set INTERFACE_BGP_1"; exit 1
-fi
-
-if [ -z "${INTERFACE_BGP_2}" ]; then
-    echo "Please set INTERFACE_BGP_2"; exit 1
-fi
-
-if [ -z "${BGP_1_IP_ADDRESS}" ]; then
-    echo "Please set BGP_1_IP_ADDRESS"; exit 1
-fi
-
-if [ -z "${BGP_2_IP_ADDRESS}" ]; then
-    echo "Please set BGP_2_IP_ADDRESS"; exit 1
-fi
+    check_var_set INTERFACE_BGP_1
+    check_var_set INTERFACE_BGP_2
+    check_var_set BGP_1_IP_ADDRESS
+    check_var_set BGP_2_IP_ADDRESS
 fi
 
 echo DEPLOY_DIR ${DEPLOY_DIR}
@@ -99,6 +80,13 @@ IPV6_ADDRESS_SUFFIX=5
 
 # Clean up pre-existing files to avoid failed nncp
 rm --force ${DEPLOY_DIR}/*_nncp.yaml
+# vlan ids
+internalapi_vlan_id=$VLAN_START
+storage_vlan_id=$((VLAN_START + VLAN_STEP))
+tenant_vlan_id=$((${VLAN_START}+$((${VLAN_STEP}*2))))
+storagemgmt_vlan_id=$((${VLAN_START}+$((${VLAN_STEP}*3))))
+octavia_vlan_id=$((${VLAN_START}+$((${VLAN_STEP}*4))))
+designate_vlan_id=$((${VLAN_START}+$((${VLAN_STEP}*5))))
 
 for WORKER in ${WORKERS}; do
   cat > ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
@@ -131,7 +119,9 @@ EOF_CAT
         - ${DNS_SERVER_IPV6}
 EOF_CAT
     fi
-    if [ -n "$NNCP_ADDITIONAL_HOST_ROUTES" ]; then
+    if [ -n "$NNCP_ADDITIONAL_HOST_ROUTES" ] || [ -n "$NNCP_INTERNALAPI_HOST_ROUTES" ] || \
+       [ -n "$NNCP_STORAGE_HOST_ROUTES" ] || [ -n "$NNCP_STORAGEMGMT_HOST_ROUTES" ] || \
+       [ -n "$NNCP_TENANT_HOST_ROUTES" ]; then
     #
     # Host Routes
     #
@@ -139,12 +129,53 @@ EOF_CAT
     routes:
       config:
 EOF_CAT
-        for route in $NNCP_ADDITIONAL_HOST_ROUTES; do
-            cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+    fi
+        if [ -n "$NNCP_ADDITIONAL_HOST_ROUTES" ]; then
+            for route in $NNCP_ADDITIONAL_HOST_ROUTES; do
+                cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       - destination: ${route}
         next-hop-interface: ${BRIDGE_NAME}
 EOF_CAT
-        done
+            done
+        fi
+        if [ -n "$NNCP_INTERNALAPI_HOST_ROUTES" ]; then
+            for internalapi_route in $NNCP_INTERNALAPI_HOST_ROUTES; do
+                cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      - destination: ${internalapi_route}
+        next-hop-interface: ${INTERFACE}.${internalapi_vlan_id}
+EOF_CAT
+            done
+        fi
+        if [ -n "$NNCP_STORAGE_HOST_ROUTES" ]; then
+            for storage_route in $NNCP_STORAGE_HOST_ROUTES; do
+                cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      - destination: ${storage_route}
+        next-hop-interface: ${INTERFACE}.${storage_vlan_id}
+EOF_CAT
+            done
+        fi
+        if [ -n "$NNCP_STORAGEMGMT_HOST_ROUTES" ]; then
+            for storagemgmt_route in $NNCP_STORAGEMGMT_HOST_ROUTES; do
+                cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      - destination: ${storagemgmt_route}
+        next-hop-interface: ${INTERFACE}.${storagemgmt_vlan_id}
+EOF_CAT
+            done
+        fi
+        if [ -n "$NNCP_TENANT_HOST_ROUTES" ]; then
+            for tenant_route in $NNCP_TENANT_HOST_ROUTES; do
+              cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      - destination: ${tenant_route}
+        next-hop-interface: ${INTERFACE}.${tenant_vlan_id}
+EOF_CAT
+            done
+        fi
+    if [ -n "$IPV6_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      - destination: ::/0
+        next-hop-address: ${GATEWAY_IPV6}
+        next-hop-interface: ${BRIDGE_NAME}
+EOF_CAT
     fi
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     interfaces:
@@ -155,19 +186,19 @@ EOF_CAT
     #
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: internalapi vlan interface
-      name: ${INTERFACE}.${VLAN_START}
+      name: ${INTERFACE}.${internalapi_vlan_id}
       state: up
       type: vlan
       vlan:
         base-iface: ${INTERFACE}
-        id: ${VLAN_START}
+        id: ${internalapi_vlan_id}
         reorder-headers: true
 EOF_CAT
     if [ -n "$IPV4_ENABLED" ]; then
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv4:
         address:
-        - ip: 172.17.0.${IP_ADDRESS_SUFFIX}
+        - ip: ${INTERNALAPI_PREFIX}.${IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
         dhcp: false
@@ -198,7 +229,6 @@ EOF_CAT
     #
     # storage VLAN interface
     #
-    storage_vlan_id=$((VLAN_START + VLAN_STEP))
 
     cat >> "${DEPLOY_DIR}/${WORKER}_nncp.yaml" <<EOF_CAT
     - description: storage vlan interface
@@ -231,7 +261,7 @@ EOF_CAT
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv4:
         address:
-        - ip: 172.18.0.${IP_ADDRESS_SUFFIX}
+        - ip: ${STORAGE_PREFIX}.${IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
         dhcp: false
@@ -264,19 +294,19 @@ EOF_CAT
     #
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: tenant vlan interface
-      name: ${INTERFACE}.$((${VLAN_START}+$((${VLAN_STEP}*2))))
+      name: ${INTERFACE}.${tenant_vlan_id}
       state: up
       type: vlan
       vlan:
         base-iface: ${INTERFACE}
-        id: $((${VLAN_START}+$((${VLAN_STEP}*2))))
+        id: ${tenant_vlan_id}
         reorder-headers: true
 EOF_CAT
     if [ -n "$IPV4_ENABLED" ]; then
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv4:
         address:
-        - ip: 172.19.0.${IP_ADDRESS_SUFFIX}
+        - ip: ${TENANT_PREFIX}.${IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
         dhcp: false
@@ -309,19 +339,19 @@ EOF_CAT
     #
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: storagemgmt vlan interface
-      name: ${INTERFACE}.$((${VLAN_START}+$((${VLAN_STEP}*3))))
+      name: ${INTERFACE}.${storagemgmt_vlan_id}
       state: up
       type: vlan
       vlan:
         base-iface: ${INTERFACE}
-        id: $((${VLAN_START}+$((${VLAN_STEP}*3))))
+        id: ${storagemgmt_vlan_id}
         reorder-headers: true
 EOF_CAT
     if [ -n "$IPV4_ENABLED" ]; then
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv4:
         address:
-        - ip: 172.20.0.${IP_ADDRESS_SUFFIX}
+        - ip: ${STORAGEMGMT_PREFIX}.${IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
         dhcp: false
@@ -355,18 +385,18 @@ EOF_CAT
     #
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: Octavia vlan host interface
-      name: ${INTERFACE}.$((${VLAN_START}+$((${VLAN_STEP}*4))))
+      name: ${INTERFACE}.${octavia_vlan_id}
       state: up
       type: vlan
       vlan:
         base-iface: ${INTERFACE}
-        id: $((${VLAN_START}+$((${VLAN_STEP}*4))))
+        id: ${octavia_vlan_id}
     - bridge:
         options:
           stp:
             enabled: false
         port:
-          - name: ${INTERFACE}.$((${VLAN_START}+$((${VLAN_STEP}*4))))
+          - name: ${INTERFACE}.${octavia_vlan_id}
       description: Configuring bridge octbr
       mtu: 1500
       name: octbr
@@ -379,19 +409,19 @@ EOF_CAT
     #
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: designate vlan interface
-      name: ${INTERFACE}.$((${VLAN_START}+$((${VLAN_STEP}*5))))
+      name: ${INTERFACE}.${designate_vlan_id}
       state: up
       type: vlan
       vlan:
         base-iface: ${INTERFACE}
-        id: $((${VLAN_START}+$((${VLAN_STEP}*5))))
+        id: ${designate_vlan_id}
         reorder-headers: true
 EOF_CAT
     if [ -n "$IPV4_ENABLED" ]; then
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv4:
         address:
-        - ip: 172.28.0.${IP_ADDRESS_SUFFIX}
+        - ip: ${DESIGNATE_PREFIX}.${IP_ADDRESS_SUFFIX}
           prefix-length: 24
         enabled: true
         dhcp: false
