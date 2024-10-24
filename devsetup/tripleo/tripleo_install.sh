@@ -158,9 +158,20 @@ fi
 CEPH_OVERCLOUD_ARGS=""
 ROLES_FILE="/home/zuul/overcloud_roles.yaml"
 if [ "$EDPM_COMPUTE_CEPH_ENABLED" = "true" ] ; then
+    # create roles file
+    cp $ROLES_FILE roles.yaml
+    openstack overcloud roles generate ComputeHCI >> roles.yaml
+    ROLES_FILE=roles.yaml
+fi
+if [ "$TRIPLEO_NETWORKING" != "true" ] ; then
+    # disable external gateway for controller nodes
+    sed -i "s/default_route_networks: \['External'\]/default_route_networks: \['ControlPlane'\]/" $ROLES_FILE
+    sed -i "/External:/d" $ROLES_FILE
+    sed -i "/subnet: external_subnet/d" $ROLES_FILE
+fi
+if [ "$EDPM_COMPUTE_CEPH_ENABLED" = "true" ] ; then
     CEPH_OVERCLOUD_ARGS="${CEPH_ARGS}"
     [[ "$MANILA_ENABLED" == "true" ]] && CEPH_OVERCLOUD_ARGS+=' -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/ceph-mds.yaml'
-    ROLES_FILE="/home/zuul/roles.yaml"
     /tmp/ceph.sh
 fi
 

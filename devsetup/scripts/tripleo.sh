@@ -97,6 +97,7 @@ export OCTAVIA_ENABLED=${OCTAVIA_ENABLED}
 export TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
 export TLSE_ENABLED=${TLSE_ENABLED:-false}
 export CLOUD_DOMAIN=${CLOUD_DOMAIN:-localdomain}
+export TRIPLEO_NETWORKING=${TRIPLEO_NETWORKING:-true}
 
 set +x
 if [ ! -f \$HOME/containers-prepare-parameters.yaml ]; then
@@ -165,6 +166,7 @@ interface_mtu: ${INTERFACE_MTU:-1500}
 ntp_server: ${NTP_SERVER}
 gateway_ip: ${GATEWAY}
 manage_default_route: ${TRIPLEO_NETWORKING}
+attach_external_net: ${TRIPLEO_NETWORKING}
 dns_server: ${PRIMARY_RESOLV_CONF_ENTRY}
 user_home: /home/zuul
 cloud_domain: ${CLOUD_DOMAIN}
