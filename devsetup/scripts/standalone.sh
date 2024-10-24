@@ -44,6 +44,7 @@ CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD:-"rm -Rf"}
 EDPM_COMPUTE_VCPUS=${COMPUTE_VCPUS:-8}
 EDPM_COMPUTE_RAM=${COMPUTE_RAM:-20}
 EDPM_COMPUTE_DISK_SIZE=${COMPUTE_DISK_SIZE:-70}
+EDPM_CONFIGURE_HUGEPAGES=${CONFIGURE_HUGEPAGES:-false}
 EDPM_COMPUTE_CEPH_ENABLED=${COMPUTE_CEPH_ENABLED:-true}
 EDPM_COMPUTE_CEPH_NOVA=${COMPUTE_CEPH_NOVA:-true}
 EDPM_COMPUTE_SRIOV_ENABLED=${COMPUTE_SRIOV_ENABLED:-true}
@@ -123,6 +124,7 @@ __EOF__
 export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
 export INTERFACE_MTU=${INTERFACE_MTU:-1500}
 export NTP_SERVER=${NTP_SERVER:-"pool.ntp.org"}
+export EDPM_CONFIGURE_HUGEPAGES=${EDPM_CONFIGURE_HUGEPAGES:-false}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
 export EDPM_COMPUTE_CEPH_NOVA=${EDPM_COMPUTE_CEPH_NOVA:-true}
 export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml}"
@@ -231,6 +233,7 @@ scp $SSH_OPT ${MY_TMP_DIR}/net_config.yaml root@$IP:/tmp/net_config.yaml
 scp $SSH_OPT ${MY_TMP_DIR}/network_data.yaml root@$IP:/tmp/network_data.yaml
 scp $SSH_OPT ${MY_TMP_DIR}/deployed_network.yaml root@$IP:/tmp/deployed_network.yaml
 scp $SSH_OPT ${MY_TMP_DIR}/Standalone.yaml root@$IP:/tmp/Standalone.yaml
+scp $SSH_OPT ${SCRIPTPATH}/../standalone/hugepages.yaml root@$IP:hugepages.yaml
 [[ "$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]] && scp $SSH_OPT standalone/ceph.sh root@$IP:/tmp/ceph.sh
 scp $SSH_OPT standalone/openstack.sh root@$IP:/tmp/openstack.sh
 scp $SSH_OPT standalone/post_config/ironic.sh root@$IP:/tmp/ironic_post.sh

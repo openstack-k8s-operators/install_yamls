@@ -15,6 +15,7 @@
 # under the License.
 set -ex
 
+EDPM_CONFIGURE_HUGEPAGES=${EDPM_CONFIGURE_HUGEPAGES:-false}
 EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
 EDPM_COMPUTE_SRIOV_ENABLED=${EDPM_COMPUTE_SRIOV_ENABLED:-true}
 EDPM_COMPUTE_DHCP_AGENT_ENABLED=${EDPM_COMPUTE_DHCP_AGENT_ENABLED:-true}
@@ -166,6 +167,9 @@ ENV_ARGS+=" -e $HOME/deployed_network.yaml"
 if [ "$EDPM_COMPUTE_SRIOV_ENABLED" = "true" ] ; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/neutron-ovn-sriov.yaml"
     ENV_ARGS+=" -e $HOME/sriov_template.yaml"
+fi
+if [ "$EDPM_CONFIGURE_HUGEPAGES" = "true" ] ; then
+    ENV_ARGS+=" -e $HOME/hugepages.yaml"
 fi
 
 if [ "$SWIFT_REPLICATED" = "true" ]; then
