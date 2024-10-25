@@ -511,6 +511,48 @@ standalone_sync:
 	$(eval $(call vars))
 	scripts/standalone-sync.sh ${EDPM_COMPUTE_SUFFIX} ${STANDALONE_COMPUTE_DRIVER} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}' '${EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES}'
 
+.PHONY: standalone_ipv6
+standalone_ipv6: export NETWORK_ISOLATION_IPV4=false
+standalone_ipv6: export NETWORK_ISOLATION_IPV6=true
+standalone_ipv6: export NETWORK_ISOLATION_NETWORK_NAME=ipv6-ctl-net
+standalone_ipv6: export IPV6_NET_ISOLATION_SUBNET=${NETWORK_ISOLATION_IPV6_ADDRESS}
+standalone_ipv6: export TEMP_IPV6_NET_ISOLATION_JSON_PATH=/tmp/temp.json
+standalone_ipv6: export STANDALONE=true
+standalone_ipv6: export USE_IPv6=true
+# IPv6 address of the nat64-router VM hosting IPv6 services
+standalone_ipv6: export NAT64_IPV6_GATEWAY=${IPV6_LAB_NAT64_HOST_IPV6}
+standalone_ipv6: export NETWORK_ISOLATION_NET_NAME=${IPV6_LAB_NETWORK_NAME}
+# Create isolated ipv6 control network and IPv6 lab with a VM running IPv6
+# services (IPv6 routing, DNS etc). Then create a stanadalone edpm node
+# running Openstack with IPv6 addressing.
+standalone_ipv6:
+	$(eval $(call vars))
+	make network_isolation_bridge
+	make ipv6_lab
+	$$(echo \
+	[{\
+	  \"type\": \"network\",\
+	  \"name\": \"$$NETWORK_ISOLATION_NETWORK_NAME\",\
+	  \"standalone_config\": {\
+	    \"type\": \"linux_bridge\",\
+	    \"name\": \"$$NETWORK_ISOLATION_NETWORK_NAME\",\
+	    \"mtu\": 1500,\
+	    \"ip_subnet\": \"$$IPV6_NET_ISOLATION_SUBNET\",\
+	    \"allocation_pools\": [{\
+	      \"start\": \"fd00:aaaa::100\",\
+	      \"end\": \"fd00:aaaa::150\"\
+	    }]\
+	  }\
+	}] > $$TEMP_IPV6_NET_ISOLATION_JSON_PATH);
+	scripts/gen-ansibleee-ssh-key.sh
+	scripts/gen-edpm-node.sh ${EDPM_COMPUTE_SUFFIX} $$(cat $$TEMP_IPV6_NET_ISOLATION_JSON_PATH | jq -c)
+	make standalone_deploy
+	make standalone_sync
+
+.PHONY: standalone_ipv6_cleanup
+standalone_ipv6_cleanup: network_isolation_bridge_cleanup standalone_cleanup ipv6_lab_cleanup
+	$(eval $(call vars))
+
 .PHONY: standalone
 standalone: export STANDALONE=true
 standalone: edpm_compute standalone_deploy ## Create vm and deploy tripleo standalone

@@ -164,7 +164,7 @@ write_files:
           # services to allow (UDP)
           set allowed_udp_dports {
               type inet_service
-              elements = { domain }
+              elements = { domain, ntp }
           }
           # this chain gathers all accept conditions
           chain allow {
@@ -272,12 +272,15 @@ write_files:
 
       [proxy]
 runcmd:
+  - [ 'sed', '-i', 's/^pool.*/pool clock.redhat.com iburst/', '/etc/chrony.conf' ]
+  - [ 'sed', '-i', '/^pool/a allow fd00:abcd:abcd:fc00::\/64', '/etc/chrony.conf' ]
   - [ 'sh', '-c', 'echo "include \"/etc/nftables/main64.nft\"" | tee -a /etc/sysconfig/nftables.conf' ]
   - [ 'systemctl', 'daemon-reload' ]
   - [ 'systemctl', 'enable', 'unbound.service' ]
   - [ 'systemctl', 'enable', 'tayga@default.service' ]
   - [ 'systemctl', 'enable', 'nftables.service' ]
   - [ 'systemctl', 'enable', 'radvd.service' ]
+  - [ 'systemctl', 'restart', 'chronyd.service' ]
   # TODO: Workaround - https://github.com/canonical/cloud-init/issues/4518 - Remove WA when fix in packages
   - [ 'crudini', '--del', '/etc/NetworkManager/system-connections/cloud-init-eth0.nmconnection', 'ipv4', 'route2' ]
   - [ 'crudini', '--set', '/etc/NetworkManager/system-connections/cloud-init-eth0.nmconnection', 'ipv6', 'route1', '::/0,${IPV6_NETWORK_IPADDRESS%%/*}' ]

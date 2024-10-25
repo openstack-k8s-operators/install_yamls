@@ -32,10 +32,10 @@ OCTAVIA_ENABLED=${OCTAVIA_ENABLED:-false}
 # The deployed_network.yaml file hard codes the IPs and VIPs configured from the network.sh
 
 export NEUTRON_INTERFACE=eth0
-export CTLPLANE_IP=${IP:-192.168.122.100}
-export CTLPLANE_VIP=${CTLPLANE_IP%.*}.99
-export CIDR=24
-export GATEWAY=${GATEWAY:-192.168.122.1}
+export CTLPLANE_IP=${IP:-{{ ctlplane_ip }}}
+export CTLPLANE_VIP={{ ctlplane_vip }}
+export CIDR={{ ctlplane_cidr }}
+export GATEWAY=${GATEWAY:-{{ gateway_ip }}}
 export BRIDGE="br-ctlplane"
 if [ "$COMPUTE_DRIVER" = "ironic" ]; then
     BRIDGE_MAPPINGS=${BRIDGE_MAPPINGS:-"datacentre:${BRIDGE},baremetal:br-baremetal"}

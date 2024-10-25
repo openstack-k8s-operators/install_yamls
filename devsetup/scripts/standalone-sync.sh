@@ -21,11 +21,17 @@ EDPM_COMPUTE_SUFFIX=${1:-"0"}
 
 EDPM_COMPUTE_NETWORK=${EDPM_COMPUTE_NETWORK:-default}
 STANDALONE_VM=${STANDALONE_VM:-"true"}
-if [[ ${STANDALONE_VM} == "true" ]]; then
-    EDPM_COMPUTE_NETWORK_IP=$(virsh net-dumpxml ${EDPM_COMPUTE_NETWORK} | xmllint --xpath 'string(/network/ip/@address)' -)
-fi
+USE_IPv6=${USE_IPv6:-false}
 IP_ADRESS_SUFFIX=$((100+${EDPM_COMPUTE_SUFFIX}))
-IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADRESS_SUFFIX}"}
+if [[ ${STANDALONE_VM} == "true" ]]; then
+    if [ ${USE_IPv6} = "true" ]; then
+        EDPM_COMPUTE_NETWORK_IP=$(virsh net-dumpxml ${EDPM_COMPUTE_NETWORK} | xmllint --xpath 'string(//ip[@family="ipv6"]/@address)' -)
+        IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%:*}:${IP_ADRESS_SUFFIX}"}
+    else
+        EDPM_COMPUTE_NETWORK_IP=$(virsh net-dumpxml ${EDPM_COMPUTE_NETWORK} | xmllint --xpath 'string(/network/ip/@address)' -)
+        IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADRESS_SUFFIX}"}
+    fi
+fi
 
 OUTPUT_DIR=${OUTPUT_DIR:-"${SCRIPTPATH}/../../out/edpm/"}
 SSH_KEY_FILE=${SSH_KEY_FILE:-"${OUTPUT_DIR}/ansibleee-ssh-key-id_rsa"}

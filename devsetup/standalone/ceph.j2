@@ -22,7 +22,7 @@ set -ex
 # Post adoption this network will remain isolated and the Ceph cluster may be considered external.
 
 # Assign the IP from vlan21 to a variable representing the Ceph IP
-export CEPH_IP=${CEPH_IP:-"172.18.0.100"}
+export CEPH_IP=${CEPH_IP:-"{{ storage_addr_prefix }}100"}
 
 # Create a block device with logical volumes to be used as an OSD.
 sudo dd if=/dev/zero of=/var/lib/ceph-osd.img bs=1 count=0 seek=7G

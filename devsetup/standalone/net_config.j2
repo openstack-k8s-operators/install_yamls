@@ -16,7 +16,7 @@ network_config:
   - ip_netmask: {{ ctlplane_vip }}/32
   {% if standalone_vm|default(true) %}
   routes:
-  - ip_netmask: 0.0.0.0/0
+  - ip_netmask: {{ ip_net_mask }}/0
     next_hop: {{ gateway_ip }}
   {%- for route in additional_host_routes %}
   - ip_netmask: {{ route }}
@@ -34,39 +34,39 @@ network_config:
     mtu: {{ interface_mtu }}
     vlan_id: 44
     addresses:
-    - ip_netmask: 172.21.0.{{ ip_address_suffix }}/24
-    - ip_netmask: 172.21.0.2/32
+    - ip_netmask: {{ external_addr_prefix }}{{ ip_address_suffix }}/{{ external_cidr }}
+    - ip_netmask: {{ external_addr_prefix }}2/{{ 128 if is_ipv6 else 32 }}
     routes: []
   # internal
   - type: vlan
     mtu: {{ interface_mtu }}
     vlan_id: 20
     addresses:
-    - ip_netmask: 172.17.0.{{ ip_address_suffix }}/24
-    - ip_netmask: 172.17.0.2/32
+    - ip_netmask: {{ internal_addr_prefix }}{{ ip_address_suffix }}/{{ internal_cidr }}
+    - ip_netmask: {{ internal_addr_prefix }}2/{{ 128 if is_ipv6 else 32 }}
     routes: []
   # storage
   - type: vlan
     mtu: {{ interface_mtu }}
     vlan_id: 21
     addresses:
-    - ip_netmask: 172.18.0.{{ ip_address_suffix }}/24
-    - ip_netmask: 172.18.0.2/32
+    - ip_netmask: {{ storage_addr_prefix }}{{ ip_address_suffix }}/{{ storage_cidr }}
+    - ip_netmask: {{ storage_addr_prefix }}2/{{ 128 if is_ipv6 else 32 }}
     routes: []
   # storage_mgmt
   - type: vlan
     mtu: {{ interface_mtu }}
     vlan_id: 23
     addresses:
-    - ip_netmask: 172.20.0.{{ ip_address_suffix }}/24
-    - ip_netmask: 172.20.0.2/32
+    - ip_netmask: {{ storage_mgmt_addr_prefix }}{{ ip_address_suffix }}/{{ storage_mgmt_cidr }}
+    - ip_netmask: {{ storage_mgmt_addr_prefix}}2/{{ 128 if is_ipv6 else 32 }}
     routes: []
   # tenant
   - type: vlan
     mtu: {{ interface_mtu }}
     vlan_id: 22
     addresses:
-    - ip_netmask: 172.19.0.{{ ip_address_suffix }}/24
+    - ip_netmask: {{ tenant_addr_prefix }}{{ ip_address_suffix }}/{{ tenant_cidr }}
     routes: []
 {%- for network in additional_networks if network.standalone_config %}
 {%- set net = network.standalone_config %}

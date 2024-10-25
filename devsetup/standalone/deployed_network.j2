@@ -15,25 +15,25 @@ parameter_defaults:
         ip_subnet: {{ ctlplane_subnet }}
         ip_address_uri: {{ ctlplane_ip }}
       storage:
-        ip_address: 172.18.0.{{ ip_address_suffix }}
-        ip_subnet: 172.18.0.1/24
-        ip_address_uri: 172.18.0.{{ ip_address_suffix }}
+        ip_address: {{ storage_addr_prefix }}{{ ip_address_suffix }}
+        ip_subnet: {{ storage_addr_prefix }}1/{{ storage_cidr }}
+        ip_address_uri: {{ storage_addr_prefix }}{{ ip_address_suffix }}
       storage_mgmt:
-        ip_address: 172.20.0.{{ ip_address_suffix }}
-        ip_subnet: 172.20.0.1/24
-        ip_address_uri: 172.20.0.{{ ip_address_suffix }}
+        ip_address: {{ storage_mgmt_addr_prefix }}{{ ip_address_suffix }}
+        ip_subnet: {{ storage_mgmt_addr_prefix }}1/{{ storage_mgmt_cidr }}
+        ip_address_uri: {{ storage_mgmt_addr_prefix }}{{ ip_address_suffix }}
       internal_api:
-        ip_address: 172.17.0.{{ ip_address_suffix }}
-        ip_subnet: 172.17.0.1/24
-        ip_address_uri: 172.17.0.{{ ip_address_suffix }}
+        ip_address: {{ internal_addr_prefix }}{{ ip_address_suffix }}
+        ip_subnet: {{ internal_addr_prefix }}1/{{ internal_cidr }}
+        ip_address_uri: {{ internal_addr_prefix }}{{ ip_address_suffix }}
       tenant:
-        ip_address: 172.19.0.{{ ip_address_suffix }}
-        ip_subnet: 172.19.0.1/24
-        ip_address_uri: 172.19.0.{{ ip_address_suffix }}
+        ip_address: {{ tenant_addr_prefix }}{{ ip_address_suffix }}
+        ip_subnet: {{ tenant_addr_prefix }}1/{{ tenant_cidr }}
+        ip_address_uri: {{ tenant_addr_prefix }}{{ ip_address_suffix }}
       external:
-        ip_address: 172.21.0.{{ ip_address_suffix }}
-        ip_subnet: 172.21.0.1/24
-        ip_address_uri: 172.21.0.{{ ip_address_suffix }}
+        ip_address: {{ external_addr_prefix }}{{ ip_address_suffix }}
+        ip_subnet: {{ external_addr_prefix }}1/{{ external_cidr }}
+        ip_address_uri: {{ external_addr_prefix }}{{ ip_address_suffix }}
   {%- for network in additional_networks if network.standalone_config %}
   {%- set net = network.standalone_config %}
       {{ net.name.lower() }}:
@@ -49,28 +49,28 @@ parameter_defaults:
       tags:
       - {{ ctlplane_subnet }}
     subnets:
-    - ip_version: 4
+    - ip_version: {{ 6 if is_ipv6 else 4 }}
   VipPortMap:
     storage:
-      ip_address: 172.18.0.2
-      ip_address_uri: 172.18.0.2
-      ip_subnet: 172.18.0.2/24
+      ip_address: {{ storage_addr_prefix }}2
+      ip_address_uri: {{ storage_addr_prefix }}2
+      ip_subnet: {{ storage_addr_prefix }}2/{{ storage_cidr }}
     storage_mgmt:
-      ip_address: 172.20.0.2
-      ip_address_uri: 172.20.0.2
-      ip_subnet: 172.20.0.2/24
+      ip_address: {{ storage_mgmt_addr_prefix }}2
+      ip_address_uri: {{ storage_mgmt_addr_prefix }}2
+      ip_subnet: {{ storage_mgmt_addr_prefix }}2/{{ storage_mgmt_cidr }}
     internal_api:
-      ip_address: 172.17.0.2
-      ip_address_uri: 172.17.0.2
-      ip_subnet: 172.17.0.2/24
+      ip_address: {{ internal_addr_prefix }}2
+      ip_address_uri: {{ internal_addr_prefix }}2
+      ip_subnet: {{ internal_addr_prefix }}2/{{ internal_cidr }}
     # tenant:
-    #   ip_address: 172.19.0.2
-    #   ip_address_uri: 172.19.0.2
-    #   ip_subnet: 172.19.0.2/24
+    #   ip_address: {{ tenant_addr_prefix }}2
+    #   ip_address_uri: {{ tenant_addr_prefix }}2
+    #   ip_subnet: {{ tenant_addr_prefix }}2/{{ tenant_cidr }}
     external:
-      ip_address: 172.21.0.2
-      ip_address_uri: 172.21.0.2
-      ip_subnet: 172.21.0.2/24
+      ip_address: {{ external_addr_prefix }}2
+      ip_address_uri: {{ external_addr_prefix }}2
+      ip_subnet: {{ external_addr_prefix }}2/{{ external_cidr }}
 {%- for network in additional_networks if network.standalone_config and network.standalone_config.vip %}
 {%- set net = network.standalone_config %}
     {{ net.name.lower() }}:
@@ -81,29 +81,29 @@ parameter_defaults:
   DeployedNetworkEnvironment:
     net_cidr_map:
       storage:
-      - 172.18.0.0/24
+      - {{ storage_addr_prefix }}0/{{ storage_cidr }}
       storage_mgmt:
-      - 172.20.0.0/24
+      - {{ storage_mgmt_addr_prefix }}0/{{ storage_mgmt_cidr }}
       internal_api:
-      - 172.17.0.0/24
+      - {{ internal_addr_prefix }}0/{{ internal_cidr }}
       tenant:
-      - 172.19.0.0/24
+      - {{ tenant_addr_prefix }}0/{{ tenant_cidr }}
       external:
-      - 172.21.0.0/24
+      - {{ external_addr_prefix }}0/{{ external_cidr }}
 {%- for network in additional_networks if network.standalone_config %}
 {%- set net = network.standalone_config %}
       {{ net.name.lower() }}:
       - {{ net.ip_subnet }}
 {%- endfor %}
     net_ip_version_map:
-      storage: 4
-      storage_mgmt: 4
-      internal_api: 4
-      tenant: 4
-      external: 4
+      storage: {{ 6 if is_ipv6 else 4 }}
+      storage_mgmt: {{ 6 if is_ipv6 else 4 }}
+      internal_api: {{ 6 if is_ipv6 else 4 }}
+      tenant: {{ 6 if is_ipv6 else 4 }}
+      external: {{ 6 if is_ipv6 else 4 }}
 {%- for network in additional_networks if network.standalone_config %}
 {%- set net = network.standalone_config %}
-      {{ net.name.lower() }}: 4
+      {{ net.name.lower() }}: {{ 6 if is_ipv6 else 4 }}
 {%- endfor %}
     net_attributes_map:
       storage:
@@ -118,11 +118,11 @@ parameter_defaults:
           - tripleo_vip=true
         subnets:
           storage_subnet:
-            cidr: 172.18.0.0/24
+            cidr: {{ storage_addr_prefix }}0/{{ storage_cidr }}
             dns_nameservers: []
             gateway_ip: null
             host_routes: []
-            ip_version: 4
+            ip_version: {{ 6 if is_ipv6 else 4 }}
             name: storage_subnet
       storage_mgmt:
         network:
@@ -136,11 +136,11 @@ parameter_defaults:
           - tripleo_vip=true
         subnets:
           storage_mgmt_subnet:
-            cidr: 172.20.0.0/24
+            cidr: {{ storage_mgmt_addr_prefix }}0/{{ storage_mgmt_cidr }}
             dns_nameservers: []
             gateway_ip: null
             host_routes: []
-            ip_version: 4
+            ip_version: {{ 6 if is_ipv6 else 4 }}
             name: storage_mgmt_subnet
       internal_api:
         network:
@@ -154,11 +154,11 @@ parameter_defaults:
           - tripleo_vip=true
         subnets:
           internal_api_subnet:
-            cidr: 172.17.0.0/24
+            cidr: {{ internal_addr_prefix }}0/{{ internal_cidr }}
             dns_nameservers: []
             gateway_ip: null
             host_routes: []
-            ip_version: 4
+            ip_version: {{ 6 if is_ipv6 else 4 }}
             name: internal_api_subnet
       tenant:
         network:
@@ -172,11 +172,11 @@ parameter_defaults:
           - tripleo_vip=false
         subnets:
           tenant_subnet:
-            cidr: 172.19.0.0/24
+            cidr: {{ tenant_addr_prefix }}0/{{ tenant_cidr }}
             dns_nameservers: []
             gateway_ip: null
             host_routes: []
-            ip_version: 4
+            ip_version: {{ 6 if is_ipv6 else 4 }}
             name: tenant_subnet
       external:
         network:
@@ -190,11 +190,11 @@ parameter_defaults:
           - tripleo_vip=true
         subnets:
           external_subnet:
-            cidr: 172.21.0.0/24
+            cidr: {{ external_addr_prefix }}0/{{ external_cidr }}
             dns_nameservers: []
             gateway_ip: null
             host_routes: []
-            ip_version: 4
+            ip_version: {{ 6 if is_ipv6 else 4 }}
             name: external_subnet
 {%- for network in additional_networks if network.standalone_config %}
 {%- set net = network.standalone_config %}
@@ -213,6 +213,6 @@ parameter_defaults:
             dns_nameservers: {{ net.dns_nameservers | default([]) }}
             gateway_ip: {{ net.gateway_ip | default('null') }}
             host_routes: {{ net.host_routes | default([]) }}
-            ip_version: 4
+            ip_version: {{ 6 if is_ipv6 else 4 }}
             name: {{ net.name.lower() }}_subnet
 {%- endfor %}

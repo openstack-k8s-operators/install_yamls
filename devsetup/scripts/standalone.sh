@@ -27,13 +27,62 @@ EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES=${4:-'[]'}
 EDPM_COMPUTE_NAME=${EDPM_COMPUTE_NAME:-"edpm-compute-${EDPM_COMPUTE_SUFFIX}"}
 EDPM_COMPUTE_NETWORK=${EDPM_COMPUTE_NETWORK:-default}
 STANDALONE_VM=${STANDALONE_VM:-"true"}
-if [[ ${STANDALONE_VM} == "true" ]]; then
-    EDPM_COMPUTE_NETWORK_IP=$(virsh net-dumpxml ${EDPM_COMPUTE_NETWORK} | xmllint --xpath 'string(/network/ip/@address)' -)
-fi
 IP_ADRESS_SUFFIX=$((100+${EDPM_COMPUTE_SUFFIX}))
-IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADRESS_SUFFIX}"}
-OS_NET_CONFIG_IFACE=${OS_NET_CONFIG_IFACE:-"nic1"}
-GATEWAY=${GATEWAY:-"${EDPM_COMPUTE_NETWORK_IP}"}
+NAT64_IPV6_GATEWAY=${NAT64_IPV6_GATEWAY:-fd00:abcd:abcd:fc00::2}
+NETWORK_ISOLATION_IPV6_ADDRESS=${NETWORK_ISOLATION_IPV6_ADDRESS:-fd00:aaaa::1/64}
+
+if [[ ${STANDALONE_VM} == "true" ]]; then
+    if [ ${USE_IPv6} = "true" ]; then
+        EDPM_COMPUTE_NETWORK_IP=$(virsh net-dumpxml ${EDPM_COMPUTE_NETWORK} | xmllint --xpath 'string(//ip[@family="ipv6"]/@address)' -)
+        IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%:*}:${IP_ADRESS_SUFFIX}"}
+        GATEWAY=${GATEWAY:-"${NAT64_IPV6_GATEWAY%%/*}"}
+        HOST_PRIMARY_RESOLV_CONF_ENTRY=${EDPM_COMPUTE_NETWORK_IP}
+
+        CTL_PLANE_ADDR_PREFIX=${CTL_PLANE_ADDR_PREFIX:-${NETWORK_ISOLATION_IPV6_ADDRESS%::*}}
+        CTL_PLANE_IP=${CTL_PLANE_IP:-${CTL_PLANE_ADDR_PREFIX}::${IP_ADRESS_SUFFIX}}
+        CTL_PLANE_CIDR=${CTL_PLANE_CIDR:-"64"}
+        CTL_PLANE_SUBNET=${CTL_PLANE_SUBNET:-${CTL_PLANE_ADDR_PREFIX}::/${CTL_PLANE_CIDR}}
+        CTL_PLANE_VIP=${CTL_PLANE_VIP:-${CTL_PLANE_ADDR_PREFIX}::99}
+
+        STORAGE_ADDR_PREFIX="${STORAGE_ADDR_PREFIX:-\"fd00:bbbb::\"}"
+        STORAGE_CIDR=${STORAGE_CIDR:-"64"}
+        STORAGE_MGMT_ADDR_PREFIX=${STORAGE_MGMT_ADDR_PREFIX:-\"fd00:cccc::\"}
+        STORAGE_MGMT_CIDR=${STORAGE_MGMT_CIDR:-"64"}
+        INTERNAL_ADDR_PREFIX=${INTERNAL_ADDR_PREFIX:-\"fd00:dddd::\"}
+        INTERNAL_CIDR=${INTERNAL_CIDR:-"64"}
+        TENANT_ADDR_PREFIX=${TENANT_ADDR_PREFIX:-\"fd00:eeee::\"}
+        TENANT_CIDR=${TENANT_CIDR:-"64"}
+        EXTERNAL_ADDR_PREFIX=${EXTERNAL_ADDR_PREFIX:-\"fd00:ffff::\"}
+        EXTERNAL_CIDR=${EXTERNAL_CIDR:-"64"}
+        IP_NET_MASK=\"::\"
+        NTP_SERVER=${NTP_SERVER:-"${NAT64_IPV6_GATEWAY%%/*}"}
+        OS_NET_CONFIG_IFACE=${OS_NET_CONFIG_IFACE:-"nic2"}
+
+    else
+        EDPM_COMPUTE_NETWORK_IP=$(virsh net-dumpxml ${EDPM_COMPUTE_NETWORK} | xmllint --xpath 'string(/network/ip/@address)' -)
+        IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADRESS_SUFFIX}"}
+        GATEWAY=${GATEWAY:-"${EDPM_COMPUTE_NETWORK_IP}"}
+        CTL_PLANE_IP=${IP}
+        CTL_PLANE_CIDR=${CTL_PLANE_CIDR:-"24"}
+        CTL_PLANE_SUBNET=${CTL_PLANE_SUBNET:-${CTL_PLANE_IP%.*}.0/${CTL_PLANE_CIDR}}
+        CTL_PLANE_VIP=${CTL_PLANE_VIP:-${CTL_PLANE_IP%.*}.99}
+
+        STORAGE_ADDR_PREFIX=${STORAGE_ADDR_PREFIX:-"172.18.0."}
+        STORAGE_CIDR=${STORAGE_CIDR:-"24"}
+        STORAGE_MGMT_ADDR_PREFIX=${STORAGE_MGMT_ADDR_PREFIX:-"172.20.0."}
+        STORAGE_MGMT_CIDR=${STORAGE_MGMT_CIDR:-"24"}
+        INTERNAL_ADDR_PREFIX=${INTERNAL_ADDR_PREFIX:-"172.17.0."}
+        INTERNAL_CIDR=${INTERNAL_CIDR:-"24"}
+        TENANT_ADDR_PREFIX=${TENANT_ADDR_PREFIX:-"172.19.0."}
+        TENANT_CIDR=${TENANT_CIDR:-"24"}
+        EXTERNAL_ADDR_PREFIX=${EXTERNAL_ADDR_PREFIX:-"172.21.0."}
+        EXTERNAL_CIDR=${EXTERNAL_CIDR:-"24"}
+
+        IP_NET_MASK="0.0.0.0"
+        OS_NET_CONFIG_IFACE=${OS_NET_CONFIG_IFACE:-"nic1"}
+    fi
+fi
+
 OUTPUT_DIR=${OUTPUT_DIR:-"${SCRIPTPATH}/../../out/edpm/"}
 SSH_KEY_FILE=${SSH_KEY_FILE:-"${OUTPUT_DIR}/ansibleee-ssh-key-id_rsa"}
 SSH_OPT="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $SSH_KEY_FILE"
@@ -55,7 +104,6 @@ TLSE_ENABLED=${TLSE_ENABLED:-false}
 CLOUD_DOMAIN=${CLOUD_DOMAIN:-localdomain}
 OCTAVIA_ENABLED=${OCTAVIA_ENABLED:-false}
 TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
-
 
 if [[ ! -f $SSH_KEY_FILE ]]; then
     echo "$SSH_KEY_FILE is missing"
@@ -84,7 +132,7 @@ sudo dnf update -y
 EOF
 fi
 
-if [[ -e /run/systemd/resolve/resolv.conf ]]; then
+if [[ -e /run/systemd/resolve/resolv.conf && ${USE_IPv6} = "false" ]]; then
     HOST_PRIMARY_RESOLV_CONF_ENTRY=$(cat /run/systemd/resolve/resolv.conf | grep ^nameserver | grep -v "${EDPM_COMPUTE_NETWORK_IP%.*}" | head -n1 | cut -d' ' -f2)
 else
     HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY:-$GATEWAY}
@@ -176,6 +224,13 @@ sudo cp /tmp/deployed_network.yaml \$HOME/deployed_network.yaml
 sudo cp /tmp/Standalone.yaml \$HOME/Standalone.yaml
 #----
 
+#---
+## Allow execution on rendered scripts
+#---
+sudo chmod +x /tmp/ceph.sh || true
+sudo chmod +x /tmp/openstack.sh || true
+#----
+
 [[ "\$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]] && /tmp/ceph.sh
 /tmp/openstack.sh
 [[ "\$COMPUTE_DRIVER" == "ironic" ]] && /tmp/ironic_post.sh
@@ -205,12 +260,26 @@ cat << EOF > ${J2_VARS_FILE}
 ---
 additional_networks: ${EDPM_COMPUTE_ADDITIONAL_NETWORKS}
 additional_host_routes: ${EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES}
-ctlplane_cidr: 24
-ctlplane_ip: ${IP}
+ctlplane_cidr: ${CTL_PLANE_CIDR}
+ctlplane_ip: ${CTL_PLANE_IP}
+ctlplane_subnet: ${CTL_PLANE_SUBNET}
+ctlplane_vip: ${CTL_PLANE_VIP}
+
+is_ipv6: ${USE_IPv6}
+storage_addr_prefix: ${STORAGE_ADDR_PREFIX}
+storage_cidr: ${STORAGE_CIDR}
+storage_mgmt_addr_prefix: ${STORAGE_MGMT_ADDR_PREFIX}
+storage_mgmt_cidr: ${STORAGE_MGMT_CIDR}
+internal_addr_prefix: ${INTERNAL_ADDR_PREFIX}
+internal_cidr: ${INTERNAL_CIDR}
+tenant_addr_prefix: ${TENANT_ADDR_PREFIX}
+tenant_cidr: ${TENANT_CIDR}
+external_addr_prefix: ${EXTERNAL_ADDR_PREFIX}
+external_cidr: ${EXTERNAL_CIDR}
+ip_net_mask: ${IP_NET_MASK}
+
 os_net_config_iface: ${OS_NET_CONFIG_IFACE}
 standalone_vm: ${STANDALONE_VM}
-ctlplane_subnet: ${IP%.*}.0/24
-ctlplane_vip: ${IP%.*}.99
 ip_address_suffix: ${IP_ADRESS_SUFFIX}
 interface_mtu: ${INTERFACE_MTU:-1500}
 gateway_ip: ${GATEWAY}
@@ -224,22 +293,33 @@ jinja2_render standalone/network_data.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/netwo
 jinja2_render standalone/deployed_network.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/deployed_network.yaml
 jinja2_render standalone/net_config.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/net_config.yaml
 jinja2_render standalone/role.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/Standalone.yaml
+jinja2_render standalone/openstack.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/openstack.sh
+jinja2_render standalone/ceph.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/ceph.sh
+
+# scp requires special syntax to specify an IPv6 address
+if [ ${USE_IPv6} = "true" ]; then
+    SCP_IP="[${IP}]"
+    SCP_OPT="-6"
+else
+    SCP_IP=${IP}
+    SCP_OPT=""
+fi
 
 # Copying files
-scp $SSH_OPT $REPO_SETUP_CMDS root@$IP:/tmp/repo-setup.sh
-scp $SSH_OPT $CMDS_FILE root@$IP:/tmp/standalone-deploy.sh
-scp $SSH_OPT ${MY_TMP_DIR}/net_config.yaml root@$IP:/tmp/net_config.yaml
-scp $SSH_OPT ${MY_TMP_DIR}/network_data.yaml root@$IP:/tmp/network_data.yaml
-scp $SSH_OPT ${MY_TMP_DIR}/deployed_network.yaml root@$IP:/tmp/deployed_network.yaml
-scp $SSH_OPT ${MY_TMP_DIR}/Standalone.yaml root@$IP:/tmp/Standalone.yaml
-[[ "$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]] && scp $SSH_OPT standalone/ceph.sh root@$IP:/tmp/ceph.sh
-scp $SSH_OPT standalone/openstack.sh root@$IP:/tmp/openstack.sh
-scp $SSH_OPT standalone/post_config/ironic.sh root@$IP:/tmp/ironic_post.sh
+scp $SCP_OPT $SSH_OPT $REPO_SETUP_CMDS root@$SCP_IP:/tmp/repo-setup.sh
+scp $SCP_OPT $SSH_OPT $CMDS_FILE root@$SCP_IP:/tmp/standalone-deploy.sh
+scp $SCP_OPT $SSH_OPT ${MY_TMP_DIR}/net_config.yaml root@$SCP_IP:/tmp/net_config.yaml
+scp $SCP_OPT $SSH_OPT ${MY_TMP_DIR}/network_data.yaml root@$SCP_IP:/tmp/network_data.yaml
+scp $SCP_OPT $SSH_OPT ${MY_TMP_DIR}/deployed_network.yaml root@$SCP_IP:/tmp/deployed_network.yaml
+scp $SCP_OPT $SSH_OPT ${MY_TMP_DIR}/Standalone.yaml root@$SCP_IP:/tmp/Standalone.yaml
+[[ "$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]] && scp $SCP_OPT $SSH_OPT ${MY_TMP_DIR}/ceph.sh root@$SCP_IP:/tmp/ceph.sh
+scp $SCP_OPT $SSH_OPT ${MY_TMP_DIR}/openstack.sh root@$SCP_IP:/tmp/openstack.sh
+scp $SCP_OPT $SSH_OPT standalone/post_config/ironic.sh root@$SCP_IP:/tmp/ironic_post.sh
 [ -f $HOME/.ssh/id_ecdsa.pub ] || \
     ssh-keygen -t ecdsa -f $HOME/.ssh/id_ecdsa -q -N ""
-scp $SSH_OPT $HOME/.ssh/id_ecdsa.pub root@$IP:/root/.ssh/id_ecdsa.pub
+scp $SCP_OPT $SSH_OPT $HOME/.ssh/id_ecdsa.pub root@$SCP_IP:/root/.ssh/id_ecdsa.pub
 if [[ -f $HOME/containers-prepare-parameters.yaml ]]; then
-    scp $SSH_OPT $HOME/containers-prepare-parameters.yaml root@$IP:/root/containers-prepare-parameters.yaml
+    scp $SCP_OPT $SSH_OPT $HOME/containers-prepare-parameters.yaml root@$SCP_IP:/root/containers-prepare-parameters.yaml
 fi
 
 # Running

@@ -25,6 +25,8 @@ trap 'rm -rf -- "$MY_TMP_DIR"' EXIT
 EDPM_SERVER_ROLE=${EDPM_SERVER_ROLE:-"compute"}
 FIRSTBOOT_EXTRA=${FIRSTBOOT_EXTRA:-"/tmp/edpm-firstboot-extra"}
 
+USE_IPv6=${USE_IPv6:-false}
+NAT64_IPV6_GATEWAY=${NAT64_IPV6_GATEWAY:-fd00:abcd:abcd:fc00::2/64}
 STANDALONE=${STANDALONE:-false}
 SWIFT_REPLICATED=${SWIFT_REPLICATED:-false}
 EDPM_COMPUTE_SUFFIX=${1:-"0"}
@@ -43,8 +45,7 @@ EDPM_COMPUTE_NETWORK_TYPE=${EDPM_COMPUTE_NETWORK_TYPE:-network}
 # Use a json string to add additonal networks:
 # '[{"type": "network", "name": "crc-bmaas"}, {"type": "network", "name": "other-net"}]'
 EDPM_COMPUTE_ADDITIONAL_NETWORKS=${2:-'[]'}
-EDPM_COMPUTE_NETWORK_IP=$(virsh net-dumpxml ${EDPM_COMPUTE_NETWORK} | xmllint --xpath 'string(/network/ip/@address)' -)
-DATAPLANE_DNS_SERVER=${DATAPLANE_DNS_SERVER:-${EDPM_COMPUTE_NETWORK_IP}}
+
 CENTOS_9_STREAM_URL=${CENTOS_9_STREAM_URL:-"https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-latest.x86_64.qcow2"}
 EDPM_IMAGE_URL=${EDPM_IMAGE_URL:-"${CENTOS_9_STREAM_URL}"}
 BASE_DISK_FILENAME=${BASE_DISK_FILENAME:-"$(basename ${EDPM_IMAGE_URL})"}
@@ -58,6 +59,20 @@ if [ "${EDPM_SERVER_ROLE}" == "networker" ]; then
     IP_ADRESS_SUFFIX=$((200+${EDPM_COMPUTE_SUFFIX}))
 else
     IP_ADRESS_SUFFIX=$((100+${EDPM_COMPUTE_SUFFIX}))
+fi
+
+if [ ${USE_IPv6} = "true" ]; then
+  IP_VER="ipv6"
+  EDPM_COMPUTE_NETWORK_IP=$(virsh net-dumpxml ${EDPM_COMPUTE_NETWORK} | xmllint --xpath 'string(//ip[@family="ipv6"]/@address)' -)
+  IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%:*}:${IP_ADRESS_SUFFIX}"}
+  GATEWAY=${GATEWAY:-"${NAT64_IPV6_GATEWAY%%/*}"}
+  PREFIX=64
+else
+  IP_VER="ipv4"
+  EDPM_COMPUTE_NETWORK_IP=$(virsh net-dumpxml ${EDPM_COMPUTE_NETWORK} | xmllint --xpath 'string(/network/ip/@address)' -)
+  IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADRESS_SUFFIX}"}
+  GATEWAY=${GATEWAY:-"${EDPM_COMPUTE_NETWORK_IP}"}
+  PREFIX=24
 fi
 
 if [ ! -f ${SSH_PUBLIC_KEY} ]; then
@@ -222,12 +237,9 @@ if [ "$SWIFT_REPLICATED" = "true" ]; then
 fi
 
 # Set network variables for firstboot script
-IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADRESS_SUFFIX}"}
 NETDEV=eth0
 NETSCRIPT="/etc/sysconfig/network-scripts/ifcfg-${NETDEV}"
-GATEWAY=${GATEWAY:-"${EDPM_COMPUTE_NETWORK_IP}"}
-DNS=${DATAPLANE_DNS_SERVER}
-PREFIX=24
+DNS=${DATAPLANE_DNS_SERVER:-${EDPM_COMPUTE_NETWORK_IP}}
 
 cat <<EOF >${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}-firstboot.sh
 PARTITION=\$(df / --output=source | grep -o "[[:digit:]]")
@@ -255,13 +267,14 @@ fi
 
 # Set network for current session
 nmcli device set eth0 managed yes
+
 n=0
 retries=6
 while true; do
-  nmcli device modify $NETDEV ipv4.addresses $IP/$PREFIX ipv4.gateway $GATEWAY ipv4.dns $DNS ipv4.method manual && break
+  nmcli device modify $NETDEV $IP_VER.addresses $IP/$PREFIX $IP_VER.gateway $GATEWAY $IP_VER.dns $DNS $IP_VER.method manual && break
   n="\$((n+1))"
   if (( n >= retries )); then
-    echo "Failed to configure ipv4 address in $NETDEV."
+    echo "Failed to configure $IP_VER address in $NETDEV."
     break
   fi
   sleep 5
