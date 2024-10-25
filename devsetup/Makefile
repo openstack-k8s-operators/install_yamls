@@ -64,6 +64,7 @@ DNS_DOMAIN ?= localdomain
 
 BARBICAN_SERVICE_ENABLED ?= true
 MANILA_SERVICE_ENABLED ?= true
+HEAT_SERVICE_ENABLED ?= true
 
 EDPM_TOTAL_NODES ?= 1
 RH_REGISTRY_USER ?= ""
@@ -476,6 +477,7 @@ tripleo_deploy:
 standalone_deploy: export TLSE_ENABLED=${TLS_ENABLED}
 standalone_deploy: export BARBICAN_ENABLED=${BARBICAN_SERVICE_ENABLED}
 standalone_deploy: export MANILA_ENABLED=${MANILA_SERVICE_ENABLED}
+standalone_deploy: export HEAT_ENABLED=${HEAT_SERVICE_ENABLED}
 standalone_deploy: export CLOUD_DOMAIN=${DNS_DOMAIN}
 standalone_deploy: export COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED}
 standalone_deploy: export COMPUTE_CEPH_NOVA=${EDPM_COMPUTE_CEPH_NOVA}
