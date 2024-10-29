@@ -105,6 +105,15 @@ if [ "$COMPUTE_DRIVER" = "ironic" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/ironic-overcloud.yaml"
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/ironic-inspector.yaml"
 fi
+if [ "$HEAT_ENABLED" = "true" ]; then
+    cat <<EOF > enable_heat.yaml
+resource_registry:
+  OS::TripleO::Services::HeatApi: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-api-container-puppet.yaml
+  OS::TripleO::Services::HeatApiCfn: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-api-cfn-container-puppet.yaml
+  OS::TripleO::Services::HeatEngine: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-engine-container-puppet.yaml
+EOF
+    ENV_ARGS+=" -e $HOME/enable_heat.yaml"
+fi
 if [ "$BARBICAN_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/barbican.yaml"
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/barbican-backend-simple-crypto.yaml"
@@ -112,6 +121,7 @@ fi
 if [ "$MANILA_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/manila-cephfsnative-config.yaml"
 fi
+
 if [ "$OCTAVIA_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/octavia.yaml"
 fi
