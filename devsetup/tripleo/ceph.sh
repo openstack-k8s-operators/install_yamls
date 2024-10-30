@@ -29,13 +29,14 @@ fi
 
 cd ci-framework
 # create block devices on all compute nodes
-ansible-playbook -i $INV playbooks/ceph.yml --tags block -e cifmw_num_osds_perhost=1
+ansible-playbook -i $INV playbooks/ceph.yml --tags block -e cifmw_num_osds_perhost=2
 cd ..
 
 cat <<EOF > osd_spec.yaml
 data_devices:
   paths:
     - /dev/ceph_vg0/ceph_lv0
+    - /dev/ceph_vg1/ceph_lv1
 EOF
 
 # create roles file
