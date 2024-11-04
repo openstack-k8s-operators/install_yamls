@@ -399,6 +399,20 @@ edpm_compute: ## Create EDPM compute VM
 		done \
 	fi
 
+.PHONY: edpm_compute_bootc
+edpm_compute_bootc: export EDPM_COMPUTE_NETWORK = ${NETWORK_ISOLATION_NET_NAME}
+edpm_compute_bootc: export FIRSTBOOT_EXTRA = ${EDPM_FIRSTBOOT_EXTRA}
+edpm_compute_bootc:
+	$(eval $(call vars))
+	scripts/gen-ansibleee-ssh-key.sh
+	if [ ${EDPM_TOTAL_NODES} -eq 1 ]; then \
+		scripts/gen-edpm-node-bootc.sh ${EDPM_COMPUTE_SUFFIX} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}'; \
+	else \
+		for INDEX in $(shell seq 0 $$((${EDPM_TOTAL_NODES} -1))) ; do \
+			scripts/gen-edpm-node-bootc.sh $$INDEX '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}' ; \
+		done \
+	fi
+
 .PHONY: edpm_ansible_runner
 edpm_ansible_runner: export EDPM_PLAYBOOK=${DATAPLANE_PLAYBOOK}
 edpm_ansible_runner: export OPENSTACK_RUNNER_IMG=${DATAPLANE_CUSTOM_SERVICE_RUNNER_IMG}
