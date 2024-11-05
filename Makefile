@@ -749,7 +749,7 @@ openstack_deploy_prep: export KIND=OpenStackControlPlane
 openstack_deploy_prep: export OVN_NICMAPPING=${OVNCONTROLLER_NMAP}
 openstack_deploy_prep: export NEUTRON_CUSTOM_CONF=${DEPLOY_DIR}/neutron-custom-conf.patch
 openstack_deploy_prep: export BRIDGE_NAME=${NNCP_BRIDGE}
-openstack_deploy_prep: export CTLPLANE_IP_ADDRESS_PREFIX=${NNCP_CTLPLANE_IPV6_ADDRESS_PREFIX}
+openstack_deploy_prep: export CTLPLANE_IP_ADDRESS_PREFIX=${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}
 ifeq ($(NETWORK_ISOLATION_IPV4), true)
 openstack_deploy_prep: export IPV4_ENABLED=true
 endif
