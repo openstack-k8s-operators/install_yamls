@@ -15,6 +15,7 @@ MEMORY=${MEMORY:-10752}
 DISK=${DISK:-31}
 HTTP_PROXY=${CRC_HTTP_PROXY:-""}
 HTTPS_PROXY=${CRC_HTTPS_PROXY:-""}
+CRC_MONITORING_ENABLED=${CRC_MONITORING_ENABLED:-false}
 
 if [ -z "${CRC_URL}" ]; then
     echo "Please set CRC_URL as ARG1"; exit 1
@@ -59,6 +60,9 @@ if [ -n ${HTTPS_PROXY} ]; then
 fi
 if [ -n ${CRC_BUNDLE} ]; then
     ${CRC_BIN} config set bundle ${CRC_BUNDLE}
+fi
+if [ "$CRC_MONITORING_ENABLED" = "true" ]; then
+    ${CRC_BIN} config set enable-cluster-monitoring true
 fi
 ${CRC_BIN} setup
 
