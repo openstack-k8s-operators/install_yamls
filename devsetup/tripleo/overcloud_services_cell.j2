@@ -29,6 +29,7 @@ resource_registry:
 {% endif %}
 
 parameter_defaults:
+  SshFirewallAllowAll: true
 {% if cell|int > 0 %}
   # Specify that this is an additional cell
   NovaAdditionalCell: True

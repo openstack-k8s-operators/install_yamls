@@ -24,6 +24,7 @@ resource_registry:
   OS::TripleO::Services::HeatEngine: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-engine-container-puppet.yaml
 
 parameter_defaults:
+  SshFirewallAllowAll: true
   RedisVirtualFixedIPs:
     - ip_address: 192.168.122.110
       use_neutron: false
