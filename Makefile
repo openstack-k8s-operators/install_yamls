@@ -832,6 +832,7 @@ edpm_deploy_prep: export BRANCH=${OPENSTACK_BRANCH}
 edpm_deploy_prep: export HASH=${OPENSTACK_COMMIT_HASH}
 edpm_deploy_prep: export EDPM_TLS_ENABLED=${DATAPLANE_TLS_ENABLED}
 edpm_deploy_prep: export EDPM_NOVA_NFS_PATH=${DATAPLANE_NOVA_NFS_PATH}
+edpm_deploy_prep: export EDPM_POST_GEN_SCRIPT=${DATAPLANE_POST_GEN_SCRIPT}
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
 edpm_deploy_prep: export BGP=ovn

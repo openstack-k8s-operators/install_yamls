@@ -222,4 +222,8 @@ fi
 
 kustomization_add_resources
 
+if [ -n "${EDPM_POST_GEN_SCRIPT}" ]; then
+    . "${EDPM_POST_GEN_SCRIPT}"
+fi
+
 popd
