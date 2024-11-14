@@ -218,6 +218,15 @@ dns_server: ${PRIMARY_RESOLV_CONF_ENTRY}
 compute_driver: ${COMPUTE_DRIVER}
 sriov_agent: ${EDPM_COMPUTE_SRIOV_ENABLED}
 dhcp_agent: ${EDPM_COMPUTE_DHCP_AGENT_ENABLED}
+# Adoption related stuff
+adopted_internal_net: ${ADOPTED_INTERNAL_NET}
+adopted_storage_net: ${ADOPTED_STORAGE_NET}
+adopted_storage_mgmt_net: ${ADOPTED_STORAGE_MGMT_NET}
+adopted_tenant_net: ${ADOPTED_TENANT_NET}
+standalone_internal_prefix: ${NETWORK_INTERNAL_PREFIX}
+standalone_storage_prefix: ${NETWORK_STORAGE_PREFIX}
+standalone_storage_mgmt_prefix: ${NETWORK_STORAGE_MGMT_PREFIX}
+standalone_tenant_prefix: ${NETWORK_TENANT_PREFIX}
 EOF
 
 jinja2_render standalone/network_data.j2 "${J2_VARS_FILE}" > ${MY_TMP_DIR}/network_data.yaml
