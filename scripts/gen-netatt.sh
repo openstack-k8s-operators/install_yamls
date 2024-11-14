@@ -15,29 +15,22 @@
 # under the License.
 set -ex
 
-if [ -z "${DEPLOY_DIR}" ]; then
-    echo "Please set DEPLOY_DIR"; exit 1
-fi
+function check_var_set {
+    if [[ ! -v $1 ]]; then
+        echo "Please set $1"; exit 1
+    fi
+}
+
+check_var_set DEPLOY_DIR
 
 if [ ! -d ${DEPLOY_DIR} ]; then
     mkdir -p ${DEPLOY_DIR}
 fi
 
-if [ -z "${INTERFACE}" ]; then
-    echo "Please set INTERFACE"; exit 1
-fi
-
-if [ -z "${BRIDGE_NAME}" ]; then
-    echo "Please set BRIDGE_NAME"; exit 1
-fi
-
-if [ -z "${VLAN_START}" ]; then
-    echo "Please set VLAN_START"; exit 1
-fi
-
-if [ -z "${VLAN_STEP}" ]; then
-    echo "Please set VLAN_STEP"; exit 1
-fi
+check_var_set INTERFACE
+check_var_set BRIDGE_NAME
+check_var_set VLAN_START
+check_var_set VLAN_STEP
 
 if [ -z "$IPV4_ENABLED" ] && [ -z "$IPV6_ENABLED" ]; then
     echo "Please enable either IPv4 or IPv6 by setting IPV4_ENABLED or IPV6_ENABLED"; exit 1
@@ -47,6 +40,13 @@ if [ -n "$IPV4_ENABLED" ] && [ -n "$IPV6_ENABLED" ]; then
     echo "Dual stack not supported, cannot enable both IPv4 and IPv6"; exit 1
 fi
 
+if [ -n "$IPV4_ENABLED" ]; then
+    check_var_set INTERNALAPI_PREFIX
+    check_var_set STORAGE_PREFIX
+    check_var_set STORAGEMGMT_PREFIX
+    check_var_set TENANT_PREFIX
+    check_var_set DESIGNATE_PREFIX
+fi
 
 echo DEPLOY_DIR ${DEPLOY_DIR}
 echo INTERFACE ${INTERFACE}
@@ -55,6 +55,11 @@ echo VLAN_STEP ${VLAN_STEP}
 if [ -n "$IPV4_ENABLED" ]; then
     echo CTLPLANE_IP_ADDRESS_PREFIX ${CTLPLANE_IP_ADDRESS_PREFIX}
     echo CTLPLANE_IP_ADDRESS_SUFFIX ${CTLPLANE_IP_ADDRESS_SUFFIX}
+    echo "INTERNALAPI_PREFIX ${INTERNALAPI_PREFIX}"
+    echo "STORAGE_PREFIX ${STORAGE_PREFIX}"
+    echo "STORAGEMGMT_PREFIX ${STORAGEMGMT_PREFIX}"
+    echo "TENANT_PREFIX ${TENANT_PREFIX}"
+    echo "DESIGNATE_PREFIX ${DESIGNATE_PREFIX}"
 fi
 if [ -n "$IPV6_ENABLED" ]; then
     echo CTLPLANE_IPV6_ADDRESS_PREFIX ${CTLPLANE_IPV6_ADDRESS_PREFIX}
@@ -113,9 +118,9 @@ spec:
 EOF_CAT
 if [ -n "$IPV4_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/internalapi.yaml <<EOF_CAT
-        "range": "172.17.0.0/24",
-        "range_start": "172.17.0.30",
-        "range_end": "172.17.0.70"
+        "range": "${INTERNALAPI_PREFIX}.0/24",
+        "range_start": "${INTERNALAPI_PREFIX}.30",
+        "range_end": "${INTERNALAPI_PREFIX}.70"
 EOF_CAT
 elif [ -n "$IPV6_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/internalapi.yaml <<EOF_CAT
@@ -147,9 +152,9 @@ spec:
 EOF_CAT
 if [ -n "$IPV4_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/storage.yaml <<EOF_CAT
-        "range": "172.18.0.0/24",
-        "range_start": "172.18.0.30",
-        "range_end": "172.18.0.70"
+        "range": "${STORAGE_PREFIX}.0/24",
+        "range_start": "${STORAGE_PREFIX}.30",
+        "range_end": "${STORAGE_PREFIX}.70"
 EOF_CAT
 elif [ -n "$IPV6_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/storage.yaml <<EOF_CAT
@@ -181,9 +186,9 @@ spec:
 EOF_CAT
 if [ -n "$IPV4_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/tenant.yaml <<EOF_CAT
-        "range": "172.19.0.0/24",
-        "range_start": "172.19.0.30",
-        "range_end": "172.19.0.70"
+        "range": "${TENANT_PREFIX}.0/24",
+        "range_start": "${TENANT_PREFIX}.30",
+        "range_end": "${TENANT_PREFIX}.70"
 EOF_CAT
 elif [ -n "$IPV6_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/tenant.yaml <<EOF_CAT
@@ -232,9 +237,9 @@ spec:
 EOF_CAT
 if [ -n "$IPV4_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/storagemgmt.yaml <<EOF_CAT
-        "range": "172.20.0.0/24",
-        "range_start": "172.20.0.30",
-        "range_end": "172.20.0.70"
+        "range": "${STORAGEMGMT_PREFIX}.0/24",
+        "range_start": "${STORAGEMGMT_PREFIX}.30",
+        "range_end": "${STORAGEMGMT_PREFIX}.70"
 EOF_CAT
 elif [ -n "$IPV6_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/storagemgmt.yaml <<EOF_CAT
