@@ -4,13 +4,15 @@ resource_registry:
   OS::TripleO::OVNMacAddressNetwork: OS::Heat::None
   OS::TripleO::OVNMacAddressPort: OS::Heat::None
   OS::TripleO::Compute::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_internal_api.yaml
+  OS::TripleO::Compute::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage_mgmt.yaml
   OS::TripleO::Compute::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
   OS::TripleO::Compute::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
-  OS::TripleO::Controller::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
   OS::TripleO::Controller::Ports::InternalApiPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_internal_api.yaml
   OS::TripleO::Controller::Ports::StorageMgmtPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage_mgmt.yaml
   OS::TripleO::Controller::Ports::StoragePort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_storage.yaml
   OS::TripleO::Controller::Ports::TenantPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_tenant.yaml
+  OS::TripleO::Compute::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
+  OS::TripleO::Controller::Ports::ExternalPort: /usr/share/openstack-tripleo-heat-templates/network/ports/deployed_external.yaml
 parameter_defaults:
   DeployedServerPortMap:
     controller-0-ctlplane:
@@ -84,6 +86,10 @@ parameter_defaults:
         ip_address: 172.19.0.103
         ip_address_uri: 172.19.0.103
         ip_subnet: 172.19.0.0/24
+      external:
+        ip_address: 172.21.0.103
+        ip_address_uri: 172.21.0.103
+        ip_subnet: 172.21.0.0/24
     controller-1:
       ctlplane:
         ip_address: 192.168.122.104
@@ -105,6 +111,10 @@ parameter_defaults:
         ip_address: 172.19.0.104
         ip_address_uri: 172.19.0.104
         ip_subnet: 172.19.0.0/24
+      external:
+        ip_address: 172.21.0.104
+        ip_address_uri: 172.21.0.104
+        ip_subnet: 172.21.0.0/24
     controller-2:
       ctlplane:
         ip_address: 192.168.122.105
@@ -126,6 +136,10 @@ parameter_defaults:
         ip_address: 172.19.0.105
         ip_address_uri: 172.19.0.105
         ip_subnet: 172.19.0.0/24
+      external:
+        ip_address: 172.21.0.105
+        ip_address_uri: 172.21.0.105
+        ip_subnet: 172.21.0.0/24
     compute-0:
       ctlplane:
         ip_address: 192.168.122.106
@@ -147,6 +161,10 @@ parameter_defaults:
         ip_address: 172.19.0.106
         ip_address_uri: 172.19.0.106
         ip_subnet: 172.19.0.0/24
+      external:
+        ip_address: 172.21.0.106
+        ip_address_uri: 172.21.0.106
+        ip_subnet: 172.21.0.0/24
     compute-1:
       ctlplane:
         ip_address: 192.168.122.107
@@ -168,6 +186,10 @@ parameter_defaults:
         ip_address: 172.19.0.107
         ip_address_uri: 172.19.0.107
         ip_subnet: 172.19.0.0/24
+      external:
+        ip_address: 172.21.0.107
+        ip_address_uri: 172.21.0.107
+        ip_subnet: 172.21.0.0/24
     compute-2:
       ctlplane:
         ip_address: 192.168.122.108
@@ -189,6 +211,10 @@ parameter_defaults:
         ip_address: 172.19.0.108
         ip_address_uri: 172.19.0.108
         ip_subnet: 172.19.0.0/24
+      external:
+        ip_address: 172.21.0.108
+        ip_address_uri: 172.21.0.108
+        ip_subnet: 172.21.0.0/24
   CtlplaneNetworkAttributes:
     network:
       dns_domain: {{ cloud_domain }}
@@ -199,8 +225,15 @@ parameter_defaults:
     subnets:
       ctlplane-subnet:
         cidr: 192.168.122.0/24
-        dns_nameservers: 192.168.122.10
-        gateway_ip: 192.168.122.10
+        dns_nameservers: [{{ dns_server }}, 192.168.122.1]
+        gateway_ip: {{ gateway_ip }}
+        {% if manage_default_route|bool %}
+        host_routes:
+          - ip_netmask: 0.0.0.0/0
+            next_hop: 192.168.122.1
+            default: true
+        {% else %}
         host_routes: []
+        {% endif %}
         ip_version: 4
         name: ctlplane-subnet
