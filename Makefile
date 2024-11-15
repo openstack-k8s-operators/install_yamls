@@ -517,6 +517,14 @@ SWIFT_KUTTL_CONF        ?= ${OPERATOR_BASE_DIR}/swift-operator/kuttl-test.yaml
 SWIFT_KUTTL_DIR         ?= ${OPERATOR_BASE_DIR}/swift-operator/tests/kuttl/tests
 SWIFT_KUTTL_NAMESPACE   ?= swift-kuttl-tests
 
+# Watcher
+WATCHER_IMG               ?= quay.io/openstack-k8s-operators/watcher-operator-index:${OPENSTACK_K8S_TAG}
+WATCHER_REPO              ?= https://github.com/openstack-k8s-operators/watcher-operator.git
+WATCHER_BRANCH            ?= ${OPENSTACK_K8S_BRANCH}
+WATCHER_COMMIT_HASH       ?=
+WATCHER                   ?= config/samples/watcher_v1beta1_watcher.yaml
+WATCHER_CR                ?= ${OPERATOR_BASE_DIR}/watcher-operator/${WATCHER}
+
 # CertManager
 CERTMANAGER_TIMEOUT                  ?= 300s
 INSTALL_CERT_MANAGER		     ?= true
@@ -571,10 +579,10 @@ help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 .PHONY: cleanup
-cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup designate_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup swift_cleanup barbican_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup ansibleee_cleanup rabbitmq_cleanup infra_cleanup manila_cleanup metallb_cleanup ## Delete all operators
+cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup designate_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup swift_cleanup watcher_cleanup barbican_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup ansibleee_cleanup rabbitmq_cleanup infra_cleanup manila_cleanup metallb_cleanup ## Delete all operators
 
 .PHONY: deploy_cleanup
-deploy_cleanup: manila_deploy_cleanup heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup designate_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup swift_deploy_cleanup barbican_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
+deploy_cleanup: manila_deploy_cleanup heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup designate_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup swift_deploy_cleanup watcher_deploy_cleanup barbican_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
 
 .PHONY: wait
 wait: ## wait for an operator's controller-manager pod to be ready (requires OPERATOR_NAME to be explicitly passed!)
@@ -2598,6 +2606,55 @@ swift_deploy_cleanup: ## cleans up the service instance, Does not affect the ope
 	$(eval $(call vars,$@,swift))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} -Rf ${OPERATOR_BASE_DIR}/swift-operator ${DEPLOY_DIR}
+
+##@ WATCHER
+.PHONY: watcher_prep
+watcher_prep: export IMAGE=${WATCHER_IMG}
+watcher_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,watcher))
+	bash scripts/gen-olm.sh
+
+.PHONY: watcher
+watcher: operator_namespace watcher_prep ## installs the operator, also runs the prep step. Set WATCHER_IMG for custom image.
+	$(eval $(call vars,$@,watcher))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: watcher_cleanup
+watcher_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,watcher))
+	bash scripts/operator-cleanup.sh
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
+
+.PHONY: watcher_deploy_prep
+watcher_deploy_prep: export KIND=Watcher
+watcher_deploy_prep: export IMAGE=unused
+watcher_deploy_prep: export REPO=${WATCHER_REPO}
+watcher_deploy_prep: export BRANCH=${WATCHER_BRANCH}
+watcher_deploy_prep: export HASH=${WATCHER_COMMIT_HASH}
+watcher_deploy_prep: watcher_deploy_cleanup ## prepares the CR to install the service based on the service sample file WATCHERAPI
+	$(eval $(call vars,$@,watcher))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	bash scripts/clone-operator-repo.sh
+	cp ${WATCHER_CR} ${DEPLOY_DIR}
+
+	bash scripts/gen-service-kustomize.sh
+
+.PHONY: watcher_deploy
+watcher_deploy: input watcher_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set WATCHER_REPO and WATCHER_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,watcher))
+	make wait
+	# Note(Chandan): Disable Kustomize till specs get added to watcher operator
+	# oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	-rm ${DEPLOY_DIR}/kustomization.yaml
+	oc apply -f ${DEPLOY_DIR}
+
+.PHONY: watcher_deploy_cleanup
+watcher_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,watcher))
+	# Note(Chandan): Disable Kustomize till specs get added to watcher operator
+	# oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	-rm ${DEPLOY_DIR}/kustomization.yaml
+	${CLEANUP_DIR_CMD} -Rf ${OPERATOR_BASE_DIR}/watcher-operator ${DEPLOY_DIR}
 
 ##@ CERT-MANAGER
 .PHONY: certmanager
