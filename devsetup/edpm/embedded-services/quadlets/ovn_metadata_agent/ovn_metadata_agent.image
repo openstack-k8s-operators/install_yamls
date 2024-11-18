@@ -1,0 +1,5 @@
+[install]
+WantedBy=edpm-compute@ovn_metadata_agent.service
+
+[Image]
+image=quay.io/podified-antelope-centos9/openstack-neutron-metadata-agent-ovn:current-podified

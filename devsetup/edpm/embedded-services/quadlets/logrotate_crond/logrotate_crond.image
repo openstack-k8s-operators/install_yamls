@@ -1,0 +1,5 @@
+[install]
+WantedBy=edpm-compute@logrotate_crond.service
+
+[Image]
+Image=quay.io/podified-antelope-centos9/openstack-cron:current-podified

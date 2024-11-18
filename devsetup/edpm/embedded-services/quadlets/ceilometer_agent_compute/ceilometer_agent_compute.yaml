@@ -1,0 +1,80 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    bind-mount-options: /var/lib/openstack/cacerts/telemetry/tls-ca-bundle.pem:z
+  creationTimestamp: "2024-11-21T04:54:58Z"
+  labels:
+    app: ceilometeragentcompute-pod
+  name: ceilometeragentcompute-pod
+spec:
+  containers:
+  - args:
+    - kolla_start
+    env:
+    - name: KOLLA_CONFIG_STRATEGY
+      value: COPY_ALWAYS
+    - name: OS_ENDPOINT_TYPE
+      value: internal
+    image: quay.io/podified-antelope-centos9/openstack-ceilometer-compute:current-podified
+    name: ceilometeragentcompute
+    securityContext:
+      runAsGroup: 42405
+      runAsUser: 42405
+      seLinuxOptions:
+        type: ceilometer_polling_t
+    volumeMounts:
+    - mountPath: /openstack
+      name: var-lib-openstack-healthchecks-ceilometer_agent_compute-host-0
+      readOnly: true
+    - mountPath: /run/libvirt
+      name: run-libvirt-host-2
+      readOnly: true
+    - mountPath: /dev/log
+      name: dev-log-host-3
+    - mountPath: /var/lib/kolla/config_files/config.json
+      name: var-lib-openstack-config-telemetry-ceilometer-agent-compute.json-host-6
+    - mountPath: /etc/hosts
+      name: etc-hosts-host-7
+      readOnly: true
+    - mountPath: /var/lib/openstack/config/
+      name: var-lib-openstack-config-telemetry-host-8
+    - mountPath: /etc/localtime
+      name: etc-localtime-host-9
+      readOnly: true
+  hostNetwork: true
+  hostname: edpm-compute-0
+  volumes:
+  - hostPath:
+      path: /var/lib/openstack/healthchecks/ceilometer_agent_compute
+      type: Directory
+    name: var-lib-openstack-healthchecks-ceilometer_agent_compute-host-0
+  - hostPath:
+      path: /run/libvirt
+      type: Directory
+    name: run-libvirt-host-2
+  - hostPath:
+      path: /dev/log
+      type: File
+    name: dev-log-host-3
+  - hostPath:
+      path: /etc/pki/ca-trust/source/anchors
+      type: Directory
+    name: etc-pki-ca-trust-source-anchors-host-4
+  - hostPath:
+      path: /var/lib/openstack/config/telemetry/ceilometer-agent-compute.json
+      type: File
+    name: var-lib-openstack-config-telemetry-ceilometer-agent-compute.json-host-6
+  - hostPath:
+      path: /etc/hosts
+      type: File
+    name: etc-hosts-host-7
+  - hostPath:
+      path: /var/lib/openstack/config/telemetry
+      type: Directory
+    name: var-lib-openstack-config-telemetry-host-8
+  - hostPath:
+      path: /etc/localtime
+      type: File
+    name: etc-localtime-host-9

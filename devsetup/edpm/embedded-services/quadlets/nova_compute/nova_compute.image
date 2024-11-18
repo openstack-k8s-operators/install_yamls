@@ -1,0 +1,5 @@
+[install]
+WantedBy=edpm-compute@nova_compute.service
+
+[Image]
+Image=quay.io/podified-antelope-centos9/openstack-nova-compute:current-podified

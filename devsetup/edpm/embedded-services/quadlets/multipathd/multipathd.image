@@ -1,0 +1,5 @@
+[install]
+WantedBy=edpm-compute@multipathd.service
+
+[Image]
+Image=quay.io/podified-antelope-centos9/openstack-multipathd:current-podified

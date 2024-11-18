@@ -1,0 +1,123 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    bind-mount-options: /var/lib/openstack/cacerts/nova/tls-ca-bundle.pem:z
+  creationTimestamp: "2024-11-21T04:24:13Z"
+  labels:
+    app: novacompute-pod
+  name: novacompute-pod
+spec:
+  containers:
+  - args:
+    - kolla_start
+    env:
+    - name: KOLLA_CONFIG_STRATEGY
+      value: COPY_ALWAYS
+    image: quay.io/podified-antelope-centos9/openstack-nova-compute:current-podified
+    name: novacompute
+    securityContext:
+      privileged: true
+      procMount: Unmasked
+    volumeMounts:
+    - mountPath: /var/lib/iscsi
+      name: var-lib-iscsi-host-0
+    - mountPath: /etc/multipath
+      name: etc-multipath-host-1
+    - mountPath: /etc/localtime
+      name: etc-localtime-host-2
+      readOnly: true
+    - mountPath: /run/libvirt
+      name: run-libvirt-host-3
+    - mountPath: /var/lib/libvirt
+      name: var-lib-libvirt-host-4
+    - mountPath: /var/log/containers/nova
+      name: var-log-containers-nova-host-5
+    - mountPath: /etc/ssh/ssh_known_hosts
+      name: etc-ssh-ssh_known_hosts-host-6
+      readOnly: true
+    - mountPath: /lib/modules
+      name: lib-modules-host-7
+      readOnly: true
+    - mountPath: /var/lib/nova
+      name: var-lib-nova-host-8
+    - mountPath: /etc/nvme
+      name: etc-nvme-host-9
+    - mountPath: /etc/multipath.conf
+      name: etc-multipath.conf-host-10
+      readOnly: true
+    - mountPath: /etc/iscsi
+      name: etc-iscsi-host-12
+      readOnly: true
+    - mountPath: /dev
+      name: dev-host-13
+    - mountPath: /var/lib/kolla/config_files
+      name: var-lib-openstack-config-nova-host-14
+      readOnly: true
+    - mountPath: /var/lib/kolla/config_files/ceph
+      name: var-lib-openstack-config-ceph-host-15
+      readOnly: true
+  hostNetwork: true
+  hostname: edpm-compute-0
+  volumes:
+  - hostPath:
+      path: /var/lib/iscsi
+      type: Directory
+    name: var-lib-iscsi-host-0
+  - hostPath:
+      path: /etc/multipath
+      type: Directory
+    name: etc-multipath-host-1
+  - hostPath:
+      path: /etc/localtime
+      type: File
+    name: etc-localtime-host-2
+  - hostPath:
+      path: /run/libvirt
+      type: Directory
+    name: run-libvirt-host-3
+  - hostPath:
+      path: /var/lib/libvirt
+      type: Directory
+    name: var-lib-libvirt-host-4
+  - hostPath:
+      path: /var/log/containers/nova
+      type: Directory
+    name: var-log-containers-nova-host-5
+  - hostPath:
+      path: /etc/ssh/ssh_known_hosts
+      type: File
+    name: etc-ssh-ssh_known_hosts-host-6
+  - hostPath:
+      path: /lib/modules
+      type: Directory
+    name: lib-modules-host-7
+  - hostPath:
+      path: /var/lib/nova
+      type: Directory
+    name: var-lib-nova-host-8
+  - hostPath:
+      path: /etc/nvme
+      type: Directory
+    name: etc-nvme-host-9
+  - hostPath:
+      path: /etc/multipath.conf
+      type: File
+    name: etc-multipath.conf-host-10
+  - hostPath:
+      path: /etc/iscsi
+      type: Directory
+    name: etc-iscsi-host-12
+  - hostPath:
+      path: /dev
+      type: Directory
+    name: dev-host-13
+  - hostPath:
+      path: /var/lib/openstack/config/nova
+      type: Directory
+    name: var-lib-openstack-config-nova-host-14
+  - hostPath:
+      path: /var/lib/openstack/config/ceph
+      type: Directory
+    name: var-lib-openstack-config-ceph-host-15

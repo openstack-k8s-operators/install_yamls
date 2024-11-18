@@ -1,0 +1,5 @@
+[install]
+WantedBy=edpm-compute@iscsid.service
+
+[Image]
+Image=quay.io/podified-antelope-centos9/openstack-iscsid:current-podified

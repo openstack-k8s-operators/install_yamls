@@ -1,0 +1,46 @@
+FROM quay.io/centos-bootc/centos-bootc:stream9
+
+RUN sudo dnf install centos-release-nfv-openvswitch centos-release-openstack-antelope -y && dnf in -y openvswitch2.17 \
+	os-net-config \
+	podman \
+	NetworkManager-ovs \
+	libvirt \
+	libvirt-admin \
+	libvirt-client \
+	libvirt-daemon \
+	qemu-kvm \
+	qemu-img \
+	libguestfs \
+	libseccomp \
+	swtpm \
+	swtpm-tools \
+	edk2-ovmf \
+	cyrus-sasl-scram \
+	tmpwatch \
+	cronie \
+	openstack-selinux \
+	rsync \
+	yum-utils
+
+
+COPY quadlets/systemd/service-template.kube /usr/share/containers/systemd/edpm-compute@.kube
+
+## Service specific configs
+COPY quadlets/ovn-controller/ovn_controller.yaml /usr/share/containers/systemd/ovn_controller.yaml
+COPY quadlets/ovn-controller/ovn_controller.image /usr/share/containers/systemd/ovn_controller.image
+COPY quadlets/iscsid/iscsid.yaml /usr/share/containers/systemd/iscsid.yaml
+COPY quadlets/iscsid/iscsid.image /usr/share/containers/systemd/iscsid.image
+COPY quadlets/nova_compute/nova_compute.yaml /usr/share/containers/systemd/nova_compute.yaml
+COPY quadlets/nova_compute/nova_compute.image /usr/share/containers/systemd/nova_compute.image
+COPY quadlets/ovn_metadata_agent/ovn_metadata_agent.yaml /usr/share/containers/systemd/ovn_metadata_agent.yaml
+COPY quadlets/ovn_metadata_agent/ovn_metadata_agent.image /usr/share/containers/systemd/ovn_metadata_agent.image
+COPY quadlets/logrotate_crond/logrotate_crond.yaml /usr/share/containers/systemd/logrotate_crond.yaml
+COPY quadlets/logrotate_crond/logrotate_crond.image /usr/share/containers/systemd/logrotate_crond.image
+COPY quadlets/multipathd/multipathd.yaml /usr/share/containers/systemd/multipathd.yaml
+COPY quadlets/multipathd/multipathd.image /usr/share/containers/systemd/multipathd.image
+COPY quadlets/ceilometer_agent_compute/ceilometer_agent_compute.yaml /usr/share/containers/systemd/ceilometer_agent_compute.yaml
+COPY quadlets/ceilometer_agent_compute/ceilometer_agent_compute.image /usr/share/containers/systemd/ceilometer_agent_compute.image
+
+# edpm container manage deps
+COPY edpm-start-podman-container /usr/libexec/
+COPY edpm-container-shutdown /usr/libexec/ 

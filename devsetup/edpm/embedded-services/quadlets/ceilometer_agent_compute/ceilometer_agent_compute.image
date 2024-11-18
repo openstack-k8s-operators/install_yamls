@@ -1,0 +1,5 @@
+[install]
+WantedBy=edpm-compute@ceilometer_agent_compute.service
+
+[Image]
+Image=quay.io/podified-antelope-centos9/openstack-ceilometer-compute:current-podified

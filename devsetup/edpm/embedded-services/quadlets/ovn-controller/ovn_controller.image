@@ -1,0 +1,5 @@
+[install]
+WantedBy=edpm-compute@ovn_controller.service
+
+[Image]
+Image=quay.io/podified-antelope-centos9/openstack-ovn-controller:current-podified

@@ -1,0 +1,82 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    bind-mount-options: /var/lib/openstack/cacerts/neutron-metadata/tls-ca-bundle.pem:z
+  creationTimestamp: "2024-11-21T04:34:05Z"
+  labels:
+    app: ovnmetadataagent-pod
+  name: ovnmetadataagent-pod
+spec:
+  containers:
+  - args:
+    - kolla_start
+    env:
+    - name: KOLLA_CONFIG_STRATEGY
+      value: COPY_ALWAYS
+    - name: EDPM_CONFIG_HASH
+      value: c661c16705cc829f2e51e2cb6f2adca1d433ec4966d0205ba7d64f55e7f8fd97
+    image: quay.io/podified-antelope-centos9/openstack-neutron-metadata-agent-ovn:current-podified
+    name: ovnmetadataagent
+    securityContext:
+      privileged: true
+      procMount: Unmasked
+      runAsGroup: 0
+      runAsUser: 0
+    volumeMounts:
+    - mountPath: /run/netns
+      name: run-netns-host-1
+    - mountPath: /var/lib/kolla/config_files/config.json
+      name: var-lib-kolla-config_files-ovn_metadata_agent.json-host-2
+      readOnly: true
+    - mountPath: /etc/neutron/kill_scripts
+      name: var-lib-neutron-kill_scripts-host-3
+      readOnly: true
+    - mountPath: /run/openvswitch
+      name: run-openvswitch-host-4
+    - mountPath: /openstack
+      name: var-lib-openstack-healthchecks-ovn_metadata_agent-host-5
+      readOnly: true
+    - mountPath: /etc/neutron.conf.d
+      name: var-lib-config-data-ansible-generated-neutron-ovn-metadata-agent-host-6
+    - mountPath: /var/lib/neutron
+      name: var-lib-neutron-host-7
+    - mountPath: /usr/local/bin/haproxy
+      name: var-lib-neutron-ovn_metadata_haproxy_wrapper-host-8
+      readOnly: true
+  hostNetwork: true
+  hostname: edpm-compute-0
+  volumes:
+  - hostPath:
+      path: /run/netns
+      type: Directory
+    name: run-netns-host-1
+  - hostPath:
+      path: /var/lib/kolla/config_files/ovn_metadata_agent.json
+      type: File
+    name: var-lib-kolla-config_files-ovn_metadata_agent.json-host-2
+  - hostPath:
+      path: /var/lib/neutron/kill_scripts
+      type: Directory
+    name: var-lib-neutron-kill_scripts-host-3
+  - hostPath:
+      path: /run/openvswitch
+      type: Directory
+    name: run-openvswitch-host-4
+  - hostPath:
+      path: /var/lib/openstack/healthchecks/ovn_metadata_agent
+      type: Directory
+    name: var-lib-openstack-healthchecks-ovn_metadata_agent-host-5
+  - hostPath:
+      path: /var/lib/config-data/ansible-generated/neutron-ovn-metadata-agent
+      type: Directory
+    name: var-lib-config-data-ansible-generated-neutron-ovn-metadata-agent-host-6
+  - hostPath:
+      path: /var/lib/neutron
+      type: Directory
+    name: var-lib-neutron-host-7
+  - hostPath:
+      path: /var/lib/neutron/ovn_metadata_haproxy_wrapper
+      type: File
+    name: var-lib-neutron-ovn_metadata_haproxy_wrapper-host-8
