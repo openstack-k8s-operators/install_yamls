@@ -216,7 +216,7 @@ crc: ## Deploys CRC using CRC_URL to download and install CRC, KUBEADMIN_PWD as 
 
 .PHONY: crc_cleanup
 crc_cleanup: ## Destroys the CRC env, but does NOT clear ( --clear-cache ) the cache to save time on next setup.
-	crc delete --force
+	crc delete --force || true
 	crc cleanup
 	sudo ${CLEANUP_DIR_CMD} /etc/pki/ca-trust/source/anchors/crc-router-ca.pem
 	sudo update-ca-trust
