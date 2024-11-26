@@ -521,6 +521,12 @@ SWIFT_KUTTL_NAMESPACE   ?= swift-kuttl-tests
 CERTMANAGER_TIMEOUT                  ?= 300s
 INSTALL_CERT_MANAGER		     ?= true
 
+# Redis
+# REDIS_IMG     ?= (this is unused because this is part of infra operator)
+REDIS           ?= config/samples/redis_v1beta1_redis.yaml
+REDIS_CR        ?= ${OPERATOR_BASE_DIR}/infra-operator-redis/${REDIS}
+REDIS_DEPL_IMG  ?= unused
+
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
 ${1}: export NAMESPACE=${NAMESPACE}
@@ -574,7 +580,7 @@ help: ## Display this help.
 cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup designate_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup swift_cleanup barbican_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup ansibleee_cleanup rabbitmq_cleanup infra_cleanup manila_cleanup metallb_cleanup ## Delete all operators
 
 .PHONY: deploy_cleanup
-deploy_cleanup: manila_deploy_cleanup heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup octavia_deploy_cleanup designate_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup swift_deploy_cleanup barbican_deploy_cleanup keystone_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
+deploy_cleanup: manila_deploy_cleanup heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup redis_deploy_cleanup octavia_deploy_cleanup designate_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup swift_deploy_cleanup barbican_deploy_cleanup keystone_deploy_cleanup redis_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
 
 .PHONY: wait
 wait: ## wait for an operator's controller-manager pod to be ready (requires OPERATOR_NAME to be explicitly passed!)
@@ -1793,7 +1799,7 @@ octavia_kuttl_run: ## runs kuttl tests for the octavia operator, assumes that ev
 
 .PHONY: octavia_kuttl
 octavia_kuttl: export NAMESPACE = ${OCTAVIA_KUTTL_NAMESPACE}
-octavia_kuttl: kuttl_common_prep ovn ovn_deploy neutron neutron_deploy placement placement_deploy nova nova_deploy glance glance_deploy octavia octavia_deploy_prep ## runs kuttl tests for the octavia operator. Installs octavia operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+octavia_kuttl: kuttl_common_prep ovn ovn_deploy redis_deploy neutron neutron_deploy placement placement_deploy nova nova_deploy glance glance_deploy octavia octavia_deploy_prep ## runs kuttl tests for the octavia operator. Installs octavia operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	make wait OPERATOR_NAME=neutron
 	make wait OPERATOR_NAME=placement
 	make wait OPERATOR_NAME=nova
@@ -1812,7 +1818,7 @@ octavia_kuttl: kuttl_common_prep ovn ovn_deploy neutron neutron_deploy placement
 
 .PHONY: designate_kuttl
 designate_kuttl: export NAMESPACE = ${DESIGNATE_KUTTL_NAMESPACE}
-designate_kuttl: kuttl_common_prep ovn ovn_deploy designate designate_deploy_prep ## runs kuttl tests for the designate operator. Installs designate operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
+designate_kuttl: kuttl_common_prep ovn ovn_deploy redis_deploy_prep designate designate_deploy_prep ## runs kuttl tests for the designate operator. Installs designate operator and cleans up previous deployments before running the tests and, add cleanup after running the tests.
 	$(eval $(call vars,$@,designate))
 	make wait
 	make designate_kuttl_run
@@ -2648,3 +2654,31 @@ ifeq ($(OKD), true)
 else
 	bash scripts/validate-marketplace.sh
 endif
+
+##@ REDIS
+.PHONY: redis_deploy_prep
+redis_deploy_prep: export KIND=Redis
+redis_deploy_prep: export NAME=redis
+redis_deploy_prep: export IMAGE=${REDIS_DEPL_IMG}
+redis_deploy_prep: export REPO=${INFRA_REPO}
+redis_deploy_prep: export BRANCH=${INFRA_BRANCH}
+redis_deploy_prep: export HASH=${INFRA_COMMIT_HASH}
+redis_deploy_prep: export ALT_CHECKOUT=redis
+redis_deploy_prep: redis_deploy_cleanup ## prepares the CR to install the service based on the service sample file REDIS
+	$(eval $(call vars,$@,infra))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${OUT}/${NAMESPACE}/infra-redis/cr
+	bash scripts/clone-operator-repo.sh
+	cp ${REDIS_CR} ${OUT}/${NAMESPACE}/infra-redis/cr
+	DEPLOY_DIR=${OUT}/${NAMESPACE}/infra-redis/cr bash scripts/gen-service-kustomize.sh
+
+.PHONY: redis_deploy
+redis_deploy: input redis_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set INFRA_REPO and INFRA_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,infra))
+	make wait
+	DEPLOY_DIR=${OUT}/${NAMESPACE}/infra-redis/cr bash scripts/operator-deploy-resources.sh
+
+.PHONY: redis_deploy_cleanup
+redis_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,infra))
+	oc kustomize ${OUT}/${NAMESPACE}/infra-redis/cr | oc delete --ignore-not-found=true -f -
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/infra-operator-redis ${OUT}/${NAMESPACE}/infra-redis/cr
