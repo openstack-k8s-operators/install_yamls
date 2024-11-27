@@ -89,9 +89,12 @@ GIT_CLONE_OPTS      ?=
 GALERA_REPLICAS         ?=
 
 # OpenStack Operator
-OPENSTACK_IMG                ?= quay.io/openstack-k8s-operators/openstack-operator-index:${OPENSTACK_K8S_TAG}
+OPENSTACK_REGISTRY           ?= quay.io
+OPENSTACK_REGISTRY_NAMESPACE ?= openstack-k8s-operators
+OPENSTACK_IMG                ?= ${OPENSTACK_REGISTRY}/${OPENSTACK_REGISTRY_NAMESPACE}/openstack-operator-index:${OPENSTACK_K8S_TAG}
 OPENSTACK_REPO               ?= https://github.com/openstack-k8s-operators/openstack-operator.git
 OPENSTACK_BRANCH             ?= ${OPENSTACK_K8S_BRANCH}
+OPENSTACK_STABLE_BRANCH      ?= 18.0-fr1
 OPENSTACK_COMMIT_HASH        ?=
 
 ifeq ($(NETWORK_ISOLATION), true)
@@ -727,6 +730,18 @@ openstack: openstack_prep operator_namespace ## installs the operator, also runs
 	$(eval $(call vars,$@,openstack))
 	oc apply -f ${OPERATOR_DIR}
 
+.PHONY: openstack_ga
+openstack_ga: export BRANCH=${OPENSTACK_STABLE_BRANCH}
+openstack_ga: export REPO_DIR=${OPERATOR_BASE_DIR}/openstack-operator
+openstack_ga: export REGISTRY=${OPENSTACK_REGISTRY}
+openstack_ga: export NAMESPACE=${OPENSTACK_REGISTRY_NAMESPACE}
+openstack_ga: openstack_repo operator_namespace ## installs the operator for a feature branch using the first available index image matching a commit.
+	@csv_tag=$$(bash scripts/get-stable-csv.sh) || exit 1; \
+	echo stable cvs tag $$csv_tag; \
+	$(MAKE) OPENSTACK_K8S_TAG=$$csv_tag openstack_prep
+	$(eval $(call vars,$@,openstack))
+	oc apply -f ${OPERATOR_DIR}
+
 .PHONY: openstack_wait
 openstack_wait: openstack ## waits openstack CSV to succeed.
 	$(eval $(call vars,$@,openstack))
@@ -798,6 +813,12 @@ openstack_update_run:
 	$(eval $(call vars,$@,openstack))
 	bash scripts/openstack-update.sh
 
+OV := $(shell oc get openstackversion -n $(NAMESPACE) -o name)
+AV := $(shell oc get -n $(NAMESPACE) ${OV} -o yaml | yq .status.availableVersion)
+.PHONY: openstack_deploy_update
+openstack_deploy_update: ## patches the openstackversion target version to the available version.
+	$(eval $(call vars,$@,openstack))
+	oc patch -n ${NAMESPACE} ${OV} --type merge --patch '{"spec": {"targetVersion": "${AV}"}}'
 
 .PHONY: edpm_deploy_generate_keys
 edpm_deploy_generate_keys:
@@ -936,6 +957,10 @@ edpm_nova_discover_hosts: ## trigger manual compute host discovery in nova
 .PHONY: openstack_crds
 openstack_crds: namespace openstack_deploy_prep ## installs all openstack CRDs. Useful for infrastructure dev
 	OPENSTACK_BUNDLE_IMG=${OPENSTACK_BUNDLE_IMG} OUT=${OUT} OPENSTACK_CRDS_DIR=${OPENSTACK_CRDS_DIR} OPERATOR_BASE_DIR=${OPERATOR_BASE_DIR} bash scripts/openstack-crds.sh
+
+.PHONY: openstack_crds_cleanup
+openstack_crds_cleanup: ## deletes all openstack CRDs. Useful for installing a ga version. expects that all deployments are gone before
+	oc delete $$(oc get crd -o name |grep 'openstack\.org')
 
 .PHONY: edpm_deploy_networker_prep
 edpm_deploy_networker_prep: export KIND=OpenStackDataPlaneNodeSet
