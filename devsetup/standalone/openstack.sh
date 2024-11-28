@@ -154,7 +154,7 @@ if [ "$TLSE_ENABLED" = "true" ]; then
         -h $IPA_SERVER_HOSTNAME \
         --read-only --tmpfs /run --tmpfs /tmp \
         -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-        -v /tmp/ipa-data:/data:Z quay.io/freeipa/freeipa-server:fedora-39 no-exit \
+        -v /tmp/ipa-data:/data:Z quay.io/freeipa/freeipa-server:fedora-40 no-exit \
         -U -r $IPA_REALM --setup-dns --no-reverse --no-ntp \
         --no-dnssec-validation --auto-forwarders
     timeout 900s grep -qEi '(INFO The ipa-server-install command was successful|ERROR The ipa-server-install command failed)' <(tail -F /tmp/ipa-data/var/log/ipaserver-install.log)
