@@ -185,6 +185,7 @@ if [ "$TLSE_ENABLED" = "true" ]; then
     export IPA_REALM=$(echo $IPA_DOMAIN | awk '{print toupper($0)}')
     export IPA_HOST=ipa.$IPA_DOMAIN
     export IPA_SERVER_HOSTNAME=$IPA_HOST
+    export IPA_IMAGE=${IPA_IMAGE:-"quay.io/freeipa/freeipa-server:fedora-41"}
     sudo mkdir /tmp/ipa-data
     sudo podman run -d --name freeipa-server-container \
         --sysctl net.ipv6.conf.lo.disable_ipv6=0 \
@@ -198,7 +199,7 @@ if [ "$TLSE_ENABLED" = "true" ]; then
         -p 88:88/udp -p 464:464/udp \
         --read-only --tmpfs /run --tmpfs /tmp \
         -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-        -v /tmp/ipa-data:/data:Z quay.io/freeipa/freeipa-server:fedora-39 no-exit \
+        -v /tmp/ipa-data:/data:Z "$IPA_IMAGE" no-exit \
         -U -r $IPA_REALM --setup-dns --no-reverse --no-ntp \
         --no-dnssec-validation --auto-forwarders
     timeout 900s grep -qEi '(INFO The ipa-server-install command was successful|ERROR The ipa-server-install command failed)' <(sudo tail -F /tmp/ipa-data/var/log/ipaserver-install.log)
