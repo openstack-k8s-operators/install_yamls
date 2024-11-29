@@ -187,6 +187,7 @@ EOF_CAT
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: internalapi vlan interface
       name: ${INTERFACE}.${internalapi_vlan_id}
+      mtu: ${INTERFACE_MTU}
       state: up
       type: vlan
       vlan:
@@ -233,6 +234,7 @@ EOF_CAT
     cat >> "${DEPLOY_DIR}/${WORKER}_nncp.yaml" <<EOF_CAT
     - description: storage vlan interface
       name: ${INTERFACE}.${storage_vlan_id}
+      mtu: ${INTERFACE_MTU}
       state: up
       type: vlan
       vlan:
@@ -249,6 +251,7 @@ EOF_CAT
         enabled: false
     - description: macvlan interface for storage NW
       name: storage
+      mtu: ${INTERFACE_MTU}
       state: up
       type: mac-vlan
       mac-vlan:
@@ -295,6 +298,7 @@ EOF_CAT
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: tenant vlan interface
       name: ${INTERFACE}.${tenant_vlan_id}
+      mtu: ${INTERFACE_MTU}
       state: up
       type: vlan
       vlan:
@@ -340,6 +344,7 @@ EOF_CAT
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: storagemgmt vlan interface
       name: ${INTERFACE}.${storagemgmt_vlan_id}
+      mtu: ${INTERFACE_MTU}
       state: up
       type: vlan
       vlan:
@@ -386,6 +391,7 @@ EOF_CAT
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: Octavia vlan host interface
       name: ${INTERFACE}.${octavia_vlan_id}
+      mtu: ${INTERFACE_MTU}
       state: up
       type: vlan
       vlan:
@@ -398,7 +404,7 @@ EOF_CAT
         port:
           - name: ${INTERFACE}.${octavia_vlan_id}
       description: Configuring bridge octbr
-      mtu: 1500
+      mtu: ${INTERFACE_MTU}
       name: octbr
       state: up
       type: linux-bridge
@@ -410,6 +416,7 @@ EOF_CAT
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: designate vlan interface
       name: ${INTERFACE}.${designate_vlan_id}
+      mtu: ${INTERFACE_MTU}
       state: up
       type: vlan
       vlan:
