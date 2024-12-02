@@ -21,7 +21,8 @@ EDPM_COMPUTE_DHCP_AGENT_ENABLED=${EDPM_COMPUTE_DHCP_AGENT_ENABLED:-true}
 COMPUTE_DRIVER=${COMPUTE_DRIVER:-"libvirt"}
 INTERFACE_MTU=${INTERFACE_MTU:-1500}
 BARBICAN_ENABLED=${BARBICAN_ENABLED:-true}
-MANILA_ENABLED=${MANILA_ENABLED:-true}
+MANILA_CEPHFS_ENABLED=${MANILA_CEPHFS_ENABLED:-true}
+MANILA_NFS_ENABLED=${MANILA_NFS_ENABLED:-false}
 SWIFT_REPLICATED=${SWIFT_REPLICATED:-false}
 TLSE_ENABLED=${TLSE_ENABLED:-false}
 CLOUD_DOMAIN=${CLOUD_DOMAIN:-localdomain}
@@ -119,8 +120,18 @@ if [ "$BARBICAN_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/barbican.yaml"
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/barbican-backend-simple-crypto.yaml"
 fi
-if [ "$MANILA_ENABLED" = "true" ]; then
+
+if [[ "$MANILA_NFS_ENABLED" = "true" && "$MANILA_CEPHFS_ENABLED" = "true" ]]; then
+    echo "[Manila] - CephNFS and native CephFS can't be enabled at the same time."
+    exit 1
+fi
+
+if [ "$MANILA_CEPHFS_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/manila-cephfsnative-config.yaml"
+fi
+
+if [ "$MANILA_NFS_ENABLED" = "true" ]; then
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/manila-cephfsganesha-config.yaml"
 fi
 
 if [ "$OCTAVIA_ENABLED" = "true" ]; then

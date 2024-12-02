@@ -138,11 +138,18 @@ for config_download in ${cdfiles[@]}; do
     sed -i "/^$/d" "$config_download"
 done
 
-# Add Manila bits
-MANILA_ENABLED=${MANILA_ENABLED:-true}
-if [ "$MANILA_ENABLED" = "true" ]; then
+# Add native_cephfs Manila bits
+MANILA_CEPHFS_ENABLED=${MANILA_CEPHFS_ENABLED:-true}
+if [ "$MANILA_CEPHFS_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/manila-cephfsnative-config.yaml"
 fi
+# Add ceph_nfs Manila bits
+MANILA_NFS_ENABLED=${MANILA_NFS_ENABLED:-false}
+if [ "$MANILA_NFS_ENABLED" = "true" ]; then
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/manila-cephfsganesha-config.yaml"
+fi
+
+
 # Add octavia bits
 OCTAVIA_ENABLED=${OCTAVIA_ENABLED:-false}
 if [ "$OCTAVIA_ENABLED" = "true" ]; then
@@ -154,12 +161,17 @@ if [ "$TELEMETRY_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/enable-legacy-telemetry.yaml"
 fi
 
+if [[ "$MANILA_NFS_ENABLED" = "true" && "$MANILA_CEPHFS_ENABLED" = "true" ]]; then
+    echo "[Manila] - CephNFS and native CephFS can't be enabled at the same time."
+    exit 1
+fi
 # defaults for non-ceph case
 CEPH_OVERCLOUD_ARGS=""
 export ROLES_FILE="/home/zuul/overcloud_roles.yaml"
 if [ "$EDPM_COMPUTE_CEPH_ENABLED" = "true" ] ; then
     CEPH_OVERCLOUD_ARGS="${CEPH_ARGS}"
-    [[ "$MANILA_ENABLED" == "true" ]] && CEPH_OVERCLOUD_ARGS+=' -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/ceph-mds.yaml'
+    # either cases we need mds
+    [[ "$MANILA_NFS_ENABLED" == "true" || "$MANILA_CEPHFS_ENABLED" == "true" ]] && CEPH_OVERCLOUD_ARGS+=' -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/ceph-mds.yaml'
     /tmp/ceph.sh
 fi
 
