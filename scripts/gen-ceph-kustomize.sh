@@ -64,7 +64,7 @@ metadata:
 spec:
   hostNetwork: $CEPH_HOSTNETWORK
   containers:
-   - image: quay.io/ceph/ceph:v18
+   - image: quay.io/ceph/ceph:v19
      name: ceph
      env:
      - name: MON_IP

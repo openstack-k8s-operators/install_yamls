@@ -433,7 +433,7 @@ MANILA_KUTTL_DIR        ?= ${OPERATOR_BASE_DIR}/manila-operator/test/kuttl/tests
 MANILA_KUTTL_NAMESPACE  ?= manila-kuttl-tests
 
 # Ceph
-CEPH_IMG       ?= quay.io/ceph/demo:latest-reef
+CEPH_IMG       ?= quay.io/ceph/demo:latest-squid
 CEPH_REPO      ?= https://github.com/rook/rook.git
 CEPH_BRANCH    ?= release-1.15
 CEPH_CRDS      ?= ${OPERATOR_BASE_DIR}/rook/deploy/examples/crds.yaml
