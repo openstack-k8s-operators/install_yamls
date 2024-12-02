@@ -27,6 +27,7 @@ TLSE_ENABLED=${TLSE_ENABLED:-false}
 CLOUD_DOMAIN=${CLOUD_DOMAIN:-localdomain}
 TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
 OCTAVIA_ENABLED=${OCTAVIA_ENABLED:-false}
+IPA_IMAGE=${IPA_IMAGE:-"quay.io/freeipa/freeipa-server:fedora-41"}
 
 # Use the files created in the previous steps including the network_data.yaml file and thw deployed_network.yaml file.
 # The deployed_network.yaml file hard codes the IPs and VIPs configured from the network.sh
@@ -154,7 +155,7 @@ if [ "$TLSE_ENABLED" = "true" ]; then
         -h $IPA_SERVER_HOSTNAME \
         --read-only --tmpfs /run --tmpfs /tmp \
         -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-        -v /tmp/ipa-data:/data:Z quay.io/freeipa/freeipa-server:fedora-39 no-exit \
+        -v /tmp/ipa-data:/data:Z "$IPA_IMAGE" no-exit \
         -U -r $IPA_REALM --setup-dns --no-reverse --no-ntp \
         --no-dnssec-validation --auto-forwarders
     timeout 900s grep -qEi '(INFO The ipa-server-install command was successful|ERROR The ipa-server-install command failed)' <(tail -F /tmp/ipa-data/var/log/ipaserver-install.log)
