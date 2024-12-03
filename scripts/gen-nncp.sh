@@ -170,13 +170,6 @@ EOF_CAT
 EOF_CAT
             done
         fi
-    if [ -n "$IPV6_ENABLED" ]; then
-        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
-      - destination: ::/0
-        next-hop-address: ${GATEWAY_IPV6}
-        next-hop-interface: ${BRIDGE_NAME}
-EOF_CAT
-    fi
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     interfaces:
 EOF_CAT
