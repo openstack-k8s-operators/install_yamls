@@ -1702,16 +1702,16 @@ mariadb_kuttl: input deploy_cleanup mariadb mariadb_deploy_prep ## runs kuttl te
 	make mariadb_cleanup
 
 .PHONY: kuttl_db_prep
-kuttl_db_prep: input deploy_cleanup mariadb mariadb_deploy infra memcached_deploy ## installs common DB service(MariaDB and Memcached)
+kuttl_db_prep: input deploy_cleanup mariadb infra mariadb_deploy memcached_deploy ## installs common DB service(MariaDB and Memcached)
 
 .PHONY: kuttl_db_cleanup
-kuttl_db_cleanup: memcached_deploy_cleanup infra_cleanup mariadb_deploy_cleanup mariadb_cleanup input_cleanup
+kuttl_db_cleanup: memcached_deploy_cleanup mariadb_deploy_cleanup infra_cleanup mariadb_cleanup input_cleanup
 
 .PHONY: kuttl_common_prep
-kuttl_common_prep: kuttl_db_prep rabbitmq rabbitmq_deploy keystone keystone_deploy ## installs common middleware services and Keystone
+kuttl_common_prep: input deploy_cleanup mariadb infra rabbitmq keystone mariadb_deploy memcached_deploy rabbitmq_deploy keystone_deploy ## installs common middleware services and Keystone
 
 .PHONY: kuttl_common_cleanup
-kuttl_common_cleanup: keystone_cleanup rabbitmq_cleanup kuttl_db_cleanup
+kuttl_common_cleanup: keystone_deploy_cleanup mariadb_deploy_cleanup memcached_deploy_cleanup rabbitmq_deploy_cleanup keystone_cleanup rabbitmq_cleanup infra_cleanup mariadb_cleanup input_cleanup
 
 .PHONY: keystone_kuttl_run
 keystone_kuttl_run: ## runs kuttl tests for the keystone operator, assumes that everything needed for running the test was deployed beforehand.
