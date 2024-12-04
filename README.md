@@ -82,6 +82,7 @@ EDPM_TOTAL_NODES=2 make edpm_compute
 ```
 
 * create dependencies
+**Note** scale number PVs to keep up with your number of nodes using `PV_NUM` variable.
 ```bash
 cd ..
 make crc_storage
