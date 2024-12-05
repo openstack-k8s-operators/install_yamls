@@ -1,5 +1,5 @@
 #!/bin/bash
-# set -x
+set -x
 
 NODE_NAME_PREFIX=${NODE_NAME_PREFIX:-"crc-bmaas"}
 INGRESS_DOMAIN=$(oc get ingresses.config/cluster -o jsonpath={.spec.domain})
