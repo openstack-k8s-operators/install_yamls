@@ -99,6 +99,11 @@ install using the redhat-marketplace
 REDHAT_OPERATORS=true make openstack
 ```
 
+* create the initialization resource (this deploys the operators)
+```bash
+make openstack_init
+```
+
 **Note** this will also run the openstack_prep target, which if NETWORK_ISOLATION == true will install nmstate and metallb operator, configure the secondary interface of the crc VM via nncp, creates the network-attachment-definitions for datacentre, internalapi, storage and tenant network. Also the metallb l2advertisement and the ipaddresspools get created.
 
 The following NADs with ip ranges get configured:
