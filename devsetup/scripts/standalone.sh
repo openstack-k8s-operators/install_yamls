@@ -147,6 +147,9 @@ else
         --output-env-file \$HOME/containers-prepare-parameters.yaml
     # Use wallaby el9 container images
     sed -i 's|quay.io/tripleowallaby$|quay.io/tripleowallabycentos9|' \$HOME/containers-prepare-parameters.yaml
+    # Adoption requires Ceph 7 (Reef) as a requirement. Instead of performing a Ceph
+    # upgrade from 6 (the default) to 7, let's try to deploy 7 in greenfield
+    sed -i "s|rhceph-6-rhel9|rhceph-7-rhel9|" \$HOME/containers-prepare-parameters.yaml
 fi
 
 # Use os-net-config to add VLAN interfaces which connect edpm-compute-0 to the isolated networks configured by install_yamls.
