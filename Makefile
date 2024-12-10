@@ -451,6 +451,7 @@ NMSTATE_SUBSCRIPTION   ?= kubernetes-nmstate-operator
 INSTALL_NMSTATE        ?= true
 
 # NNCP
+INSTALL_NNCP        ?= true
 NNCP_NODES          ?=
 NNCP_INTERFACE      ?= enp6s0
 NNCP_BRIDGE         ?= ospbr
@@ -714,10 +715,11 @@ endif
 ##@ OPENSTACK
 
 OPENSTACK_PREP_DEPS := validate_marketplace
-OPENSTACK_PREP_NMSTATE_DEPS := $(if $(findstring true,$(INSTALL_NMSTATE)), nmstate nncp_with_retries, nncp_with_retries)
+OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_NMSTATE)), nmstate)
+OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_NNCP)), nncp_with_retries)
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_CERT_MANAGER)), certmanager)
-OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_ISOLATION)), ${OPENSTACK_PREP_NMSTATE_DEPS} netattach metallb metallb_config)
-OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_BGP)), ${OPENSTACK_PREP_NMSTATE_DEPS} netattach metallb metallb_config)
+OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_ISOLATION)), netattach metallb metallb_config)
+OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_BGP)), netattach metallb metallb_config)
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(BMO_SETUP)), crc_bmo_setup)
 
 .PHONY: openstack_prep
