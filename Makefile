@@ -381,6 +381,7 @@ BAREMETAL_OS_CONTAINER_IMG ?=
 
 # Dataplane Operator
 DATAPLANE_TIMEOUT                                ?= 30m
+DATAPLANE_SAMPLES_DIR                            ?= ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/dataplane
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
 DATAPLANE_KUSTOMIZE_SCENARIO                     ?= bgp_ovn_cluster
@@ -403,6 +404,7 @@ DATAPLANE_NETWORKER_IP							 ?=172.16.1.200
 DATAPLANE_SSHD_ALLOWED_RANGES                    ?=['172.16.1.0/24']
 DATAPLANE_DEFAULT_GW                             ?= 172.16.1.1
 endif
+DATAPLANE_KUSTOMIZE_DIR                          ?= ${DATAPLANE_SAMPLES_DIR}/${DATAPLANE_KUSTOMIZE_SCENARIO}
 DATAPLANE_TOTAL_NODES                            ?=1
 DATAPLANE_GROWVOLS_ARGS                          ?=/=8GB /tmp=1GB /home=1GB /var=100%
 DATAPLANE_TOTAL_NETWORKER_NODES					 ?=1
@@ -759,7 +761,7 @@ openstack_deploy_prep: export KIND=OpenStackControlPlane
 openstack_deploy_prep: export OVN_NICMAPPING=${OVNCONTROLLER_NMAP}
 openstack_deploy_prep: export NEUTRON_CUSTOM_CONF=${DEPLOY_DIR}/neutron-custom-conf.patch
 openstack_deploy_prep: export BRIDGE_NAME=${NNCP_BRIDGE}
-openstack_deploy_prep: export CTLPLANE_IP_ADDRESS_PREFIX=${NNCP_CTLPLANE_IPV6_ADDRESS_PREFIX}
+openstack_deploy_prep: export CTLPLANE_IP_ADDRESS_PREFIX=${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}
 ifeq ($(NETWORK_ISOLATION_IPV4), true)
 openstack_deploy_prep: export IPV4_ENABLED=true
 endif
@@ -846,6 +848,7 @@ edpm_deploy_prep: export BRANCH=${OPENSTACK_BRANCH}
 edpm_deploy_prep: export HASH=${OPENSTACK_COMMIT_HASH}
 edpm_deploy_prep: export EDPM_TLS_ENABLED=${DATAPLANE_TLS_ENABLED}
 edpm_deploy_prep: export EDPM_NOVA_NFS_PATH=${DATAPLANE_NOVA_NFS_PATH}
+edpm_deploy_prep: export EDPM_POST_GEN_SCRIPT=${DATAPLANE_POST_GEN_SCRIPT}
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
 edpm_deploy_prep: export BGP=ovn
@@ -858,7 +861,7 @@ edpm_deploy_prep: edpm_deploy_cleanup openstack_repo ## prepares the CR to insta
 	mkdir -p ${DEPLOY_DIR}
 	cp ${DATAPLANE_EXTRA_NOVA_CONFIG_FILE} ${EDPM_EXTRA_NOVA_CONFIG_FILE}
 	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
-	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/dataplane/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
+	oc kustomize --load-restrictor LoadRestrictionsNone ${DATAPLANE_KUSTOMIZE_DIR} > ${DEPLOY_DIR}/dataplane.yaml
 	bash scripts/gen-edpm-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
@@ -898,7 +901,7 @@ edpm_deploy_baremetal_prep: export EDPM_GROWVOLS_ARGS=${DATAPLANE_GROWVOLS_ARGS}
 edpm_deploy_baremetal_prep: export REPO=${OPENSTACK_REPO}
 edpm_deploy_baremetal_prep: export BRANCH=${OPENSTACK_BRANCH}
 edpm_deploy_baremetal_prep: export HASH=${OPENSTACK_COMMIT_HASH}
-edpm_deploy_baremetal_prep: export DATAPLANE_KUSTOMIZE_SCENARIO=baremetal
+edpm_deploy_baremetal_prep: export DATAPLANE_KUSTOMIZE_DIR=${DATAPLANE_SAMPLES_DIR}/baremetal
 edpm_deploy_baremetal_prep: export EDPM_ROOT_PASSWORD=${BM_ROOT_PASSWORD}
 edpm_deploy_baremetal_prep: export EDPM_EXTRA_NOVA_CONFIG_FILE=${DEPLOY_DIR}/25-nova-extra.conf
 edpm_deploy_baremetal_prep: export EDPM_SERVER_ROLE=compute
@@ -907,7 +910,7 @@ edpm_deploy_baremetal_prep: edpm_deploy_cleanup openstack_repo ## prepares the C
 	mkdir -p ${DEPLOY_DIR}
 	cp ${DATAPLANE_EXTRA_NOVA_CONFIG_FILE} ${EDPM_EXTRA_NOVA_CONFIG_FILE}
 	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
-	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/dataplane/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR}/dataplane.yaml
+	oc kustomize --load-restrictor LoadRestrictionsNone ${DATAPLANE_KUSTOMIZE_DIR} > ${DEPLOY_DIR}/dataplane.yaml
 	bash scripts/gen-edpm-baremetal-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
@@ -971,7 +974,7 @@ edpm_deploy_networker_prep: export EDPM_SERVER_ROLE=networker
 edpm_deploy_networker_prep: export REPO=${OPENSTACK_REPO}
 edpm_deploy_networker_prep: export BRANCH=${OPENSTACK_BRANCH}
 edpm_deploy_networker_prep: export HASH=${OPENSTACK_COMMIT_HASH}
-edpm_deploy_networker_prep: export DATAPLANE_KUSTOMIZE_SCENARIO=networker
+edpm_deploy_networker_prep: export DATAPLANE_KUSTOMIZE_DIR=${DATAPLANE_SAMPLES_DIR}/networker
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
 edpm_deploy_networker_prep: export BGP=ovn
@@ -984,7 +987,7 @@ edpm_deploy_networker_prep: edpm_deploy_networker_cleanup openstack_repo ## prep
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${DEPLOY_DIR_EDPM_NETWORKER}
 	oc apply -f devsetup/edpm/config/ansible-ee-env.yaml
-	oc kustomize --load-restrictor LoadRestrictionsNone ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/dataplane/${DATAPLANE_KUSTOMIZE_SCENARIO} > ${DEPLOY_DIR_EDPM_NETWORKER}/dataplane.yaml
+	oc kustomize --load-restrictor LoadRestrictionsNone ${DATAPLANE_KUSTOMIZE_DIR} > ${DEPLOY_DIR_EDPM_NETWORKER}/dataplane.yaml
 	bash scripts/gen-edpm-kustomize.sh
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
