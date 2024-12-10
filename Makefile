@@ -802,6 +802,12 @@ openstack_update_run:
 	$(eval $(call vars,$@,openstack))
 	bash scripts/openstack-update.sh
 
+OV := $(shell oc get openstackversion -n $(NAMESPACE) -o name)
+.PHONY: openstack_patch_version
+openstack_patch_version: ## patches the openstackversion target version to the available version, if there is an update available
+	$(eval $(call vars,$@,openstack))
+	oc wait -n ${NAMESPACE} ${OV} --for=condition=MinorUpdateAvailable --timeout=${TIMEOUT} && \
+	oc patch -n ${NAMESPACE} ${OV} --type merge --patch '{"spec": {"targetVersion": "$(shell oc get -n $(NAMESPACE) ${OV} -o yaml | yq .status.availableVersion)"}}'
 
 .PHONY: edpm_deploy_generate_keys
 edpm_deploy_generate_keys:
@@ -940,6 +946,10 @@ edpm_nova_discover_hosts: ## trigger manual compute host discovery in nova
 .PHONY: openstack_crds
 openstack_crds: namespace openstack_deploy_prep ## installs all openstack CRDs. Useful for infrastructure dev
 	OPENSTACK_BUNDLE_IMG=${OPENSTACK_BUNDLE_IMG} OUT=${OUT} OPENSTACK_CRDS_DIR=${OPENSTACK_CRDS_DIR} OPERATOR_BASE_DIR=${OPERATOR_BASE_DIR} bash scripts/openstack-crds.sh
+
+.PHONY: openstack_crds_cleanup
+openstack_crds_cleanup: ## deletes all openstack CRDs. Useful for installing a ga version. expects that all deployments are gone before
+	oc delete $$(oc get crd -o name |grep 'openstack\.org')
 
 .PHONY: edpm_deploy_networker_prep
 edpm_deploy_networker_prep: export KIND=OpenStackDataPlaneNodeSet
