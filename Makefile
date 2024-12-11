@@ -747,6 +747,10 @@ openstack_cleanup: operator_namespace## deletes the operator, but does not clean
 	oc delete catalogsource --all=true
 	test -d ${OPERATOR_BASE_DIR}/baremetal-operator && make crc_bmo_cleanup || true
 
+.PHONY: openstack_cleanup_all
+openstack_cleanup_all: openstack_cleanup  nncp_cleanup namespace_cleanup ## deletes the operator and its resources
+	@echo "Completed full cleanup."
+
 .PHONY: openstack_repo
 openstack_repo: export REPO=${OPENSTACK_REPO}
 openstack_repo: export BRANCH=${OPENSTACK_BRANCH}
