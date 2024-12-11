@@ -103,6 +103,30 @@ cat <<EOF >>kustomization.yaml
 EOF
 fi
 
+if [ -n "$EDPM_REGISTRY_URL" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/nodeTemplate/ansible/ansibleVars/registry_url
+      value: ${EDPM_REGISTRY_URL}
+EOF
+fi
+
+if [ -n "$EDPM_CONTAINER_PREFIX" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/nodeTemplate/ansible/ansibleVars/image_prefix
+      value: ${EDPM_CONTAINER_PREFIX}
+EOF
+fi
+
+if [ -n "$EDPM_CONTAINER_TAG" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/nodeTemplate/ansible/ansibleVars/image_tag
+      value: ${EDPM_CONTAINER_TAG}
+EOF
+fi
+
 cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/timesync_ntp_servers
@@ -111,15 +135,6 @@ cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/neutron_public_interface_name
       value: ${EDPM_NETWORK_INTERFACE_NAME}
-    - op: replace
-      path: /spec/nodeTemplate/ansible/ansibleVars/registry_url
-      value: ${EDPM_REGISTRY_URL}
-    - op: replace
-      path: /spec/nodeTemplate/ansible/ansibleVars/image_prefix
-      value: ${EDPM_CONTAINER_PREFIX}
-    - op: replace
-      path: /spec/nodeTemplate/ansible/ansibleVars/image_tag
-      value: ${EDPM_CONTAINER_TAG}
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/edpm_sshd_allowed_ranges
       value: ${EDPM_SSHD_ALLOWED_RANGES}
