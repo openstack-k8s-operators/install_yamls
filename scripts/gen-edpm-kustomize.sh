@@ -95,10 +95,15 @@ cat <<EOF >>kustomization.yaml
 EOF
 fi
 
+if [ -z "$EDPM_SKIP_REPO_SETUP" ]; then
 cat <<EOF >>kustomization.yaml
     - op: add
       path: /spec/services/0
       value: repo-setup
+EOF
+fi
+
+cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/timesync_ntp_servers
       value:
