@@ -448,10 +448,10 @@ CEPH_CLIENT    ?= ${OPERATOR_BASE_DIR}/rook/deploy/examples/toolbox.yaml
 NMSTATE_NAMESPACE      ?= openshift-nmstate
 NMSTATE_OPERATOR_GROUP ?= openshift-nmstate-tn6k8
 NMSTATE_SUBSCRIPTION   ?= kubernetes-nmstate-operator
-INSTALL_NMSTATE        ?= true
+INSTALL_NMSTATE        ?= $(NETWORK_ISOLATION) || $(NETWORK_BGP)
 
 # NNCP
-INSTALL_NNCP        ?= true
+INSTALL_NNCP        ?= $(NETWORK_ISOLATION) || $(NETWORK_BGP)
 NNCP_NODES          ?=
 NNCP_INTERFACE      ?= enp6s0
 NNCP_BRIDGE         ?= ospbr
