@@ -738,10 +738,18 @@ openstack_wait: openstack ## waits openstack CSV to succeed.
 	$(eval $(call vars,$@,openstack))
 	timeout $(TIMEOUT) bash -c 'until $$(oc get csv -l operators.coreos.com/openstack-operator.openstack-operators -n ${OPERATOR_NAMESPACE} | grep -q Succeeded); do sleep 1; done'
 
+
+# creates the new initialization resource for our operators
+.PHONY: openstack_init
+openstack_init: openstack_wait openstack_deploy_cleanup openstack_repo
+	oc create -f ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/operator_v1beta1_openstack.yaml
+	oc wait openstack/openstack -n ${OPERATOR_NAMESPACE} --for condition=Ready --timeout=${TIMEOUT}
+
 .PHONY: openstack_cleanup
 openstack_cleanup: operator_namespace## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,openstack))
 	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
+	if oc get openstack &>/dev/null; then oc delete --ignore-not-found=true openstack/openstack; fi
 	oc delete subscription --all=true
 	oc delete csv --all=true
 	oc delete catalogsource --all=true
