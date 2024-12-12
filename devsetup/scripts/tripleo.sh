@@ -119,9 +119,9 @@ fi
 if [ "\$RH_REGISTRY_USER" ] && [ -n "\$RH_REGISTRY_PWD" ]; then
     grep -q ContainerImageRegistryCredentials \$HOME/containers-prepare-parameters.yaml || \
     cat >> \$HOME/containers-prepare-parameters.yaml <<__EOF__
-ContainerImageRegistryCredentials:
+  ContainerImageRegistryCredentials:
     registry.redhat.io:
-        \${RH_REGISTRY_USER}: \$RH_REGISTRY_PWD
+        '\${RH_REGISTRY_USER}': \$RH_REGISTRY_PWD
 __EOF__
 fi
 set -x
