@@ -714,12 +714,12 @@ endif
 
 ##@ OPENSTACK
 
-OPENSTACK_PREP_DEPS := validate_marketplace metallb
+OPENSTACK_PREP_DEPS := validate_marketplace
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_NMSTATE)), nmstate)
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_NNCP)), nncp_with_retries)
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_CERT_MANAGER)), certmanager)
-OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_ISOLATION)), netattach metallb_config)
-OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_BGP)), netattach metallb_config)
+OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_ISOLATION)), netattach metallb metallb_config)
+OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_BGP)), netattach metallb metallb_config)
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(BMO_SETUP)), crc_bmo_setup)
 
 .PHONY: openstack_prep
@@ -1733,10 +1733,10 @@ kuttl_db_prep: input deploy_cleanup mariadb mariadb_deploy infra memcached_deplo
 kuttl_db_cleanup: memcached_deploy_cleanup infra_cleanup mariadb_deploy_cleanup mariadb_cleanup input_cleanup
 
 .PHONY: kuttl_common_prep
-kuttl_common_prep: validate_marketplace metallb kuttl_db_prep rabbitmq rabbitmq_deploy keystone keystone_deploy ## installs common middleware services and Keystone
+kuttl_common_prep: kuttl_db_prep rabbitmq rabbitmq_deploy keystone keystone_deploy ## installs common middleware services and Keystone
 
 .PHONY: kuttl_common_cleanup
-kuttl_common_cleanup: keystone_cleanup rabbitmq_cleanup kuttl_db_cleanup metallb_cleanup
+kuttl_common_cleanup: keystone_cleanup rabbitmq_cleanup kuttl_db_cleanup
 
 .PHONY: keystone_kuttl_run
 keystone_kuttl_run: ## runs kuttl tests for the keystone operator, assumes that everything needed for running the test was deployed beforehand.
