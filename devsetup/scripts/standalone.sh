@@ -69,19 +69,8 @@ source ${SCRIPTPATH}/common.sh
 # export NTP_SERVER=pool.ntp.org
 
 if [[ ! -f $REPO_SETUP_CMDS ]]; then
-    cat <<EOF > $REPO_SETUP_CMDS
-set -ex
-sudo dnf remove -y epel-release
-sudo dnf update -y
-sudo dnf install -y vim git curl util-linux lvm2 tmux wget
-URL=https://trunk.rdoproject.org/centos9-wallaby/component/tripleo/current-tripleo/
-RPM_NAME=\$(curl \$URL | grep python3-tripleo-repos | sed -e 's/<[^>]*>//g' | awk 'BEGIN { FS = ".rpm" } ; { print \$1 }')
-RPM=\$RPM_NAME.rpm
-sudo dnf install -y \$URL\$RPM
-sudo -E tripleo-repos -b wallaby current-tripleo-dev ceph --stream
-sudo dnf repolist
-sudo dnf update -y
-EOF
+    echo "$REPO_SETUP_CMDS is missing. Wallaby is end-of-life. Please use OSP 17.1 content to deploy TripleO Standalone and follow the guide for setting up downstream repos."
+    exit 1
 fi
 
 if [[ -e /run/systemd/resolve/resolv.conf ]]; then
