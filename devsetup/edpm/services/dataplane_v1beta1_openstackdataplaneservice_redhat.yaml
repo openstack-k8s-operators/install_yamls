@@ -1,0 +1,29 @@
+---
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  name: redhat
+spec:
+  playbookContents: |
+    - name: RH subscription management and Insights
+      hosts: "{{ edpm_override_hosts | default('all', true) }}"
+      strategy: linear
+      gather_facts: "{{ gather_facts | default(false) }}"
+      any_errors_fatal: "{{ edpm_any_errors_fatal | default(true) }}"
+      max_fail_percentage: "{{ edpm_max_fail_percentage | default(0) }}"
+      tasks:
+        - name: Gather facts if they don't exist
+          ansible.builtin.setup:
+            gather_subset:
+              - "!all"
+              - "!min"
+              - "distribution"
+          when: "'distribution' not in ansible_facts"
+        - name: Load system-roles.rhc tasks
+          ansible.builtin.include_role:
+            name: "{{ lookup('ansible.builtin.env', 'EDPM_SYSTEMROLES', default='redhat.rhel_system_roles') + '.rhc' }}"
+            apply:
+              become: true
+          when: ansible_facts['distribution'] | lower == 'redhat'
+          tags:
+            - edpm_bootstrap
