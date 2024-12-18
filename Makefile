@@ -734,8 +734,10 @@ openstack: openstack_prep operator_namespace ## installs the operator, also runs
 	oc apply -f ${OPERATOR_DIR}
 
 .PHONY: openstack_wait
-openstack_wait: openstack ## waits openstack CSV to succeed.
+openstack_wait: ## waits openstack CSV to succeed.
 	$(eval $(call vars,$@,openstack))
+	# call make_openstack if it isn't already
+	bash -c '(oc get subscription -n openstack-operators openstack-operator || make openstack) || true'
 	timeout $(TIMEOUT) bash -c 'until $$(oc get csv -l operators.coreos.com/openstack-operator.openstack-operators -n ${OPERATOR_NAMESPACE} | grep -q Succeeded); do sleep 1; done'
 
 
