@@ -1023,6 +1023,7 @@ endif
 ##@ INFRA
 .PHONY: infra_prep
 infra_prep: export IMAGE=${INFRA_IMG}
+infra_prep: metallb
 infra_prep: ## creates the files to install the operator using olm
 	$(eval $(call vars,$@,infra))
 	bash scripts/gen-olm.sh
