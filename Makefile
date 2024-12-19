@@ -744,8 +744,8 @@ openstack_wait: ## waits openstack CSV to succeed.
 # creates the new initialization resource for our operators
 .PHONY: openstack_init
 openstack_init: openstack_wait
-	test -f ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/operator_v1beta1_openstack.yaml || make openstack_repo
-	oc create -f ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/operator_v1beta1_openstack.yaml
+	bash -c 'test -f ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/operator_v1beta1_openstack.yaml || make openstack_repo'
+	oc apply -f ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/operator_v1beta1_openstack.yaml
 	oc wait openstack/openstack -n ${OPERATOR_NAMESPACE} --for condition=Ready --timeout=${TIMEOUT}
 
 .PHONY: openstack_cleanup
