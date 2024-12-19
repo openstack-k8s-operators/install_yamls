@@ -44,8 +44,8 @@ if [ -z "$KEYSTONE_FEDERATION_CLIENT_SECRET" ]; then
     echo "Please set KEYSTONE_FEDERATION_CLIENT_SECRET"; exit 1
 fi
 
-if [ -z "$KEYSTONE_CRYPTO_PASSPHRASE" ]; then
-    echo "Please set KEYSTONE_CRYPTO_PASSPHRASE"; exit 1
+if [ -z "$KEYSTONE_FEDERATION_CRYPTO_PASSPHRASE" ]; then
+    echo "Please set KEYSTONE_FEDERATION_CRYPTO_PASSPHRASE"; exit 1
 fi
 
 if [ -z "$LIBVIRT_SECRET" ]; then
@@ -84,8 +84,8 @@ secretGenerator:
   - CinderPassword=${PASSWORD}
   - IronicPassword=${PASSWORD}
   - IronicInspectorPassword=${PASSWORD}
-  - KeystoneClientSecret=${KEYSTONE_FEDERATION_CLIENT_SECRET}
-  - KeystoneCryptoPassphrase=${KEYSTONE_CRYPTO_PASSPHRASE}
+  - KeystoneOIDCClientSecret=${KEYSTONE_FEDERATION_CLIENT_SECRET}
+  - KeystoneOIDCCryptoPassphrase=${KEYSTONE_FEDERATION_CRYPTO_PASSPHRASE}
   - OctaviaPassword=${PASSWORD}
   - OctaviaHeartbeatKey=${PASSWORD}
   - NovaPassword=${PASSWORD}
