@@ -765,7 +765,7 @@ openstack_repo: export HASH=${OPENSTACK_COMMIT_HASH}
 openstack_repo: ## clones the openstack-operator repo
 	$(eval $(call vars,$@,openstack))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	bash -c "CHECKOUT_FROM_OPENSTACK_REF=false scripts/clone-operator-repo.sh"
+	bash -c "test -d ${OPERATOR_BASE_DIR}/openstack-operator || CHECKOUT_FROM_OPENSTACK_REF=false scripts/clone-operator-repo.sh"
 
 .PHONY: openstack_deploy_prep
 openstack_deploy_prep: export KIND=OpenStackControlPlane
