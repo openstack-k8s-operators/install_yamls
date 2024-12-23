@@ -9,9 +9,15 @@ if [ -z "$OPERATOR_NAME" ]; then
     echo "Please set OPERATOR_NAME"; exit 1
 fi
 
-REPLICAS=$(oc get -n "${OPERATOR_NAMESPACE}" deployment ${OPERATOR_NAME}-operator-controller-manager -o json | jq -e '.status.availableReplicas')
-if [ "$REPLICAS" != "1" ]; then
+CSVNAME=$(oc get csv -n ${OPERATOR_NAMESPACE} -o jsonpath='{range .items[*]}{@.metadata.name}{"\n"}{end}' | grep -E "^${OPERATOR_NAME}-operator\.v")
+if [ -z "$CSVNAME" ]; then
+    echo "NOTFOUND"
     exit 1
 fi
-echo "Succeeded"
+
+PHASE=$(oc get -n ${OPERATOR_NAMESPACE} csv/${CSVNAME} -o jsonpath='{.status.phase}')
+echo $PHASE
+if [ "$PHASE" != "Succeeded" ]; then
+    exit 1
+fi
 exit 0
