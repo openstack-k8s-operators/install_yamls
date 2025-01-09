@@ -273,10 +273,13 @@ if [ $EDPM_COMPUTE_CELLS -gt 1 ] ; then
         done
     done
 
+    # NOTE: tripleo_stack_name only used in start/end markers. Make it non-conflicting to overcloud and cells entries.
     echo "ensure /etc/hosts records are up-to-date in the main stack"
     ANSIBLE_REMOTE_USER="tripleo-admin" ansible allovercloud \
         -i /home/zuul/inventories -m include_role \
         -a name=tripleo_hosts_entries \
+        -e tripleo_stack_name=all \
+        -e role_networks='["InternalApi"]' \
         -e hostname_resolve_network=ctlplane -e plan=overcloud \
         -e @/home/zuul/overcloud-deploy/overcloud/config-download/overcloud/global_vars.yaml
 fi
