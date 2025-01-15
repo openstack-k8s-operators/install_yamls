@@ -95,6 +95,7 @@ secretGenerator:
   - HeatAuthEncryptionKey=${HEAT_AUTH_ENCRYPTION_KEY}
   - HeatStackDomainAdminPassword=${PASSWORD}
   - SwiftPassword=${PASSWORD}
+  - WatcherPassword=${PASSWORD}
 - name: ${LIBVIRT_SECRET}
   literals:
   - LibvirtPassword=${PASSWORD}
