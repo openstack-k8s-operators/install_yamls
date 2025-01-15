@@ -31,6 +31,11 @@ export SSH_PUBLIC_KEY_CONTENTS="$(cat ${SSH_PUBLIC_KEY})"
 
 cat > ${EDPM_BOOTC_OUTPUT_DIR}/user-data <<EOF
 #cloud-config
+chpasswd:
+  users:
+  - {name: root, password: "12345678", type: text}
+  - {name: cloud-admin, password: "12345678", type: text}
+  expire: False
 hostname: ${EDPM_COMPUTE_NAME}
 fqdn: ${EDPM_COMPUTE_NAME}.${EDPM_COMPUTE_DOMAIN}
 create_hostname_file: true
@@ -66,7 +71,9 @@ network:
     enp2s0:
       match:
         name: enp2s0
-      gateway4: 192.168.122.1
+      routes:
+        - to: 0.0.0.0/0
+          via: 192.168.122.1
       addresses:
         - ${IP}/${PREFIX}
       nameservers:
@@ -74,9 +81,7 @@ network:
           - ${DATAPLANE_DNS_SERVER}
 EOF
 
-if [ ! -f ${EDPM_BOOTC_OUTPUT_DIR}/cidata.iso ]; then
-    genisoimage -output ${EDPM_BOOTC_OUTPUT_DIR}/cidata.iso -V CIDATA -r -J ${EDPM_BOOTC_OUTPUT_DIR}/user-data ${EDPM_BOOTC_OUTPUT_DIR}/meta-data ${EDPM_BOOTC_OUTPUT_DIR}/network-config
-fi
+genisoimage -output ${EDPM_BOOTC_OUTPUT_DIR}/cidata.iso -V CIDATA -r -J ${EDPM_BOOTC_OUTPUT_DIR}/user-data ${EDPM_BOOTC_OUTPUT_DIR}/meta-data ${EDPM_BOOTC_OUTPUT_DIR}/network-config
 
 sudo podman run --rm -it --privileged \
     -v ${OUTPUT_DIR}:/target:z \
