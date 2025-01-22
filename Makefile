@@ -1973,6 +1973,7 @@ glance_kuttl: kuttl_common_prep swift swift_deploy glance glance_deploy_prep ## 
 	make glance_kuttl_run
 	make deploy_cleanup
 	make glance_cleanup
+	make swift_cleanup
 	make kuttl_common_cleanup
 
 .PHONY: manila_kuttl_run
