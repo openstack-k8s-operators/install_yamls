@@ -752,7 +752,11 @@ openstack_init: openstack_wait
 openstack_cleanup: operator_namespace## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,openstack))
 	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
-	if oc get openstack &>/dev/null; then oc delete --ignore-not-found=true openstack/openstack; fi
+	# TODO: Once https://issues.redhat.com/browse/OSPRH-13217 is properly resolved, the
+	# explicit calls to "oc delete" the webhooks can be removed below
+	if oc get openstack &>/dev/null; then oc delete --ignore-not-found=true openstack/openstack \
+	&& oc delete mutatingwebhookconfiguration -l app.kubernetes.io/created-by=openstack-operator \
+	&& oc delete validatingwebhookconfiguration -l app.kubernetes.io/created-by=openstack-operator; fi
 	oc delete subscription --all=true
 	oc delete csv --all=true
 	oc delete catalogsource --all=true
