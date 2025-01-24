@@ -99,6 +99,7 @@ This requires running operators required for controlplane and dataplane:
 ```
 pushd ..
 make openstack
+make openstack_init
 popd
 ```
 
