@@ -111,7 +111,7 @@ if [ ! -f \$HOME/containers-prepare-parameters.yaml ]; then
         --output-env-file \$HOME/containers-prepare-parameters.yaml \${login_args}
     # Adoption requires Ceph 7 (Reef) as a requirement. Instead of performing a Ceph
     # upgrade from 6 (the default) to 7, let's try to deploy 7 in greenfield
-    sed -i "s|rhceph-6-rhel9|rhceph-7-rhel9|" $HOME/containers-prepare-parameters.yaml
+    sed -i "s|rhceph-6-rhel9|rhceph-7-rhel9|" \$HOME/containers-prepare-parameters.yaml
 else
     echo "Using existing containers-prepare-parameters.yaml"
 fi
@@ -119,9 +119,9 @@ fi
 if [ "\$RH_REGISTRY_USER" ] && [ -n "\$RH_REGISTRY_PWD" ]; then
     grep -q ContainerImageRegistryCredentials \$HOME/containers-prepare-parameters.yaml || \
     cat >> \$HOME/containers-prepare-parameters.yaml <<__EOF__
-ContainerImageRegistryCredentials:
+  ContainerImageRegistryCredentials:
     registry.redhat.io:
-        \${RH_REGISTRY_USER}: \$RH_REGISTRY_PWD
+        '\${RH_REGISTRY_USER}': \$RH_REGISTRY_PWD
 __EOF__
 fi
 set -x
