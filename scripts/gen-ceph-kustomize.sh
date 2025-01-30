@@ -184,7 +184,7 @@ function create_pool {
 function build_caps {
     local CAPS=""
     for pool in "${CEPH_POOLS[@]}"; do
-        caps="allow rwx pool="$pool
+        caps="profile rbd pool="$pool
         CAPS+=$caps,
     done
     echo "${CAPS::-1}"
@@ -198,11 +198,10 @@ function create_key {
     if [ "${#CEPH_POOLS[@]}" -eq 0 ]; then
         osd_caps="allow *"
     else
-        caps=$(build_caps)
-        osd_caps="allow class-read object_prefix rbd_children, $caps"
+        osd_caps=$(build_caps)
     fi
     # do not log the key if exists
-    oc rsh -n $NAMESPACE ceph ceph auth get-or-create "$client" mgr "allow rw" mon "allow r" osd "$osd_caps" >/dev/null
+    oc rsh -n $NAMESPACE ceph ceph auth get-or-create "$client" mgr "allow *" mon "profile rbd" osd "$osd_caps" >/dev/null
 }
 
 function create_secret {
