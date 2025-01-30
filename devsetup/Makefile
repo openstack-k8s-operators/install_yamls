@@ -126,7 +126,8 @@ BMAAS_ROUTE_LIBVIRT_NETWORKS ?= ${BMAAS_NETWORK_NAME},crc,default
 DATAPLANE_PLAYBOOK ?= osp.edpm.download_cache
 DATAPLANE_CUSTOM_SERVICE_RUNNER_IMG ?=quay.io/openstack-k8s-operators/openstack-ansibleee-runner:latest
 BM_NETWORK_NAME            ?=default
-BM_INSTANCE_NAME_PREFIX    ?=edpm-compute
+BM_INSTANCE_NAME_PREFIX    ?=edpm-compute-baremetal
+BM_INSTANCE_NAME_SUFFIX    ?=0
 BM_NODE_COUNT              ?=1
 BM_ROOT_PASSWORD_SECRET    ?=
 BMH_NAMESPACE              ?=openstack
@@ -377,6 +378,7 @@ edpm_baremetal_compute: export OPERATOR_NAME=openstack
 edpm_baremetal_compute: export NAMESPACE=${BMH_NAMESPACE}
 edpm_baremetal_compute: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
 edpm_baremetal_compute: export BMAAS_INSTANCE_NAME_PREFIX=${BM_INSTANCE_NAME_PREFIX}
+edpm_baremetal_compute: export BMAAS_INSTANCE_NAME_SUFFIX=${BM_INSTANCE_NAME_SUFFIX}
 edpm_baremetal_compute: export BMAAS_NODE_COUNT=${BM_NODE_COUNT}
 edpm_baremetal_compute: export NODE_COUNT=${BM_NODE_COUNT}
 edpm_baremetal_compute: export DEPLOY_DIR=../out/bmaas
@@ -384,18 +386,31 @@ edpm_baremetal_compute: ## Create virtual baremetal for the dataplane
 	$(eval $(call vars))
 	make bmaas_virtual_bms
 	make bmaas_sushy_emulator_wait
-	bash scripts/edpm-compute-baremetal.sh --create
+	if [ "${NODE_COUNT}" = "1" ]; then \
+		bash scripts/edpm-compute-baremetal.sh --create ; \
+	else \
+		for INDEX in $(shell seq 0 $$((${NODE_COUNT} -1))) ; do \
+			export BMAAS_INSTANCE_NAME_SUFFIX=$$INDEX ; \
+			bash scripts/edpm-compute-baremetal.sh --create ; \
+		done \
+	fi
 
 edpm_baremetal_compute_cleanup: export BMAAS_NETWORK_NAME=${BM_NETWORK_NAME}
 edpm_baremetal_compute_cleanup: export NAMESPACE=${BMH_NAMESPACE}
 edpm_baremetal_compute_cleanup: export BMAAS_INSTANCE_NAME_PREFIX=${BM_INSTANCE_NAME_PREFIX}
+edpm_baremetal_compute_cleanup: export BMAAS_INSTANCE_NAME_SUFFIX=${BM_INSTANCE_NAME_SUFFIX}
 edpm_baremetal_compute_cleanup: export BMAAS_NODE_COUNT=${BM_NODE_COUNT}
 edpm_baremetal_compute_cleanup: export NODE_COUNT=${BM_NODE_COUNT}
 edpm_baremetal_compute_cleanup:  ## Cleanup dataplane with BMAAS
 	$(eval $(call vars))
-	scripts/edpm-compute-baremetal.sh --cleanup
-	pushd .. && rm -Rf out/edpm || true && popd
-	make bmaas_sushy_emulator_cleanup || true
+	if [ "${NODE_COUNT}" = "1" ]; then \
+		bash scripts/edpm-compute-baremetal.sh --cleanup ; \
+	else \
+		for INDEX in $(shell seq 0 $$((${NODE_COUNT} -1))) ; do \
+			export BMAAS_INSTANCE_NAME_SUFFIX=$$INDEX ; \
+			bash scripts/edpm-compute-baremetal.sh --cleanup ; \
+		done \
+	fi
 	make bmaas_virtual_bms_cleanup || true
 
 .PHONY: edpm_compute
@@ -662,6 +677,7 @@ bmaas_metallb_cleanup:
 bmaas_virtual_bms: export NODE_COUNT = ${BMAAS_NODE_COUNT}
 bmaas_virtual_bms: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
 bmaas_virtual_bms: export NODE_NAME_PREFIX = ${BMAAS_INSTANCE_NAME_PREFIX}
+bmaas_virtual_bms: export NODE_NAME_SUFFIX = ${BMAAS_INSTANCE_NAME_SUFFIX}
 bmaas_virtual_bms: export MEMORY = ${BMAAS_INSTANCE_MEMORY}
 bmaas_virtual_bms: export VCPUS = ${BMAAS_INSTANCE_VCPUS}
 bmaas_virtual_bms: export DISK_SIZE = ${BMAAS_INSTANCE_DISK_SIZE}
@@ -669,12 +685,20 @@ bmaas_virtual_bms: export OS_VARIANT = ${BMAAS_INSTANCE_OS_VARIANT}
 bmaas_virtual_bms: export VIRT_TYPE = ${BMAAS_INSTANCE_VIRT_TYPE}
 bmaas_virtual_bms: export NET_MODEL = ${BMAAS_INSTANCE_NET_MODEL}
 bmaas_virtual_bms: ## Create libvirt VM for BMaaS
-	scripts/bmaas/vbm-setup.sh --create
+	if [ ${NODE_COUNT} -eq 1 ]; then \
+		scripts/bmaas/vbm-setup.sh --create ; \
+	else \
+		for INDEX in $(shell seq 0 $$((${NODE_COUNT} -1))) ; do \
+			set -x ; \
+			NODE_NAME_SUFFIX=$$INDEX scripts/bmaas/vbm-setup.sh --create ; \
+		done \
+	fi
 
 .PHONY: bmaas_virtual_bms_cleanup
 bmaas_virtual_bms_cleanup: export NODE_COUNT = ${BMAAS_NODE_COUNT}
 bmaas_virtual_bms_cleanup: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
 bmaas_virtual_bms_cleanup: export NODE_NAME_PREFIX = ${BMAAS_INSTANCE_NAME_PREFIX}
+bmaas_virtual_bms_cleanup: export NODE_NAME_SUFFIX = ${BMAAS_INSTANCE_NAME_SUFFIX}
 bmaas_virtual_bms_cleanup: export MEMORY = ${BMAAS_INSTANCE_MEMORY}
 bmaas_virtual_bms_cleanup: export VCPUS = ${BMAAS_INSTANCE_VCPUS}
 bmaas_virtual_bms_cleanup: export DISK_SIZE = ${BMAAS_INSTANCE_DISK_SIZE}
@@ -682,7 +706,13 @@ bmaas_virtual_bms_cleanup: export OS_VARIANT = ${BMAAS_INSTANCE_OS_VARIANT}
 bmaas_virtual_bms_cleanup: export VIRT_TYPE = ${BMAAS_INSTANCE_VIRT_TYPE}
 bmaas_virtual_bms_cleanup: export NET_MODEL = ${BMAAS_INSTANCE_NET_MODEL}
 bmaas_virtual_bms_cleanup: ## Cleanup libvirt VM for BMaaS
-	scripts/bmaas/vbm-setup.sh --cleanup
+	if [ ${NODE_COUNT} -eq 1 ]; then \
+		scripts/bmaas/vbm-setup.sh --cleanup ; \
+	else \
+		for INDEX in $(shell seq 0 $$((${NODE_COUNT} -1))) ; do \
+			NODE_NAME_SUFFIX=$$INDEX scripts/bmaas/vbm-setup.sh --cleanup ; \
+		done \
+	fi
 
 .PHONY: bmaas_sushy_emulator
 bmaas_sushy_emulator: export NODE_NAME_PREFIX = ${BMAAS_INSTANCE_NAME_PREFIX}
@@ -697,17 +727,20 @@ bmaas_sushy_emulator: export SUSHY_EMULATOR_OS_CLOUD = ${BMAAS_SUSHY_EMULATOR_OS
 bmaas_sushy_emulator: export SUSHY_EMULATOR_OS_CLIENT_CONFIG_FILE = ${BMAAS_SUSHY_EMULATOR_OS_CLIENT_CONFIG_FILE}
 bmaas_sushy_emulator: export REDFISH_USERNAME = ${BMAAS_REDFISH_USERNAME}
 bmaas_sushy_emulator: export REDFISH_PASSWORD = ${BMAAS_REDFISH_PASSWORD}
+bmaas_sushy_emulator: export DEPLOY_DIR=../out/bmaas
 bmaas_sushy_emulator: ## Create BMaaS sushy-emulator (Virtual RedFish)
 	scripts/bmaas/sushy-emulator.sh --create
 
 .PHONY: bmaas_sushy_emulator_cleanup
 bmaas_sushy_emulator_cleanup: export NODE_NAME_PREFIX = ${BMAAS_INSTANCE_NAME_PREFIX}
+bmaas_sushy_emulator_cleanup: export NODE_NAME_SUFFIX = ${BMAAS_INSTANCE_NAME_SUFFIX}
 bmaas_sushy_emulator_cleanup: export LIBVIRT_USER = ${BMAAS_LIBVIRT_USER}
 bmaas_sushy_emulator_cleanup: export SUSHY_EMULATOR_NAMESPACE = ${BMAAS_SUSHY_EMULATOR_NAMESPACE}
 bmaas_sushy_emulator_cleanup: export SUSHY_EMULATOR_DRIVER = ${BMAAS_SUSHY_EMULATOR_DRIVER}
 bmaas_sushy_emulator_cleanup: export SUSHY_EMULATOR_OS_CLOUD = ${BMAAS_SUSHY_EMULATOR_OS_CLOUD}
 bmaas_sushy_emulator_cleanup: export REDFISH_USERNAME = ${BMAAS_REDFISH_USERNAME}
 bmaas_sushy_emulator_cleanup: export REDFISH_PASSWORD = ${BMAAS_REDFISH_PASSWORD}
+bmaas_sushy_emulator_cleanup: export DEPLOY_DIR=../out/bmaas
 bmaas_sushy_emulator_cleanup: ## Cleanup BMaaS sushy-emulator (Virtual RedFish)
 	scripts/bmaas/sushy-emulator.sh --cleanup
 
