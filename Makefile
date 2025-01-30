@@ -2037,8 +2037,8 @@ openstack_kuttl_run: ## runs kuttl tests for the openstack operator, assumes tha
 openstack_kuttl: export NAMESPACE = ${OPENSTACK_KUTTL_NAMESPACE}
 openstack_kuttl: input deploy_cleanup openstack openstack_deploy_prep ## runs kuttl tests for the openstack operator. Installs openstack operator and cleans up previous deployments before running the tests, cleans up after running the tests.
 	# Wait until OLM installs openstack CRDs
-	timeout $(TIMEOUT) bash -c "while ! (oc get crd | grep openstack.org); do sleep 1; done"
-	bash -c '(oc get crd openstacks.operator.openstack.org && make openstack_init) || true'
+	timeout $(TIMEOUT) bash -c "while ! (oc get crd openstacks.operator.openstack.org); do sleep 1; done"
+	make openstack_init
 	$(eval $(call vars,$@,ansibleee))
 	make wait
 	$(eval $(call vars,$@,infra))
