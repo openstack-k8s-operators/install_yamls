@@ -30,6 +30,4 @@ spec:
             update-crypto-policies --set FIPS:NO-ENFORCE-EMS
             ./venv/bin/repo-setup current-podified -b antelope
             popd
-            sed -i '/AppStream/a exclude="libvirt*10.10.0-4*,qemu*9.1.0-9*"' /etc/yum.repos.d/repo-setup-centos-appstream.repo
-            sed -i '/AppStream/a exclude="libvirt*10.10.0-4*,qemu*9.1.0-9*"' /etc/yum.repos.d/centos.repo || true
             rm -rf repo-setup-main
