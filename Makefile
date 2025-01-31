@@ -18,7 +18,7 @@ endif
 METADATA_SHARED_SECRET   ?= 1234567842
 HEAT_AUTH_ENCRYPTION_KEY ?= 767c3ed056cbaa3b9dfedb8c6f825bf0
 OPENSTACK_K8S_BRANCH     ?= main
-OPENSTACK_K8S_TAG        ?= latest
+OPENSTACK_K8S_TAG        ?= 18.0-fr1-latest
 
 # Use Red Hat operators from OpenShift Marketplace
 REDHAT_OPERATORS		 ?= false
@@ -715,6 +715,11 @@ openstack: openstack_prep operator_namespace ## installs the operator, also runs
 openstack_wait: openstack ## waits openstack CSV to succeed.
 	$(eval $(call vars,$@,openstack))
 	timeout $(TIMEOUT) bash -c 'until $$(oc get csv -l operators.coreos.com/openstack-operator.openstack-operators -n ${OPERATOR_NAMESPACE} | grep -q Succeeded); do sleep 1; done'
+
+# creates the new initialization resource for our operators
+.PHONY: openstack_init
+openstack_init: ## NOOP call in 18.0-fr1
+	/bin/true
 
 .PHONY: openstack_cleanup
 openstack_cleanup: operator_namespace## deletes the operator, but does not cleanup the service resources
