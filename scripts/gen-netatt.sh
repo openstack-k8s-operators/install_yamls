@@ -122,6 +122,17 @@ if [ -n "$IPV4_ENABLED" ]; then
         "range_start": "${INTERNALAPI_PREFIX}.30",
         "range_end": "${INTERNALAPI_PREFIX}.70"
 EOF_CAT
+    # In the data-plane adoption scenario A (where different IP subnet ranges
+    # between next-gen and wallaby are used) the net-attach-def needs additional routes.
+    if [ -n "$INTERNALAPI_HOST_ROUTE" ]; then
+    cat >> ${DEPLOY_DIR}/internalapi.yaml <<EOF_CAT
+        "routes": [
+          {
+             "dst": "${INTERNALAPI_HOST_ROUTES}"
+          }
+        ]
+EOF_CAT
+    fi
 elif [ -n "$IPV6_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/internalapi.yaml <<EOF_CAT
         "range": "fd00:bbbb::/64",
@@ -190,6 +201,17 @@ if [ -n "$IPV4_ENABLED" ]; then
         "range_start": "${TENANT_PREFIX}.30",
         "range_end": "${TENANT_PREFIX}.70"
 EOF_CAT
+    # In the data-plane adoption scenario A (where different IP subnet ranges
+    # between next-gen and wallaby are used) the net-attach-def needs additional routes.
+    if [ -n "$TENANT_HOST_ROUTE" ]; then
+    cat >> ${DEPLOY_DIR}/tenant.yaml <<EOF_CAT
+        "routes": [
+          {
+             "dst": "${TENANT_HOST_ROUTES}"
+          }
+        ]
+EOF_CAT
+    fi
 elif [ -n "$IPV6_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/tenant.yaml <<EOF_CAT
         "range": "fd00:dddd::/64",
