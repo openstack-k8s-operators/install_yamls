@@ -46,6 +46,7 @@ if [ -n "$IPV4_ENABLED" ]; then
     check_var_set STORAGEMGMT_PREFIX
     check_var_set TENANT_PREFIX
     check_var_set DESIGNATE_PREFIX
+    check_var_set DESIGNATE_EXT_PREFIX
 fi
 
 echo DEPLOY_DIR ${DEPLOY_DIR}
@@ -60,6 +61,7 @@ if [ -n "$IPV4_ENABLED" ]; then
     echo "STORAGEMGMT_PREFIX ${STORAGEMGMT_PREFIX}"
     echo "TENANT_PREFIX ${TENANT_PREFIX}"
     echo "DESIGNATE_PREFIX ${DESIGNATE_PREFIX}"
+    echo "DESIGNATE_PREFIX ${DESIGNATE_EXT_PREFIX}"
 fi
 if [ -n "$IPV6_ENABLED" ]; then
     echo CTLPLANE_IPV6_ADDRESS_PREFIX ${CTLPLANE_IPV6_ADDRESS_PREFIX}
@@ -317,6 +319,27 @@ spec:
         "range": "172.28.0.0/24",
         "range_start": "172.28.0.30",
         "range_end": "172.28.0.70"
+      }
+    }
+EOF_CAT
+cat > ${DEPLOY_DIR}/designateext.yaml <<EOF_CAT
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: designateext
+  namespace: ${NAMESPACE}
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "designatext",
+      "type": "macvlan",
+      "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}*6))",
+      "ipam": {
+        "type": "whereabouts",
+        "range": "172.50.0.0/24",
+        "range_start": "172.50.0.30",
+        "range_end": "172.50.0.70"
       }
     }
 EOF_CAT
