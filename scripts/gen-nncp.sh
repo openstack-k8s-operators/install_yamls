@@ -39,6 +39,7 @@ check_var_set STORAGE_PREFIX
 check_var_set STORAGEMGMT_PREFIX
 check_var_set TENANT_PREFIX
 check_var_set DESIGNATE_PREFIX
+check_var_set DESIGNATE_EXT_PREFIX
 if [ -n "$BGP" ]; then
     check_var_set INTERFACE_BGP_1
     check_var_set INTERFACE_BGP_2
@@ -87,6 +88,7 @@ tenant_vlan_id=$((${VLAN_START}+$((${VLAN_STEP}*2))))
 storagemgmt_vlan_id=$((${VLAN_START}+$((${VLAN_STEP}*3))))
 octavia_vlan_id=$((${VLAN_START}+$((${VLAN_STEP}*4))))
 designate_vlan_id=$((${VLAN_START}+$((${VLAN_STEP}*5))))
+designate_ext_vlan_id=$((${VLAN_START}+$((${VLAN_STEP}*6))))
 
 for WORKER in ${WORKERS}; do
   cat > ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
@@ -430,6 +432,51 @@ EOF_CAT
       ipv6:
         address:
         - ip: fd00:eded::${IPV6_ADDRESS_SUFFIX}
+          prefix-length: 64
+        enabled: true
+        dhcp: false
+        autoconf: false
+EOF_CAT
+    else
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv6:
+        enabled: false
+EOF_CAT
+    fi
+
+    #
+    # designate external VLAN interface
+    #
+    cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+    - description: designate external vlan interface
+      name: ${INTERFACE}.${designate_ext_vlan_id}
+      state: up
+      type: vlan
+      vlan:
+        base-iface: ${INTERFACE}
+        id: ${designate_ext_vlan_id}
+        reorder-headers: true
+EOF_CAT
+    if [ -n "$IPV4_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv4:
+        address:
+        - ip: ${DESIGNATE_EXT_PREFIX}.${IP_ADDRESS_SUFFIX}
+          prefix-length: 24
+        enabled: true
+        dhcp: false
+EOF_CAT
+    else
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv4:
+        enabled: false
+EOF_CAT
+    fi
+    if [ -n "$IPV6_ENABLED" ]; then
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+      ipv6:
+        address:
+        - ip: fd00:eaea::${IPV6_ADDRESS_SUFFIX}
           prefix-length: 64
         enabled: true
         dhcp: false
