@@ -1221,7 +1221,7 @@ barbican_deploy: input barbican_deploy_prep ## installs the service instance usi
 
 .PHONY: barbican_deploy_validate
 barbican_deploy_validate: input namespace ## checks that barbican was properly deployed. Set BARBICAN_KUTTL_DIR to use assert file from custom repo.
-	kubectl-kuttl assert -n ${NAMESPACE} ${BARBICAN_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180
+	kubectl-kuttl assert -n ${NAMESPACE} ${BARBICAN_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180 $(KUTTL_ARGS)
 
 .PHONY: barbican_deploy_cleanup
 barbican_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
@@ -1720,7 +1720,7 @@ nova_deploy_cleanup: namespace ## cleans up the service instance, Does not affec
 
 .PHONY: mariadb_kuttl_run
 mariadb_kuttl_run: ## runs kuttl tests for the mariadb operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${MARIADB_KUTTL_CONF} ${MARIADB_KUTTL_DIR} --namespace ${NAMESPACE}
+	kubectl-kuttl test --config ${MARIADB_KUTTL_CONF} ${MARIADB_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: mariadb_kuttl
 mariadb_kuttl: export NAMESPACE = ${MARIADB_KUTTL_NAMESPACE}
@@ -1747,7 +1747,7 @@ kuttl_common_cleanup: keystone_cleanup rabbitmq_cleanup kuttl_db_cleanup metallb
 
 .PHONY: keystone_kuttl_run
 keystone_kuttl_run: ## runs kuttl tests for the keystone operator, assumes that everything needed for running the test was deployed beforehand.
-	KEYSTONE_KUTTL_DIR=${KEYSTONE_KUTTL_DIR} kubectl-kuttl test --config ${KEYSTONE_KUTTL_CONF} ${KEYSTONE_KUTTL_DIR} --namespace ${NAMESPACE}
+	KEYSTONE_KUTTL_DIR=${KEYSTONE_KUTTL_DIR} kubectl-kuttl test --config ${KEYSTONE_KUTTL_CONF} ${KEYSTONE_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: keystone_kuttl
 keystone_kuttl: export NAMESPACE = ${KEYSTONE_KUTTL_NAMESPACE}
@@ -1766,7 +1766,7 @@ keystone_kuttl: kuttl_db_prep rabbitmq rabbitmq_deploy keystone keystone_deploy_
 
 .PHONY: barbican_kuttl_run
 barbican_kuttl_run: ## runs kuttl tests for the barbican operator, assumes that everything needed for running the test was deployed beforehand.
-	BARBICAN_KUTTL_DIR=${BARBICAN_KUTTL_DIR} kubectl-kuttl test --config ${BARBICAN_KUTTL_CONF} ${BARBICAN_KUTTL_DIR} --namespace ${NAMESPACE}
+	BARBICAN_KUTTL_DIR=${BARBICAN_KUTTL_DIR} kubectl-kuttl test --config ${BARBICAN_KUTTL_CONF} ${BARBICAN_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: barbican_kuttl
 barbican_kuttl: export NAMESPACE = ${BARBICAN_KUTTL_NAMESPACE}
@@ -1781,7 +1781,7 @@ barbican_kuttl: kuttl_common_prep barbican barbican_deploy_prep ## runs kuttl te
 
 .PHONY: placement_kuttl_run
 placement_kuttl_run: ## runs kuttl tests for the placement operator, assumes that everything needed for running the test was deployed beforehand.
-	PLACEMENT_KUTTL_DIR=${PLACEMENT_KUTTL_DIR} kubectl-kuttl test --config ${PLACEMENT_KUTTL_CONF} ${PLACEMENT_KUTTL_DIR} --namespace ${NAMESPACE}
+	PLACEMENT_KUTTL_DIR=${PLACEMENT_KUTTL_DIR} kubectl-kuttl test --config ${PLACEMENT_KUTTL_CONF} ${PLACEMENT_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: placement_kuttl
 placement_kuttl: export NAMESPACE = ${PLACEMENT_KUTTL_NAMESPACE}
@@ -1796,7 +1796,7 @@ placement_kuttl: kuttl_common_prep placement placement_deploy_prep ## runs kuttl
 
 .PHONY: cinder_kuttl_run
 cinder_kuttl_run: ## runs kuttl tests for the cinder operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${CINDER_KUTTL_CONF} ${CINDER_KUTTL_DIR} --namespace ${NAMESPACE}
+	kubectl-kuttl test --config ${CINDER_KUTTL_CONF} ${CINDER_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: cinder_kuttl
 cinder_kuttl: export NAMESPACE = ${CINDER_KUTTL_NAMESPACE}
@@ -1811,7 +1811,7 @@ cinder_kuttl: kuttl_common_prep cinder cinder_deploy_prep ## runs kuttl tests fo
 
 .PHONY: neutron_kuttl_run
 neutron_kuttl_run: ## runs kuttl tests for the neutron operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${NEUTRON_KUTTL_CONF} ${NEUTRON_KUTTL_DIR} --namespace ${NAMESPACE}
+	kubectl-kuttl test --config ${NEUTRON_KUTTL_CONF} ${NEUTRON_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: neutron_kuttl
 neutron_kuttl: export NAMESPACE = ${NEUTRON_KUTTL_NAMESPACE}
@@ -1827,7 +1827,7 @@ neutron_kuttl: kuttl_common_prep ovn ovn_deploy neutron neutron_deploy_prep ## r
 
 .PHONY: octavia_kuttl_run
 octavia_kuttl_run: ## runs kuttl tests for the octavia operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${OCTAVIA_KUTTL_CONF} ${OCTAVIA_KUTTL_DIR} --namespace ${NAMESPACE}
+	kubectl-kuttl test --config ${OCTAVIA_KUTTL_CONF} ${OCTAVIA_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: octavia_kuttl
 octavia_kuttl: export NAMESPACE = ${OCTAVIA_KUTTL_NAMESPACE}
@@ -1861,11 +1861,11 @@ designate_kuttl: kuttl_common_prep ovn ovn_deploy redis_deploy_prep designate de
 
 .PHONY: designate_kuttl_run
 designate_kuttl_run: ## runs kuttl tests for the designate operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${DESIGNATE_KUTTL_CONF} ${DESIGNATE_KUTTL_DIR} --namespace ${NAMESPACE}
+	kubectl-kuttl test --config ${DESIGNATE_KUTTL_CONF} ${DESIGNATE_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: ovn_kuttl_run
 ovn_kuttl_run: ## runs kuttl tests for the ovn operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${OVN_KUTTL_CONF} ${OVN_KUTTL_DIR} --namespace ${NAMESPACE}
+	kubectl-kuttl test --config ${OVN_KUTTL_CONF} ${OVN_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: ovn_kuttl
 ovn_kuttl: export NAMESPACE = ${OVN_KUTTL_NAMESPACE}
@@ -1882,7 +1882,7 @@ ovn_kuttl: input deploy_cleanup infra ovn ovn_deploy_prep ## runs kuttl tests fo
 
 .PHONY: infra_kuttl_run
 infra_kuttl_run: ## runs kuttl tests for the infra operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${INFRA_KUTTL_CONF} ${INFRA_KUTTL_DIR} --namespace ${NAMESPACE}
+	kubectl-kuttl test --config ${INFRA_KUTTL_CONF} ${INFRA_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: infra_kuttl
 infra_kuttl: export NAMESPACE = ${INFRA_KUTTL_NAMESPACE}
@@ -1898,7 +1898,7 @@ infra_kuttl: input deploy_cleanup rabbitmq rabbitmq_deploy infra memcached_deplo
 
 .PHONY: ironic_kuttl_run
 ironic_kuttl_run: ## runs kuttl tests for the ironic operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${IRONIC_KUTTL_CONF} ${IRONIC_KUTTL_DIR} --namespace ${NAMESPACE}
+	kubectl-kuttl test --config ${IRONIC_KUTTL_CONF} ${IRONIC_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: ironic_kuttl
 ironic_kuttl: export NAMESPACE = ${IRONIC_KUTTL_NAMESPACE}
@@ -1915,7 +1915,7 @@ ironic_kuttl_crc: crc_storage ironic_kuttl
 
 .PHONY: heat_kuttl_run
 heat_kuttl_run: ## runs kuttl tests for the heat operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${HEAT_KUTTL_CONF} ${HEAT_KUTTL_DIR} --namespace ${NAMESPACE}
+	kubectl-kuttl test --config ${HEAT_KUTTL_CONF} ${HEAT_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: heat_kuttl
 heat_kuttl: export NAMESPACE = ${HEAT_KUTTL_NAMESPACE}
@@ -1934,7 +1934,7 @@ heat_kuttl_crc: crc_storage heat_kuttl
 
 .PHONY: ansibleee_kuttl_run
 ansibleee_kuttl_run: ## runs kuttl tests for the openstack-ansibleee operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${ANSIBLEEE_KUTTL_CONF} ${ANSIBLEEE_KUTTL_DIR} --namespace ${NAMESPACE}
+	kubectl-kuttl test --config ${ANSIBLEEE_KUTTL_CONF} ${ANSIBLEEE_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: ansibleee_kuttl_cleanup
 ansibleee_kuttl_cleanup:
@@ -1961,7 +1961,7 @@ ansibleee_kuttl: input ansibleee_kuttl_prep ansibleee ## runs kuttl tests for th
 
 .PHONY: glance_kuttl_run
 glance_kuttl_run: ## runs kuttl tests for the glance operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${GLANCE_KUTTL_CONF} ${GLANCE_KUTTL_DIR} --namespace ${NAMESPACE}
+	kubectl-kuttl test --config ${GLANCE_KUTTL_CONF} ${GLANCE_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: glance_kuttl
 glance_kuttl: export NAMESPACE = ${GLANCE_KUTTL_NAMESPACE}
@@ -1978,7 +1978,7 @@ glance_kuttl: kuttl_common_prep swift swift_deploy glance glance_deploy_prep ## 
 
 .PHONY: manila_kuttl_run
 manila_kuttl_run: ## runs kuttl tests for the manila operator,
-	kubectl-kuttl test --config ${MANILA_KUTTL_CONF} ${MANILA_KUTTL_DIR} --namespace ${NAMESPACE}
+	kubectl-kuttl test --config ${MANILA_KUTTL_CONF} ${MANILA_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: manila_kuttl
 manila_kuttl: export NAMESPACE = ${MANILA_KUTTL_NAMESPACE}
@@ -1995,7 +1995,7 @@ manila_kuttl: kuttl_common_prep ceph manila manila_deploy_prep ## runs kuttl tes
 
 .PHONY: swift_kuttl_run
 swift_kuttl_run: ## runs kuttl tests for the swift operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${SWIFT_KUTTL_CONF} ${SWIFT_KUTTL_DIR} --namespace ${NAMESPACE}
+	kubectl-kuttl test --config ${SWIFT_KUTTL_CONF} ${SWIFT_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: swift_kuttl
 swift_kuttl: export NAMESPACE = ${SWIFT_KUTTL_NAMESPACE}
@@ -2011,7 +2011,7 @@ swift_kuttl: kuttl_common_prep barbican barbican_deploy swift swift_deploy_prep 
 
 .PHONY: horizon_kuttl_run
 horizon_kuttl_run: ## runs kuttl tests for the horizon operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${HORIZON_KUTTL_CONF} ${HORIZON_KUTTL_DIR} --config ${HORIZON_KUTTL_CONF} --namespace ${NAMESPACE}
+	kubectl-kuttl test --config ${HORIZON_KUTTL_CONF} ${HORIZON_KUTTL_DIR} --config ${HORIZON_KUTTL_CONF} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: horizon_kuttl
 horizon_kuttl: export NAMESPACE = ${HORIZON_KUTTL_NAMESPACE}
@@ -2580,7 +2580,7 @@ telemetry_deploy_cleanup: ## cleans up the service instance, Does not affect the
 
 .PHONY: telemetry_kuttl_run
 telemetry_kuttl_run: ## runs kuttl tests for the telemetry operator, assumes that everything needed for running the test was deployed beforehand.
-	kubectl-kuttl test --config ${TELEMETRY_KUTTL_CONF} --namespace ${NAMESPACE}
+	kubectl-kuttl test --config ${TELEMETRY_KUTTL_CONF} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: telemetry_kuttl
 telemetry_kuttl: export NAMESPACE = ${TELEMETRY_KUTTL_NAMESPACE}
