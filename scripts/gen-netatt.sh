@@ -120,7 +120,12 @@ if [ -n "$IPV4_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/internalapi.yaml <<EOF_CAT
         "range": "${INTERNALAPI_PREFIX}.0/24",
         "range_start": "${INTERNALAPI_PREFIX}.30",
-        "range_end": "${INTERNALAPI_PREFIX}.70"
+        "range_end": "${INTERNALAPI_PREFIX}.70",
+        "routes": [
+          {
+             "dst": "172.17.0.0/24"
+          }
+        ]
 EOF_CAT
 elif [ -n "$IPV6_ENABLED" ]; then
     cat >> ${DEPLOY_DIR}/internalapi.yaml <<EOF_CAT
