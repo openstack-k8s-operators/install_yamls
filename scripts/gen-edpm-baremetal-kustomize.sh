@@ -53,6 +53,12 @@ patches:
       path: /spec/baremetalSetTemplate/bmhNamespace
       value: ${EDPM_BMH_NAMESPACE}
     - op: add
+      path: /spec/baremetalSetTemplate/osContainerImageUrl
+      value: quay.io/rabi/edpm-bootc:latest-qcow2
+    - op: add
+      path: /spec/baremetalSetTemplate/osImage
+      value: edpm-bootc.qcow2
+    - op: add
       path: /spec/services/0
       value: repo-setup
     - op: replace
