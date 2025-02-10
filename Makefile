@@ -1727,7 +1727,7 @@ mariadb_kuttl_run: ## runs kuttl tests for the mariadb operator, assumes that ev
 mariadb_kuttl: export NAMESPACE = ${MARIADB_KUTTL_NAMESPACE}
 # Set the value of $MARIADB_KUTTL_NAMESPACE if you want to run the keystone
 # kuttl tests in a namespace different than the default (mariadb-kuttl-tests)
-mariadb_kuttl: input deploy_cleanup mariadb mariadb_deploy_prep ## runs kuttl tests for the mariadb operator. Installs mariadb operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+mariadb_kuttl: input deploy_cleanup infra mariadb mariadb_deploy_prep ## runs kuttl tests for the mariadb operator. Installs mariadb operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,mariadb))
 	make wait
 	make mariadb_kuttl_run
