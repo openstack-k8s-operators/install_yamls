@@ -51,10 +51,9 @@ NETWORK_STORAGE_ADDRESS_PREFIX 	?= 172.18.0
 NETWORK_TENANT_ADDRESS_PREFIX 	?= 172.19.0
 NETWORK_STORAGEMGMT_ADDRESS_PREFIX 	?= 172.20.0
 NETWORK_DESIGNATE_ADDRESS_PREFIX 	?= 172.28.0
+# Additional routes that will be forwarded to nncp and net-attach-def
 INTERNALAPI_HOST_ROUTES ?=
-STORAGE_HOST_ROUTES ?=
 TENANT_HOST_ROUTES ?=
-STORAGEMGMT_HOST_ROUTES ?=
 
 # network isolation
 NETWORK_ISOLATION   ?= true
@@ -2415,6 +2414,8 @@ netattach: export DESIGNATE_PREFIX=${NETWORK_DESIGNATE_ADDRESS_PREFIX}
 netattach: export VLAN_START=${NETWORK_VLAN_START}
 netattach: export VLAN_STEP=${NETWORK_VLAN_STEP}
 netattach: export CTLPLANE_IP_ADDRESS_PREFIX=${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}
+netattach: export NETATT_INTERNALAPI_HOST_ROUTES=${INTERNALAPI_HOST_ROUTES}
+netattach: export NETATT_TENANT_HOST_ROUTES=${TENANT_HOST_ROUTES}
 netattach: namespace ## Creates network-attachment-definitions for the networks the workers are attached via nncp
 	$(eval $(call vars,$@,netattach))
 	bash scripts/gen-netatt.sh
