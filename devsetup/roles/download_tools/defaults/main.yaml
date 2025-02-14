@@ -16,3 +16,6 @@ kustomize_version: v5.0.3
 
 # kubectl version to use (must be specific version)
 kubectl_version: v1.25.7
+
+# chainsaw version to use (must be specific version)
+chainsaw_version: 0.2.12

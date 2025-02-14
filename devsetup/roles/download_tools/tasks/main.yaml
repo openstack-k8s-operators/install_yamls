@@ -111,6 +111,21 @@
     mode: '0755'
     timeout: 30
 
+- name: Download chainsaw
+  tags:
+    - chainsaw
+  ansible.builtin.unarchive:
+    src:
+      "https://github.com/kyverno/chainsaw/releases/download/v{{ chainsaw_version }}/\
+      chainsaw_linux_amd64.tar.gz"
+    dest: "{{ lookup('env', 'HOME') }}/bin/"
+    remote_src: true
+    extra_opts:
+      - "--exclude"
+      - "README.md"
+      - "--exclude"
+      - "LICENSE"
+
 - name: Download and extract yq
   tags:
     - yq

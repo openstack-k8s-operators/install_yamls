@@ -180,11 +180,14 @@ MARIADB                 ?= config/samples/mariadb_v1beta1_galera.yaml
 else
 MARIADB                 ?= config/samples/mariadb_v1beta1_mariadb.yaml
 endif
-MARIADB_CR              ?= ${OPERATOR_BASE_DIR}/mariadb-operator/${MARIADB}
-MARIADB_DEPL_IMG        ?= unused
-MARIADB_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
-MARIADB_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
-MARIADB_KUTTL_NAMESPACE ?= mariadb-kuttl-tests
+MARIADB_CR                 ?= ${OPERATOR_BASE_DIR}/mariadb-operator/${MARIADB}
+MARIADB_DEPL_IMG           ?= unused
+MARIADB_KUTTL_CONF         ?= ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
+MARIADB_KUTTL_DIR          ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
+MARIADB_KUTTL_NAMESPACE    ?= mariadb-kuttl-tests
+MARIADB_CHAINSAW_CONF      ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/chainsaw/config.yaml
+MARIADB_CHAINSAW_DIR       ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/chainsaw/tests
+MARIADB_CHAINSAW_NAMESPACE ?= mariadb-chainsaw-tests
 
 # Placement
 PLACEMENT_IMG             ?= quay.io/openstack-k8s-operators/placement-operator-index:${OPENSTACK_K8S_TAG}
@@ -2051,6 +2054,23 @@ openstack_kuttl: input deploy_cleanup openstack openstack_deploy_prep ## runs ku
 	make openstack_kuttl_run
 	make openstack_deploy_cleanup
 	make openstack_cleanup
+
+##@ CHAINSAW tests
+
+.PHONY: mariadb_chainsaw_run
+mariadb_chainsaw_run: ## runs chainsaw tests for the mariadb operator, assumes that everything needed for running the test was deployed beforehand.
+	chainsaw test --config ${MARIADB_CHAINSAW_CONF} ${MARIADB_CHAINSAW_DIR} --namespace ${NAMESPACE} --report-format JSON
+
+.PHONY: mariadb_chainsaw
+mariadb_chainsaw: export NAMESPACE = ${MARIADB_CHAINSAW_NAMESPACE}
+# Set the value of $MARIADB_CHAINSAW_NAMESPACE if you want to run the keystone
+# kuttl tests in a namespace different than the default (mariadb-chainsaw-tests)
+mariadb_chainsaw: input deploy_cleanup mariadb mariadb_deploy_prep ## runs chainsaw tests for the mariadb operator. Installs mariadb operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+	$(eval $(call vars,$@,mariadb))
+	make wait
+	make mariadb_chainsaw_run
+	make deploy_cleanup
+	make mariadb_cleanup
 
 ##@ HORIZON
 .PHONY: horizon_prep
