@@ -42,6 +42,7 @@ if [ -z "${CRC_BIN}" ]; then
 fi
 
 # config CRC
+${CRC_BIN} config set network-mode system
 ${CRC_BIN} config set consent-telemetry no
 ${CRC_BIN} config set kubeadmin-password ${KUBEADMIN_PWD}
 ${CRC_BIN} config set pull-secret-file ${PULL_SECRET_FILE}
