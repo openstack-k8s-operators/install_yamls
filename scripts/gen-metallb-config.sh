@@ -140,6 +140,27 @@ if [ -n "$IPV6_ENABLED" ]; then
   - fd00:dddd::80-fd00:dddd::90
 EOF_CAT
 fi
+cat >> ${DEPLOY_DIR}/ipaddresspools.yaml <<EOF_CAT
+---
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  namespace: metallb-system
+  name: designateext
+spec:
+  autoAssign: false
+  addresses:
+EOF_CAT
+if [ -n "$IPV4_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/ipaddresspools.yaml <<EOF_CAT
+  - ${DESIGNATE_EXT_PREFIX}.80-${DESIGNATE_EXT_PREFIX}.90
+EOF_CAT
+fi
+if [ -n "$IPV6_ENABLED" ]; then
+    cat >> ${DEPLOY_DIR}/ipaddresspools.yaml <<EOF_CAT
+  - fd00:eaea::80-fd00:eaea::90
+EOF_CAT
+fi
 
 cat > ${DEPLOY_DIR}/l2advertisement.yaml <<EOF_CAT
 ---
@@ -186,6 +207,17 @@ spec:
   - tenant
   interfaces:
   - ${INTERFACE}.22
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: designateext
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+  - designateext
+  interfaces:
+  - ${INTERFACE}.26
 EOF_CAT
 cat > ${DEPLOY_DIR}/bgppeers.yaml <<EOF_CAT
 ---
@@ -226,6 +258,7 @@ spec:
   - internalapi
   - storage
   - tenant
+  - designateext
   peers:
   - bgp-peer
   - bgp-peer-2
