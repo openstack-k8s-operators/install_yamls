@@ -1,0 +1,14 @@
+---
+parameter_defaults:
+  NovaSchedulerEnabledFilters:
+    - ComputeFilter
+    - ComputeCapabilitiesFilter
+    - ImagePropertiesFilter
+    - ServerGroupAntiAffinityFilter
+    - ServerGroupAffinityFilter
+    - PciPassthroughFilter
+    - NUMATopologyFilter
+  StandaloneParameters:
+    NovaReservedHugePages: ["node:0,size:2MB,count:1"]
+    KernelArgsDeferReboot: true
+    KernelArgs: "default_hugepagesz=2M hugepagesz=2M hugepages=258"

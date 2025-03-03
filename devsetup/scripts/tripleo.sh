@@ -38,6 +38,7 @@ MANILA_ENABLED=${MANILA_ENABLED:-true}
 OCTAVIA_ENABLED=${OCTAVIA_ENABLED:-false}
 TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
 TLSE_ENABLED=${TLSE_ENABLED:-false}
+EDPM_CONFIGURE_HUGEPAGES=${CONFIGURE_HUGEPAGES:-false}
 
 if [[ ! -f $SSH_KEY_FILE ]]; then
     echo "$SSH_KEY_FILE is missing"
@@ -89,6 +90,7 @@ export INTERFACE_MTU=${INTERFACE_MTU:-1500}
 export NTP_SERVER=${NTP_SERVER:-"pool.ntp.org"}
 export IP=${IP}
 export GATEWAY=${GATEWAY}
+export EDPM_CONFIGURE_HUGEPAGES=${EDPM_CONFIGURE_HUGEPAGES:-false}
 export EDPM_COMPUTE_CEPH_ENABLED=${COMPUTE_CEPH_ENABLED:-false}
 export EDPM_COMPUTE_CEPH_NOVA=${COMPUTE_CEPH_NOVA:-false}
 export CEPH_ARGS="${CEPH_ARGS:--e \$HOME/deployed_ceph.yaml -e /usr/share/openstack-tripleo-heat-templates/environments/cephadm/cephadm-rbd-only.yaml}"
@@ -247,6 +249,7 @@ scp $SSH_OPT ${SCRIPTPATH}/../tripleo/hieradata_overrides_undercloud.yaml zuul@$
 scp $SSH_OPT ${SCRIPTPATH}/../tripleo/undercloud-parameter-defaults.yaml zuul@$IP:undercloud-parameter-defaults.yaml
 scp $SSH_OPT ${MY_TMP_DIR}/undercloud.conf zuul@$IP:undercloud.conf
 scp $SSH_OPT ${SCRIPTPATH}/../tripleo/nova_noceph.yaml zuul@$IP:nova_noceph.yaml
+scp $SSH_OPT ${SCRIPTPATH}/../tripleo/hugepages.yaml zuul@$IP:hugepages.yaml
 if [ $EDPM_COMPUTE_CELLS -gt 1 ]; then
     for cell in $(seq 0 $(( EDPM_COMPUTE_CELLS - 1))); do
         scp $SSH_OPT ${MY_TMP_DIR}/vips_data${cell}.yaml zuul@$IP:vips_data${cell}.yaml

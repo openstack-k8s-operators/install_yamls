@@ -170,6 +170,11 @@ if [ "$TRIPLEO_ATTACH_EXTNET" = "false" ]; then
     sed -i "/subnet: external_subnet/d" $ROLES_FILE
 fi
 
+# NOTE: cannot use both TLSe and hugepages as the node with freeipa cannot survive required reboot
+if [ "$EDPM_CONFIGURE_HUGEPAGES" = "true" ] && [ "$TLSE_ENABLED" != "true" ] ; then
+    ENV_ARGS+=" -e $HOME/hugepages.yaml"
+fi
+
 if [ "$TLSE_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/ssl/tls-everywhere-endpoints-dns.yaml"
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/haproxy-public-tls-certmonger.yaml"
