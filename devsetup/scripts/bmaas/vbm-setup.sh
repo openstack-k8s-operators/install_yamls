@@ -15,7 +15,7 @@ fi
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 NETWORK_NAME=${NETWORK_NAME:-"crc-bmaas"}
 NODE_NAME_PREFIX=${NODE_NAME_PREFIX:-"crc-bmaas"}
-NODE_COUNT=${NODE_COUNT:-"1"}
+NODE_NAME_SUFFIX=${NODE_NAME_SUFFIX:-"0"}
 ACTION=""
 
 # Virtual Machine spec
@@ -37,7 +37,6 @@ function usage {
     echo "options:"
     echo "  --create      Create BMaaS virtual baremetal VMs"
     echo "  --cleanup     Cleanup, delete BMaaS virtual baremteal VMs"
-    echo "  --num-nodes   Number of BMaaS virtual baremetal VMs to create (default: 1)"
     echo
 }
 
@@ -104,8 +103,8 @@ function cleanup_libvirt_logging {
 function create_vm {
     local temp_file
     local name
+    name=$1
     temp_file=$(mktemp -p "$MY_TMP_DIR")
-    name="$NODE_NAME_PREFIX-$(printf "%02d" "$i")"
     echo "Creating VM: $name"
     virt-install --connect qemu:///system \
         --name "$name" \
@@ -142,17 +141,14 @@ function create {
         echo "Network $NETWORK_NAME does not exist, please create it"
         exit 1
     fi
-    for (( i=1; i<=NODE_COUNT; i++ )); do
-        create_vm "$i"
-    done
+    vm="$NODE_NAME_PREFIX-$(printf "%02d" "${NODE_NAME_SUFFIX}")"
+    create_vm "$vm"
 }
 
 function cleanup {
-    local vms
-    vms=$(virsh --connect=qemu:///system list --all --name | grep "$NODE_NAME_PREFIX")
-    for vm in $vms; do
-        delete_vm "$vm"
-    done
+    local vm
+    vm="$NODE_NAME_PREFIX-$(printf "%02d" "${NODE_NAME_SUFFIX}")"
+    delete_vm "$vm"
 }
 
 while [[ "$#" -gt 0 ]]; do
@@ -162,11 +158,6 @@ while [[ "$#" -gt 0 ]]; do
         ;;
         "--cleanup")
             ACTION="CLEANUP";
-        ;;
-        "--num-nodes")
-            [[ $2 =~ ^[0-9]+$ ]] || { echo "Invalid value --num-nodes must be a number"; usage; exit 1; }
-            NODE_COUNT="$2";
-            shift
         ;;
         *)
             echo "Unknown parameter passed: $1";
