@@ -18,7 +18,7 @@ endif
 METADATA_SHARED_SECRET   ?= 1234567842
 HEAT_AUTH_ENCRYPTION_KEY ?= 767c3ed056cbaa3b9dfedb8c6f825bf0
 OPENSTACK_K8S_BRANCH     ?= main
-OPENSTACK_K8S_TAG        ?= 18.0-fr2
+OPENSTACK_K8S_TAG        ?= 18.0-fr2-latest
 
 # Use Red Hat operators from OpenShift Marketplace
 REDHAT_OPERATORS		 ?= false
