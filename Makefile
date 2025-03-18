@@ -2328,10 +2328,23 @@ else
 endif
 
 .PHONY: nncp_with_retries
-nncp_with_retries: ## Deploy NNCP with retries
+nncp_with_retries: nncp_dns ## Deploy NNCP with retries
 	 $(eval $(call vars,$@))
 	bash scripts/retry_make_nncp.sh $(NNCP_RETRIES)
 
+.PHONY: nncp_dns
+nncp_dns: export DNS_SERVER=${NNCP_DNS_SERVER}
+nncp_dns:
+	$(eval $(call vars,$@,nncp))
+ifeq ($(NNCP_NODES),)
+	WORKERS='$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}")' \
+	bash scripts/gen-nncp-dns.sh
+else
+	WORKERS=${NNCP_NODES} bash scripts/gen-nncp-dns.sh
+endif
+	oc apply -f ${DEPLOY_DIR}/
+	timeout ${NNCP_TIMEOUT} bash -c "while ! (oc wait nncp -l osp/interface=nncp-dns --for jsonpath='{.status.conditions[0].reason}'=SuccessfullyConfigured); do sleep 10; done"
+	oc delete nncp -l osp/interface=nncp-dns
 
 .PHONY: nncp
 nncp: export INTERFACE=${NNCP_INTERFACE}
