@@ -118,6 +118,57 @@ get_current_state "02_after_ovn_controlplane_update"
 DATAPLANE_NODESET=$(oc get openstackdataplanenodeset -o name | awk -F'/' '{print "    - "  $2}')
 DATAPLANE_DEPLOYMENT=$(oc get openstackdataplanedeployment -o name | awk -F'/' '{print $2; exit}')
 
+# Ensure we don't get signature problem using a custom playbook
+
+cat > edpm-custom-docker-policy <<'EOF'
+---
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  name: edpm-custom-docker-policy
+spec:
+  label: dataplane-deployment-custom-service
+  playbookContents: |
+    - hosts: all
+      tasks:
+        - name: Do no block on signature for container
+          ansible.builtin.copy:
+            content: |
+              {
+                  "default": [
+                      {
+                          "type": "insecureAcceptAnything"
+                      }
+                  ],
+                  "transports": {
+                      "docker": {
+                          "registry.access.redhat.com": [
+                              {
+                                  "type": "insecureAcceptAnything"
+                              }
+                          ],
+                          "registry.redhat.io": [
+                              {
+                                  "type": "insecureAcceptAnything"
+                              }
+                          ]
+                      },
+                      "docker-daemon": {
+                          "": [
+                              {
+                                  "type": "insecureAcceptAnything"
+                              }
+                          ]
+                      }
+                  }
+              }
+            dest: "/etc/containers/policy.json"
+          become: true
+EOF
+
+oc create -f edpm-custom-docker-policy.yaml
+
+# Add the custom playbook and make sure to re-authenticate
 cat <<EOF >edpm-deployment-ovn-update.yaml
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
@@ -127,6 +178,8 @@ spec:
   nodeSets:
 $DATAPLANE_NODESET
   servicesOverride:
+    - edpm-custom-docker-policy
+    - configure-os
     - ovn
 EOF
 
