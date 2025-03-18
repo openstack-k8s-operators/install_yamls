@@ -7,7 +7,7 @@ PASSWORD                 ?= 12345678
 SECRET                   ?= osp-secret
 LIBVIRT_SECRET           ?= libvirt-secret
 OUT                      ?= ${PWD}/out
-TIMEOUT                  ?= 300s
+TIMEOUT                  ?= 500s
 BAREMETAL_TIMEOUT        ?= 20m
 DBSERVICE           ?= galera
 ifeq ($(DBSERVICE), galera)
