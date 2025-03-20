@@ -1,5 +1,7 @@
 CRC_VERSION ?= latest
 CRC_URL ?= 'https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/$(CRC_VERSION)/crc-linux-amd64.tar.xz'
+# possible values: openshift, microshift, okd
+CRC_PRESET ?= openshift
 KUBEADMIN_PWD ?= 12345678
 PULL_SECRET  ?= ${PWD}/pull-secret.txt
 TIMEOUT                  ?= 300s
@@ -132,6 +134,18 @@ BM_NODE_COUNT              ?=1
 BM_ROOT_PASSWORD_SECRET    ?=
 BMH_NAMESPACE              ?=openstack
 
+SNO_WORK_DIR                 ?= ${HOME}/.sno
+SNO_SSH_PUB_KEY              ?= ${HOME}/.ssh/id_rsa.pub
+SNO_LIBVIRT_STORAGE_POOL     ?= default
+SNO_INSTANCE_NAME            ?= sno
+SNO_CLUSTER_NETWORK          ?= 10.217.0.0/22
+SNO_HOST_PREFIX              ?= 23
+SNO_MACHINE_NETWORK          ?= 192.168.130.0/24
+SNO_SERVICE_NETWORK          ?= 10.217.4.0/23
+SNO_HOST_IP                  ?= 192.168.130.11
+SNO_OCP_VERSION              ?= latest-4.18
+SNO_OCP_MIRROR_URL           ?= https://mirror.openshift.com/pub/openshift-v4/clients/ocp
+
 IPV6_LAB_WORK_DIR                 ?= ${HOME}/.ipv6lab
 IPV6_LAB_SSH_PUB_KEY              ?= ${HOME}/.ssh/id_rsa.pub
 IPV6_LAB_LIBVIRT_STORAGE_POOL     ?= default
@@ -154,7 +168,7 @@ IPV6_LAB_SNO_HOST_PREFIX          ?= 64
 IPV6_LAB_SNO_MACHINE_NETWORK      ?= fd00:abcd:abcd:fc00::/64
 IPV6_LAB_SNO_SERVICE_NETWORK      ?= fd00:abcd:abcd:fc03::/112
 IPV6_LAB_SNO_HOST_IP              ?= fd00:abcd:abcd:fc00::11
-IPV6_LAB_SNO_OCP_VERSION          ?= latest-4.14
+IPV6_LAB_SNO_OCP_VERSION          ?= latest-4.18
 IPV6_LAB_SNO_OCP_MIRROR_URL       ?= https://mirror.openshift.com/pub/openshift-v4/clients/ocp
 
 # default number of instances to deploy via edpm_deploy_instance
@@ -235,6 +249,30 @@ crc_attach_default_interface:
 .PHONY: crc_attach_default_interface_cleanup
 crc_attach_default_interface_cleanup:
 	make attach_default_interface_cleanup
+
+##@ SNO equivalent of CRC
+.PHONY: sno
+sno: export WORK_DIR = ${SNO_WORK_DIR}
+sno: export SSH_PUB_KEY = ${SNO_SSH_PUB_KEY}
+sno: export OCP_VERSION = ${SNO_OCP_VERSION}
+sno: export OCP_MIRROR_URL = ${SNO_OCP_MIRROR_URL}
+sno: export OCP_ADMIN_PASSWD = ${KUBEADMIN_PWD}
+sno: export NETWORK_NAME = ${OCP_NETWORK_NAME}
+sno: export IPV4_ADDRESS= ${SNO_MACHINE_NETWORK}
+sno: export IP_VERSION = v4
+sno: export VCPUS = ${CPUS}
+sno: export DISK_SIZE = ${DISK}
+sno: export LIBVIRT_STORAGE_POOL = ${SNO_LIBVIRT_STORAGE_POOL}
+sno: ## Deployes Single-node-Openshift
+	bash scripts/network-setup.sh --create
+	bash scripts/ipv6-nat64/sno.sh --create
+
+.PHONY: sno_cleanup
+sno_cleanup: export WORK_DIR = ${SNO_WORK_DIR}
+sno_cleanup: export NETWORK_NAME = ${OCP_NETWORK_NAME}
+sno_cleanup:  ## Destroys Single-node-Openshift
+	bash scripts/ipv6-nat64/sno.sh --cleanup
+	bash scripts/network-setup.sh --cleanup
 
 ##@ IPv6 Lab
 .PHONY: ipv6_lab_network

@@ -16,6 +16,7 @@ DISK=${DISK:-31}
 HTTP_PROXY=${CRC_HTTP_PROXY:-""}
 HTTPS_PROXY=${CRC_HTTPS_PROXY:-""}
 CRC_MONITORING_ENABLED=${CRC_MONITORING_ENABLED:-false}
+CRC_PRESET=${CRC_PRESET:-openshift}
 
 if [ -z "${CRC_URL}" ]; then
     echo "Please set CRC_URL as ARG1"; exit 1
@@ -42,6 +43,7 @@ if [ -z "${CRC_BIN}" ]; then
 fi
 
 # config CRC
+${CRC_BIN} config set preset ${CRC_PRESET}
 ${CRC_BIN} config set network-mode system
 ${CRC_BIN} config set consent-telemetry no
 ${CRC_BIN} config set kubeadmin-password ${KUBEADMIN_PWD}
@@ -65,9 +67,9 @@ fi
 if [ "$CRC_MONITORING_ENABLED" = "true" ]; then
     ${CRC_BIN} config set enable-cluster-monitoring true
 fi
-${CRC_BIN} setup
+${CRC_BIN} setup --log-level debug
 
-${CRC_BIN} start
+${CRC_BIN} start --log-level debug
 ${CRC_BIN} console --credentials # get the kubeadmin login and then login
 
 # add crc provided oc client to PATH
