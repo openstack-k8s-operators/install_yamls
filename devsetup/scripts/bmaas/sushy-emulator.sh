@@ -14,9 +14,6 @@ function usage {
     echo
 }
 
-MY_TMP_DIR="$(mktemp -d)"
-trap 'rm -rf -- "$MY_TMP_DIR"' EXIT
-
 NODE_NAME_PREFIX=${NODE_NAME_PREFIX:-"crc-bmaas"}
 NAMESPACE=${SUSHY_EMULATOR_NAMESPACE:-"sushy-emulator"}
 DRIVER=${SUSHY_EMULATOR_DRIVER:-"libvirt"}
@@ -27,6 +24,9 @@ IMAGE=${SUSHY_EMULATOR_IMAGE:-"quay.io/metal3-io/sushy-tools:latest"}
 CRC_NETWORK_NAME=${CRC_NETWORK_NAME:-crc}
 BM_IPV6=${BM_IPV6:-false}
 BM_IPV4=${BM_IPV4:-false}
+SUSHY_DIR=${SUSHY_DIR:-"${DEPLOY_DIR}/sushy"}
+
+mkdir -p ${SUSHY_DIR}
 
 
 if [ $DRIVER = "libvirt" ]; then
@@ -49,7 +49,12 @@ if [ $DRIVER = "libvirt" ]; then
         LIBVIRT_URI="'qemu+ssh://${LIBVIRT_USER}@${LIBVIRT_IP_ADDRESS}/system${LIBVIRT_SOCKET}'"
         SUSHY_EMULATOR_LISTEN_IP="'0.0.0.0'"
     fi
-    INSTANCES=$(virsh --connect=qemu:///system list --all --uuid --name | grep "${NODE_NAME_PREFIX}" | awk 'BEGIN{ printf "[" }; { printf "%s\"%s\"", sep, $1, sep=","}; END{ printf "]" }')
+    BMHS=$(oc get -o name bmh | cut -d/ -f2)
+    LIBVIRT_INSTANCES=$(virsh --connect=qemu:///system list --all --uuid --name | grep "${NODE_NAME_PREFIX}" | awk '{print $1}')
+    for bmh in ${BMHS}; do
+        LIBVIRT_INSTANCES="${LIBVIRT_INSTANCES} $(virsh --connect=qemu:///system domuuid ${bmh})"
+    done
+    INSTANCES=$(echo ${LIBVIRT_INSTANCES} | awk 'BEGIN{ printf "[" }; { printf "%s\"%s\"", sep, $1, sep=","}; END{ printf "]" }')
     EMULATOR_OS_CLOUD="None"
 elif [ $DRIVER = "openstack" ]; then
     OS_CLIENT_CONFIG_FILE=${SUSHY_EMULATOR_OS_CLIENT_CONFIG_FILE:-/etc/openstack/clouds.yaml}
@@ -60,15 +65,15 @@ fi
 
 function create_sushy_emulator_namespace {
     echo "Creating namespace ${NAMESPACE}"
-    cat <<EOF > "${MY_TMP_DIR}/namespace.yaml"
+    cat <<EOF > "${SUSHY_DIR}/namespace.yaml"
 apiVersion: v1
 kind: Namespace
 metadata:
     name: ${NAMESPACE}
 EOF
 
-    # cat ${MY_TMP_DIR}/namespace.yaml
-    oc apply -f "${MY_TMP_DIR}/namespace.yaml"
+    # cat ${SUSHY_DIR}/namespace.yaml
+    oc apply -f "${SUSHY_DIR}/namespace.yaml"
 }
 
 function create_sushy_emulator_user {
@@ -88,12 +93,16 @@ function generate_ssh_keypair {
         echo "PANIC, unable to get ${LIBVIRT_USER} home directory."
         exit 1
     fi
-    ssh-keygen -q -f "${MY_TMP_DIR}/${SSH_KEY_FILE}" -N "" -t "${SSH_ALGORITHM}" -b "${SSH_KEY_SIZE}"
+    if [ ! -f "${SUSHY_DIR}/${SSH_KEY_FILE}" ]; then
+        ssh-keygen -q -f "${SUSHY_DIR}/${SSH_KEY_FILE}" -N "" -t "${SSH_ALGORITHM}" -b "${SSH_KEY_SIZE}"
+    else
+        echo "${SUSHY_DIR}/${SSH_KEY_FILE} already exists, not re-generating"
+    fi
     sudo mkdir -p "${homedir}/.ssh"
-    sudo cp "${MY_TMP_DIR}/${SSH_KEY_FILE}" "${homedir}/.ssh/${SSH_KEY_FILE}"
-    sudo cp "${MY_TMP_DIR}/${SSH_KEY_FILE}.pub" "${homedir}/.ssh/${SSH_KEY_FILE}.pub"
+    sudo cp "${SUSHY_DIR}/${SSH_KEY_FILE}" "${homedir}/.ssh/${SSH_KEY_FILE}"
+    sudo cp "${SUSHY_DIR}/${SSH_KEY_FILE}.pub" "${homedir}/.ssh/${SSH_KEY_FILE}.pub"
     sudo touch "${homedir}/.ssh/authorized_keys"
-    cat "${MY_TMP_DIR}/${SSH_KEY_FILE}.pub" | sudo tee "${homedir}/.ssh/authorized_keys" > /dev/null
+    cat "${SUSHY_DIR}/${SSH_KEY_FILE}.pub" | sudo tee "${homedir}/.ssh/authorized_keys" > /dev/null
     sudo chown -R "${LIBVIRT_USER}":"${LIBVIRT_USER}" "${homedir}/.ssh"
     sudo chmod 700 "${homedir}/.ssh"
     sudo chmod -R og-rwx "${homedir}/.ssh"
@@ -101,7 +110,14 @@ function generate_ssh_keypair {
 
 function create_sushy_emulator_config {
     echo "Creating sushy-emulator-config"
-    cat << EOF > "${MY_TMP_DIR}/config-map.yaml"
+    local htpasswd
+    if [ -f "${SUSHY_DIR}/htpasswd" ]; then
+        htpasswd=$(cat ${SUSHY_DIR}/htpasswd)
+    else
+        htpasswd=$(htpasswd -nbB "${REDFISH_USERNAME}" "${REDFISH_PASSWORD}")
+        echo ${htpasswd} > ${SUSHY_DIR}/htpasswd
+    fi
+    cat << EOF > "${SUSHY_DIR}/config-map.yaml"
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -109,7 +125,7 @@ metadata:
   namespace: ${NAMESPACE}
 data:
   htpasswd: |
-$(htpasswd -nbB "${REDFISH_USERNAME}" "${REDFISH_PASSWORD}" | sed 's/^/    /')
+    ${htpasswd}
   config: |
     # Listen on all local IP interfaces
     SUSHY_EMULATOR_LISTEN_IP = ${SUSHY_EMULATOR_LISTEN_IP}
@@ -146,14 +162,14 @@ $(htpasswd -nbB "${REDFISH_USERNAME}" "${REDFISH_PASSWORD}" | sed 's/^/    /')
     SUSHY_EMULATOR_ALLOWED_INSTANCES = ${INSTANCES}
 EOF
 
-    # cat ${MY_TMP_DIR}/config-map.yaml
-    oc apply -f "${MY_TMP_DIR}/config-map.yaml"
+    # cat ${SUSHY_DIR}/config-map.yaml
+    oc apply -f "${SUSHY_DIR}/config-map.yaml"
 }
 
 function create_sushy_emulator_secret {
     echo "Creating sushy-emulator-secret"
     if [ $DRIVER = "libvirt" ]; then
-        cat << EOF > "${MY_TMP_DIR}/secret.yaml"
+        cat << EOF > "${SUSHY_DIR}/secret.yaml"
 apiVersion: v1
 kind: Secret
 metadata:
@@ -161,9 +177,9 @@ metadata:
     namespace: ${NAMESPACE}
 data:
     ssh-publickey: |
-$(base64 < "${MY_TMP_DIR}/${SSH_KEY_FILE}.pub" | sed 's/^/        /')
+$(base64 < "${SUSHY_DIR}/${SSH_KEY_FILE}.pub" | sed 's/^/        /')
     ssh-privatekey: |
-$(base64 < "${MY_TMP_DIR}/${SSH_KEY_FILE}" | sed 's/^/        /')
+$(base64 < "${SUSHY_DIR}/${SSH_KEY_FILE}" | sed 's/^/        /')
     ssh-known-hosts: |
 $(ssh-keyscan -H "${LIBVIRT_IP_ADDRESS}" | base64 | sed 's/^/        /')
 ---
@@ -176,7 +192,7 @@ data:
     openstack-clouds-yaml: ""
 EOF
     elif [ $DRIVER = "openstack" ]; then
-        cat << EOF > "${MY_TMP_DIR}/secret.yaml"
+        cat << EOF > "${SUSHY_DIR}/secret.yaml"
 apiVersion: v1
 kind: Secret
 metadata:
@@ -198,13 +214,13 @@ $(cat ${OS_CLIENT_CONFIG_FILE} | base64 | sed 's/^/        /')
 EOF
     fi
 
-    # cat ${MY_TMP_DIR}/secret.yaml
-    oc apply -f "${MY_TMP_DIR}/secret.yaml"
+    # cat ${SUSHY_DIR}/secret.yaml
+    oc apply -f "${SUSHY_DIR}/secret.yaml"
 }
 
 function create_sushy_emulator_pod {
     echo "Creating sushy-emulator pod"
-    cat << EOF > "${MY_TMP_DIR}/sushy-emulator-pod.yaml"
+    cat << EOF > "${SUSHY_DIR}/sushy-emulator-pod.yaml"
 ---
 apiVersion: v1
 kind: Pod
@@ -284,13 +300,15 @@ spec:
   restartPolicy: OnFailure
 EOF
 
-    # cat ${MY_TMP_DIR}/sushy-emulator-pod.yaml
-    oc apply -f "${MY_TMP_DIR}/sushy-emulator-pod.yaml"
+    # cat ${SUSHY_DIR}/sushy-emulator-pod.yaml
+    # delete existing pod to force reloading of any config changes
+    oc delete -n sushy-emulator --wait pod sushy-emulator
+    oc apply -f "${SUSHY_DIR}/sushy-emulator-pod.yaml"
 }
 
 function create_sushy_emulator_service {
     echo "Creating sushy-emulator-service"
-    cat << EOF > "${MY_TMP_DIR}/sushy-emulator-service.yaml"
+    cat << EOF > "${SUSHY_DIR}/sushy-emulator-service.yaml"
 ---
 apiVersion: v1
 kind: Service
@@ -308,13 +326,13 @@ spec:
     targetPort: 8000
 EOF
 
-    # cat ${MY_TMP_DIR}/sushy-emulator-service.yaml
-    oc apply -f "${MY_TMP_DIR}/sushy-emulator-service.yaml"
+    # cat ${SUSHY_DIR}/sushy-emulator-service.yaml
+    oc apply -f "${SUSHY_DIR}/sushy-emulator-service.yaml"
 }
 
 function create_sushy_emulator_route {
     echo "Creating sushy-emulator-route"
-    cat << EOF > "${MY_TMP_DIR}/sushy-emulator-route.yaml"
+    cat << EOF > "${SUSHY_DIR}/sushy-emulator-route.yaml"
 ---
 apiVersion: route.openshift.io/v1
 kind: Route
@@ -332,8 +350,8 @@ spec:
     name: sushy-emulator-service
 EOF
 
-    # cat ${MY_TMP_DIR}/sushy-emulator-route.yaml
-    oc apply -f "${MY_TMP_DIR}/sushy-emulator-route.yaml"
+    # cat ${SUSHY_DIR}/sushy-emulator-route.yaml
+    oc apply -f "${SUSHY_DIR}/sushy-emulator-route.yaml"
 }
 
 function create {
@@ -366,6 +384,8 @@ function cleanup {
             echo "Not deleting user ${LIBVIRT_USER}, user does not exist"
         fi
     fi
+
+    rm -rf ${SUSHY_DIR}
 }
 
 case "$1" in
