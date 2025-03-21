@@ -2320,6 +2320,7 @@ else
 	oc apply -f ${OPERATOR_DIR}
 	timeout ${TIMEOUT} bash -c "while ! (oc get deployments/nmstate-operator -n ${NAMESPACE}); do sleep 10; done"
 	oc wait deployments/nmstate-operator -n ${NAMESPACE} --for condition=Available --timeout=${TIMEOUT}
+	timeout ${TIMEOUT} bash -c "while ! (oc wait pod -n openshift-apiserver -l apiserver=true --for condition=Ready); do sleep 10; done"
 	oc apply -f ${DEPLOY_DIR}
 	timeout ${TIMEOUT} bash -c "while ! (oc get pod --no-headers=true -l component=kubernetes-nmstate-handler -n ${NAMESPACE}| grep nmstate-handler); do sleep 10; done"
 	oc wait pod -n ${NAMESPACE} -l component=kubernetes-nmstate-handler --for condition=Ready --timeout=$(TIMEOUT)
