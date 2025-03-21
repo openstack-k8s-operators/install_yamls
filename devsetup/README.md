@@ -1,4 +1,6 @@
-# CRC automation + tool deployment
+# OCP automation + tool deployment
+### OCP installation
+
 ### CRC
 CRC installation requires sudo to create a NetworkManager dispatcher file in /etc/NetworkManager/dispatcher.d/99-crc.sh, also the post step to add the CRC cert to the system store to be able to access the image registry from the host system.
 
@@ -15,42 +17,21 @@ To configure a http and/or https proxy on the crc instance, use `CRC_HTTP_PROXY`
 
 After the installation is complete, proceed with the OpenStack service provisioning.
 
-The steps it runs are the following:
+
+### SNO
+Single-node-Openshift can also be installed in a configuration which is similar to CRC it takes longer to install but the resulting OCP better represents what end-users are running
+
+* Get the pull secret from `https://cloud.redhat.com/openshift/create/local` and save it in `pull-secret.txt` of the repo dir, or set the `PULL_SECRET` env var to point to a different location.
+* `SNO_OCP_VERSION` can be used to change requirements for the SNO install.
+
 ```bash
-# Pre req
-# verifies that the pull secret is located at $(pwd)/pull-secret.txt (get it from https://cloud.redhat.com/openshift/create/local)
-
-* install crc
-mkdir -p ~/bin
-curl -L https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz | tar -U --strip-components=1 -C ~/bin -xJf - --no-anchored crc
-
-# config CRC
-crc config set consent-telemetry no
-crc config set kubeadmin-password ${KUBEADMIN_PWD}
-crc config set pull-secret-file ${PULL_SECRET_FILE}
-crc setup
-
-crc start
-
-# show kubeadmin and devel login details
-crc console --credentials
-
-# add crc provided oc client to PATH
-eval $(${CRC_BIN} oc-env)
-
-# login to crc env
-oc login -u kubeadmin -p ${KUBEADMIN_PWD} https://api.crc.testing:6443
-
-# make sure you can push to the internal registry; without this step you'll get x509 errors
-echo -n "Adding router-ca to system certs to allow accessing the crc image registry"
-oc extract secret/router-ca --keys=tls.crt -n openshift-ingress-operator --confirm
-sudo cp -f tls.crt /etc/pki/ca-trust/source/anchors/crc-router-ca.pem
-sudo update-ca-trust
+cd <install_yamls_root_path>/devsetup
+CPUS=12 MEMORY=25600 DISK=100 make sno
 ```
 
-#### Access OCP from external systems
+### Access OCP from external systems
 
-On the local system add the required entries to your local /etc/hosts. The previous used ansible playbook also outputs the information:
+On the local system add the required entries to your local /etc/hosts. The previous used ansible playbook also outputs the information for CRC:
 
 ```
 cat <<EOF >> /etc/hosts
@@ -58,8 +39,15 @@ cat <<EOF >> /etc/hosts
 EOF
 ```
 
+and for SNO:
+```
+cat <<EOF >> /etc/hosts
+192.168.130.11 api.sno.lab.example.com canary-openshift-ingress-canary.apps.sno.lab.example.com console-openshift-console.apps.sno.lab.example.com default-route-openshift-image-registry.apps.sno.lab.example.com downloads-openshift-console.apps.sno.lab.example.com oauth-openshift.apps.sno.lab.example.com
+EOF
+```
+
 **Note**
-validate that the IP address matches the installed CRC VM.
+validate that the IP address matches the installed OCP VM.
 
 To access OCP console
 
@@ -92,7 +80,7 @@ a mechanism to configure them using the ansibleee-operator.
 
 After completing the devsetup, attach the crc VM to the default network:
 ```
-make crc_attach_default_interface
+make attach_default_interface
 ```
 
 This requires running operators required for controlplane and dataplane:
