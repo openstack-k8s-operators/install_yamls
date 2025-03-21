@@ -435,7 +435,6 @@ MANILAAPI_DEPL_IMG      ?= unused
 MANILASCH_DEPL_IMG      ?= unused
 MANILASHARE_DEPL_IMG    ?= unused
 MANILA_KUTTL_CONF       ?= ${OPERATOR_BASE_DIR}/manila-operator/kuttl-test.yaml
-MANILA_KUTTL_DIR        ?= ${OPERATOR_BASE_DIR}/manila-operator/test/kuttl/tests
 MANILA_KUTTL_NAMESPACE  ?= manila-kuttl-tests
 
 # Ceph
@@ -1985,7 +1984,7 @@ glance_kuttl: kuttl_common_prep swift swift_deploy glance glance_deploy_prep ## 
 
 .PHONY: manila_kuttl_run
 manila_kuttl_run: ## runs kuttl tests for the manila operator,
-	kubectl-kuttl test --config ${MANILA_KUTTL_CONF} ${MANILA_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
+	kubectl-kuttl test --config ${MANILA_KUTTL_CONF} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: manila_kuttl
 manila_kuttl: export NAMESPACE = ${MANILA_KUTTL_NAMESPACE}
