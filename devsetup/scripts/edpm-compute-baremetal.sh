@@ -67,8 +67,6 @@ kind: BareMetalHost
 metadata:
   name: edpm-compute-${i}
   namespace: ${NAMESPACE}
-  annotations:
-    inspect.metal3.io: disabled
   labels:
     app: openstack
 spec:
