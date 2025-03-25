@@ -1228,7 +1228,7 @@ barbican_deploy: input barbican_deploy_prep ## installs the service instance usi
 
 .PHONY: barbican_deploy_validate
 barbican_deploy_validate: input namespace ## checks that barbican was properly deployed. Set BARBICAN_KUTTL_DIR to use assert file from custom repo.
-	kubectl-kuttl assert -n ${NAMESPACE} ${BARBICAN_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180 $(KUTTL_ARGS)
+	kubectl-kuttl assert -n ${NAMESPACE} ${BARBICAN_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout=${TIMEOUT} $(KUTTL_ARGS)
 
 .PHONY: barbican_deploy_cleanup
 barbican_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
@@ -1779,6 +1779,7 @@ barbican_kuttl_run: ## runs kuttl tests for the barbican operator, assumes that 
 barbican_kuttl: export NAMESPACE = ${BARBICAN_KUTTL_NAMESPACE}
 barbican_kuttl: kuttl_common_prep barbican barbican_deploy_prep ## runs kuttl tests for the barbican operator. Installs barbican operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,barbican))
+	make openstack_init
 	make wait
 	make barbican_kuttl_run
 	make deploy_cleanup
@@ -2024,6 +2025,7 @@ horizon_kuttl_run: ## runs kuttl tests for the horizon operator, assumes that ev
 horizon_kuttl: export NAMESPACE = ${HORIZON_KUTTL_NAMESPACE}
 horizon_kuttl: kuttl_common_prep horizon horizon_deploy_prep ## runs kuttl tests for the horizon operator. Installs horizon operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,horizon))
+	make openstack_init
 	make wait
 	make horizon_kuttl_run
 	make deploy_cleanup
