@@ -1228,7 +1228,7 @@ barbican_deploy: input barbican_deploy_prep ## installs the service instance usi
 
 .PHONY: barbican_deploy_validate
 barbican_deploy_validate: input namespace ## checks that barbican was properly deployed. Set BARBICAN_KUTTL_DIR to use assert file from custom repo.
-	kubectl-kuttl assert -n ${NAMESPACE} ${BARBICAN_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180 $(KUTTL_ARGS)
+	kubectl-kuttl assert -n ${NAMESPACE} ${BARBICAN_KUTTL_DIR}/../common/assert_sample_deployment.yaml --timeout 180 --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
 .PHONY: barbican_deploy_cleanup
 barbican_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
