@@ -14,8 +14,9 @@ fi
 
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 NETWORK_NAME=${NETWORK_NAME:-"crc-bmaas"}
-NODE_NAME_PREFIX=${NODE_NAME_PREFIX:-"crc-bmaas"}
 NODE_COUNT=${NODE_COUNT:-"1"}
+NODE_NAME_PREFIX=${NODE_NAME_PREFIX:-"crc-bmaas"}
+NODE_NAME_SUFFIX=${NODE_NAME_SUFFIX:-"0"}
 ACTION=""
 
 # Virtual Machine spec
@@ -105,7 +106,7 @@ function create_vm {
     local temp_file
     local name
     temp_file=$(mktemp -p "$MY_TMP_DIR")
-    name="$NODE_NAME_PREFIX-$(printf "%02d" "$i")"
+    name=$1
     echo "Creating VM: $name"
     virt-install --connect qemu:///system \
         --name "$name" \
@@ -142,15 +143,17 @@ function create {
         echo "Network $NETWORK_NAME does not exist, please create it"
         exit 1
     fi
-    for (( i=1; i<=NODE_COUNT; i++ )); do
-        create_vm "$i"
+    for (( i=0; i<NODE_COUNT; i++ )); do
+        node_suffix=$(($i + ${NODE_NAME_SUFFIX}))
+        vm="$NODE_NAME_PREFIX-$(printf "%02d" "${node_suffix}")"
+        create_vm "$vm"
     done
 }
 
 function cleanup {
-    local vms
-    vms=$(virsh --connect=qemu:///system list --all --name | grep "$NODE_NAME_PREFIX")
-    for vm in $vms; do
+    for (( i=0; i<NODE_COUNT; i++ )); do
+        node_suffix=$(($i + ${NODE_NAME_SUFFIX}))
+        vm="$NODE_NAME_PREFIX-$(printf "%02d" "${node_suffix}")"
         delete_vm "$vm"
     done
 }

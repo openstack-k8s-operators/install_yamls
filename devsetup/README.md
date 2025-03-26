@@ -164,12 +164,21 @@ This requires controlplane to be deployed before dataplane:
 ```
 pushd ..
 make openstack_deploy
+make openstack_init
 popd
 ```
 
 Create and manage the virtual machines:
 ```
 BM_NODE_COUNT=1 make edpm_baremetal_compute
+
+# optional, create more virtual machines later:
+# creates edpm-baremetal-compute-01 and edpm-baremetal-compute-02
+BM_NODE_COUNT=2 BM_NODE_SUFFIX=1 make edpm_baremetal_compute
+
+# optional, create more virtual machines with differet names:
+# creates edpm-bootc-00
+BM_NODE_PREFIX=edpm-bootc make edpm_baremetal_compute
 ```
 
 The dataplane can then be deployed on these nodes as for other baremetal
@@ -187,6 +196,14 @@ make edpm_deploy_cleanup
 popd
 # Will delete VM's!:
 BM_NODE_COUNT=1 make edpm_baremetal_compute_cleanup
+
+# optional, cleanup other virtual machines:
+# cleans up edpm-baremetal-compute-01 and edpm-baremetal-compute-02
+BM_NODE_COUNT=2 BM_NODE_SUFFIX=1 make edpm_baremetal_compute_cleanup
+
+# optional, cleanup virtual machines with differet names:
+# cleans up edpm-bootc-00
+BM_NODE_PREFIX=edpm-bootc make edpm_baremetal_compute_cleanup
 ```
 
 ### BMaaS LAB

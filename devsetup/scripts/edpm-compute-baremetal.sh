@@ -24,38 +24,39 @@ function usage {
 }
 
 export NODE_COUNT=${NODE_COUNT:-2}
-export DEPLOY_DIR=${DEPLOY_DIR:-"../out/edpm"}
+DEPLOY_DIR=${DEPLOY_DIR:-"../out/edpm"}
 
 OPERATOR_DIR=${OPERATOR_DIR:-../out/operator}
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-NODE_NAME_PREFIX=${BMAAS_INSTANCE_NAME_PREFIX=:-"edpm-compute"}
+NODE_NAME_PREFIX=${BMAAS_INSTANCE_NAME_PREFIX:-"edpm-compute"}
+NODE_NAME_SUFFIX=${BMAAS_INSTANCE_NAME_SUFFIX:-"0"}
 NETWORK_NAME=${BMAAS_NETWORK_NAME:-"default"}
 BMH_CR_FILE=${BMH_CR_FILE:-bmh_deploy.yaml}
 INGRESS_DOMAIN=$(oc get ingresses.config/cluster -o jsonpath={.spec.domain})
 
-function create {
-    mkdir -p ${DEPLOY_DIR}
-    pushd ${DEPLOY_DIR}
-    NODE_INDEX=0
-    while IFS= read -r instance; do
-        export uuid_${NODE_INDEX}="${instance% *}"
-        name="${instance#* }"
-        export mac_address_${NODE_INDEX}=$(virsh --connect=qemu:///system domiflist "$name" | grep "${NETWORK_NAME}" | awk '{print $5}')
-        echo ${mac_address_0}
-        NODE_INDEX=$((NODE_INDEX+1))
-    done <<< "$(virsh --connect=qemu:///system list --all --uuid --name | grep "${NODE_NAME_PREFIX}")"
+function set_node_vars {
+   node_suffix=$1
+   NODE_NAME_SUFFIX_PADDED=$(printf "%02d" "$node_suffix")
+   NODE_NAME=${NODE_NAME:-"${NODE_NAME_PREFIX}-${NODE_NAME_SUFFIX_PADDED}"}
+   NODE_DEPLOY_DIR=${DEPLOY_DIR}/${NODE_NAME}
+   NODE_BMH_CR_FILE=${NODE_DEPLOY_DIR}/${BMH_CR_FILE}
+}
 
-    rm ${BMH_CR_FILE} || true
-    for (( i=0; i<${NODE_COUNT}; i++ )); do
-        mac_var=mac_address_${i}
-        uuid_var=uuid_${i}
-        cat <<EOF >>${BMH_CR_FILE}
+function create {
+    for (( i=${NODE_NAME_SUFFIX}; i<${NODE_COUNT}; i++ )); do
+        set_node_vars $i
+        rm -f ${NODE_BMH_CR_FILE} || true
+        mkdir -p ${NODE_DEPLOY_DIR}
+        pushd ${NODE_DEPLOY_DIR}
+        mac_address=$(virsh --connect=qemu:///system domiflist "${NODE_NAME}" | grep "${NETWORK_NAME}" | awk '{print $5}')
+        uuid=$(virsh --connect=qemu:///system list --all --uuid --name | grep "${NODE_NAME}" | awk '{print $1}')
+        cat <<EOF >${BMH_CR_FILE}
 ---
 # This is the secret with the BMC credentials (Redfish in this case).
 apiVersion: v1
 kind: Secret
 metadata:
-  name: node-${i}-bmc-secret
+  name: ${NODE_NAME}-bmc-secret
   namespace: ${NAMESPACE}
 type: Opaque
 data:
@@ -65,23 +66,22 @@ data:
 apiVersion: metal3.io/v1alpha1
 kind: BareMetalHost
 metadata:
-  name: edpm-compute-${i}
+  name: ${NODE_NAME}
   namespace: ${NAMESPACE}
   labels:
     app: openstack
 spec:
   bmc:
-    address: redfish-virtualmedia+http://sushy-emulator.${INGRESS_DOMAIN}/redfish/v1/Systems/${!uuid_var}
-    credentialsName: node-${i}-bmc-secret
-  bootMACAddress: ${!mac_var}
+    address: redfish-virtualmedia+http://sushy-emulator.${INGRESS_DOMAIN}/redfish/v1/Systems/${uuid}
+    credentialsName: ${NODE_NAME}-bmc-secret
+  bootMACAddress: ${mac_address}
   bootMode: UEFI
   online: false
   rootDeviceHints:
     deviceName: /dev/vda
 EOF
-    done
-    cat <<EOF >kustomization.yaml
-
+        cat <<EOF >kustomization.yaml
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: ${NAMESPACE}
@@ -91,15 +91,20 @@ labels:
 resources:
   - ${BMH_CR_FILE}
 EOF
-    popd
-    /bin/bash ../scripts/operator-deploy-resources.sh
+        popd
+        DEPLOY_DIR=${NODE_DEPLOY_DIR} /bin/bash ../scripts/operator-deploy-resources.sh
+      done
 }
 
 function cleanup {
-    while oc get bmh | grep -q -e "deprovisioning" -e "provisioned"; do
-        sleep 5
-    done || true
-    oc delete --all bmh -n $NAMESPACE --ignore-not-found=true || true
+    for (( i=${NODE_NAME_SUFFIX}; i<${NODE_COUNT}; i++ )); do
+      set_node_vars $i
+      while oc get bmh ${NODE_NAME} | grep -q -e "deprovisioning" -e "provisioned"; do
+          sleep 5
+      done || true
+      oc delete bmh -n $NAMESPACE --ignore-not-found=true ${NODE_NAME} || true
+      rm -rf ${NODE_DEPLOY_DIR}
+    done
 }
 
 case "$1" in
