@@ -2745,3 +2745,11 @@ redis_deploy_cleanup: namespace ## cleans up the service instance, Does not affe
 	$(eval $(call vars,$@,infra))
 	oc kustomize ${OUT}/${NAMESPACE}/infra-redis/cr | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/infra-operator-redis ${OUT}/${NAMESPACE}/infra-redis/cr
+
+## etcd
+.PHONY: set_slower_etcd_profile
+set_slower_etcd_profile:  ## that is a helper for the CI jobs, where OpenShift API is restarting because etcd crashed earlier.
+	oc patch etcd/cluster --type=merge -p '{ "spec": { "controlPlaneHardwareSpeed": "Slower" }}'
+	# need to wait until the etcd pod would apply new rules
+	sleep 60
+	timeout $(TIMEOUT) bash -c "while ! (timeout 5 oc get pods -n openshift-etcd -o jsonpath='{.items[*].status.phase}' | grep -qE '^Running'); do sleep 10; done"
