@@ -601,7 +601,7 @@ wait: ## wait for an operator's controller-manager pod to be ready (requires OPE
 .PHONY: crc_storage
 crc_storage: namespace ## initialize local storage PVs in CRC vm
 	$(eval $(call vars,$@))
-	bash scripts/create-pv.sh
+	bash scripts/create-pv.sh || bash scripts/collect-kubelet-logs.sh
 	bash scripts/gen-crc-pv-kustomize.sh
 	oc apply -f ${OUT}/crc/storage.yaml
 
