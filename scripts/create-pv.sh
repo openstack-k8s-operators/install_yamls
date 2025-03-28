@@ -14,7 +14,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 set -ex
+
+SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+. "${SCRIPTPATH}/storage_common.sh"
+
 PV_NUM=${PV_NUM:-12}
+TIMEOUT=${TIMEOUT:-300s}
 
 released=$(oc get pv -o json | jq -r '.items[] | select(.status.phase | test("Released")).metadata.name')
 
@@ -22,11 +27,13 @@ for name in $released; do
     oc patch pv -p '{"spec":{"claimRef": null}}' $name
 done
 
-NODE_NAMES=$(oc get node -o name -l node-role.kubernetes.io/worker)
+NODE_NAMES=$(oc get node -o template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' -l node-role.kubernetes.io/worker)
 if [ -z "$NODE_NAMES" ]; then
     echo "Unable to determine node name with 'oc' command."
     exit 1
 fi
 for node in $NODE_NAMES; do
-    oc debug $node -T -- chroot /host /usr/bin/bash -c "for i in `seq -w -s ' ' $PV_NUM`; do echo \"creating dir /mnt/openstack/pv\$i on $node\"; mkdir -p /mnt/openstack/pv\$i; done"
+    . "${SCRIPTPATH}/storage_apply.sh" "${node}" "create"
 done
+
+oc wait job -n "${NAMESPACE}" -l install-yamls.crc.storage --for condition=Complete --timeout "${TIMEOUT}"
