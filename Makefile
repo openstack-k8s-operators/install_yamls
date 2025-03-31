@@ -82,6 +82,7 @@ OPERATOR_BASE_DIR   ?= ${OUT}/operator
 
 # storage (used by some operators)
 STORAGE_CLASS       ?= "local-storage"
+CRC_STORAGE_NAMESPACE ?= crc-storage
 CRC_STORAGE_RETRIES ?= 3
 LVMS_CR ?= 1
 
@@ -599,6 +600,7 @@ wait: ## wait for an operator's controller-manager pod to be ready (requires OPE
 
 ##@ CRC
 .PHONY: crc_storage
+crc_storage: export NAMESPACE = ${CRC_STORAGE_NAMESPACE}
 crc_storage: namespace ## initialize local storage PVs in CRC vm
 	$(eval $(call vars,$@))
 	bash scripts/create-pv.sh
@@ -606,6 +608,7 @@ crc_storage: namespace ## initialize local storage PVs in CRC vm
 	oc apply -f ${OUT}/crc/storage.yaml
 
 .PHONY: crc_storage_cleanup
+crc_storage_cleanup: export NAMESPACE = ${CRC_STORAGE_NAMESPACE}
 crc_storage_cleanup: namespace ## cleanup local storage PVs in CRC vm
 	$(eval $(call vars,$@))
 	bash scripts/cleanup-crc-pv.sh
