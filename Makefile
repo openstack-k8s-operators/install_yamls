@@ -1238,7 +1238,7 @@ barbican_deploy_cleanup: ## cleans up the service instance, Does not affect the 
 	$(eval $(call vars,$@,barbican))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/barbican-operator ${DEPLOY_DIR}
-	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "drop database barbican;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "flush tables; drop database if exists barbican;" || true
 
 ##@ MARIADB
 mariadb_prep: export IMAGE=${MARIADB_IMG}
@@ -1677,7 +1677,7 @@ designate_deploy_cleanup: ## cleans up the service instance, Does not affect the
 	$(eval $(call vars,$@,designate))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/designate-operator ${DEPLOY_DIR}
-	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "flush tables; drop database if exists designate;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "flush tables; drop database if exists designate;" || true
 
 ##@ NOVA
 .PHONY: nova_prep
@@ -2574,7 +2574,7 @@ manila_deploy_cleanup: ## cleans up the service instance, Does not affect the op
 	$(eval $(call vars,$@,manila))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/manila-operator ${DEPLOY_DIR}
-	oc rsh -t mariadb-openstack mysql -u root --password=${PASSWORD} -e "flush tables; drop database if exists manila;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "flush tables; drop database if exists manila;" || true
 
 ##@ TELEMETRY
 .PHONY: telemetry_prep
