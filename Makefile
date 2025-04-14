@@ -82,6 +82,7 @@ OPERATOR_BASE_DIR   ?= ${OUT}/operator
 
 # storage (used by some operators)
 STORAGE_CLASS       ?= "local-storage"
+CRC_STORAGE_NAMESPACE ?= crc-storage
 CRC_STORAGE_RETRIES ?= 3
 LVMS_CR ?= 1
 
@@ -599,6 +600,7 @@ wait: ## wait for an operator's controller-manager pod to be ready (requires OPE
 
 ##@ CRC
 .PHONY: crc_storage
+crc_storage: export NAMESPACE = ${CRC_STORAGE_NAMESPACE}
 crc_storage: namespace ## initialize local storage PVs in CRC vm
 	$(eval $(call vars,$@))
 	bash scripts/create-pv.sh
@@ -606,6 +608,7 @@ crc_storage: namespace ## initialize local storage PVs in CRC vm
 	oc apply -f ${OUT}/crc/storage.yaml
 
 .PHONY: crc_storage_cleanup
+crc_storage_cleanup: export NAMESPACE = ${CRC_STORAGE_NAMESPACE}
 crc_storage_cleanup: namespace ## cleanup local storage PVs in CRC vm
 	$(eval $(call vars,$@))
 	bash scripts/cleanup-crc-pv.sh
@@ -2745,3 +2748,11 @@ redis_deploy_cleanup: namespace ## cleans up the service instance, Does not affe
 	$(eval $(call vars,$@,infra))
 	oc kustomize ${OUT}/${NAMESPACE}/infra-redis/cr | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/infra-operator-redis ${OUT}/${NAMESPACE}/infra-redis/cr
+
+## etcd
+.PHONY: set_slower_etcd_profile
+set_slower_etcd_profile:  ## that is a helper for the CI jobs, where OpenShift API is restarting because etcd crashed earlier.
+	oc patch etcd/cluster --type=merge -p '{ "spec": { "controlPlaneHardwareSpeed": "Slower" }}'
+	# need to wait until the etcd pod would apply new rules
+	sleep 60
+	timeout $(TIMEOUT) bash -c "while ! (timeout 5 oc get pods -n openshift-etcd -o jsonpath='{.items[*].status.phase}' | grep -qE '^Running'); do sleep 10; done"
