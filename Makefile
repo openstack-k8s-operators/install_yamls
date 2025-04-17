@@ -536,6 +536,20 @@ REDIS           ?= config/samples/redis_v1beta1_redis.yaml
 REDIS_CR        ?= ${OPERATOR_BASE_DIR}/infra-operator-redis/${REDIS}
 REDIS_DEPL_IMG  ?= unused
 
+# Loki
+LOKI_NAMESPACE        ?= openshift-operators-redhat
+LOKI_OPERATOR_GROUP   ?= openshift-operators-redhat-loki
+LOKI_SUBSCRIPTION     ?= loki-operator
+LOKI_DEPLOY_NAMESPACE ?= netobserv
+LOKI_DEPLOY_MODE      ?= openshift-network
+LOKI_DEPLOY_SIZE      ?= 1x.demo
+
+# Netobserv
+NETOBSERV_NAMESPACE        ?= openshift-netobserv-operator
+NETOBSERV_OPERATOR_GROUP   ?= openshift-netobserv-operator-net
+NETOBSERV_SUBSCRIPTION     ?= netobserv-operator
+NETOBSERV_DEPLOY_NAMESPACE ?= ${LOKI_DEPLOY_NAMESPACE}
+
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
 ${1}: export NAMESPACE=${NAMESPACE}
@@ -2530,6 +2544,87 @@ metallb_cleanup: ## deletes the operator, but does not cleanup the service resou
 	$(eval $(call vars,$@,metallb))
 	bash scripts/operator-cleanup.sh
 	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
+
+##@ LOKI
+.PHONY: loki
+loki: export NAMESPACE=${LOKI_NAMESPACE}
+loki: export OPERATOR_GROUP=${LOKI_OPERATOR_GROUP}
+loki: export SUBSCRIPTION=${LOKI_SUBSCRIPTION}
+loki: ## installs loki operator in the openshift-operators-redhat namespace
+	$(eval $(call vars,$@,loki))
+	bash scripts/gen-namespace.sh
+	oc apply -f ${OUT}/${NAMESPACE}/namespace.yaml
+	timeout $(TIMEOUT) bash -c "while ! (oc get project.v1.project.openshift.io ${NAMESPACE}); do sleep 1; done"
+	bash scripts/gen-olm-loki.sh
+	oc apply -f ${OPERATOR_DIR}
+	timeout ${TIMEOUT} bash -c "while ! (oc get deployments/loki-operator-controller-manager -n ${NAMESPACE}); do sleep 10; done"
+	oc wait deployments/loki-operator-controller-manager -n ${NAMESPACE} --for condition=Available --timeout=${TIMEOUT}
+
+.PHONY: loki_cleanup
+loki_cleanup: export OPERATOR_NAMESPACE=${LOKI_NAMESPACE}
+loki_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,loki))
+	bash scripts/operator-cleanup.sh
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
+
+##@ LOKI_DEPLOY
+.PHONY: loki_deploy
+loki_deploy: export NAMESPACE=${LOKI_DEPLOY_NAMESPACE}
+loki_deploy: export SIZE=${LOKI_DEPLOY_SIZE}
+loki_deploy: export MODE=${LOKI_DEPLOY_MODE}
+loki_deploy: namespace ## installs Lokistack in the netobserv namespace
+	$(eval $(call vars,$@,loki))
+	bash scripts/gen-lokistack.sh
+	oc apply -f ${DEPLOY_DIR}/lokisecret.yaml
+	oc apply -f ${DEPLOY_DIR}/lokistack.yaml
+	timeout ${TIMEOUT} bash -c "while ! (oc get lokistack/loki -n ${NAMESPACE}); do sleep 10; done"
+	oc wait lokistack/loki --for condition=Ready=True -n ${NAMESPACE} --timeout=${TIMEOUT}
+
+.PHONY: loki_deploy_cleanup
+loki_deploy_cleanup: export NAMESPACE=${LOKI_DEPLOY_NAMESPACE}
+loki_deploy_cleanup: ## removes Lokistack CRs in the netobserv namespace
+	oc delete lokistack --all=true -n ${NAMESPACE}
+
+##@ NETOBSERV
+.PHONY: netobserv
+netobserv: export NAMESPACE=${NETOBSERV_NAMESPACE}
+netobserv: export OPERATOR_GROUP=${NETOBSERV_OPERATOR_GROUP}
+netobserv: export SUBSCRIPTION=${NETOBSERV_SUBSCRIPTION}
+netobserv: ## installs netobserv operator in the openshift-netobserv namespace
+	$(eval $(call vars,$@,netobserv))
+	bash scripts/gen-namespace.sh
+	oc apply -f ${OUT}/${NAMESPACE}/namespace.yaml
+	timeout $(TIMEOUT) bash -c "while ! (oc get project.v1.project.openshift.io ${NAMESPACE}); do sleep 1; done"
+	bash scripts/gen-olm-netobserv.sh
+	oc apply -f ${OPERATOR_DIR}
+	timeout ${TIMEOUT} bash -c "while ! (oc get deployments/netobserv-controller-manager -n ${NAMESPACE}); do sleep 10; done"
+	oc wait deployments/netobserv-controller-manager -n ${NAMESPACE} --for condition=Available --timeout=${TIMEOUT}
+
+.PHONY: netobserv_cleanup
+netobserv_cleanup: export OPERATOR_NAMESPACE=${NETOBSERV_NAMESPACE}
+netobserv_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,network-observability))
+	bash scripts/operator-cleanup.sh
+	oc delete sub -n ${NETOBSERV_NAMESPACE} netobserv-operator --ignore-not-found=true
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
+
+##@ NETOBSERV_DEPLOY
+.PHONY: netobserv_deploy
+netobserv_deploy: export NAMESPACE=${NETOBSERV_DEPLOY_NAMESPACE}
+netobserv_deploy: ## installs netobserv CRs in the netobserv namespace
+	$(eval $(call vars,$@,netobserv))
+	bash scripts/gen-namespace.sh
+	oc apply -f ${OUT}/${NAMESPACE}/namespace.yaml
+	timeout $(TIMEOUT) bash -c "while ! (oc get project.v1.project.openshift.io ${NAMESPACE}); do sleep 1; done"
+	bash scripts/gen-netobserv.sh
+	oc apply -f ${DEPLOY_DIR}/flowcollector.yaml
+	timeout ${TIMEOUT} bash -c "while ! (oc get flowcollector/cluster -n ${NAMESPACE}); do sleep 10; done"
+	oc wait flowcollector/cluster --for condition=Ready=True -n ${NAMESPACE} --timeout=${TIMEOUT}
+
+.PHONY: netobserv_deploy_cleanup
+netobserv_deploy_cleanup: export NAMESPACE=${NETOBSERV_DEPLOY_NAMESPACE}
+netobserv_deploy_cleanup: ## removes netobserv CRs in the netobserv namespace
+	oc delete flowcollector --all=true -n ${NAMESPACE}
 
 ##@ MANILA
 .PHONY: manila_prep
