@@ -2585,8 +2585,11 @@ nncp_generate: ## unconfigured nncp configuration on worker node and deletes the
 ifeq ($(NNCP_NODES),)
 	WORKERS='$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}")' \
 	bash scripts/gen-nncp.sh
+	WORKERS='$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}")' \
+	bash scripts/gen-nncp-dns.sh
 else
 	WORKERS=${NNCP_NODES} bash scripts/gen-nncp.sh
+	WORKERS=${NNCP_NODES} bash scripts/gen-nncp-dns.sh
 endif
 
 .PHONY: netattach
