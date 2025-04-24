@@ -755,6 +755,12 @@ openstack_wait: ## waits openstack CSV to succeed.
 openstack_init: openstack_wait
 	bash -c 'test -f ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/operator_v1beta1_openstack.yaml || make openstack_repo'
 	oc apply -f ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/operator_v1beta1_openstack.yaml
+	# FIXME: Ugly hack to prevent OpenStack Baremetal operator from crashing when BMO is not installed
+	if ! echo "${BMO_CRDS}" | grep -q "baremetalhosts.metal3.io"; then \
+		curl -o /tmp/bmh_crd.yaml --retry-all-errors --retry 5 --retry-delay 10 https://raw.githubusercontent.com/metal3-io/baremetal-operator/refs/heads/main/config/base/crds/bases/metal3.io_baremetalhosts.yaml; \
+		oc apply -f /tmp/bmh_crd.yaml; \
+		rm -f /tmp/bmh_crd.yaml; \
+	fi
 	oc wait openstack/openstack -n ${OPERATOR_NAMESPACE} --for condition=Ready --timeout=${TIMEOUT}
 	timeout ${TIMEOUT} bash -c "while ! (oc get services -n ${OPERATOR_NAMESPACE} | grep -E '^(openstack|openstack-baremetal|infra)-operator-webhook-service' | wc -l | grep -q -e 3); do sleep 5; done"
 
