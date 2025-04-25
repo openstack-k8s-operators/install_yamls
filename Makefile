@@ -763,6 +763,7 @@ openstack_init: openstack_wait
 	fi
 	oc wait openstack/openstack -n ${OPERATOR_NAMESPACE} --for condition=Ready --timeout=${TIMEOUT}
 	timeout ${TIMEOUT} bash -c "while ! (oc get services -n ${OPERATOR_NAMESPACE} | grep -E '^(openstack|openstack-baremetal|infra)-operator-webhook-service' | wc -l | grep -q -e 3); do sleep 5; done"
+	oc wait deployment -n ${OPERATOR_NAMESPACE} -l control-plane=controller-manager --for condition=Available --timeout=${TIMEOUT}
 
 .PHONY: openstack_cleanup
 openstack_cleanup: operator_namespace## deletes the operator, but does not cleanup the service resources
