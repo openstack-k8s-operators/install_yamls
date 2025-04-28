@@ -2367,13 +2367,20 @@ endif
 
 .PHONY: nncp_with_retries
 nncp_with_retries: nncp_dns ## Deploy NNCP with retries
-	$(eval $(call vars,$@))
+	$(eval $(call vars,$@,nncp))
 	mkdir -p ${DEPLOY_DIR}
 #	bash scripts/retry_make_nncp.sh $(NNCP_RETRIES)
-	nncp_status="$$(oc get nncp -l osp/interface=${NNCP_INTERFACE})"; \
+	nncp_status="$$(oc get nncp -l osp/interface=${NNCP_INTERFACE} || true)"; \
 	if ! echo "$$nncp_status" | grep -q "SuccessfullyConfigured"; then \
 		echo "INFO: retries needed (state = $$nncp_status)"; \
 		bash scripts/retry_make_nncp.sh $(NNCP_RETRIES); \
+		 nncp_status="$$(oc get nncp -l osp/interface=${NNCP_INTERFACE} || true)"; \
+		if ! echo "$$nncp_status" | grep -q "SuccessfullyConfigured"; then \
+			echo "ERROR: NNCP is still not SuccessfullyConfigured after retry (state = $$nncp_status)"; \
+			exit 1; \
+		else \
+			echo "INFO: NNCP successfully configured after retry (state = $$nncp_status)"; \
+		fi \
 	else \
 		echo "INFO: NO retries needed (state = $$nncp_status)"; \
 	fi
@@ -2388,19 +2395,52 @@ ifeq ($(NNCP_NODES),)
 else
 	WORKERS=${NNCP_NODES} bash scripts/gen-nncp-dns.sh
 endif
-	nncp_status="$$(oc get nncp -l osp/interface=nncp-dns)"
+	nncp_status="$$(oc get nncp -l osp/interface=${NNCP_INTERFACE} || true)"; \
 	if ! echo "$$nncp_status" | grep -q "SuccessfullyConfigured"; then \
 		oc apply -f ${DEPLOY_DIR}/crc_nncp_dns.yaml; \
 		timeout ${NNCP_TIMEOUT} bash -c "while ! (oc wait nncp -l osp/interface=nncp-dns --for jsonpath='{.status.conditions[0].reason}'=SuccessfullyConfigured); do sleep 10; done"; \
+		attempts=0; \
+		attempts_config=0; \
+		max_attempts=15; \
+		while [ $$attempts -lt $$max_attempts ]; do \
+			nncp_status="$$(oc get nncp -l osp/interface=nncp-dns)"; \
+			echo "nncp_status = $$nncp_status"; \
+			attempts=`expr $$attempts + 1`; \
+			echo "CONTINUING: attempts = $$attempts"; \
+			sleep 1; \
+		done; \
+		if [ $$attempts -eq $$max_attempts ]; then \
+			echo "We seem to be still up.... continue with delete and wait..."; \
+		fi; \
 		oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/crc_nncp_dns.yaml; \
-		# +++owen - do it again - seems to "prime" the interface/enp6s0 pumps a bit better; \
-		oc apply -f ${DEPLOY_DIR}/crc_nncp_dns.yaml; \
-		timeout ${NNCP_TIMEOUT} bash -c "while ! (oc wait nncp -l osp/interface=nncp-dns --for jsonpath='{.status.conditions[0].reason}'=SuccessfullyConfigured); do sleep 10; done"; \
-		oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/crc_nncp_dns.yaml; \
+		attempts=0; \
+		attempts_config=0; \
+		max_attempts=15; \
+		while [ $$attempts -lt $$max_attempts ]; do \
+			nncp_status="$$(oc get nncp -l osp/interface=nncp-dns)"; \
+			echo "nncp_status = $$nncp_status"; \
+			attempts=`expr $$attempts + 1`; \
+			echo "CONTINUING: attempts = $$attempts"; \
+			sleep 1; \
+		done; \
+		${CLEANUP_DIR_CMD} ${DEPLOY_DIR}; \
 	else \
 		echo "INFO: NO retries needed (state = $$nncp_status)"; \
 	fi
-	${CLEANUP_DIR_CMD} ${DEPLOY_DIR};
+
+.PHONY: nncp_dns_orig
+nncp_dns_orig: export DNS_SERVER=${NNCP_DNS_SERVER}
+nncp_dns_orig:
+	$(eval $(call vars,$@,nncp))
+ifeq ($(NNCP_NODES),)
+	WORKERS='$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}")' \
+	bash scripts/gen-nncp-dns.sh
+else
+	WORKERS=${NNCP_NODES} bash scripts/gen-nncp-dns.sh
+endif
+	oc apply -f ${DEPLOY_DIR}/crc_nncp_dns.yaml
+	timeout ${NNCP_TIMEOUT} bash -c "while ! (oc wait nncp -l osp/interface=nncp-dns --for jsonpath='{.status.conditions[0].reason}'=SuccessfullyConfigured); do sleep 10; done"
+	oc delete nncp -l osp/interface=nncp-dns
 
 .PHONY: nncp
 nncp: export INTERFACE=${NNCP_INTERFACE}
@@ -2456,7 +2496,7 @@ endif
 	max_attempts=${NNCP_MAX_ATTEMPTS}; \
 	max_attempts_config=${NNCP_MAX_ATTEMPTS_CONFIG}; \
 	while [ $$attempts -lt $$max_attempts ]; do \
-		nncp_status="$$(oc get nncp -l osp/interface=${NNCP_INTERFACE})"; \
+		nncp_status="$$(oc get nncp -l osp/interface=${NNCP_INTERFACE} || true)"; \
 		echo "nncp_status = $$nncp_status"; \
 		if [ "$$nncp_status" = "NAME         STATUS   REASON" ]; then \
 			echo "REASON: NOT YET STARTED"; \
@@ -2489,56 +2529,60 @@ endif
 	done; \
 	if [ $$attempts -eq $$max_attempts ]; then \
 		echo "Timed out waiting for NNCP to be ready"; \
-		exit 1; \
 	else \
-		echo "Successful after $$attempts attempts"; \
+		echo "nncp: Successful after $$attempts attempts"; \
 	fi
 
 
+#	oc wait nncp -l osp/interface=${NNCP_INTERFACE} --for condition=available --timeout=$(NNCP_CLEANUP_TIMEOUT)
 .PHONY: nncp_cleanup
 nncp_cleanup: export INTERFACE=${NNCP_INTERFACE}
 nncp_cleanup: nncp_generate ## unconfigured nncp configuration on worker node and deletes the nncp resource
 	$(eval $(call vars,$@,nncp))
-	sed -i 's/state: up/state: absent/' ${DEPLOY_DIR}/crc_nncp.yaml
-	oc apply -f ${DEPLOY_DIR}/crc_nncp.yaml
-#	oc wait nncp -l osp/interface=${NNCP_INTERFACE} --for condition=available --timeout=$(NNCP_CLEANUP_TIMEOUT)
-	attempts=0; \
-	attempts_config=0; \
-	max_attempts=${NNCP_MAX_ATTEMPTS}; \
-	max_attempts_config=${NNCP_MAX_ATTEMPTS_CONFIG}; \
-	while [ $$attempts -lt $$max_attempts ]; do \
-		nncp_status="$$(oc get nncp -l osp/interface=${NNCP_INTERFACE})"; \
-		echo "nncp_status = $$nncp_status"; \
-		if [ "$$nncp_status" = "NAME         STATUS   REASON" ]; then \
-			echo "REASON: NOT YET STARTED"; \
-		elif echo "$$nncp_status" | grep -q "SuccessfullyConfigured"; then \
-			echo "REASON: SuccessfullyConfigured"; \
-			break; \
-		elif echo "$$nncp_status" | grep -q "FailedToConfigure"; then \
-			echo "REASON2: FailedToConfigure"; \
-			break; \
-		elif echo "$$nncp_status" | grep -q "ConfigurationProgressing"; then \
-			echo "REASON: ConfigurationProgressing"; \
-			sleep 1; \
-			attempts_config=`expr $$attempts_config + 1`; \
-			echo "attempts_config = $$attempts_config"; \
-			if [ $$attempts_config -eq $$max_attempts_config ]; then \
-				echo "HACK3: need to re-configure interface - workaround for now"; \
-				break; \
-			fi; \
-			continue; \
-		fi; \
-		attempts=`expr $$attempts + 1`; \
-		echo "CONTINUING: attempts = $$attempts"; \
-		sleep 1; \
-	done; \
-	if [ $$attempts -eq $$max_attempts ]; then \
-		echo "Timed out waiting for NNCP to be ready"; \
+	nncp_status="$$(oc get nncp -l osp/interface=${NNCP_INTERFACE} || true)"; \
+	if ! echo "$$nncp_status" | grep -q "SuccessfullyConfigured"; then \
+		echo "nncp_cleanup: Nothing to cleanup, enp6s0 interface resource not available"; \
 	else \
-		echo "Successful after $$attempts attempts"; \
+		sed -i 's/state: up/state: absent/' ${DEPLOY_DIR}/crc_nncp.yaml; \
+		oc apply -f ${DEPLOY_DIR}/crc_nncp.yaml; \
+		attempts=0; \
+		attempts_config=0; \
+		max_attempts=${NNCP_MAX_ATTEMPTS}; \
+		max_attempts_config=${NNCP_MAX_ATTEMPTS_CONFIG}; \
+		while [ $$attempts -lt $$max_attempts ]; do \
+			nncp_status="$$(oc get nncp -l osp/interface=${NNCP_INTERFACE} || true)"; \
+			echo "nncp_status = $$nncp_status"; \
+			if [ "$$nncp_status" = "NAME         STATUS   REASON" ]; then \
+				echo "REASON: NOT YET STARTED"; \
+			elif echo "$$nncp_status" | grep -q "SuccessfullyConfigured"; then \
+				echo "REASON: SuccessfullyConfigured"; \
+				break; \
+			elif echo "$$nncp_status" | grep -q "FailedToConfigure"; then \
+				echo "REASON2: FailedToConfigure"; \
+				break; \
+			elif echo "$$nncp_status" | grep -q "ConfigurationProgressing"; then \
+				echo "REASON: ConfigurationProgressing"; \
+				sleep 1; \
+				attempts_config=`expr $$attempts_config + 1`; \
+				echo "attempts_config = $$attempts_config"; \
+				if [ $$attempts_config -eq $$max_attempts_config ]; then \
+					echo "HACK3: need to re-configure interface - workaround for now"; \
+					break; \
+				fi; \
+				continue; \
+			fi; \
+			attempts=`expr $$attempts + 1`; \
+			echo "CONTINUING: attempts = $$attempts"; \
+			sleep 1; \
+		done; \
+		if [ $$attempts -eq $$max_attempts ]; then \
+			echo "Timed out waiting for NNCP to be ready"; \
+		else \
+			echo "nncp_cleanup: Successful after $$attempts attempts"; \
+		fi; \
+		oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/crc_nncp.yaml; \
+		${CLEANUP_DIR_CMD} ${DEPLOY_DIR}; \
 	fi
-	oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/crc_nncp.yaml
-	${CLEANUP_DIR_CMD} ${DEPLOY_DIR}
 
 .PHONY: nncp_generate
 nncp_generate: export INTERFACE=${NNCP_INTERFACE}
