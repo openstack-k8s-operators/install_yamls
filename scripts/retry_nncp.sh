@@ -20,10 +20,10 @@ nncp_dns() {
     echo "nncp_dns: START"
 
     make nncp_generate
-    
+
     if [ ! -f  ${DEPLOY_DIR}/crc_nncp_dns.yaml ]; then
-	echo "nncp_dns: FATAL: could not find "${DEPLOY_DIR}/crc_nncp_dns.yaml
-	exit 1
+        echo "nncp_dns: FATAL: could not find "${DEPLOY_DIR}/crc_nncp_dns.yaml
+        exit 1
     fi
 
     # Apply NNCP config
@@ -81,8 +81,8 @@ nncp()
     make nncp_generate
 
     if [ ! -f  ${DEPLOY_DIR}/crc_nncp.yaml ]; then
-	echo "nncp: FATAL: could not find "${DEPLOY_DIR}/crc_nncp.yaml
-	exit 1
+        echo "nncp: FATAL: could not find "${DEPLOY_DIR}/crc_nncp.yaml
+        exit 1
     fi
 
     oc apply -f ${DEPLOY_DIR}/crc_nncp.yaml
@@ -97,27 +97,27 @@ nncp()
 
             no_response=$((no_response+1))
 
-	    if [ $no_response -eq $no_response_max ]; then
-		echo "nncp: FATAL: we have not received a response from the CRC after $no_response attempts, aborting!!!"
-		exit 1
-	    fi
+            if [ $no_response -eq $no_response_max ]; then
+                echo "nncp: FATAL: we have not received a response from the CRC after $no_response attempts, aborting!!!"
+                exit 1
+            fi
 
             sleep 1
             continue
         fi
 
-	# if we are coming out of a non responsive CRC - best to delete, re-apply, and keep attempting
-	if [[ $no_response -ne 0 ]]; then
-	    echo "nncp: CRC back to being responsive - best to delete, re-apply, and continue.."
+        # if we are coming out of a non responsive CRC - best to delete, re-apply, and keep attempting
+        if [[ $no_response -ne 0 ]]; then
+            echo "nncp: CRC back to being responsive - best to delete, re-apply, and continue.."
 
             oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/crc_nncp.yaml
-	    # re-apply and continue
-	    oc apply -f ${DEPLOY_DIR}/crc_nncp.yaml
+            # re-apply and continue
+            oc apply -f ${DEPLOY_DIR}/crc_nncp.yaml
             no_response=0
             continue
-	fi
-	    
-	
+        fi
+
+
         if echo "$nncp_status" | grep -q "No resources found"; then
             echo "nncp: REASON: No NNCP resource found yet"
             attempts=$((attempts+1))
@@ -127,12 +127,13 @@ nncp()
 
         if echo "$nncp_status" | grep -q "SuccessfullyConfigured"; then
             echo "nncp: REASON: SuccessfullyConfigured"
+            echo "nncp: attempts= $attempts"
             break
         elif echo "$nncp_status" | grep -q "FailedToConfigure"; then
             echo "nncp: REASON: FailedToConfigure"
             oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/crc_nncp.yaml
-	    # re-apply and continue
-	    oc apply -f ${DEPLOY_DIR}/crc_nncp.yaml
+            # re-apply and continue
+            oc apply -f ${DEPLOY_DIR}/crc_nncp.yaml
             continue
         elif echo "$nncp_status" | grep -q "ConfigurationProgressingo"; then
             echo "nncp: REASON: ConfigurationProgressing"
@@ -187,27 +188,27 @@ nncp_cleanup()
 
             no_response=$((no_response+1))
 
-	    if [ $no_response -eq $no_response_max ]; then
-		echo "nncp: FATAL: we have not received a response from the CRC after $no_response attempts, aborting!!!"
-		exit 1
-	    fi
+            if [ $no_response -eq $no_response_max ]; then
+                echo "nncp: FATAL: we have not received a response from the CRC after $no_response attempts, aborting!!!"
+                exit 1
+            fi
 
             sleep 1
             continue
         fi
 
-	# if we are coming out of a non responsive CRC - best to delete, re-apply, and keep attempting
-	if [[ $no_response -ne 0 ]]; then
-	    echo "nncp_cleanup: CRC back to being responsive - best to delete, re-apply, and continue.."
+        # if we are coming out of a non responsive CRC - best to delete, re-apply, and keep attempting
+        if [[ $no_response -ne 0 ]]; then
+            echo "nncp_cleanup: CRC back to being responsive - best to delete, re-apply, and continue.."
 
             oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/crc_nncp.yaml
-	    # re-apply and continue
-	    oc apply -f ${DEPLOY_DIR}/crc_nncp.yaml
+            # re-apply and continue
+            oc apply -f ${DEPLOY_DIR}/crc_nncp.yaml
             no_response=0
             continue
-	fi
+        fi
 
-	no_response=0
+        no_response=0
 
         if echo "$nncp_status" | grep -q "No resources found"; then
             echo "nncp_cleanup: REASON: No NNCP resource found yet"
@@ -224,6 +225,7 @@ nncp_cleanup()
             break;
         elif echo "$nncp_status" | grep -q "ConfigurationProgressing"; then
             echo "nncp_cleanup: REASON: ConfigurationProgressing"
+            echo "nncp_cleanup: attempts= $attempts"
             attempts=$((attempts+1))
             sleep 1
             continue
@@ -274,6 +276,7 @@ fi
 retry=0
 while (( retry < MAX_RETRIES )); do
 
+    retry=$((retry+1))
     echo "retry: going on $retry/$MAX_RETRIES..."
 
     if nncp; then
@@ -284,7 +287,6 @@ while (( retry < MAX_RETRIES )); do
     make nncp_generate
     nncp_cleanup
 
-    retry=$((retry+1))
     echo "retry: $retry/$MAX_RETRIES failed. Retrying in 1s..."
     sleep 1
 done
