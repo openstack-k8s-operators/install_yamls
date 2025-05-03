@@ -74,9 +74,11 @@ nncp()
 {
     local attempts=0
     local no_response=0
-    local no_response_max=${NO_RESPONSE_MAX}
+    local no_response_max=${NNCP_NO_RESPONSE_MAX}
     local max_attempts=${NNCP_MAX_ATTEMPTS}
     local nncp_status=""
+
+    echo "nncp: START"
 
     make nncp_generate
 
@@ -166,8 +168,10 @@ nncp_cleanup()
     local attempts=0
     local max_attempts=${NNCP_MAX_ATTEMPTS}
     local no_response=0
-    local no_response_max=${NO_RESPONSE_MAX}
+    local no_response_max=${NNCP_NO_RESPONSE_MAX}
     local nncp_status=""
+
+    echo "nncp_cleanup: START"
 
     make nncp_generate
 
@@ -249,7 +253,6 @@ nncp_cleanup()
     fi
 
     oc delete --ignore-not-found=true -f ${DEPLOY_DIR}/crc_nncp.yaml
-    echo "nncp_cleanup: DONE"
    ${CLEANUP_DIR_CMD} ${DEPLOY_DIR}
 
     return 0
