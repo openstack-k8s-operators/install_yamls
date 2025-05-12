@@ -47,6 +47,9 @@ if [ -n "$BGP" ]; then
     check_var_set BGP_2_IP_ADDRESS
 fi
 
+# Default VLANs MTU to the interface MTU if not defined or empty
+[ -n "${VLAN_MTU}" ] || VLAN_MTU="${INTERFACE_MTU}"
+
 echo DEPLOY_DIR ${DEPLOY_DIR}
 echo WORKERS ${WORKERS}
 echo INTERFACE ${INTERFACE}
@@ -54,6 +57,7 @@ echo BRIDGE_NAME ${BRIDGE_NAME}
 echo INTERFACE_BGP_1 ${INTERFACE_BGP_1}
 echo INTERFACE_BGP_2 ${INTERFACE_BGP_2}
 echo INTERFACE_MTU ${INTERFACE_MTU}
+echo VLAN_MTU ${VLAN_MTU}
 echo VLAN_START ${VLAN_START}
 echo VLAN_STEP ${VLAN_STEP}
 echo STORAGE_MACVLAN ${STORAGE_MACVLAN}
@@ -182,6 +186,7 @@ EOF_CAT
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: internalapi vlan interface
       name: ${INTERFACE}.${internalapi_vlan_id}
+      mtu: ${VLAN_MTU}
       state: up
       type: vlan
       vlan:
@@ -228,6 +233,7 @@ EOF_CAT
     cat >> "${DEPLOY_DIR}/${WORKER}_nncp.yaml" <<EOF_CAT
     - description: storage vlan interface
       name: ${INTERFACE}.${storage_vlan_id}
+      mtu: ${VLAN_MTU}
       state: up
       type: vlan
       vlan:
@@ -244,6 +250,7 @@ EOF_CAT
         enabled: false
     - description: macvlan interface for storage NW
       name: storage
+      mtu: ${INTERFACE_MTU}
       state: up
       type: mac-vlan
       mac-vlan:
@@ -290,6 +297,7 @@ EOF_CAT
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: tenant vlan interface
       name: ${INTERFACE}.${tenant_vlan_id}
+      mtu: ${VLAN_MTU}
       state: up
       type: vlan
       vlan:
@@ -335,6 +343,7 @@ EOF_CAT
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: storagemgmt vlan interface
       name: ${INTERFACE}.${storagemgmt_vlan_id}
+      mtu: ${VLAN_MTU}
       state: up
       type: vlan
       vlan:
@@ -381,6 +390,7 @@ EOF_CAT
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: Octavia vlan host interface
       name: ${INTERFACE}.${octavia_vlan_id}
+      mtu: ${VLAN_MTU}
       state: up
       type: vlan
       vlan:
@@ -393,7 +403,7 @@ EOF_CAT
         port:
           - name: ${INTERFACE}.${octavia_vlan_id}
       description: Configuring bridge octbr
-      mtu: 1500
+      mtu: ${INTERFACE_MTU}
       name: octbr
       state: up
       type: linux-bridge
@@ -405,6 +415,7 @@ EOF_CAT
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: designate vlan interface
       name: ${INTERFACE}.${designate_vlan_id}
+      mtu: ${VLAN_MTU}
       state: up
       type: vlan
       vlan:
