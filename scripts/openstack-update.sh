@@ -168,7 +168,7 @@ metadata:
   name: $DATAPLANE_DEPLOYMENT-update
 spec:
   nodeSets:
-$DATAPLANE_NODESET
+$NODE_SETS
   servicesOverride:
     - update
 EOF
