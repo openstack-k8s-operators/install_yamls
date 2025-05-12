@@ -131,7 +131,7 @@ while read -r node_name services; do
 done <<< $openstackdataplanenodesets
 
 DATAPLANE_DEPLOYMENT=edpm
-NODE_SETS=$(printf '    %s\n' "${nodes_with_ovn[@]}")
+OVN_NODE_SETS=$(printf '    %s\n' "${nodes_with_ovn[@]}")
 
 cat <<EOF >edpm-deployment-ovn-update.yaml
 apiVersion: dataplane.openstack.org/v1beta1
@@ -140,7 +140,7 @@ metadata:
   name: $DATAPLANE_DEPLOYMENT-ovn-update
 spec:
   nodeSets:
-$NODE_SETS
+$OVN_NODE_SETS
   servicesOverride:
     - ovn
 EOF
@@ -161,6 +161,8 @@ echo "MinorUpdateControlplane completed"
 get_current_state "04_after_controlplane_update"
 
 # start data plane plane update for rest of edpm services
+DATAPLANE_NODESETS=$(oc get openstackdataplanenodeset -o name | awk -F'/' '{print "    - "  $2}')
+
 cat <<EOF >edpm-deployment-update.yaml
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
@@ -168,7 +170,7 @@ metadata:
   name: $DATAPLANE_DEPLOYMENT-update
 spec:
   nodeSets:
-$NODE_SETS
+$DATAPLANE_NODESETS
   servicesOverride:
     - update
 EOF
