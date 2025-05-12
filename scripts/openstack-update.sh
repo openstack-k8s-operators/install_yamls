@@ -43,45 +43,6 @@ else
     BASE_DIR=""                 # current directory
 fi
 
-function get_current_compute_state {
-    local stage="${1:-}"
-    file_pre="${BASE_DIR}${stage:+${stage}-}"
-
-    if [ -e "${CI_INVENTORY}" ]; then
-        echo "Collecting compute state ${stage:+for $stage }in ${BASE_DIR:-${PWD}}"
-
-        # Collect all running containers an all compute nodes in ~/ci-framework-data/tests/update/ by default.
-        ansible -i "${CI_INVENTORY}" -m shell -a \
-                "sudo podman ps -q --filter 'status=running' | xargs -I {} sudo podman inspect --format {% raw %} '{{.Name}} {{.Config.Image}} {{.State.StartedAt}}' {% endraw %} {}|sort" computes | \
-            awk -vfile_pre="${file_pre}" 'BEGIN {tp=strftime("%Y%m%d%H%M%S")} /^compute/ {if (s != "") {close(s)}; s = "containers-" $1 "_" tp ".txt"; next;}; s {print > file_pre s} '
-        # Collect packages list an all compute nodes in ~/ci-framework-data/tests/update/ by default.
-        ansible -i "${CI_INVENTORY}" -m shell -a \
-                "sudo dnf list installed | sort" computes | \
-            awk -vfile_pre="${file_pre}" 'BEGIN {tp=strftime("%Y%m%d%H%M%S")} /^compute/ {if (s != "") {close(s)}; s = "packages-" $1 "_" tp ".txt"; next;}; s {print > file_pre s} '
-    fi
-}
-
-function get_current_pod_state {
-    local stage="${1:-}"
-    file_pre="${BASE_DIR}${stage:+${stage}-}"
-
-    echo "Collecting pod state ${stage:+for $stage }in ${BASE_DIR:-${PWD}}"
-
-    local openstack_state_file="${file_pre}pods_os_state_$(date +%Y%m%d_%H%M%S).tsv"
-    local os_operator_state_file="${file_pre}pods_os_op_state_$(date +%Y%m%d_%H%M%S).tsv"
-    oc get pods -n "${OPERATOR_NAMESPACE}" -o json | jq -r '.items[] | select(.status.phase == "Running") | . as $pod | .status.containerStatuses[] | [$pod.metadata.name, $pod.status.startTime, .image, .state.running.startedAt ] | @tsv' > $os_operator_state_file
-
-    oc get pods -n "${NAMESPACE}" -o json | jq -r '.items[] | select(.status.phase == "Running") | . as $pod | .status.containerStatuses[] | [$pod.metadata.name, $pod.status.startTime, .image, .state.running.startedAt ] | @tsv' > $openstack_state_file
-}
-
-function get_current_state {
-    local stage="${1:-}"
-    get_current_compute_state "${stage}"
-    get_current_pod_state "${stage}"
-}
-
-get_current_state "01_before_update"
-
 OPENSTACK_OPERATOR_CSV=$(oc get csv -n $OPERATOR_NAMESPACE -o name | grep openstack-operator)
 OPENSTACK_VERSION_CR=$(oc get openstackversion -n $NAMESPACE -o name)
 
@@ -90,6 +51,8 @@ if [ "${FAKE_UPDATE}" != "false" ]; then
     sed -i $OUTFILE -e "s|value: .*/$CONTAINERS_NAMESPACE/\(.*\)[@:].*|value: quay.io/$CONTAINERS_NAMESPACE/\1:$CONTAINERS_TARGET_TAG|g"
     OPENSTACK_DEPLOYED_VERSION=$(oc get -n $NAMESPACE $OPENSTACK_VERSION_CR --template={{.spec.targetVersion}})
     sed -i $OUTFILE -e "s|value: $OPENSTACK_DEPLOYED_VERSION|value: $OPENSTACK_VERSION|"
+
+    ${UPDATE_ARTIFACT_DIR}/update_event.sh Applying Fake Update CR
 
     oc apply -f $OUTFILE
 fi
@@ -107,12 +70,14 @@ cat <<EOF >openstackversionpatch.yaml
       }
 EOF
 
+${UPDATE_ARTIFACT_DIR}/update_event.sh Patching the Openstack Version
+
 oc patch $OPENSTACK_VERSION_CR  --type=merge  --patch-file openstackversionpatch.yaml
 
 # wait for ovn update on control plane
 oc wait $OPENSTACK_VERSION_CR --for=condition=MinorUpdateOVNControlplane --timeout=$TIMEOUT
 
-get_current_state "02_after_ovn_controlplane_update"
+${UPDATE_ARTIFACT_DIR}/update_event.sh MinorUpdateOVNControlplane Completed
 
 # start ovn update on data plane
 nodes_with_ovn=()
@@ -145,6 +110,8 @@ $OVN_NODE_SETS
     - ovn
 EOF
 
+${UPDATE_ARTIFACT_DIR}/update_event.sh Applying the OVN CRD
+
 oc create -f edpm-deployment-ovn-update.yaml
 
 oc get openstackdataplanedeployment ${DATAPLANE_DEPLOYMENT}-ovn-update -o yaml
@@ -152,13 +119,13 @@ oc get openstackdataplanedeployment ${DATAPLANE_DEPLOYMENT}-ovn-update -o yaml
 oc wait $OPENSTACK_VERSION_CR  --for=condition=MinorUpdateOVNDataplane --timeout=$TIMEOUT
 echo "MinorUpdateOVNDataplane completed"
 
-get_current_state "03_after_ovn_dataplane_update"
+${UPDATE_ARTIFACT_DIR}/update_event.sh MinorUpdateOVNDataplane Completed
 
 # wait for control plane update to complete
 oc wait $OPENSTACK_VERSION_CR --for=condition=MinorUpdateControlplane --timeout=$TIMEOUT
-echo "MinorUpdateControlplane completed"
 
-get_current_state "04_after_controlplane_update"
+${UPDATE_ARTIFACT_DIR}/update_event.sh MinorUpdateControlplane Completed
+echo "MinorUpdateControlplane completed"
 
 # start data plane plane update for rest of edpm services
 DATAPLANE_NODESETS=$(oc get openstackdataplanenodeset -o name | awk -F'/' '{print "    - "  $2}')
@@ -175,13 +142,14 @@ $DATAPLANE_NODESETS
     - update
 EOF
 
+${UPDATE_ARTIFACT_DIR}/update_event.sh Applying the UPDATE CRD
+
 oc create -f edpm-deployment-update.yaml
 
 # wait for completion of minor update
 oc wait $OPENSTACK_VERSION_CR --for=condition=MinorUpdateDataplane --timeout=$TIMEOUT
 echo "MinorUpdate completed"
-
-get_current_state "05_after_update"
+${UPDATE_ARTIFACT_DIR}/update_event.sh MinorUpdateDataplane Completed
 
 # check for the status of edpm update
 oc get openstackdataplanedeployment ${DATAPLANE_DEPLOYMENT}-update -o yaml
