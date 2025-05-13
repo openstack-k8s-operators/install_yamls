@@ -115,8 +115,23 @@ oc wait $OPENSTACK_VERSION_CR --for=condition=MinorUpdateOVNControlplane --timeo
 get_current_state "02_after_ovn_controlplane_update"
 
 # start ovn update on data plane
-DATAPLANE_NODESET=$(oc get openstackdataplanenodeset -o name | awk -F'/' '{print "    - "  $2}')
-DATAPLANE_DEPLOYMENT=$(oc get openstackdataplanedeployment -o name | awk -F'/' '{print $2; exit}')
+nodes_with_ovn=()
+# Get the names of all OpenStackDataPlaneNodeSet resources
+openstackdataplanenodesets=$(oc get openstackdataplanenodeset -o custom-columns=NAME:.metadata.name,SERVICES:.spec.services --no-headers)
+
+# Loop through each OpenStackDataPlaneNodeSet
+while read -r node_name services; do
+    # Check if 'ovn' is in the list of services
+    for service in ${services[@]};do
+        if [[ "$service" == *"ovn"* ]]; then
+            nodes_with_ovn+=("- $node_name")
+            break
+        fi
+    done
+done <<< $openstackdataplanenodesets
+
+DATAPLANE_DEPLOYMENT=edpm
+OVN_NODE_SETS=$(printf '    %s\n' "${nodes_with_ovn[@]}")
 
 cat <<EOF >edpm-deployment-ovn-update.yaml
 apiVersion: dataplane.openstack.org/v1beta1
@@ -125,14 +140,14 @@ metadata:
   name: $DATAPLANE_DEPLOYMENT-ovn-update
 spec:
   nodeSets:
-$DATAPLANE_NODESET
+$OVN_NODE_SETS
   servicesOverride:
     - ovn
 EOF
 
 oc create -f edpm-deployment-ovn-update.yaml
 
-oc get openstackdataplanedeployment
+oc get openstackdataplanedeployment ${DATAPLANE_DEPLOYMENT}-ovn-update -o yaml
 # wait for ovn dataplane completes
 oc wait $OPENSTACK_VERSION_CR  --for=condition=MinorUpdateOVNDataplane --timeout=$TIMEOUT
 echo "MinorUpdateOVNDataplane completed"
@@ -146,6 +161,8 @@ echo "MinorUpdateControlplane completed"
 get_current_state "04_after_controlplane_update"
 
 # start data plane plane update for rest of edpm services
+DATAPLANE_NODESETS=$(oc get openstackdataplanenodeset -o name | awk -F'/' '{print "    - "  $2}')
+
 cat <<EOF >edpm-deployment-update.yaml
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
@@ -153,7 +170,7 @@ metadata:
   name: $DATAPLANE_DEPLOYMENT-update
 spec:
   nodeSets:
-$DATAPLANE_NODESET
+$DATAPLANE_NODESETS
   servicesOverride:
     - update
 EOF
