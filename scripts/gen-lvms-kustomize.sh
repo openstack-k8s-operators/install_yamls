@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x
 
 # expect that the common.sh is in the same dir as the calling script
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
@@ -6,9 +7,9 @@ SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 # Some defaults
 DISK_SIZE=${DISK_SIZE:-100}
-TARGET_DIR=${TARGET_DIR:=$HOME/.crc}
+TARGET_DIR=${TARGET_DIR:=$HOME/.crc/machines/crc}
 OCP_API=${OCP_API:-"192.168.130.11"}
-REQUIRE_RESTART=0
+REQUIRE_RESTART=${REQUIRE_RESTART:-1}
 # if this parameter is set to 1, a LVM_CLUSTER CR is created and applied,
 # otherwise, only the operator is deployed through OLM
 LVMS_CLUSTER_CR=${LVMS_CLUSTER_CR:-0}
@@ -47,8 +48,6 @@ function add_device {
         # Attach the disk to the crc VM: it requires reboot
         echo "Attaching disk $disk_name to crc"
         sudo virsh attach-disk crc "${TARGET_DIR}/${disk_name}" "${disk_name}" --config
-        # Trigger a CRC restart
-        REQUIRE_RESTART=1
     fi
 }
 
@@ -73,6 +72,20 @@ function lvms_operator_kustomize {
 cat <<EOF >kustomization.yaml
 resources:
 - https://github.com/openshift/lvm-operator/config/olm-deploy
+
+patches:
+- patch: |-
+    - op: remove
+      path: /spec/channel
+    - op: replace
+      path: /spec/source
+      value: redhat-operators
+    - op: replace
+      path: /spec/sourceNamespace
+      value: openshift-marketplace
+  target:
+    kind: Subscription
+    name: lvms-operator
 EOF
 
 # apply the LVMS operator
@@ -98,7 +111,12 @@ spec:
           name: thin-pool-1
           sizePercent: 90
           overprovisionRatio: 10
+        deviceSelector:
+          paths:
 EOF
+for disk in "${!DEVICES[@]}"; do
+    echo "          - /dev/$disk"
+done >> lvms_cluster.yaml
 
 # apply the resulting CR
 oc apply -f "${DEPLOY_DIR}"/lvms_cluster.yaml
@@ -125,15 +143,18 @@ EOF
 oc apply -f "${DEPLOY_DIR}"/lvms_ns.yaml
 }
 
-function patch_csv_metrics {
-    until oc -n "$LVMS_NAMESPACE" get csv lvms-operator.v0.0.1 &> /dev/null; do
+function get_csv_version {
+    until [[ "Succeeded" == "$(oc -n "$LVMS_NAMESPACE" get csv -o json | jq -r '.items[] | select(.metadata.name | contains("lvms-operator")) | .status.phase' 2>/dev/null)" ]]; do
         sleep $TIME
-        echo -n .
         (( CSV_TIMEOUT-- ))
         [[ "$CSV_TIMEOUT" -eq 0 ]] && exit 1
     done
-    echo
-    oc -n "$LVMS_NAMESPACE" patch csv -n openshift-storage lvms-operator.v0.0.1 \
+    oc -n openshift-storage get csv -o json | jq -r '.items[] | select(.metadata.name | contains("lvms-operator")) | .spec.version'
+}
+
+function patch_csv_metrics {
+    version=$(get_csv_version)
+    oc -n "$LVMS_NAMESPACE" patch csv -n "$LVMS_NAMESPACE" lvms-operator.v$version \
         --type=json -p="[{'op': 'remove', 'path': '/spec/install/spec/deployments/0/spec/template/spec/containers/0/volumeMounts/1'}]"
 }
 
