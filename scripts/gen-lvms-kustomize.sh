@@ -73,6 +73,20 @@ function lvms_operator_kustomize {
 cat <<EOF >kustomization.yaml
 resources:
 - https://github.com/openshift/lvm-operator/config/olm-deploy
+
+patches:
+- patch: |-
+    - op: remove
+      path: /spec/channel
+    - op: replace
+      path: /spec/source
+      value: redhat-operators
+    - op: replace
+      path: /spec/sourceNamespace
+      value: openshift-marketplace
+  target:
+    kind: Subscription
+    name: lvms-operator
 EOF
 
 # apply the LVMS operator
@@ -125,15 +139,18 @@ EOF
 oc apply -f "${DEPLOY_DIR}"/lvms_ns.yaml
 }
 
-function patch_csv_metrics {
-    until oc -n "$LVMS_NAMESPACE" get csv lvms-operator.v0.0.1 &> /dev/null; do
+function get_csv_version {
+    until [[ "Succeeded" == "$(oc -n "$LVMS_NAMESPACE" get csv -o custom-columns=":.status.phase" --no-headers 2>/dev/null)" ]]; do
         sleep $TIME
-        echo -n .
         (( CSV_TIMEOUT-- ))
         [[ "$CSV_TIMEOUT" -eq 0 ]] && exit 1
     done
-    echo
-    oc -n "$LVMS_NAMESPACE" patch csv -n openshift-storage lvms-operator.v0.0.1 \
+    oc get csv -o custom-columns=":.spec.version" --no-headers
+}
+
+function patch_csv_metrics {
+    version=$(get_csv_version)
+    oc -n "$LVMS_NAMESPACE" patch csv -n "$LVMS_NAMESPACE" lvms-operator.v$version \
         --type=json -p="[{'op': 'remove', 'path': '/spec/install/spec/deployments/0/spec/template/spec/containers/0/volumeMounts/1'}]"
 }
 
