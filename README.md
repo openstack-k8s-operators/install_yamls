@@ -213,3 +213,5 @@ To deploy operators in okd community distro add parameter OKD=true to the make c
 ```bash
 make openstack OKD=true
 ```
+
+* [Openstack Minor Update - Running minor update](MINOR_UPDATE.md)
