@@ -20,7 +20,7 @@ CONTAINERS_TARGET_TAG=${CONTAINERS_TARGET_TAG:-current-podified}
 FAKE_UPDATE=${FAKE_UPDATE:-false}
 OPENSTACK_VERSION=${OPENSTACK_VERSION:-0.0.2}
 OUTFILE=${OUTFILE:-csv.yaml}
-TIMEOUT=${TIMEOUT:-600s}
+TIMEOUT=${TIMEOUT:-1000s}
 CI_INVENTORY="${HOME}/ci-framework-data/artifacts/zuul_inventory.yml"
 UPDATE_ARTIFACT_DIR="${UPDATE_ARTIFACT_DIR:-${HOME}/ci-framework-data/tests/update}"
 
