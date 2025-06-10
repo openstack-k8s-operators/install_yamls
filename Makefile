@@ -723,9 +723,10 @@ endif
 
 ##@ OPENSTACK
 
-OPENSTACK_PREP_DEPS := validate_marketplace metallb
+OPENSTACK_PREP_DEPS := validate_marketplace
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_NMSTATE)), nmstate)
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_NNCP)), nncp_with_retries)
+OPENSTACK_PREP_DEPS += metallb
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_CERT_MANAGER)), certmanager)
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_ISOLATION)), netattach metallb_config)
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_BGP)), netattach metallb_config)
