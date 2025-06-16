@@ -836,6 +836,16 @@ openstack_update_run:
 	$(eval $(call vars,$@,openstack))
 	bash scripts/openstack-update.sh
 
+.PHONY: update_services ## prepares new openstackversion, patches the openstackversion target version to the available version, and runs openstack update with new update-servies openstackdataplanedeployment at the end
+update_services:
+	$(eval $(call vars,$@,openstack))
+	bash scripts/openstack-update-services.sh
+
+.PHONY: update_system
+update_system: ## runs update-system openstackdataplanedeployment to start update packages on edpm nodes
+	$(eval $(call vars,$@,openstack))
+	bash scripts/openstack-update-system.sh
+
 OV := $(shell oc get openstackversion -n $(NAMESPACE) -o name)
 .PHONY: openstack_patch_version
 openstack_patch_version: ## patches the openstackversion target version to the available version, if there is an update available
