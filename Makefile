@@ -836,6 +836,16 @@ openstack_update_run:
 	$(eval $(call vars,$@,openstack))
 	bash scripts/openstack-update.sh
 
+.PHONY: update_services
+update_services:
+	$(eval $(call vars,$@,openstack))
+	bash scripts/openstack-update-services.sh
+
+.PHONY: update_system
+update_system:
+	$(eval $(call vars,$@,openstack))
+	bash scripts/openstack-update-system.sh
+
 OV := $(shell oc get openstackversion -n $(NAMESPACE) -o name)
 .PHONY: openstack_patch_version
 openstack_patch_version: ## patches the openstackversion target version to the available version, if there is an update available
