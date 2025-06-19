@@ -1104,6 +1104,7 @@ endif
 ifeq ($(NETWORK_BGP), true)
 netconfig_deploy_prep: export BGP=enabled
 endif
+netconfig_deploy_prep: export INTERFACE_MTU=${NETWORK_MTU}
 netconfig_deploy_prep: export IMAGE=${NETCONFIG_DEPL_IMG}
 netconfig_deploy_prep: export REPO=${INFRA_REPO}
 netconfig_deploy_prep: export BRANCH=${INFRA_BRANCH}
