@@ -43,6 +43,7 @@ fi
 IMAGE=${IMAGE:-unused}
 IMAGE_PATH=${IMAGE_PATH:-containerImage}
 STORAGE_REQUEST=${STORAGE_REQUEST:-10G}
+INTERFACE_MTU=${INTERFACE_MTU:-1500}
 
 if [ ! -d ${DEPLOY_DIR} ]; then
     mkdir -p ${DEPLOY_DIR}
@@ -134,6 +135,28 @@ if [ "${KIND}" == "NetConfig" ]; then
     else
         IPV6_SUBNET_INDEX=1
     fi
+
+    # Set MTU as requested
+    cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/networks/0/mtu
+      value: ${INTERFACE_MTU}
+    - op: replace
+      path: /spec/networks/1/mtu
+      value: ${INTERFACE_MTU}
+    - op: replace
+      path: /spec/networks/2/mtu
+      value: ${INTERFACE_MTU}
+    - op: replace
+      path: /spec/networks/3/mtu
+      value: ${INTERFACE_MTU}
+    - op: replace
+      path: /spec/networks/4/mtu
+      value: ${INTERFACE_MTU}
+    - op: replace
+      path: /spec/networks/5/mtu
+      value: ${INTERFACE_MTU}
+EOF
 
     if [ -z "${IPV4_ENABLED}" ]; then
         # Delete IPv4 subnets if not enabled
