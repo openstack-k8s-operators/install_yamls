@@ -831,6 +831,14 @@ openstack_deploy_cleanup: namespace netconfig_deploy_cleanup ## cleans up the se
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f - || true
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/openstack-operator ${DEPLOY_DIR}
 
+.PHONY: openstack_update_prep
+openstack_update_prep: export STOP_BEFORE_UPDATE_RUN=true
+openstack_update_prep: export FAKE_UPDATE=true
+openstack_update_prep: input openstack openstack_init openstack_wait_deploy
+	$(eval $(call vars,$@,openstack))
+	make edpm_wait_deploy
+	bash scripts/openstack-update.sh
+
 .PHONY: openstack_update_run
 openstack_update_run:
 	$(eval $(call vars,$@,openstack))
