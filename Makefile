@@ -864,7 +864,7 @@ OV := $(shell oc get openstackversion -n $(NAMESPACE) -o name)
 .PHONY: openstack_patch_version
 openstack_patch_version: ## patches the openstackversion target version to the available version, if there is an update available
 	$(eval $(call vars,$@,openstack))
-	oc wait -n ${NAMESPACE} ${OV} --for=condition=MinorUpdateAvailable --timeout=${TIMEOUT} && \
+	oc wait -n ${NAMESPACE} ${OV} --for=condition=MinorUpdateAvailable=True --timeout=${TIMEOUT} && \
 	oc patch -n ${NAMESPACE} ${OV} --type merge --patch '{"spec": {"targetVersion": "$(shell oc get -n $(NAMESPACE) ${OV} -o yaml | yq .status.availableVersion)"}}'
 
 .PHONY: edpm_deploy_generate_keys
