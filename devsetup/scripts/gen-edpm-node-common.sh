@@ -52,17 +52,61 @@ BASE_DISK_FILENAME=${BASE_DISK_FILENAME:-"$(basename ${EDPM_IMAGE_URL})"}
 DISK_FILENAME=${DISK_FILENAME:-"edpm-${EDPM_SERVER_ROLE}-${EDPM_COMPUTE_SUFFIX}.qcow2"}
 DISK_FILEPATH=${DISK_FILEPATH:-"${CRC_POOL}/${DISK_FILENAME}"}
 
-NVME1_FILENAME=${NVME1_FILENAME:-"edpm-${EDPM_SERVER_ROLE}-${EDPM_COMPUTE_SUFFIX}-nvme1.qcow2"}
-NVME1_FILEPATH=${NVME1_FILEPATH:-"${CRC_POOL}/${NVME1_FILENAME}"}
+EDPM_EMULATED_NVME_ENABLED=${EDPM_EMULATED_NVME_ENABLED:-"false"}
+NVME_XML=""
 
-qemu-img create -f qcow2 ${NVME1_FILEPATH} 1G
-chmod og+w ${NVME1_FILEPATH}
+if [ $EDPM_EMULATED_NVME_ENABLED == "true" ] ; then
+    NVME1_FILENAME=${NVME1_FILENAME:-"edpm-${EDPM_SERVER_ROLE}-${EDPM_COMPUTE_SUFFIX}-nvme1.qcow2"}
+    NVME1_FILEPATH=${NVME1_FILEPATH:-"${CRC_POOL}/${NVME1_FILENAME}"}
 
-NVME2_FILENAME=${NVME2_FILENAME:-"edpm-${EDPM_SERVER_ROLE}-${EDPM_COMPUTE_SUFFIX}-nvme2.qcow2"}
-NVME2_FILEPATH=${NVME2_FILEPATH:-"${CRC_POOL}/${NVME2_FILENAME}"}
+    qemu-img create -f qcow2 ${NVME1_FILEPATH} 1G
+    chmod og+w ${NVME1_FILEPATH}
+    # intentionally ignore errors on non selinux enabled systems
+    chcon -t svirt_image_t ${NVME1_FILEPATH} | true
 
-qemu-img create -f qcow2 ${NVME2_FILEPATH} 1G
-chmod og+w ${NVME2_FILEPATH}
+    NVME2_FILENAME=${NVME2_FILENAME:-"edpm-${EDPM_SERVER_ROLE}-${EDPM_COMPUTE_SUFFIX}-nvme2.qcow2"}
+    NVME2_FILEPATH=${NVME2_FILEPATH:-"${CRC_POOL}/${NVME2_FILENAME}"}
+
+    qemu-img create -f qcow2 ${NVME2_FILEPATH} 1G
+    chmod og+w ${NVME2_FILEPATH}
+    # intentionally ignore errors on non selinux enabled systems
+    chcon -t svirt_image_t ${NVME2_FILEPATH} | true
+
+    NVME_XML=$(cat <<EOF
+  <qemu:commandline>
+    <qemu:arg value='-drive'/>
+    <qemu:arg value='file=${NVME1_FILEPATH},format=qcow2,if=none,id=NVME1'/>
+    <qemu:arg value='-device'/>
+    <qemu:arg value='nvme,drive=NVME1,serial=nvme-1,bus=pcie.0,addr=0x8'/>
+  </qemu:commandline>
+  <qemu:commandline>
+    <qemu:arg value='-drive'/>
+    <qemu:arg value='file=${NVME2_FILEPATH},format=qcow2,if=none,id=NVME2'/>
+    <qemu:arg value='-device'/>
+    <qemu:arg value='nvme,drive=NVME2,serial=nvme-2,bus=pcie.0,addr=0x9'/>
+  </qemu:commandline>
+EOF
+)
+fi
+
+EDPM_EMULATED_SRIOV_NIC_ENABLED=${EDPM_EMULATED_SRIOV_NIC_ENABLED:-"false"}
+IGB_XML=""
+if [ $EDPM_EMULATED_SRIOV_NIC_ENABLED == "true" ] ; then
+    IGB_XML=$(cat <<EOF
+    <interface type='network'>
+      <source ${EDPM_COMPUTE_NETWORK_TYPE}='${EDPM_COMPUTE_NETWORK}'/>
+      <model type='igb'/>
+    </interface>
+    <interface type='network'>
+      <source ${EDPM_COMPUTE_NETWORK_TYPE}='${EDPM_COMPUTE_NETWORK}'/>
+      <model type='igb'/>
+    </interface>
+EOF
+)
+fi
+
+
+
 
 SSH_PUBLIC_KEY=${SSH_PUBLIC_KEY:-"${OUTPUT_DIR}/ansibleee-ssh-key-id_rsa.pub"}
 MAC_ADDRESS=${MAC_ADDRESS:-"$(echo -n 52:54:00; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':')"}
@@ -167,14 +211,7 @@ cat <<EOF >${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}.xml
       <model type='virtio'/>
       <address type='pci' domain='0x0000' bus='0x02' slot='0x00' function='0x0'/>
     </interface>
-    <interface type='network'>
-      <source ${EDPM_COMPUTE_NETWORK_TYPE}='${EDPM_COMPUTE_NETWORK}'/>
-      <model type='igb'/>
-    </interface>
-    <interface type='network'>
-      <source ${EDPM_COMPUTE_NETWORK_TYPE}='${EDPM_COMPUTE_NETWORK}'/>
-      <model type='igb'/>
-    </interface>
+    ${IGB_XML}
     <serial type='pty'>
       <target port='0'/>
     </serial>
@@ -200,18 +237,7 @@ cat <<EOF >${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}.xml
       <driver intremap='on' iotlb='on'/>
     </iommu>
   </devices>
-  <qemu:commandline>
-    <qemu:arg value='-drive'/>
-    <qemu:arg value='file=${NVME1_FILEPATH},format=qcow2,if=none,id=NVME1'/>
-    <qemu:arg value='-device'/>
-    <qemu:arg value='nvme,drive=NVME1,serial=nvme-1,bus=pcie.0,addr=0x8'/>
-  </qemu:commandline>
-  <qemu:commandline>
-    <qemu:arg value='-drive'/>
-    <qemu:arg value='file=${NVME2_FILEPATH},format=qcow2,if=none,id=NVME2'/>
-    <qemu:arg value='-device'/>
-    <qemu:arg value='nvme,drive=NVME2,serial=nvme-2,bus=pcie.0,addr=0x9'/>
-  </qemu:commandline>
+  ${NVME_XML}
 </domain>
 EOF
 

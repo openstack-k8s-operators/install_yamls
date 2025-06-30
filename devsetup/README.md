@@ -116,6 +116,13 @@ Deploy a compute node VM:
 make edpm_compute
 ```
 
+You can deploy a compute node VM with additional devices:
+```
+EDPM_EMULATED_NVME_ENABLED=true \
+EDPM_EMULATED_SRIOV_NIC_ENABLED=true \
+make edpm_compute
+```
+
 Execute the edpm_deploy step:
 ```
 pushd ..

@@ -33,6 +33,8 @@ STANDALONE=${STANDALONE:-false}
 virsh destroy ${EDPM_COMPUTE_NAME} || :
 virsh undefine --snapshots-metadata --remove-all-storage ${EDPM_COMPUTE_NAME} || :
 ${CLEANUP_DIR_CMD} "${CRC_POOL}/${EDPM_COMPUTE_NAME}.qcow2"
+${CLEANUP_DIR_CMD} "${CRC_POOL}/${EDPM_COMPUTE_NAME}-nvme1.qcow2"
+${CLEANUP_DIR_CMD} "${CRC_POOL}/${EDPM_COMPUTE_NAME}-nvme2.qcow2"
 
 chassis_uuid=$(run_ovn_ctl_command SB --format=csv --data=bare --columns=name,hostname list chassis | awk -F "," "/,${EDPM_COMPUTE_NAME}/{ print \$1 }")
 
