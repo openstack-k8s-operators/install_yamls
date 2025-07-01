@@ -107,6 +107,57 @@ done <<< $openstackdataplanenodesets
 DATAPLANE_DEPLOYMENT=edpm
 OVN_NODE_SETS=$(printf '    %s\n' "${nodes_with_ovn[@]}")
 
+# Ensure we don't get signature problem using a custom playbook
+
+cat > edpm-custom-docker-policy <<'EOF'
+---
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  name: edpm-custom-docker-policy
+spec:
+  label: dataplane-deployment-custom-service
+  playbookContents: |
+    - hosts: all
+      tasks:
+        - name: Do no block on signature for container
+          ansible.builtin.copy:
+            content: |
+              {
+                  "default": [
+                      {
+                          "type": "insecureAcceptAnything"
+                      }
+                  ],
+                  "transports": {
+                      "docker": {
+                          "registry.access.redhat.com": [
+                              {
+                                  "type": "insecureAcceptAnything"
+                              }
+                          ],
+                          "registry.redhat.io": [
+                              {
+                                  "type": "insecureAcceptAnything"
+                              }
+                          ]
+                      },
+                      "docker-daemon": {
+                          "": [
+                              {
+                                  "type": "insecureAcceptAnything"
+                              }
+                          ]
+                      }
+                  }
+              }
+            dest: "/etc/containers/policy.json"
+          become: true
+EOF
+
+oc create -f edpm-custom-docker-policy.yaml
+
+# Add the custom playbook and make sure to re-authenticate
 cat <<EOF >edpm-deployment-ovn-update.yaml
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
@@ -116,6 +167,8 @@ spec:
   nodeSets:
 $OVN_NODE_SETS
   servicesOverride:
+    - edpm-custom-docker-policy
+    - configure-os
     - ovn
 EOF
 
