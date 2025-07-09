@@ -60,12 +60,10 @@ echo STORAGE_MACVLAN ${STORAGE_MACVLAN}
 if [ -n "$IPV4_ENABLED" ]; then
 echo CTLPLANE_IP_ADDRESS_PREFIX ${CTLPLANE_IP_ADDRESS_PREFIX}
 echo CTLPLANE_IP_ADDRESS_SUFFIX ${CTLPLANE_IP_ADDRESS_SUFFIX}
-echo DNS_SERVER ${DNS_SERVER}
 fi
 if [ -n "$IPV6_ENABLED" ]; then
 echo CTLPLANE_IPV6_ADDRESS_PREFIX ${CTLPLANE_IPV6_ADDRESS_PREFIX}
 echo CTLPLANE_IPV6_ADDRESS_SUFFIX ${CTLPLANE_IPV6_ADDRESS_SUFFIX}
-echo DNS_SERVER_IPV6 ${DNS_SERVER_IPV6}
 fi
 if [ -n "$BGP" ]; then
 echo INTERFACE_BGP_1 ${INTERFACE_BGP_1}
@@ -101,26 +99,6 @@ metadata:
 spec:
   desiredState:
 EOF_CAT
-
-    #
-    # DNS Resolver
-    #
-    cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
-    dns-resolver:
-      config:
-        search: []
-        server:
-EOF_CAT
-    if [ -n "$IPV4_ENABLED" ]; then
-        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
-        - ${DNS_SERVER}
-EOF_CAT
-    fi
-    if [ -n "$IPV6_ENABLED" ]; then
-        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
-        - ${DNS_SERVER_IPV6}
-EOF_CAT
-    fi
     if [ -n "$NNCP_ADDITIONAL_HOST_ROUTES" ] || [ -n "$NNCP_INTERNALAPI_HOST_ROUTES" ] || \
        [ -n "$NNCP_STORAGE_HOST_ROUTES" ] || [ -n "$NNCP_STORAGEMGMT_HOST_ROUTES" ] || \
        [ -n "$NNCP_TENANT_HOST_ROUTES" ]; then
