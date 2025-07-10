@@ -477,7 +477,6 @@ NNCP_CTLPLANE_IPV6_ADDRESS_SUFFIX   ?=10
 NNCP_GATEWAY_IPV6                   ?=fd00:aaaa::1
 NNCP_DNS_SERVER_IPV6                ?=fd00:aaaa::1
 NNCP_ADDITIONAL_HOST_ROUTES         ?=
-NNCP_RETRIES ?= 5
 
 # MetalLB
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
@@ -739,7 +738,7 @@ endif
 
 OPENSTACK_PREP_DEPS := validate_marketplace
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_NMSTATE)), nmstate)
-OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_NNCP)), nncp_with_retries)
+OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_NNCP)), nncp)
 OPENSTACK_PREP_DEPS += metallb
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_CERT_MANAGER)), certmanager)
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_ISOLATION)), netattach metallb_config)
@@ -2363,25 +2362,6 @@ else
 	oc wait deployments/nmstate-webhook -n ${NAMESPACE} --for condition=Available --timeout=${TIMEOUT}
 endif
 
-.PHONY: nncp_with_retries
-nncp_with_retries: nncp_dns ## Deploy NNCP with retries
-	 $(eval $(call vars,$@))
-	bash scripts/retry_make_nncp.sh $(NNCP_RETRIES)
-
-.PHONY: nncp_dns
-nncp_dns: export DNS_SERVER=${NNCP_DNS_SERVER}
-nncp_dns:
-	$(eval $(call vars,$@,nncp))
-ifeq ($(NNCP_NODES),)
-	WORKERS='$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}")' \
-	bash scripts/gen-nncp-dns.sh
-else
-	WORKERS=${NNCP_NODES} bash scripts/gen-nncp-dns.sh
-endif
-	oc apply -f ${DEPLOY_DIR}/
-	timeout ${NNCP_TIMEOUT} bash -c "while ! (oc wait nncp -l osp/interface=nncp-dns --for jsonpath='{.status.conditions[0].reason}'=SuccessfullyConfigured); do sleep 10; done"
-	oc delete nncp -l osp/interface=nncp-dns
-
 .PHONY: nncp
 nncp: export INTERFACE=${NNCP_INTERFACE}
 nncp: export BRIDGE_NAME=${NNCP_BRIDGE}
@@ -2408,7 +2388,7 @@ ifeq ($(NETWORK_ISOLATION_IPV6), true)
 nncp: export IPV6_ENABLED=true
 nncp: export CTLPLANE_IPV6_ADDRESS_PREFIX=${NNCP_CTLPLANE_IPV6_ADDRESS_PREFIX}
 nncp: export CTLPLANE_IPV6_ADDRESS_SUFFIX=${NNCP_CTLPLANE_IPV6_ADDRESS_SUFFIX}
-nncp: export DNS_SERVER_IPV6=${NNCP_DNS_SERVER_IPV6}
+nncp: export DNS_SERVER=${NNCP_DNS_SERVER_IPV6}
 endif
 ifeq ($(NETWORK_ISOLATION_IPV4), true)
 nncp: export IPV4_ENABLED=true
@@ -2431,6 +2411,8 @@ else
 endif
 	oc apply -f ${DEPLOY_DIR}/
 	timeout ${NNCP_TIMEOUT} bash -c "while ! (oc wait nncp -l osp/interface=${NNCP_INTERFACE} --for jsonpath='{.status.conditions[0].reason}'=SuccessfullyConfigured); do sleep 10; done"
+	oc patch dns.operator/default --type merge -p '{"spec":{"upstreamResolvers":{"policy":"Sequential","upstreams":[{"type":"Network","address":"'${DNS_SERVER}'","port":53},{"type":"SystemResolvConf"}]}}}'
+	timeout ${NNCP_TIMEOUT} bash -c "while ! (oc wait dns.operator/default --for condition=available); do sleep 10; done"
 
 
 .PHONY: nncp_cleanup
