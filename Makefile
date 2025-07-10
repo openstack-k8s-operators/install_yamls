@@ -477,7 +477,6 @@ NNCP_CTLPLANE_IPV6_ADDRESS_SUFFIX   ?=10
 NNCP_GATEWAY_IPV6                   ?=fd00:aaaa::1
 NNCP_DNS_SERVER_IPV6                ?=fd00:aaaa::1
 NNCP_ADDITIONAL_HOST_ROUTES         ?=
-NNCP_RETRIES ?= 5
 
 # MetalLB
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
@@ -739,7 +738,7 @@ endif
 
 OPENSTACK_PREP_DEPS := validate_marketplace
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_NMSTATE)), nmstate)
-OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_NNCP)), nncp_with_retries)
+OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_NNCP)), nncp)
 OPENSTACK_PREP_DEPS += metallb
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_CERT_MANAGER)), certmanager)
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_ISOLATION)), netattach metallb_config)
@@ -2434,7 +2433,7 @@ else
 	WORKERS=${NNCP_NODES} bash scripts/gen-nncp.sh
 endif
 	echo "nncp_generate: DONE"
-
+  
 .PHONY: netattach
 netattach: export INTERFACE=${NNCP_INTERFACE}
 netattach: export BRIDGE_NAME=${NNCP_BRIDGE}
