@@ -462,7 +462,6 @@ NNCP_INTERFACE      ?= enp6s0
 NNCP_BRIDGE         ?= ospbr
 NNCP_TIMEOUT		?= 240s
 NNCP_CLEANUP_TIMEOUT	?= 120s
-NNCP_NO_RESPONSE_MAX ?= 120
 NNCP_CTLPLANE_IP_ADDRESS_SUFFIX     ?=10
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
 NNCP_CTLPLANE_IP_ADDRESS_PREFIX     ?=192.168.122
@@ -479,9 +478,6 @@ NNCP_GATEWAY_IPV6                   ?=fd00:aaaa::1
 NNCP_DNS_SERVER_IPV6                ?=fd00:aaaa::1
 NNCP_ADDITIONAL_HOST_ROUTES         ?=
 NNCP_RETRIES ?= 5
-NNCP_MAX_ATTEMPTS ?= 300
-NNCP_MAX_ATTEMPTS_CONFIG ?= 300
-NNCP_MAX_WAITING ?= 60
 
 # MetalLB
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
@@ -2371,7 +2367,12 @@ endif
 nncp_with_retries: export INTERFACE=${NNCP_INTERFACE}
 nncp_with_retries: export TIMEOUT=${NNCP_TIMEOUT}
 nncp_with_retries: export CLEANUP_TIMEOUT=${NNCP_CLEANUP_TIMEOUT}
-nncp_with_retries: export NO_RESPONSE_MAX=${NNCP_NO_RESPONSE_MAX}
+ifeq ($(NETWORK_ISOLATION_IPV6), true)
+nncp_with_retries: export DNS_SERVER_IPV6=${NNCP_DNS_SERVER_IPV6}
+endif
+ifeq ($(NETWORK_ISOLATION_IPV4), true)
+nncp_with_retries: export DNS_SERVER=${NNCP_DNS_SERVER}
+endif
 nncp_with_retries:
 	$(eval $(call vars,$@,nncp))
 	bash scripts/retry_nncp.sh
@@ -2380,7 +2381,6 @@ nncp_with_retries:
 nncp_cleanup: export INTERFACE=${NNCP_INTERFACE}
 nncp_cleanup: export TIMEOUT=${NNCP_TIMEOUT}
 nncp_cleanup: export CLEANUP_TIMEOUT=${NNCP_CLEANUP_TIMEOUT}
-nncp_cleanup: export NO_RESPONSE_MAX=${NNCP_NO_RESPONSE_MAX}
 nncp_cleanup:
 	$(eval $(call vars,$@,nncp))
 	bash scripts/retry_nncp.sh nncp_cleanup
@@ -2430,11 +2430,8 @@ nncp_generate: ## generate nncp.yaml and nncp_dns.yaml
 ifeq ($(NNCP_NODES),)
 	WORKERS='$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}")' \
 	bash scripts/gen-nncp.sh
-	WORKERS='$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}")' \
-	bash scripts/gen-nncp-dns.sh
 else
 	WORKERS=${NNCP_NODES} bash scripts/gen-nncp.sh
-	WORKERS=${NNCP_NODES} bash scripts/gen-nncp-dns.sh
 endif
 	echo "nncp_generate: DONE"
 
