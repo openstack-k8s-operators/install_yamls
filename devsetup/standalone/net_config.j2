@@ -29,6 +29,12 @@ network_config:
     mtu: {{ interface_mtu }}
     # force the MAC address of the bridge to this interface
     primary: true
+    {% if ovn_egress_iface | bool | default(true) %}
+    # this ovs_extra configuration fixes OSPRH-17551, but it will
+    # be not needed when FDP-1472 is resolved
+    ovs_extra:
+      - "set interface eth1 external-ids:ovn-egress-iface=true"
+    {% endif %}
   # external
   - type: vlan
     mtu: {{ interface_mtu }}
