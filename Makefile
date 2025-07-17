@@ -2387,7 +2387,7 @@ else
 endif
 	oc apply -f ${DEPLOY_DIR}/
 	timeout ${NNCP_TIMEOUT} bash -c "while ! (oc wait nncp -l osp/interface=${NNCP_INTERFACE} --for jsonpath='{.status.conditions[0].reason}'=SuccessfullyConfigured); do sleep 10; done"
-	oc patch dns.operator/default --type merge -p '{"spec":{"upstreamResolvers":{"policy":"Sequential","upstreams":[{"type":"Network","address":"'${DNS_SERVER}'","port":53},{"type":"SystemResolvConf"}]}}}'
+	if test -n "${DNS_SERVER}"; then oc patch dns.operator/default --type merge -p '{"spec":{"upstreamResolvers":{"policy":"Sequential","upstreams":[{"type":"Network","address":"'${DNS_SERVER}'","port":53},{"type":"SystemResolvConf"}]}}}'; fi
 	timeout ${NNCP_TIMEOUT} bash -c "while ! (oc wait dns.operator/default --for condition=available); do sleep 10; done"
 
 
