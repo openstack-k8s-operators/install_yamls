@@ -13,7 +13,7 @@ REQUIRE_RESTART=${REQUIRE_RESTART:-1}
 # if this parameter is set to 1, a LVM_CLUSTER CR is created and applied,
 # otherwise, only the operator is deployed through OLM
 LVMS_CLUSTER_CR=${LVMS_CLUSTER_CR:-0}
-LVMS_NAMESPACE=${LVMS_NAMESPACE:-openshift-storage}
+LVMS_NAMESPACE=${LVMS_NAMESPACE:-openshift-lvm-storage}
 
 # Timeout defaults
 API_TIMEOUT=100
@@ -123,13 +123,13 @@ oc apply -f "${DEPLOY_DIR}"/lvms_cluster.yaml
 }
 
 
-# Patch openshift-storage namespace to get the right annotations
+# Patch the LVMS namespace to get the right annotations
 function patch_lvms_ns {
 cat <<EOF >lvms_ns.yaml
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: openshift-storage
+  name: $LVMS_NAMESPACE
   annotations:
     workload.openshift.io/allowed: "management"
     openshift.io/sa.scc.uid-range: "1000090000/10000"
@@ -149,7 +149,7 @@ function get_csv_version {
         (( CSV_TIMEOUT-- ))
         [[ "$CSV_TIMEOUT" -eq 0 ]] && exit 1
     done
-    oc -n openshift-storage get csv -o json | jq -r '.items[] | select(.metadata.name | contains("lvms-operator")) | .spec.version'
+    oc -n $LVMS_NAMESPACE get csv -o json | jq -r '.items[] | select(.metadata.name | contains("lvms-operator")) | .spec.version'
 }
 
 function patch_csv_metrics {
@@ -199,7 +199,7 @@ function main {
     else
         # Deploy LVMS operator
         lvms_operator_deploy
-        # Patch the openshift-storage namespace with the
+        # Patch the LVMS namespace with the
         # expected annotations and labels.
         echo "Rolling out the lvms-operator"
         patch_lvms_ns
