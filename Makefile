@@ -80,6 +80,9 @@ MICROSHIFT ?= 0
 # operators gets cloned here
 OPERATOR_BASE_DIR   ?= ${OUT}/operator
 
+# bash container image (needed for certain targets)
+BASH_IMG ?= quay.io/openstack-k8s-operators/bash:latest
+
 # storage (used by some operators)
 STORAGE_CLASS       ?= "local-storage"
 CRC_STORAGE_NAMESPACE ?= crc-storage
@@ -614,6 +617,7 @@ wait: ## wait for an operator's controller-manager pod to be ready (requires OPE
 ##@ CRC
 .PHONY: crc_storage
 crc_storage: export NAMESPACE = ${CRC_STORAGE_NAMESPACE}
+crc_storage: export STORAGE_BASH_IMG = ${BASH_IMG}
 crc_storage: namespace ## initialize local storage PVs in CRC vm
 	$(eval $(call vars,$@))
 	bash scripts/create-pv.sh
@@ -622,6 +626,7 @@ crc_storage: namespace ## initialize local storage PVs in CRC vm
 
 .PHONY: crc_storage_cleanup
 crc_storage_cleanup: export NAMESPACE = ${CRC_STORAGE_NAMESPACE}
+crc_storage_cleanup: export STORAGE_BASH_IMG = ${BASH_IMG}
 crc_storage_cleanup: namespace ## cleanup local storage PVs in CRC vm
 	$(eval $(call vars,$@))
 	bash scripts/cleanup-crc-pv.sh
