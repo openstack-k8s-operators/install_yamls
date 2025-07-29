@@ -33,7 +33,7 @@ spec:
     spec:
       containers:
       - name: storage
-        image: quay.io/openstack-k8s-operators/bash:latest
+        image: ${STORAGE_BASH_IMG}
         env:
           - name: PV_NUM
             value: "${PV_NUM}"
