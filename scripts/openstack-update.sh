@@ -18,6 +18,7 @@ set -ex
 CONTAINERS_NAMESPACE=${CONTAINERS_NAMESPACE:-podified-antelope-centos9}
 CONTAINERS_TARGET_TAG=${CONTAINERS_TARGET_TAG:-current-podified}
 FAKE_UPDATE=${FAKE_UPDATE:-false}
+STOP_BEFORE_UPDATE_RUN=${STOP_BEFORE_UPDATE_RUN:-false}
 OPENSTACK_VERSION=${OPENSTACK_VERSION:-0.0.2}
 OUTFILE=${OUTFILE:-csv.yaml}
 TIMEOUT=${TIMEOUT:-1000s}
@@ -57,7 +58,7 @@ OPENSTACK_VERSION_CR=$(oc get openstackversion -n $NAMESPACE -o name)
 
 if [ "${FAKE_UPDATE}" != "false" ]; then
     oc get $OPENSTACK_OPERATOR_CSV -o yaml -n $OPERATOR_NAMESPACE  > $OUTFILE
-    sed -i $OUTFILE -e "s|value: .*/$CONTAINERS_NAMESPACE/\(.*\)[@:].*|value: quay.io/$CONTAINERS_NAMESPACE/\1:$CONTAINERS_TARGET_TAG|g"
+    sed -i $OUTFILE -e "s|value: .*/$CONTAINERS_NAMESPACE/\(.*\)@:.*|value: quay.io/$CONTAINERS_NAMESPACE/\1:$CONTAINERS_TARGET_TAG|g"
     OPENSTACK_DEPLOYED_VERSION=$(oc get -n $NAMESPACE $OPENSTACK_VERSION_CR --template={{.spec.targetVersion}})
     sed -i $OUTFILE -e "s|value: $OPENSTACK_DEPLOYED_VERSION|value: $OPENSTACK_VERSION|"
 
@@ -70,6 +71,9 @@ oc project $NAMESPACE
 # wait until openstackVersion cr completes reconcile, status.availableVersion should be the same as VERSION
 oc wait $OPENSTACK_VERSION_CR --for=jsonpath='{.status.availableVersion}'=$OPENSTACK_VERSION --timeout=$TIMEOUT
 
+if [ "${STOP_BEFORE_UPDATE_RUN}" != "false" ]; then
+    exit 0
+fi
 
 OPENSTACK_DEPLOYED_VERSION=$(oc get $OPENSTACK_VERSION_CR --template={{.spec.targetVersion}})
 
