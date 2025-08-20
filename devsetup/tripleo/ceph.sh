@@ -29,7 +29,13 @@ fi
 
 cd ci-framework
 # create block devices on all compute nodes
-ansible-playbook -i $INV playbooks/ceph.yml --tags block -e cifmw_num_osds_perhost=2
+# TODO: Remove the condition when playbook migration process
+# is completed. More info: https://github.com/openstack-k8s-operators/ci-framework/pull/3154
+if [ -f hooks/playbooks/ceph.yml ]; then
+    ansible-playbook -i "$INV" hooks/playbooks/ceph.yml --tags block -e cifmw_num_osds_perhost=2
+else
+    ansible-playbook -i "$INV" playbooks/ceph.yml --tags block -e cifmw_num_osds_perhost=2
+fi
 cd ..
 
 cat <<EOF > osd_spec.yaml
