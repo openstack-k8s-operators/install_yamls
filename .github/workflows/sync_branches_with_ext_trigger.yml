@@ -1,0 +1,14 @@
+---
+name: Sync a target branch with source branch
+on:  # yamllint disable-line rule:truthy
+  repository_dispatch:
+    types: [trigger-sync]
+
+jobs:
+  trigger-sync:
+    uses: openstack-k8s-operators/ci-framework/.github/workflows/sync_branches_reusable_workflow.yml@main
+    with:
+      source-branch: ${{ github.event.client_payload.source-branch }}
+      target-branch: ${{ github.event.client_payload.target-branch }}
+    secrets:
+      ssh-key: ${{ secrets.DEPLOY_KEY }}
