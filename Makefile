@@ -2013,7 +2013,7 @@ glance_kuttl_run: ## runs kuttl tests for the glance operator, assumes that ever
 glance_kuttl: export NAMESPACE = ${GLANCE_KUTTL_NAMESPACE}
 # Set the value of $GLANCE_KUTTL_NAMESPACE if you want to run the glance kuttl tests in a namespace different than the default (glance-kuttl-tests)
 # Add swift to get a valid backend we can test
-glance_kuttl: kuttl_common_prep swift swift_deploy glance glance_deploy_prep ## runs kuttl tests for the glance operator. Installs glance operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+glance_kuttl: kuttl_common_prep openstack_crds swift swift_deploy glance glance_deploy_prep ## runs kuttl tests for the glance operator. Installs glance operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,glance))
 	make wait
 	make glance_kuttl_run
