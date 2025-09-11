@@ -81,7 +81,9 @@ network:
           - ${DATAPLANE_DNS_SERVER}
 EOF
 
-genisoimage -output ${EDPM_BOOTC_OUTPUT_DIR}/cidata.iso -V CIDATA -r -J ${EDPM_BOOTC_OUTPUT_DIR}/user-data ${EDPM_BOOTC_OUTPUT_DIR}/meta-data ${EDPM_BOOTC_OUTPUT_DIR}/network-config
+# cidata.iso could be owned qemu:qemu if used previously, just delete any old file found
+sudo -E rm -f ${EDPM_BOOTC_OUTPUT_DIR}/cidata.iso
+xorrisofs -output ${EDPM_BOOTC_OUTPUT_DIR}/cidata.iso -V CIDATA -r -J ${EDPM_BOOTC_OUTPUT_DIR}/user-data ${EDPM_BOOTC_OUTPUT_DIR}/meta-data ${EDPM_BOOTC_OUTPUT_DIR}/network-config
 
 sudo podman run --rm -it --privileged \
     -v ${OUTPUT_DIR}:/target:z \
