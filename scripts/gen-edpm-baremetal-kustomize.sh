@@ -113,6 +113,13 @@ cat <<EOF >>kustomization.yaml
       value: ${EDPM_OS_CONTAINER_IMG}
 EOF
 fi
+if [ "$EDPM_OS_IMG" != "" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/baremetalSetTemplate/osImage
+      value: ${EDPM_OS_IMG}
+EOF
+fi
 if [ "$EDPM_CTLPLANE_INTERFACE" != "" ]; then
 cat <<EOF >>kustomization.yaml
     - op: replace
