@@ -148,6 +148,8 @@ if [ "$TLSE_ENABLED" = "true" ]; then
     export IPA_SERVER_HOSTNAME=$IPA_HOST
     mkdir /tmp/ipa-data
     podman run -d --name freeipa-server-container \
+        -p 389:389 \
+        -p 636:636 \
         --sysctl net.ipv6.conf.lo.disable_ipv6=0 \
         --security-opt seccomp=unconfined \
         --ip 10.88.0.2 \
