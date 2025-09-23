@@ -507,8 +507,9 @@ TELEMETRY_KUTTL_NAMESPACE ?= telemetry-kuttl-tests
 
 # BMO
 BMO_REPO                         ?= https://github.com/metal3-io/baremetal-operator
-BMO_BRANCH                       ?= release-0.6
+BMO_BRANCH                       ?= release-0.9
 BMO_IPA_BRANCH                   ?= stable/2024.1
+IRONIC_IMAGE_TAG                 ?= release-24.1
 BMO_COMMIT_HASH                  ?=
 BMO_PROVISIONING_INTERFACE       ?=
 ifeq ($(NETWORK_ISOLATION_USE_DEFAULT_NETWORK), true)
@@ -717,6 +718,7 @@ crc_bmo_setup: $(if $(findstring true,$(INSTALL_CERT_MANAGER)), certmanager)
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0.1\:/${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}.11\:/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0./${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}./g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && yq 'del(.spec.template.spec.containers[] | select(.name == "ironic-dnsmasq"))' -i ironic-deployment/base/ironic.yaml && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/image\: quay.io\/metal3-io\/ironic$$/image\: quay.io\/metal3-io\/ironic\:${IRONIC_IMAGE_TAG}/g' ironic-deployment/base/ironic.yaml && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && make generate manifests && bash tools/deploy.sh -bitm && popd
 ifeq ($(BMO_SETUP_ROUTE_REPLACE), true)
 	sudo ip route replace 192.168.126.0/24 dev virbr0
