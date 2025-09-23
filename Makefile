@@ -507,7 +507,7 @@ TELEMETRY_KUTTL_NAMESPACE ?= telemetry-kuttl-tests
 
 # BMO
 BMO_REPO                         ?= https://github.com/metal3-io/baremetal-operator
-BMO_BRANCH                       ?= release-0.6
+BMO_BRANCH                       ?= release-0.11
 BMO_IPA_BRANCH                   ?= stable/2024.1
 BMO_COMMIT_HASH                  ?=
 BMO_PROVISIONING_INTERFACE       ?=
