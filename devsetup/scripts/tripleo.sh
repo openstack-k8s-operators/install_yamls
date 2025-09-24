@@ -100,6 +100,7 @@ export MANILA_ENABLED=${MANILA_ENABLED:-true}
 export OCTAVIA_ENABLED=${OCTAVIA_ENABLED}
 export TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
 export TLSE_ENABLED=${TLSE_ENABLED:-false}
+export TRIPLEO_ADDITIONAL_ENV=/tmp/aditional_env_file.yaml
 export CLOUD_DOMAIN=${CLOUD_DOMAIN:-localdomain}
 export TRIPLEO_NETWORKING=${TRIPLEO_NETWORKING:-true}
 export TRIPLEO_ATTACH_EXTNET=${TRIPLEO_ATTACH_EXTNET:-true}
@@ -266,6 +267,7 @@ else
 fi
 scp $SSH_OPT ${SCRIPTPATH}/../tripleo/overcloud_roles.yaml zuul@$IP:overcloud_roles.yaml
 scp $SSH_OPT ${SCRIPTPATH}/../tripleo/ansible_config.cfg zuul@$IP:ansible_config.cfg
+[ -n "${TRIPLEO_ADDITIONAL_ENV}" ] && [ -f "${TRIPLEO_ADDITIONAL_ENV}" ] && scp $SSH_OPT "${TRIPLEO_ADDITIONAL_ENV}" zuul@$IP:/tmp/aditional_env_file.yaml || true
 if [[ "$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]]; then
     scp $SSH_OPT ${SCRIPTPATH}/../tripleo/ceph.sh root@$IP:/tmp/ceph.sh
     scp $SSH_OPT ${SCRIPTPATH}/../tripleo/generate_ceph_inventory.py root@$IP:/tmp/generate_ceph_inventory.py

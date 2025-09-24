@@ -195,4 +195,8 @@ if [ "$EDPM_COMPUTE_DHCP_AGENT_ENABLED" = "true" ] ; then
     ENV_ARGS+=" -e $HOME/dhcp_agent_template.yaml"
 fi
 
+if [ -f "${STANDALONE_ADDITIONAL_ENV}" ]; then
+    ENV_ARGS+=" -e ${STANDALONE_ADDITIONAL_ENV}"
+fi
+
 sudo ${CMD} ${CMD_ARGS} ${ENV_ARGS}
