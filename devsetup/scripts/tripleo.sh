@@ -268,6 +268,7 @@ else
 fi
 scp $SSH_OPT ${SCRIPTPATH}/../tripleo/overcloud_roles.yaml zuul@$IP:overcloud_roles.yaml
 scp $SSH_OPT ${SCRIPTPATH}/../tripleo/ansible_config.cfg zuul@$IP:ansible_config.cfg
+[ -n "${TRIPLEO_ADDITIONAL_ENV}" ] && [ -f "${TRIPLEO_ADDITIONAL_ENV}" ] && scp $SSH_OPT "${TRIPLEO_ADDITIONAL_ENV}" zuul@$IP:/tmp/additional_env_file.yaml || true
 if [[ "$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]]; then
     scp $SSH_OPT ${SCRIPTPATH}/../tripleo/ceph.sh root@$IP:/tmp/ceph.sh
     scp $SSH_OPT ${SCRIPTPATH}/../tripleo/generate_ceph_inventory.py root@$IP:/tmp/generate_ceph_inventory.py
