@@ -1531,6 +1531,7 @@ cinder_deploy_prep: cinder_deploy_cleanup ## prepares the CR to install the serv
 cinder_deploy: input cinder_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set CINDER_REPO and CINDER_BRANCH to deploy from a custom repo.
 	$(eval $(call vars,$@,cinder))
 	make wait
+	bash scripts/operator-deploy-resources.sh
 
 .PHONY: cinder_deploy_cleanup
 cinder_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
