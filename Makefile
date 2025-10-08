@@ -1141,6 +1141,8 @@ netconfig_deploy_prep: export IMAGE=${NETCONFIG_DEPL_IMG}
 netconfig_deploy_prep: export REPO=${INFRA_REPO}
 netconfig_deploy_prep: export BRANCH=${INFRA_BRANCH}
 netconfig_deploy_prep: export HASH=${INFRA_COMMIT_HASH}
+netconfig_deploy_prep: export VLAN_START=${NETWORK_VLAN_START}
+netconfig_deploy_prep: export VLAN_STEP=${NETWORK_VLAN_STEP}
 netconfig_deploy_prep: netconfig_deploy_cleanup ## prepares the CR to install the service based on the service sample file DNSMASQ and DNSDATA
 	$(eval $(call vars,$@,infra))
 	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
