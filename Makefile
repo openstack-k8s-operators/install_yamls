@@ -787,17 +787,28 @@ openstack_init: openstack_wait
 	timeout ${TIMEOUT} bash -c "while ! (oc get services -n ${OPERATOR_NAMESPACE} | grep -E '^(openstack|openstack-baremetal|infra)-operator-webhook-service' | wc -l | grep -q -e 3); do sleep 5; done"
 
 .PHONY: openstack_cleanup
+openstack_cleanup: export NAMESPACE = ${OPERATOR_NAMESPACE}
 openstack_cleanup: operator_namespace## deletes the operator, but does not cleanup the service resources
 	$(eval $(call vars,$@,openstack))
 	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 	# TODO: Once https://issues.redhat.com/browse/OSPRH-13217 is properly resolved, the
 	# explicit calls to "oc delete" the webhooks can be removed below
-	if oc get openstack &>/dev/null; then oc delete --ignore-not-found=true openstack/openstack \
-	&& oc delete mutatingwebhookconfiguration -l app.kubernetes.io/created-by=openstack-operator \
-	&& oc delete validatingwebhookconfiguration -l app.kubernetes.io/created-by=openstack-operator; fi
+	if oc get openstack &>/dev/null; then \
+		oc delete --ignore-not-found=true openstack/openstack && \
+		oc delete mutatingwebhookconfiguration -l app.kubernetes.io/created-by=openstack-operator && \
+		oc delete validatingwebhookconfiguration -l app.kubernetes.io/created-by=openstack-operator; \
+	fi
 	oc delete subscription --all=true
 	oc delete csv --all=true
 	oc delete catalogsource --all=true
+	SCRIPTPATH="$$(pwd)/scripts" && \
+	. "$${SCRIPTPATH}/cleanup_images_common.sh" && \
+	NODE_NAMES=$$(oc get node -o template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}') && \
+	for node in $$NODE_NAMES; do \
+		echo "--- Checking node $$node ---"; \
+		. "$${SCRIPTPATH}/cleanup_images_apply.sh" "$${node}"; \
+	done && \
+	oc wait job -n "${NAMESPACE}" -l install-yamls.cleanup-images --for condition=Complete --timeout 300s
 	test -d ${OPERATOR_BASE_DIR}/baremetal-operator && make crc_bmo_cleanup || true
 
 .PHONY: openstack_repo
