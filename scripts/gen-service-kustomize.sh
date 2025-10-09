@@ -40,10 +40,13 @@ if [ -n "$IPV6_ENABLED" ]; then
     echo CTLPLANE_IPV6_GATEWAY ${CTLPLANE_IPV6_GATEWAY}
 fi
 
+REPLACEMENTS="" # will be populated with replacements for the service, if necessary
 IMAGE=${IMAGE:-unused}
 IMAGE_PATH=${IMAGE_PATH:-containerImage}
 STORAGE_REQUEST=${STORAGE_REQUEST:-10G}
 INTERFACE_MTU=${INTERFACE_MTU:-1500}
+VLAN_START=${VLAN_START:-20}
+VLAN_STEP=${VLAN_STEP:-1}
 
 if [ ! -d ${DEPLOY_DIR} ]; then
     mkdir -p ${DEPLOY_DIR}
@@ -136,6 +139,12 @@ if [ "${KIND}" == "NetConfig" ]; then
         IPV6_SUBNET_INDEX=1
     fi
 
+    # Calculate VLAN IDs for networks that need them
+    VLAN_INTERNALAPI=${VLAN_START}
+    VLAN_STORAGE=$((VLAN_START + VLAN_STEP))
+    VLAN_TENANT=$((VLAN_START + 2 * VLAN_STEP))
+    VLAN_STORAGEMGMT=$((VLAN_START + 3 * VLAN_STEP))
+
     # Set MTU as requested
     cat <<EOF >>kustomization.yaml
     - op: replace
@@ -157,6 +166,71 @@ if [ "${KIND}" == "NetConfig" ]; then
       path: /spec/networks/5/mtu
       value: ${INTERFACE_MTU}
 EOF
+
+    # Generate ConfigMap with VLAN values and set up replacements for IPv4 subnets
+    # This approach is necessary because:
+    # 1. We cannot assume the order of the networks in the NetConfig CR, therefore we need to
+    #    inject VLAN IDs based on the network name
+    # 2. We cannot use name selectors in Kustomize patches, so they are not an option
+    # 3. We could use replacements and "sourceValue"s, but they are not supported in
+    #    the Kustomize version we are using, so that is not an option
+    # 4. So instead we generate a local ConfigMap with the VLAN IDs and use it as a source
+    #    for the replacements
+
+    # Generate ConfigMap and replacements for IPv4 subnets if IPv4 is enabled
+    if [ -n "${IPV4_ENABLED}" ]; then
+    cat <<EOF >vlan-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  annotations:
+    config.kubernetes.io/local-config: "true"
+  name: vlan-config
+data:
+  internalapi: ${VLAN_INTERNALAPI}
+  storage: ${VLAN_STORAGE}
+  storagemgmt: ${VLAN_STORAGEMGMT}
+  tenant: ${VLAN_TENANT}
+EOF
+
+    REPLACEMENTS="${REPLACEMENTS}
+- source:
+    kind: ConfigMap
+    name: vlan-config
+    fieldPath: data.internalapi
+  targets:
+  - select:
+      kind: NetConfig
+    fieldPaths:
+    - spec.networks.[name=internalapi].subnets.0.vlan
+- source:
+    kind: ConfigMap
+    name: vlan-config
+    fieldPath: data.storage
+  targets:
+  - select:
+      kind: NetConfig
+    fieldPaths:
+    - spec.networks.[name=storage].subnets.0.vlan
+- source:
+    kind: ConfigMap
+    name: vlan-config
+    fieldPath: data.storagemgmt
+  targets:
+  - select:
+      kind: NetConfig
+    fieldPaths:
+    - spec.networks.[name=storagemgmt].subnets.0.vlan
+- source:
+    kind: ConfigMap
+    name: vlan-config
+    fieldPath: data.tenant
+  targets:
+  - select:
+      kind: NetConfig
+    fieldPaths:
+    - spec.networks.[name=tenant].subnets.0.vlan"
+    fi
 
     if [ -z "${IPV4_ENABLED}" ]; then
         # Delete IPv4 subnets if not enabled
@@ -204,7 +278,7 @@ EOF
           - end: fd00:bbbb::250
             start: fd00:bbbb::100
           cidr: fd00:bbbb::/64
-          vlan: 20
+          vlan: ${VLAN_INTERNALAPI}
 EOF
 
         # External
@@ -230,7 +304,7 @@ EOF
           - end: fd00:cccc::250
             start: fd00:cccc::100
           cidr: fd00:cccc::/64
-          vlan: 21
+          vlan: ${VLAN_STORAGE}
 EOF
 
         # StorageMgmt
@@ -243,7 +317,7 @@ EOF
           - end: fd00:eeee::250
             start: fd00:eeee::100
           cidr: fd00:eeee::/64
-          vlan: 23
+          vlan: ${VLAN_STORAGEMGMT}
 EOF
 
         # Tenant
@@ -256,7 +330,7 @@ EOF
           - end: fd00:dddd::250
             start: fd00:dddd::100
           cidr: fd00:dddd::/64
-          vlan: 22
+          vlan: ${VLAN_TENANT}
 EOF
 
     fi
@@ -554,6 +628,14 @@ EOF
       value: fd00:bbbb::86,172.17.0.86
 EOF
     fi
+fi
+
+# Add replacements if any were built
+if [ -n "$REPLACEMENTS" ]; then
+  cat <<EOF >>kustomization.yaml
+replacements:
+$REPLACEMENTS
+EOF
 fi
 
 kustomization_add_resources
