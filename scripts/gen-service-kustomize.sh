@@ -505,6 +505,23 @@ if [[ "${KIND}" == "OpenStackControlPlane" ]]; then
     - op: remove
       path: /spec/dns/template/options/0/values/0
 EOF
+    else
+        cat <<EOF >>kustomization.yaml
+- patch: |-
+    apiVersion: core.openstack.org/v1beta1
+    kind: ${KIND}
+    metadata:
+      name: unused
+    spec:
+      dns:
+        template:
+          options:
+          - key: server
+            values:
+            - ${CTLPLANE_IPV4_DNS_SERVER}
+  target:
+    kind: ${KIND}
+EOF
     fi
 
     if [ -n "${IPV6_ENABLED}" ]; then
