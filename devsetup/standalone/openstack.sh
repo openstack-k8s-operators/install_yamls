@@ -28,6 +28,7 @@ TLSE_ENABLED=${TLSE_ENABLED:-false}
 CLOUD_DOMAIN=${CLOUD_DOMAIN:-localdomain}
 TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
 OCTAVIA_ENABLED=${OCTAVIA_ENABLED:-false}
+DESIGNATE_ENABLED=${DESIGNATE_ENABLED:-false}
 IPA_IMAGE=${IPA_IMAGE:-"quay.io/freeipa/freeipa-server:fedora-41"}
 
 # Use the files created in the previous steps including the network_data.yaml file and thw deployed_network.yaml file.
@@ -36,6 +37,7 @@ IPA_IMAGE=${IPA_IMAGE:-"quay.io/freeipa/freeipa-server:fedora-41"}
 export NEUTRON_INTERFACE=eth0
 export CTLPLANE_IP=${IP:-192.168.122.100}
 export CTLPLANE_VIP=${CTLPLANE_IP%.*}.99
+export DESIGNATE_BIND_IP=${DESIGNATE_BIND_IP:-${CTLPLANE_IP%.*}.155}
 export CIDR=24
 export GATEWAY=${GATEWAY:-192.168.122.1}
 export BRIDGE="br-ctlplane"
@@ -87,6 +89,13 @@ parameter_defaults:
     tag: baremetal
   IronicInspectorInterface: br-baremetal
   IronicCleaningDiskErase: metadata
+  DesignateBindNSRecords:
+  - ns1.example.com.
+  - ns2.example.com.
+  DesignateBackendListenIPs:
+  - ${DESIGNATE_BIND_IP}
+  UnboundForwardResolvers:
+  - 10.88.0.2
 EOF
 
 CMD="openstack tripleo deploy"
@@ -126,6 +135,9 @@ fi
 
 if [ "$OCTAVIA_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/octavia.yaml"
+fi
+if [ "$DESIGNATE_ENABLED" = "true" ]; then
+    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/enable-designate.yaml"
 fi
 if [ "$TELEMETRY_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/enable-legacy-telemetry.yaml"
