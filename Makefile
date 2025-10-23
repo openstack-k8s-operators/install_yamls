@@ -817,6 +817,7 @@ openstack_deploy_prep: export BRIDGE_NAME=${NNCP_BRIDGE}
 openstack_deploy_prep: export CTLPLANE_IP_ADDRESS_PREFIX=${NNCP_CTLPLANE_IPV6_ADDRESS_PREFIX}
 ifeq ($(NETWORK_ISOLATION_IPV4), true)
 openstack_deploy_prep: export IPV4_ENABLED=true
+openstack_deploy_prep: export CTLPLANE_IPV4_DNS_SERVER=${NNCP_DNS_SERVER}
 endif
 ifeq ($(NETWORK_ISOLATION_IPV6), true)
 openstack_deploy_prep: export IPV6_ENABLED=true
