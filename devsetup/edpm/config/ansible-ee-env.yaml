@@ -4,7 +4,8 @@ kind: ConfigMap
 metadata:
   name: openstack-aee-default-env
 data:
-  ANSIBLE_CALLBACKS_ENABLED: "ansible.posix.profile_tasks,yaml"
+  ANSIBLE_CALLBACKS_ENABLED: "ansible.posix.profile_tasks"
+  ANSIBLE_CALLBACK_RESULT_FORMAT: "yaml"
   ANSIBLE_DISPLAY_ARGS_TO_STDOUT: "True"
   ANSIBLE_VERBOSITY: "1"
   ANSIBLE_FORCE_COLOR: "True"
