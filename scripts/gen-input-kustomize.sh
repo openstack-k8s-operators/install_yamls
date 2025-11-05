@@ -75,6 +75,7 @@ secretGenerator:
   - BarbicanPassword=${PASSWORD}
   - BarbicanSimpleCryptoKEK=${BARBICAN_SIMPLE_CRYPTO_ENCRYPTION_KEY}
   - CeilometerPassword=${PASSWORD}
+  - CloudKittyPassword=${PASSWORD}
   - DbRootPassword=${PASSWORD}
   - DatabasePassword=${PASSWORD}
   - DesignatePassword=${PASSWORD}
