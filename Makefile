@@ -518,6 +518,7 @@ else
 BMO_IRONIC_HOST                  ?= 172.16.1.10
 endif
 BMO_SETUP_ROUTE_REPLACE          ?= true
+BMO_CLEANUP                      ?= true
 
 # Swift
 SWIFT_IMG               ?= quay.io/openstack-k8s-operators/swift-operator-index:${OPENSTACK_K8S_TAG}
@@ -798,7 +799,9 @@ openstack_cleanup: operator_namespace## deletes the operator, but does not clean
 	oc delete subscription --all=true
 	oc delete csv --all=true
 	oc delete catalogsource --all=true
+ifeq ($(BMO_CLEANUP), true)
 	test -d ${OPERATOR_BASE_DIR}/baremetal-operator && make crc_bmo_cleanup || true
+endif
 
 .PHONY: openstack_repo
 openstack_repo: export REPO=${OPENSTACK_REPO}
