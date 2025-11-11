@@ -148,6 +148,7 @@ spec:
   nodeSets:
 $DATAPLANE_NODESETS
   servicesOverride:
+    - nova
     - update
 EOF
 
