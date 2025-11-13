@@ -120,7 +120,7 @@ OPENSTACK_BUNDLE_IMG         ?= quay.io/openstack-k8s-operators/openstack-operat
 OPENSTACK_STORAGE_BUNDLE_IMG ?= quay.io/openstack-k8s-operators/openstack-operator-storage-bundle:${OPENSTACK_K8S_TAG}
 OPENSTACK_CRDS_DIR           ?= openstack_crds
 OPENSTACK_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/openstack-operator/kuttl-test.yaml
-OPENSTACK_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/openstack-operator/tests/kuttl/tests
+OPENSTACK_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/openstack-operator/test/kuttl/tests
 OPENSTACK_KUTTL_NAMESPACE ?= openstack-kuttl-tests
 
 # Infra Operator
@@ -129,7 +129,7 @@ INFRA_REPO            ?= https://github.com/openstack-k8s-operators/infra-operat
 INFRA_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
 INFRA_COMMIT_HASH     ?=
 INFRA_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/infra-operator/kuttl-test.yaml
-INFRA_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/infra-operator/tests/kuttl/tests
+INFRA_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/infra-operator/test/kuttl/tests
 INFRA_KUTTL_NAMESPACE ?= infra-kuttl-tests
 
 # DNS
@@ -160,7 +160,7 @@ KEYSTONEAPI              ?= config/samples/keystone_v1beta1_keystoneapi.yaml
 KEYSTONEAPI_CR           ?= ${OPERATOR_BASE_DIR}/keystone-operator/${KEYSTONEAPI}
 KEYSTONEAPI_DEPL_IMG     ?= unused
 KEYSTONE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/keystone-operator/kuttl-test.yaml
-KEYSTONE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/keystone-operator/tests/kuttl/tests
+KEYSTONE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/keystone-operator/test/kuttl/tests
 KEYSTONE_KUTTL_NAMESPACE ?= keystone-kuttl-tests
 
 # Barbican
@@ -172,7 +172,7 @@ BARBICAN                 ?= config/samples/barbican_v1beta1_barbican.yaml
 BARBICAN_CR              ?= ${OPERATOR_BASE_DIR}/barbican-operator/${BARBICAN}
 BARBICAN_DEPL_IMG        ?= unused
 BARBICAN_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/barbican-operator/kuttl-test.yaml
-BARBICAN_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/barbican-operator/tests/kuttl/tests
+BARBICAN_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/barbican-operator/test/kuttl/tests
 BARBICAN_KUTTL_NAMESPACE ?= barbican-kuttl-tests
 
 # Mariadb
@@ -188,10 +188,10 @@ endif
 MARIADB_CR                 ?= ${OPERATOR_BASE_DIR}/mariadb-operator/${MARIADB}
 MARIADB_DEPL_IMG           ?= unused
 MARIADB_KUTTL_CONF         ?= ${OPERATOR_BASE_DIR}/mariadb-operator/kuttl-test.yaml
-MARIADB_KUTTL_DIR          ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/kuttl/tests
+MARIADB_KUTTL_DIR          ?= ${OPERATOR_BASE_DIR}/mariadb-operator/test/kuttl/tests
 MARIADB_KUTTL_NAMESPACE    ?= mariadb-kuttl-tests
-MARIADB_CHAINSAW_CONF      ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/chainsaw/config.yaml
-MARIADB_CHAINSAW_DIR       ?= ${OPERATOR_BASE_DIR}/mariadb-operator/tests/chainsaw/tests
+MARIADB_CHAINSAW_CONF      ?= ${OPERATOR_BASE_DIR}/mariadb-operator/test/chainsaw/config.yaml
+MARIADB_CHAINSAW_DIR       ?= ${OPERATOR_BASE_DIR}/mariadb-operator/test/chainsaw/tests
 MARIADB_CHAINSAW_NAMESPACE ?= mariadb-chainsaw-tests
 
 # Placement
@@ -203,7 +203,7 @@ PLACEMENTAPI              ?= config/samples/placement_v1beta1_placementapi.yaml
 PLACEMENTAPI_CR           ?= ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI}
 PLACEMENTAPI_DEPL_IMG     ?= unused
 PLACEMENT_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/placement-operator/kuttl-test.yaml
-PLACEMENT_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/placement-operator/tests/kuttl/tests
+PLACEMENT_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/placement-operator/test/kuttl/tests
 PLACEMENT_KUTTL_NAMESPACE ?= placement-kuttl-tests
 
 # Sir Glancealot
@@ -232,7 +232,7 @@ OVNCONTROLLER_CR    ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNCONTROLLER}
 OVNCONTROLLER_NMAP  ?= ${NETWORK_ISOLATION}
 # TODO: Image customizations for all OVN services
 OVN_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/ovn-operator/kuttl-test.yaml
-OVN_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovn-operator/tests/kuttl/tests
+OVN_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovn-operator/test/kuttl/tests
 OVN_KUTTL_NAMESPACE ?= ovn-kuttl-tests
 
 # Neutron
@@ -302,7 +302,7 @@ IRONICPXE_DEPL_IMG     ?= unused
 IRONICINS_DEPL_IMG     ?= unused
 IRONICNAG_DEPL_IMG     ?= unused
 IRONIC_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/ironic-operator/kuttl-test.yaml
-IRONIC_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ironic-operator/tests/kuttl/tests
+IRONIC_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ironic-operator/test/kuttl/tests
 IRONIC_KUTTL_NAMESPACE ?= ironic-kuttl-tests
 
 # Octavia
@@ -314,7 +314,7 @@ OCTAVIA                 ?= config/samples/octavia_v1beta1_octavia.yaml
 OCTAVIA_CR              ?= ${OPERATOR_BASE_DIR}/octavia-operator/${OCTAVIA}
 # TODO: Image custom    izations for all Octavia services
 OCTAVIA_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/octavia-operator/kuttl-test.yaml
-OCTAVIA_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/octavia-operator/tests/kuttl/tests
+OCTAVIA_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/octavia-operator/test/kuttl/tests
 OCTAVIA_KUTTL_NAMESPACE ?= octavia-kuttl-tests
 
 # Designate
@@ -325,7 +325,7 @@ DESIGNATE_COMMIT_HASH     ?=
 DESIGNATE                 ?= config/samples/designate_v1beta1_designate.yaml
 DESIGNATE_CR              ?= ${OPERATOR_BASE_DIR}/designate-operator/${DESIGNATE}
 DESIGNATE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/designate-operator/kuttl-test.yaml
-DESIGNATE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/designate-operator/tests/kuttl/tests
+DESIGNATE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/designate-operator/test/kuttl/tests
 DESIGNATE_KUTTL_NAMESPACE ?= designate-kuttl-tests
 
 # Nova
@@ -351,7 +351,7 @@ HORIZON_CR              ?= ${OPERATOR_BASE_DIR}/horizon-operator/${HORIZON}
 HORIZON_DEPL_IMG        ?= unused
 HORIZON_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/horizon-operator/kuttl-test.yaml
 HORIZON_KUTTL_NAMESPACE ?= horizon-kuttl-tests
-HORIZON_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/horizon-operator/tests/kuttl/tests
+HORIZON_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/horizon-operator/test/kuttl/tests
 
 # Heat
 HEAT_IMG             ?= quay.io/openstack-k8s-operators/heat-operator-index:${OPENSTACK_K8S_TAG}
@@ -364,7 +364,7 @@ HEATAPI_DEPL_IMG     ?= unused
 HEATCFNAPI_DEPL_IMG  ?= unused
 HEATENGINE_DEPL_IMG  ?= unused
 HEAT_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/heat-operator/kuttl-test.yaml
-HEAT_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/heat-operator/tests/kuttl/tests
+HEAT_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/heat-operator/test/kuttl/tests
 HEAT_KUTTL_NAMESPACE ?= heat-kuttl-tests
 
 # AnsibleEE
@@ -375,7 +375,7 @@ ANSIBLEE_COMMIT_HASH      ?=
 ANSIBLEEE                 ?= config/samples/_v1beta1_ansibleee.yaml
 ANSIBLEEE_CR              ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/${ANSIBLEEE}
 ANSIBLEEE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/kuttl-test.yaml
-ANSIBLEEE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/tests/kuttl/tests
+ANSIBLEEE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/test/kuttl/tests
 ANSIBLEEE_KUTTL_NAMESPACE ?= ansibleee-kuttl-tests
 
 
@@ -501,7 +501,7 @@ CEILOMETER_CENTRAL_DEPL_IMG      ?= unused
 CEILOMETER_NOTIFICATION_DEPL_IMG ?= unused
 SG_CORE_DEPL_IMG                 ?= unused
 TELEMETRY_KUTTL_BASEDIR   ?= ${OPERATOR_BASE_DIR}/telemetry-operator
-TELEMETRY_KUTTL_RELPATH   ?= tests/kuttl/suites
+TELEMETRY_KUTTL_RELPATH   ?= test/kuttl/suites
 TELEMETRY_KUTTL_CONF      ?= ${TELEMETRY_KUTTL_BASEDIR}/kuttl-test.yaml
 TELEMETRY_KUTTL_NAMESPACE ?= telemetry-kuttl-tests
 
@@ -528,7 +528,7 @@ SWIFT_COMMIT_HASH       ?=
 SWIFT                   ?= config/samples/swift_v1beta1_swift.yaml
 SWIFT_CR                ?= ${OPERATOR_BASE_DIR}/swift-operator/${SWIFT}
 SWIFT_KUTTL_CONF        ?= ${OPERATOR_BASE_DIR}/swift-operator/kuttl-test.yaml
-SWIFT_KUTTL_DIR         ?= ${OPERATOR_BASE_DIR}/swift-operator/tests/kuttl/tests
+SWIFT_KUTTL_DIR         ?= ${OPERATOR_BASE_DIR}/swift-operator/test/kuttl/tests
 SWIFT_KUTTL_NAMESPACE   ?= swift-kuttl-tests
 
 # CertManager
