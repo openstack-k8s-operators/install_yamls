@@ -3,7 +3,7 @@
 opm_version: v1.30.0
 
 # operator-sdk version to use (must be specific version)
-sdk_version: v1.31.0
+sdk_version: v1.41.1
 
 # golang version
 go_version: 1.24.6
