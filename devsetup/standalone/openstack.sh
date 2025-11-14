@@ -127,7 +127,11 @@ EOF
 fi
 if [ "$BARBICAN_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/barbican.yaml"
-    ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/barbican-backend-simple-crypto.yaml"
+    if [ "$BARBICAN_HSM_ENABLED" = "true" ]; then
+        ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/barbican-backend-pkcs11.yaml"
+    else
+        ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/barbican-backend-simple-crypto.yaml"
+    fi
 fi
 if [ "$MANILA_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/manila-cephfsnative-config.yaml"
