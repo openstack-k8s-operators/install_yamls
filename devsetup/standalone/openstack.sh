@@ -125,7 +125,7 @@ resource_registry:
 EOF
     ENV_ARGS+=" -e $HOME/enable_heat.yaml"
 fi
-if [ "$BARBICAN_ENABLED" = "true" ]; then
+if [ "${BARBICAN_ENABLED,,}" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/barbican.yaml"
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/barbican-backend-simple-crypto.yaml"
 fi
