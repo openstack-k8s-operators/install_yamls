@@ -492,6 +492,7 @@ edpm_deploy_instance: ## Spin a instance on edpm node
 .PHONY: tripleo_deploy
 tripleo_deploy: export CLOUD_DOMAIN=${DNS_DOMAIN}
 tripleo_deploy: export TLSE_ENABLED=${TLS_ENABLED}
+tripleo_deploy: export TRIPLEO_ADDITIONAL_ENV=${ADDITIONAL_ENV_FILE}
 tripleo_deploy: export INTERFACE_MTU=${NETWORK_MTU}
 tripleo_deploy: export COMPUTE_CELLS=${EDPM_COMPUTE_CELLS}
 tripleo_deploy: export REGISTRY_USER ?= ${RH_REGISTRY_USER}
@@ -524,6 +525,7 @@ standalone_deploy: export MANILA_ENABLED=${MANILA_SERVICE_ENABLED}
 standalone_deploy: export HEAT_ENABLED=${HEAT_SERVICE_ENABLED}
 standalone_deploy: export CLOUD_DOMAIN=${DNS_DOMAIN}
 standalone_deploy: export COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED}
+standalone_deploy: export STANDALONE_ADDITIONAL_ENV=${ADDITIONAL_ENV_FILE}
 standalone_deploy: export CONFIGURE_HUGEPAGES=${EDPM_CONFIGURE_HUGEPAGES}
 standalone_deploy: export COMPUTE_CEPH_NOVA=${EDPM_COMPUTE_CEPH_NOVA}
 standalone_deploy: export COMPUTE_SRIOV_ENABLED=${EDPM_COMPUTE_SRIOV_ENABLED}
