@@ -444,12 +444,14 @@ MANILA_KUTTL_DIR        ?= ${OPERATOR_BASE_DIR}/manila-operator/test/kuttl/tests
 MANILA_KUTTL_NAMESPACE  ?= manila-kuttl-tests
 
 # Ceph
-CEPH_IMG       ?= quay.io/ceph/demo:latest-squid
+CEPH_IMG       ?= quay.io/ceph/ceph:v20
+CEPH_NAMESPACE ?= rook-ceph
 CEPH_REPO      ?= https://github.com/rook/rook.git
-CEPH_BRANCH    ?= release-1.15
+CEPH_BRANCH    ?= release-1.18
 CEPH_CRDS      ?= ${OPERATOR_BASE_DIR}/rook/deploy/examples/crds.yaml
 CEPH_COMMON    ?= ${OPERATOR_BASE_DIR}/rook/deploy/examples/common.yaml
 CEPH_OP        ?= ${OPERATOR_BASE_DIR}/rook/deploy/examples/operator-openshift.yaml
+CEPH_CSI_OP    ?= ${OPERATOR_BASE_DIR}/rook/deploy/examples/csi-operator.yaml
 CEPH_CR        ?= ${OPERATOR_BASE_DIR}/rook/deploy/examples/cluster-test.yaml
 CEPH_CLIENT    ?= ${OPERATOR_BASE_DIR}/rook/deploy/examples/toolbox.yaml
 
@@ -2252,30 +2254,13 @@ baremetal_cleanup: ## deletes the operator, but does not cleanup the service res
 	test -d ${OPERATOR_BASE_DIR}/baremetal-operator && make crc_bmo_cleanup || true
 
 ##@ CEPH
-.PHONY: ceph_help
-ceph_help: export CEPH_IMAGE=${CEPH_IMG}
-ceph_help: ## Ceph helper
-	$(eval $(call vars,$@,ceph))
-	bash scripts/gen-ceph-kustomize.sh "help" "full"
 
 .PHONY: ceph
 ceph: export CEPH_IMAGE=${CEPH_IMG}
-ceph: namespace input ## deploy the Ceph Pod
-	$(eval $(call vars,$@,ceph))
-	bash scripts/gen-ceph-kustomize.sh "build"
-	bash scripts/operator-deploy-resources.sh
-	bash scripts/gen-ceph-kustomize.sh "isready"
-	bash scripts/gen-ceph-kustomize.sh "config"
-	bash scripts/gen-ceph-kustomize.sh "cephfs"
-	bash scripts/gen-ceph-kustomize.sh "pools"
-	bash scripts/gen-ceph-kustomize.sh "secret"
-	bash scripts/gen-ceph-kustomize.sh "post"
+ceph: rook_crc_disk rook rook_deploy ## deploy the Ceph Cluster
 
 .PHONY: ceph_cleanup
-ceph_cleanup: ## deletes the ceph pod
-	$(eval $(call vars,$@,ceph))
-	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	${CLEANUP_DIR_CMD} ${DEPLOY_DIR}
+ceph_cleanup: rook_cleanup ## delete the Ceph Cluster, remove rook operator
 
 ##@ ROOK
 
@@ -2294,10 +2279,14 @@ rook: namespace rook_prep ## installs the CRDs and the operator, also runs the p
 	oc apply -f ${CEPH_CRDS}
 	# Apply roles, sa, scc and common resources
 	oc apply -f ${CEPH_COMMON}
+	# Apply csi-operator CRDs needed to deploy mons
+	oc apply -f ${CEPH_CSI_OP}
 	# Run the rook operator
 	oc apply -f ${CEPH_OP}
-	## Do not deploy NFS CEPH-CSI
-	oc -n rook-ceph patch configmap rook-ceph-operator-config --type='merge' -p '{"data": { "ROOK_CSI_ENABLE_CEPHFS": "false" }}'
+	# Do not deploy NFS CEPH-CSI
+	oc -n ${CEPH_NAMESPACE} patch configmap rook-ceph-operator-config --type='merge' -p '{"data": { "ROOK_CSI_ENABLE_CEPHFS": "false" }}'
+	# Wait for the operator
+	oc -n ${CEPH_NAMESPACE} wait --for=condition=Available deployment/rook-ceph-operator --timeout=${TIMEOUT}
 
 .PHONY: rook_deploy_prep
 rook_deploy_prep: export IMAGE=${CEPH_IMG}
@@ -2305,13 +2294,18 @@ rook_deploy_prep: # ceph_deploy_cleanup ## prepares the CR to install the servic
 	$(eval $(call vars,$@,ceph))
 	# Patch the rook-ceph scc to allow using hostnetworking: this simulates an
 	# external ceph cluster
-	oc patch scc rook-ceph --type='merge' -p '{ "allowHostNetwork": true, "allowHostPID": true, "allowHostPorts": true}'
-	bash scripts/gen-rook-kustomize.sh
+	oc patch scc ${CEPH_NAMESPACE} --type='merge' -p '{ "allowHostNetwork": true, "allowHostPID": true, "allowHostPorts": true}'
+	bash scripts/gen-rook-kustomize.sh "build"
 
 .PHONY: rook_deploy
+rook_deploy: export IMAGE=${CEPH_IMG}
 rook_deploy: rook_deploy_prep ## installs the service instance using kustomize.
 	$(eval $(call vars,$@,ceph))
 	oc kustomize ${DEPLOY_DIR} | oc apply -f -
+	bash scripts/gen-rook-kustomize.sh "isready"
+	bash scripts/gen-rook-kustomize.sh "cephfs"
+	bash scripts/gen-rook-kustomize.sh "pools"
+	bash scripts/gen-rook-kustomize.sh "secret"
 
 .PHONY: rook_crc_disk
 rook_crc_disk: ## Create a disk and attach to CRC / SNO VM
