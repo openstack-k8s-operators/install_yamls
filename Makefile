@@ -2310,7 +2310,7 @@ rook_deploy: rook_deploy_prep ## installs the service instance using kustomize.
 .PHONY: rook_crc_disk
 rook_crc_disk: ## Create a disk and attach to CRC / SNO VM
 	$(eval $(call vars,$@,ceph))
-	bash scripts/disk-setup.sh
+	bash scripts/gen-rook-crc-disk.sh
 
 .PHONY: rook_cleanup
 rook_cleanup: ## deletes rook resources

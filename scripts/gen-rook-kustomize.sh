@@ -22,6 +22,7 @@ SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 CEPH_HOSTNETWORK=${CEPH_HOSTNETWORK:-true}
 CEPH_POOLS=("volumes" "images" "backups" "cephfs.cephfs.meta" "cephfs.cephfs.data")
 CEPH_NAMESPACE=${CEPH_NAMESPACE:-"rook-ceph"}
+CEPH_NODE=${2:-"crc"}
 
 if [ -z "$IMAGE" ]; then
     echo "Unable to determine ceph image."
@@ -123,6 +124,27 @@ patches:
     - op: replace
       path: /metadata/name
       value: ceph
+    - op: replace
+      path: /spec/storage/useAllDevices
+      value: false
+    - op: replace
+      path: /spec/storage/useAllNodes
+      value: false
+    - op: replace
+      path: /spec/dashboard/enabled
+      value: false
+    - op: add
+      path: /spec/storage/nodes
+      value:
+        - name: "${CEPH_NODE}"
+          devices:
+            - name: /dev/ceph_vg_1/ceph_lv_data
+    - op: add
+      path: /spec/mgr/modules/-
+      value:
+        name: prometheus
+        enabled: false
+
 EOF
 
 if [[ "$CEPH_HOSTNETWORK" == "false" ]]; then
