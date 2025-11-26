@@ -2741,9 +2741,10 @@ telemetry_kuttl_run: ## runs kuttl tests for the telemetry operator, assumes tha
 telemetry_kuttl: export NAMESPACE = ${TELEMETRY_KUTTL_NAMESPACE}
 # Set the value of $TELEMETRY_KUTTL_NAMESPACE if you want to run the telemetry
 # kuttl tests in a namespace different than the default (telemetry-kuttl-tests)
-telemetry_kuttl: kuttl_common_prep ovn heat heat_deploy telemetry telemetry_deploy_prep
+telemetry_kuttl: kuttl_common_prep ovn heat heat_deploy certmanager telemetry telemetry_deploy_prep
 	$(eval $(call vars,$@,telemetry))
 	sed -i "s#- ${TELEMETRY_KUTTL_RELPATH}#- ${TELEMETRY_KUTTL_BASEDIR}/${TELEMETRY_KUTTL_RELPATH}#g" ${TELEMETRY_KUTTL_CONF}
+	make wait OPERATOR_NAME=certmanager
 	make wait
 	make telemetry_kuttl_run
 	make deploy_cleanup
