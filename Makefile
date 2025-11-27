@@ -2744,7 +2744,6 @@ telemetry_kuttl: export NAMESPACE = ${TELEMETRY_KUTTL_NAMESPACE}
 telemetry_kuttl: kuttl_common_prep ovn heat heat_deploy certmanager telemetry telemetry_deploy_prep
 	$(eval $(call vars,$@,telemetry))
 	sed -i "s#- ${TELEMETRY_KUTTL_RELPATH}#- ${TELEMETRY_KUTTL_BASEDIR}/${TELEMETRY_KUTTL_RELPATH}#g" ${TELEMETRY_KUTTL_CONF}
-	make wait OPERATOR_NAME=certmanager
 	make wait
 	make telemetry_kuttl_run
 	make deploy_cleanup
