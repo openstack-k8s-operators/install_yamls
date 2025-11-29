@@ -196,7 +196,7 @@ if [ "$TLSE_ENABLED" = "true" ]; then
     export IPA_REALM=$(echo $IPA_DOMAIN | awk '{print toupper($0)}')
     export IPA_HOST=ipa.$IPA_DOMAIN
     export IPA_SERVER_HOSTNAME=$IPA_HOST
-    export IPA_IMAGE=${IPA_IMAGE:-"quay.io/freeipa/freeipa-server:fedora-41"}
+    export IPA_IMAGE=${IPA_IMAGE:-"quay.io/freeipa/freeipa-server:fedora-43"}
     sudo mkdir /tmp/ipa-data
     sudo podman run -d --name freeipa-server-container \
         --sysctl net.ipv6.conf.lo.disable_ipv6=0 \
