@@ -116,6 +116,8 @@ Deploy a compute node VM:
 make edpm_compute
 ```
 
+**Note:** Set the `EDPM_IMAGE_URL` environment variable to use a different image (e.g., RHEL 9.6). If using a RHEL image, use subscription-manager or other methods to enable repos in the compute nodes.
+
 You can deploy a compute node VM with additional devices:
 ```
 EDPM_EMULATED_NVME_ENABLED=true \
