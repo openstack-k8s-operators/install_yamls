@@ -800,6 +800,8 @@ openstack_cleanup: operator_namespace## deletes the operator, but does not clean
 	oc delete subscription --all=true
 	oc delete csv --all=true
 	oc delete catalogsource --all=true
+	# Hack to avoid usage of old cached catalog versions when we deploy the operator again
+	oc delete pods -n openshift-operator-lifecycle-manager -l app=catalog-operator
 ifeq ($(BMO_CLEANUP), true)
 	test -d ${OPERATOR_BASE_DIR}/baremetal-operator && make crc_bmo_cleanup || true
 endif
