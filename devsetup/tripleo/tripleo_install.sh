@@ -181,6 +181,10 @@ if [ "$EDPM_CONFIGURE_HUGEPAGES" = "true" ] && [ "$TLSE_ENABLED" != "true" ] ; t
     ENV_ARGS+=" -e $HOME/hugepages.yaml"
 fi
 
+if [ -f "/tmp/additional_env_file.yaml" ]; then
+    ENV_ARGS+=" -e /tmp/additional_env_file.yaml"
+fi
+
 if [ "$TLSE_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/ssl/tls-everywhere-endpoints-dns.yaml"
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/environments/services/haproxy-public-tls-certmonger.yaml"
