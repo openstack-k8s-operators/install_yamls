@@ -386,7 +386,8 @@ BAREMETAL_BRANCH        ?= ${OPENSTACK_K8S_BRANCH}
 BAREMETAL_COMMIT_HASH   ?=
 BMH_NAMESPACE           ?= ${NAMESPACE}
 BAREMETAL_OS_CONTAINER_IMG ?=
-BAREMETAL_OS_IMG ?=
+BAREMETAL_OS_IMG_TYPE      ?=
+BAREMETAL_OS_IMG           ?=
 
 # Dataplane Operator
 DATAPLANE_TIMEOUT                                ?= 30m
@@ -959,6 +960,7 @@ edpm_deploy_baremetal_prep: export EDPM_ANSIBLE_SECRET=${DATAPLANE_ANSIBLE_SECRE
 edpm_deploy_baremetal_prep: export EDPM_ANSIBLE_USER=${DATAPLANE_ANSIBLE_USER}
 edpm_deploy_baremetal_prep: export EDPM_BMH_NAMESPACE=${BMH_NAMESPACE}
 edpm_deploy_baremetal_prep: export EDPM_OS_CONTAINER_IMG=${BAREMETAL_OS_CONTAINER_IMG}
+edpm_deploy_baremetal_prep: export EDPM_OS_IMG_TYPE=${BAREMETAL_OS_IMG_TYPE}
 edpm_deploy_baremetal_prep: export EDPM_OS_IMG=${BAREMETAL_OS_IMG}
 edpm_deploy_baremetal_prep: export EDPM_PROVISIONING_INTERFACE=${BMO_PROVISIONING_INTERFACE}
 edpm_deploy_baremetal_prep: export EDPM_CTLPLANE_INTERFACE=${BM_CTLPLANE_INTERFACE}
