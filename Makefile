@@ -2419,7 +2419,7 @@ nncp: export VLAN_START=${NETWORK_VLAN_START}
 nncp: export VLAN_STEP=${NETWORK_VLAN_STEP}
 nncp: export STORAGE_MACVLAN=${NETWORK_STORAGE_MACVLAN}
 ## NOTE(ldenny): When applying the nncp resource the OCP API can momentarly drop, below retry is added to aviod checking status while API is down and failing.
-nncp: ## installs the nncp resources to configure the interface connected to the edpm node, right now only single nic vlan. Interface referenced via NNCP_INTERFACE
+nncp: nmstate ## installs the nncp resources to configure the interface connected to the edpm node, right now only single nic vlan. Interface referenced via NNCP_INTERFACE
 	$(eval $(call vars,$@,nncp))
 ifeq ($(NNCP_NODES),)
 	WORKERS='$(shell oc get nodes -l node-role.kubernetes.io/worker -o jsonpath="{.items[*].metadata.name}")' \
@@ -2535,7 +2535,7 @@ metallb_config: export LEAF_1=${BGP_LEAF_1}
 metallb_config: export LEAF_2=${BGP_LEAF_2}
 metallb_config: export SOURCE_IP=${BGP_SOURCE_IP}
 metallb_config: export SOURCE_IP6=${BGP_SOURCE_IP6}
-metallb_config: metallb_config_cleanup ## creates the IPAddressPools and l2advertisement resources
+metallb_config: metallb metallb_config_cleanup ## creates the IPAddressPools and l2advertisement resources
 	$(eval $(call vars,$@,metallb))
 	bash scripts/gen-metallb-config.sh
 	oc apply -f ${DEPLOY_DIR}/ipaddresspools.yaml
