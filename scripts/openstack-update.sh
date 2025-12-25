@@ -107,6 +107,7 @@ done <<< $openstackdataplanenodesets
 DATAPLANE_DEPLOYMENT=edpm
 OVN_NODE_SETS=$(printf '    %s\n' "${nodes_with_ovn[@]}")
 
+if [ ${#nodes_with_ovn[@]} -ne 0 ]; then
 cat <<EOF >edpm-deployment-ovn-update.yaml
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
@@ -124,6 +125,7 @@ update_event Applying the OVN CRD
 oc create -f edpm-deployment-ovn-update.yaml
 
 oc get openstackdataplanedeployment ${DATAPLANE_DEPLOYMENT}-ovn-update -o yaml
+fi
 # wait for ovn dataplane completes
 oc wait $OPENSTACK_VERSION_CR  --for=condition=MinorUpdateOVNDataplane --timeout=$TIMEOUT
 echo "MinorUpdateOVNDataplane completed"
