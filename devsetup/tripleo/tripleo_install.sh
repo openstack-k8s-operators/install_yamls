@@ -181,8 +181,8 @@ if [ "$EDPM_CONFIGURE_HUGEPAGES" = "true" ] && [ "$TLSE_ENABLED" != "true" ] ; t
     ENV_ARGS+=" -e $HOME/hugepages.yaml"
 fi
 
-if [ -f "${TRIPLEO_ADDITIONAL_ENV}" ]; then
-    ENV_ARGS+=" -e ${TRIPLEO_ADDITIONAL_ENV}"
+if [ -f "/tmp/additional_env_file.yaml" ]; then
+    ENV_ARGS+=" -e /tmp/additional_env_file.yaml"
 fi
 
 if [ "$TLSE_ENABLED" = "true" ]; then

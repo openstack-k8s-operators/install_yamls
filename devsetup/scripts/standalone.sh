@@ -127,7 +127,6 @@ export BARBICAN_ENABLED=${BARBICAN_ENABLED}
 export MANILA_ENABLED=${MANILA_ENABLED}
 export SWIFT_REPLICATED=${SWIFT_REPLICATED}
 export TLSE_ENABLED=${TLSE_ENABLED}
-export STANDALONE_ADDITIONAL_ENV=${STANDALONE_ADDITIONAL_ENV}
 export CLOUD_DOMAIN=${CLOUD_DOMAIN}
 export OCTAVIA_ENABLED=${OCTAVIA_ENABLED}
 export DESIGNATE_ENABLED=${DESIGNATE_ENABLED}
@@ -239,7 +238,7 @@ scp $SSH_OPT ${SCRIPTPATH}/../standalone/hugepages.yaml root@$IP:hugepages.yaml
 [[ "$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]] && scp $SSH_OPT standalone/ceph.sh root@$IP:/tmp/ceph.sh
 scp $SSH_OPT standalone/openstack.sh root@$IP:/tmp/openstack.sh
 scp $SSH_OPT standalone/post_config/ironic.sh root@$IP:/tmp/ironic_post.sh
-[ -f "${STANDALONE_ADDITIONAL_ENV}" ] && scp $SSH_OPT "${STANDALONE_ADDITIONAL_ENV}" root@$IP:${STANDALONE_ADDITIONAL_ENV} || true
+[ -f "${STANDALONE_ADDITIONAL_ENV}" ] && scp $SSH_OPT "${STANDALONE_ADDITIONAL_ENV}" root@$IP:/tmp/additional_env_file.yaml || true
 [ -f $HOME/.ssh/id_ecdsa.pub ] || \
     ssh-keygen -t ecdsa -f $HOME/.ssh/id_ecdsa -q -N ""
 scp $SSH_OPT $HOME/.ssh/id_ecdsa.pub root@$IP:/root/.ssh/id_ecdsa.pub
