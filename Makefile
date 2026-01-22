@@ -661,10 +661,11 @@ operator_namespace: ## creates the namespace specified via OPERATOR_NAMESPACE en
 	$(eval $(call vars,$@))
 	bash scripts/gen-namespace.sh
 	oc apply -f ${OUT}/${OPERATOR_NAMESPACE}/namespace.yaml
-	timeout $(TIMEOUT) bash -c "while ! (oc get project.v1.project.openshift.io ${OPERATOR_NAMESPACE}); do sleep 1; done"
 ifeq ($(MICROSHIFT) ,0)
+	timeout $(TIMEOUT) bash -c "while ! (oc get project.v1.project.openshift.io ${OPERATOR_NAMESPACE}); do sleep 1; done"
 	oc project ${OPERATOR_NAMESPACE}
 else
+	timeout $(TIMEOUT) bash -c "while ! (oc get namespace ${OPERATOR_NAMESPACE}); do sleep 1; done"
 	oc config set-context --current --namespace=${OPERATOR_NAMESPACE}
 	oc adm policy add-scc-to-user privileged -z default --namespace ${OPERATOR_NAMESPACE}
 endif
@@ -675,10 +676,11 @@ namespace: ## creates the namespace specified via NAMESPACE env var (defaults to
 	$(eval $(call vars,$@))
 	bash scripts/gen-namespace.sh
 	oc apply -f ${OUT}/${NAMESPACE}/namespace.yaml
-	timeout $(TIMEOUT) bash -c "while ! (oc get project.v1.project.openshift.io ${NAMESPACE}); do sleep 1; done"
 ifeq ($(MICROSHIFT) ,0)
+	timeout $(TIMEOUT) bash -c "while ! (oc get project.v1.project.openshift.io ${NAMESPACE}); do sleep 1; done"
 	oc project ${NAMESPACE}
 else
+	timeout $(TIMEOUT) bash -c "while ! (oc get namespace ${NAMESPACE}); do sleep 1; done"
 	oc config set-context --current --namespace=${NAMESPACE}
 	oc adm policy add-scc-to-user privileged -z default --namespace ${NAMESPACE}
 endif
@@ -688,7 +690,11 @@ namespace_cleanup: ## deletes the namespace specified via NAMESPACE env var, als
 	$(eval $(call vars,$@))
 	make keystone_cleanup
 	make mariadb_cleanup
+ifeq ($(MICROSHIFT) ,0)
 	oc delete project ${NAMESPACE}
+else
+	oc delete namespace ${NAMESPACE}
+endif
 	${CLEANUP_DIR_CMD} ${OUT}/${NAMESPACE}
 
 ##@ SERVICE INPUT
