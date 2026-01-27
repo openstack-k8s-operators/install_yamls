@@ -23,3 +23,8 @@ done
 for CRD in $(grep -l CustomResourceDefinition ${OUT}/${OPENSTACK_CRDS_DIR}/manifests/*); do
     oc apply -f $CRD;
 done
+
+# openstack operator CRDs are not included in the bundle images, so we need to apply them
+# from the openstack-operator checkout that was already referenced above (since that was
+# used to create the service operator CRDs based on the go.mod present there)
+oc apply -k ${OPERATOR_BASE_DIR}/openstack-operator/config/crd --server-side
