@@ -238,6 +238,7 @@ scp $SSH_OPT ${SCRIPTPATH}/../standalone/hugepages.yaml root@$IP:hugepages.yaml
 [[ "$EDPM_COMPUTE_CEPH_ENABLED" == "true" ]] && scp $SSH_OPT standalone/ceph.sh root@$IP:/tmp/ceph.sh
 scp $SSH_OPT standalone/openstack.sh root@$IP:/tmp/openstack.sh
 scp $SSH_OPT standalone/post_config/ironic.sh root@$IP:/tmp/ironic_post.sh
+[ -f "${STANDALONE_ADDITIONAL_ENV}" ] && scp $SSH_OPT "${STANDALONE_ADDITIONAL_ENV}" root@$IP:/tmp/additional_env_file.yaml || true
 [ -f $HOME/.ssh/id_ecdsa.pub ] || \
     ssh-keygen -t ecdsa -f $HOME/.ssh/id_ecdsa -q -N ""
 scp $SSH_OPT $HOME/.ssh/id_ecdsa.pub root@$IP:/root/.ssh/id_ecdsa.pub
