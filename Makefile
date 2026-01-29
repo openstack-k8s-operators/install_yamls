@@ -367,18 +367,6 @@ HEAT_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/heat-operator/kuttl-test.yaml
 HEAT_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/heat-operator/test/kuttl/tests
 HEAT_KUTTL_NAMESPACE ?= heat-kuttl-tests
 
-# AnsibleEE
-ANSIBLEEE_IMG        ?= quay.io/openstack-k8s-operators/openstack-ansibleee-operator-index:${OPENSTACK_K8S_TAG}
-ANSIBLEEE_REPO       ?= https://github.com/openstack-k8s-operators/openstack-ansibleee-operator
-ANSIBLEEE_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
-ANSIBLEE_COMMIT_HASH      ?=
-ANSIBLEEE                 ?= config/samples/_v1beta1_ansibleee.yaml
-ANSIBLEEE_CR              ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/${ANSIBLEEE}
-ANSIBLEEE_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/kuttl-test.yaml
-ANSIBLEEE_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator/test/kuttl/tests
-ANSIBLEEE_KUTTL_NAMESPACE ?= ansibleee-kuttl-tests
-
-
 # Baremetal Operator
 BAREMETAL_IMG           ?= quay.io/openstack-k8s-operators/openstack-baremetal-operator-index:${OPENSTACK_K8S_TAG}
 BAREMETAL_REPO          ?= https://github.com/openstack-k8s-operators/openstack-baremetal-operator.git
@@ -613,7 +601,7 @@ help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 .PHONY: cleanup
-cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup designate_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup swift_cleanup barbican_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup ansibleee_cleanup rabbitmq_cleanup infra_cleanup manila_cleanup metallb_cleanup ## Delete all operators
+cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup designate_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup swift_cleanup barbican_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup rabbitmq_cleanup infra_cleanup manila_cleanup metallb_cleanup ## Delete all operators
 
 .PHONY: deploy_cleanup
 deploy_cleanup: manila_deploy_cleanup heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup redis_deploy_cleanup octavia_deploy_cleanup designate_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup swift_deploy_cleanup barbican_deploy_cleanup keystone_deploy_cleanup redis_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
@@ -2000,33 +1988,6 @@ heat_kuttl: kuttl_common_prep heat heat_deploy_prep  ## runs kuttl tests for the
 .PHONY: heat_kuttl_crc
 heat_kuttl_crc: crc_storage heat_kuttl
 
-.PHONY: ansibleee_kuttl_run
-ansibleee_kuttl_run: ## runs kuttl tests for the openstack-ansibleee operator, assumes that everything needed for running the test was deployed beforehand.
-	ANDIBLEEE_KUTTL_DIR=${ANSIBLEEE_KUTTL_DIR} kubectl-kuttl test --config ${ANSIBLEEE_KUTTL_CONF} ${ANSIBLEEE_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
-
-.PHONY: ansibleee_kuttl_cleanup
-ansibleee_kuttl_cleanup:
-	$(eval $(call vars,$@,openstack-ansibleee))
-	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/openstack-ansibleee-operator
-
-.PHONY: ansibleee_kuttl_prep
-ansibleee_kuttl_prep: export REPO=${ANSIBLEEE_REPO}
-ansibleee_kuttl_prep: export BRANCH=${ANSIBLEEE_BRANCH}
-ansibleee_kuttl_prep: export HASH=${ANSIBLEEE_COMMIT_HASH}
-ansibleee_kuttl_prep: ansibleee_kuttl_cleanup
-	$(eval $(call vars,$@,openstack-ansibleee))
-	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR}
-	bash scripts/clone-operator-repo.sh
-
-.PHONY: ansibleee_kuttl
-ansibleee_kuttl: export NAMESPACE= ${ANSIBLEEE_KUTTL_NAMESPACE}
-ansibleee_kuttl: input ansibleee_kuttl_prep ansibleee ## runs kuttl tests for the openstack-ansibleee operator. Installs openstack-ansibleee operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
-	$(eval $(call vars,$@,openstack-ansibleee))
-	make wait
-	make ansibleee_kuttl_run
-	make ansibleee_cleanup
-	bash scripts/restore-namespace.sh
-
 .PHONY: glance_kuttl_run
 glance_kuttl_run: ## runs kuttl tests for the glance operator, assumes that everything needed for running the test was deployed beforehand.
 	GLANCE_KUTTL_DIR=${GLANCE_KUTTL_DIR} kubectl-kuttl test --config ${GLANCE_KUTTL_CONF} ${GLANCE_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
@@ -2091,6 +2052,19 @@ horizon_kuttl: kuttl_common_prep horizon horizon_deploy_prep ## runs kuttl tests
 	make horizon_cleanup
 	make kuttl_common_cleanup
 
+.PHONY: openstack_kuttl_prep
+openstack_kuttl_prep: export NAMESPACE = ${OPENSTACK_KUTTL_NAMESPACE}
+openstack_kuttl_prep: input deploy_cleanup openstack openstack_deploy_prep ## runs kuttl tests for the openstack operator. Installs openstack operator and cleans up previous deployments before running the tests, cleans up after running the tests.
+	# Wait until OLM installs openstack CRDs
+	timeout $(TIMEOUT) bash -c "while ! (oc get crd openstacks.operator.openstack.org); do sleep 1; done"
+	make openstack_init
+	$(eval $(call vars,$@,infra))
+	make wait
+	$(eval $(call vars,$@,openstack-baremetal))
+	make wait
+	$(eval $(call vars,$@,openstack))
+	make wait
+
 .PHONY: openstack_kuttl_run
 openstack_kuttl_run: ## runs kuttl tests for the openstack operator, assumes that everything needed for running the test was deployed beforehand.
 	set -e; \
@@ -2101,23 +2075,17 @@ openstack_kuttl_run: ## runs kuttl tests for the openstack operator, assumes tha
 		kubectl-kuttl test --config ${OPENSTACK_KUTTL_CONF} ${OPENSTACK_KUTTL_DIR} --test $${test_dir}; \
 	done
 
-.PHONY: openstack_kuttl
-openstack_kuttl: export NAMESPACE = ${OPENSTACK_KUTTL_NAMESPACE}
-openstack_kuttl: input deploy_cleanup openstack openstack_deploy_prep ## runs kuttl tests for the openstack operator. Installs openstack operator and cleans up previous deployments before running the tests, cleans up after running the tests.
-	# Wait until OLM installs openstack CRDs
-	timeout $(TIMEOUT) bash -c "while ! (oc get crd openstacks.operator.openstack.org); do sleep 1; done"
-	make openstack_init
-	$(eval $(call vars,$@,ansibleee))
-	make wait
-	$(eval $(call vars,$@,infra))
-	make wait
-	$(eval $(call vars,$@,openstack-baremetal))
-	make wait
-	$(eval $(call vars,$@,openstack))
-	make wait
-	make openstack_kuttl_run
+.PHONY: openstack_kuttl_cleanup
+openstack_kuttl_cleanup: export NAMESPACE = ${OPENSTACK_KUTTL_NAMESPACE}
+openstack_kuttl_cleanup:
 	make openstack_deploy_cleanup
 	make openstack_cleanup
+
+.PHONY: openstack_kuttl
+openstack_kuttl: export NAMESPACE = ${OPENSTACK_KUTTL_NAMESPACE}
+openstack_kuttl: openstack_kuttl_prep
+	make openstack_kuttl_run
+	make openstack_kuttl_cleanup
 
 ##@ CHAINSAW tests
 
@@ -2222,24 +2190,6 @@ heat_deploy_cleanup: ## cleans up the service instance, Does not affect the oper
 	$(eval $(call vars,$@,heat))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/heat-operator ${DEPLOY_DIR}
-
-##@ ANSIBLEEE
-.PHONY: ansibleee_prep
-ansibleee_prep: export IMAGE=${ANSIBLEEE_IMG}
-ansibleee_prep: ## creates the files to install the operator using olm
-	$(eval $(call vars,$@,openstack-ansibleee))
-	bash scripts/gen-olm.sh
-
-.PHONY: ansibleee
-ansibleee: operator_namespace ansibleee_prep ## installs the operator, also runs the prep step. Set ansibleee_IMG for custom image.
-	$(eval $(call vars,$@,openstack-ansibleee))
-	oc apply -f ${OPERATOR_DIR}
-
-.PHONY: ansibleee_cleanup
-ansibleee_cleanup: ## deletes the operator, but does not cleanup the service resources
-	$(eval $(call vars,$@,openstack-ansibleee))
-	bash scripts/operator-cleanup.sh
-	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 ##@ BAREMETAL
 .PHONY: baremetal_prep
