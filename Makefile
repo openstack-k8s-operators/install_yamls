@@ -510,7 +510,10 @@ TELEMETRY_KUTTL_DIR       ?= ${TELEMETRY_KUTTL_BASEDIR}/${TELEMETRY_KUTTL_RELPAT
 # BMO
 BMO_REPO                         ?= https://github.com/metal3-io/baremetal-operator
 BMO_BRANCH                       ?= release-0.9
+BMO_IPA_BASEURI                  ?= https://tarballs.opendev.org/openstack/ironic-python-agent/dib
+BMO_IPA_FLAVOR                   ?= centos9
 BMO_IPA_BRANCH                   ?= stable/2024.1
+BMO_IPA_INSECURE                 ?= false
 IRONIC_IMAGE                     ?= quay.io/metal3-io/ironic
 IRONIC_IMAGE_TAG                 ?= release-24.1
 BMO_COMMIT_HASH                  ?=
@@ -715,7 +718,10 @@ crc_bmo_setup: $(if $(findstring true,$(INSTALL_CERT_MANAGER)), certmanager)
 	mkdir -p ${OPERATOR_BASE_DIR}
 	bash -c "CHECKOUT_FROM_OPENSTACK_REF=false OPERATOR_NAME=baremetal scripts/clone-operator-repo.sh"
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i -e '$$aIRONIC_IP=${BMO_IRONIC_HOST}' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i -e '$$aIPA_BASEURI=${BMO_IPA_BASEURI}' ironic-deployment/default/ironic_bmo_configmap.env && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i -e '$$aIPA_FLAVOR=${BMO_IPA_FLAVOR}' ironic-deployment/default/ironic_bmo_configmap.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i -e '$$aIPA_BRANCH=${BMO_IPA_BRANCH}' ironic-deployment/default/ironic_bmo_configmap.env && popd
+	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i -e '$$aCURL_INSECURE=${BMO_IPA_INSECURE}' ironic-deployment/default/ironic_bmo_configmap.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/eth2/${BMO_PROVISIONING_INTERFACE}/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/ENDPOINT\=http/ENDPOINT\=https/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
 	pushd ${OPERATOR_BASE_DIR}/baremetal-operator && sed -i 's/172.22.0.2\:/${NNCP_CTLPLANE_IP_ADDRESS_PREFIX}.10\:/g' ironic-deployment/default/ironic_bmo_configmap.env config/default/ironic.env && popd
