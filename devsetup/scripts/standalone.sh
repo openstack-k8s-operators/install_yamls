@@ -112,7 +112,7 @@ resource_registry:
 __EOF__
 
 export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
-export INTERFACE_MTU=${INTERFACE_MTU:-1500}
+export INTERFACE_MTU=${INTERFACE_MTU:-1450}
 export NTP_SERVER=${NTP_SERVER:-"pool.ntp.org"}
 export EDPM_CONFIGURE_HUGEPAGES=${EDPM_CONFIGURE_HUGEPAGES:-false}
 export EDPM_COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED:-true}
@@ -205,7 +205,7 @@ standalone_vm: ${STANDALONE_VM}
 ctlplane_subnet: ${IP%.*}.0/24
 ctlplane_vip: ${IP%.*}.99
 ip_address_suffix: ${IP_ADRESS_SUFFIX}
-interface_mtu: ${INTERFACE_MTU:-1500}
+interface_mtu: ${INTERFACE_MTU:-1450}
 gateway_ip: ${GATEWAY}
 dns_server: ${PRIMARY_RESOLV_CONF_ENTRY}
 compute_driver: ${COMPUTE_DRIVER}
