@@ -87,7 +87,7 @@ sudo hostnamectl set-hostname undercloud.${CLOUD_DOMAIN}
 sudo hostnamectl set-hostname undercloud.${CLOUD_DOMAIN} --transient
 
 export HOST_PRIMARY_RESOLV_CONF_ENTRY=${HOST_PRIMARY_RESOLV_CONF_ENTRY}
-export INTERFACE_MTU=${INTERFACE_MTU:-1500}
+export INTERFACE_MTU=${INTERFACE_MTU:-1450}
 export NTP_SERVER=${NTP_SERVER:-"pool.ntp.org"}
 export IP=${IP}
 export GATEWAY=${GATEWAY}
@@ -170,7 +170,7 @@ ctlplane_ip: ${IP}
 os_net_config_iface: ${OS_NET_CONFIG_IFACE}
 ctlplane_vip: ${IP%.*}.99
 ip_address_suffix: ${IP_ADRESS_SUFFIX}
-interface_mtu: ${INTERFACE_MTU:-1500}
+interface_mtu: ${INTERFACE_MTU:-1450}
 ntp_server: ${NTP_SERVER}
 gateway_ip: ${GATEWAY}
 manage_default_route: ${TRIPLEO_CONFIGURE_DEFAULT_ROUTE}
