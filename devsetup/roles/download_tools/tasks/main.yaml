@@ -48,6 +48,27 @@
     mode: '0755'
     timeout: 30
 
+- name: Set oc-mirror download url
+  tags:
+    - oc_mirror
+  ansible.builtin.set_fact:
+    oc_mirror_url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ oc_mirror_version }}/oc-mirror.tar.gz"
+
+- name: Download and extract oc-mirror
+  tags:
+    - oc_mirror
+  ansible.builtin.unarchive:
+    src: "{{ oc_mirror_url }}"
+    dest: "{{ lookup('env', 'HOME') }}/bin/"
+    remote_src: true
+
+- name: Make oc-mirror executable
+  tags:
+    - oc_mirror
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/bin/oc-mirror"
+    mode: '0755'
+
 - name: Get version from sdk_version
   tags:
     - operator_sdk

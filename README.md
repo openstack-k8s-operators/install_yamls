@@ -213,3 +213,57 @@ To deploy operators in okd community distro add parameter OKD=true to the make c
 ```bash
 make openstack OKD=true
 ```
+
+## Disconnected environment testing
+
+**Note**: This tests OpenStack operators/images in disconnected mode using the internal registry as a mirror, not a fully disconnected OCP cluster.
+
+To test OpenStack deployment in a disconnected environment using the OpenShift internal registry as a mirror:
+
+```bash
+# Install required tools (includes oc-mirror)
+cd devsetup && make download_tools && cd ..
+
+# Setup storage first
+make crc_storage
+
+# Setup mirror registry - mirrors operator index and all related images using oc-mirror v2
+# This also configures the registry as insecure if no CA is set up
+make mirror_registry
+
+# Run make openstack using the command output by mirror_registry
+make openstack OPENSTACK_IMG=<mirrored-catalog-url>
+
+# Continue with the usual deployment workflow
+make openstack_deploy
+make edpm_deploy
+```
+
+Two mirroring modes are available:
+
+| Target | Mode | Description |
+|--------|------|-------------|
+| `make mirror_registry` | Insecure | Configures registry as insecure (skips TLS verification) |
+| `make mirror_registry_secure` | Secure | Sets up CA trust first, then mirrors with TLS verification |
+
+Both targets use `oc-mirror v2` to mirror the operator catalog and all related images.
+
+**Features:**
+- Uses `--max-nested-paths 2` to work with internal registry path limitations
+- Replaces `registry.redhat.io` images with `quay.io` equivalents (no auth required)
+- Generates and applies IDMS/ITMS for image redirection
+- Sets `mirrorSourcePolicy: NeverContactSource` on all IDMS entries to block source registries (true disconnected testing)
+
+For secure mode (testing operator CA bundle support):
+```bash
+make mirror_registry_secure
+```
+
+Cleanup:
+```bash
+make mirror_registry_cleanup
+```
+
+**Tool requirements:**
+- `oc-mirror`: Install via `cd devsetup && make download_tools` (or `make download_tools DOWNLOAD_TOOLS_SELECTION=oc_mirror`)
+- `skopeo`: For digest inspection (installed via `make download_tools`)
