@@ -21,16 +21,11 @@ fi
 
 OPERATOR_NAMESPACE=openshift-marketplace
 
-# Similar part was done in CI Framework CRC jobs
-# https://review.rdoproject.org/cgit/config/tree/playbooks/crc/files/ensure_services_up.sh
-not_running_pods=$(oc get pods --no-headers -n ${OPERATOR_NAMESPACE} 2>/dev/null | grep -viE 'running|completed')
-if [ -z "$not_running_pods" ]; then
-    echo "All $OPERATOR_NAMESPACE pods seems to me fine"
-else
-    # Workaround for problematic openshift-marketplace
-    # More info: https://github.com/crc-org/crc/issues/4109#issuecomment-2042497411
-    oc delete pods --all -n "${OPERATOR_NAMESPACE}"
-    oc wait pod --for=delete -n "$OPERATOR_NAMESPACE" -l olm.managed --timeout=${TIMEOUT}
+oc get pods -n ${OPERATOR_NAMESPACE} | grep "CrashLoopBackOff"
+if [ $? -eq 0 ]; then
+    oc patch OperatorHub cluster --type json -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
+    oc wait pod --for=delete -n ${OPERATOR_NAMESPACE} -l olm.managed --timeout=${TIMEOUT}
+    oc patch OperatorHub cluster --type json -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": false}]'
     oc wait pod -n ${OPERATOR_NAMESPACE} -l olm.managed --for condition=Ready
 fi
 
