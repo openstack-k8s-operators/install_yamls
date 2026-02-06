@@ -193,7 +193,7 @@ help: ## Display this help.
 
 ##@ Download required tools and versions
 .PHONY: download_tools
-download_tools: ## Runs an ansible playbook to install required tools with the versions to develop the service operators. The tools get installed in ~/bin and go in /usr/local/go (alternatives get used to set it as the system wide go version). You can select installed tools using DOWNLOAD_TOOLS_SELECTION listing the wanted tags (dependencies, golang, kubectl, kustomize, kuttl, operator_sdk, opm, yq).
+download_tools: ## Runs an ansible playbook to install required tools with the versions to develop the service operators. The tools get installed in ~/bin and go in /usr/local/go (alternatives get used to set it as the system wide go version). You can select installed tools using DOWNLOAD_TOOLS_SELECTION listing the wanted tags (dependencies, golang, kubectl, kustomize, kuttl, operator_sdk, opm, oc_mirror, yq).
 	ANSIBLE_FORCE_COLOR=true ansible-playbook \
 	-v -i hosts --tags ${DOWNLOAD_TOOLS_SELECTION} \
 	download_tools.yaml

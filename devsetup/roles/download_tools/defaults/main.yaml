@@ -5,6 +5,9 @@ kuttl_version: 0.20.0
 # Released version of the opm package (can be set to 'latest')
 opm_version: latest
 
+# oc-mirror version (OCP version to download from)
+oc_mirror_version: latest
+
 # operator-sdk version to use (must be specific version)
 sdk_version: v1.41.1
 

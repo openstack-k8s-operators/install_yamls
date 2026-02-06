@@ -89,6 +89,10 @@ CRC_STORAGE_NAMESPACE ?= crc-storage
 CRC_STORAGE_RETRIES ?= 3
 LVMS_CR ?= 1
 
+# mirror registry (for disconnected environment testing)
+MIRROR_REGISTRY_HOST ?= default-route-openshift-image-registry.apps-crc.testing
+MIRROR_NAMESPACE     ?= openstack-mirror
+
 # options to pass in all targets that use git clone
 GIT_CLONE_OPTS      ?=
 
@@ -734,6 +738,32 @@ crc_bmo_cleanup:
 	oc kustomize ${OPERATOR_BASE_DIR}/baremetal-operator/ironic-deployment/default | oc delete --ignore-not-found=true -f -
 	oc kustomize ${OPERATOR_BASE_DIR}/baremetal-operator/config | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/baremetal-operator
+
+##@ MIRROR REGISTRY (Disconnected Environment Testing)
+MIRROR_INSECURE ?= true
+
+.PHONY: mirror_registry
+mirror_registry: ## Setup mirror registry: mirror images and apply IDMS (insecure by default)
+	MIRROR_REGISTRY_HOST=$(MIRROR_REGISTRY_HOST) \
+	MIRROR_NAMESPACE=$(MIRROR_NAMESPACE) \
+	OPERATOR_INDEX_IMAGE=$(OPENSTACK_IMG) \
+	OUT_DIR=$(OUT)/mirror \
+	MIRROR_INSECURE=$(MIRROR_INSECURE) \
+	bash scripts/mirror-registry-setup.sh
+
+.PHONY: mirror_registry_secure
+mirror_registry_secure: MIRROR_INSECURE=false
+mirror_registry_secure: mirror_registry_ca mirror_registry ## Setup mirror registry with CA trust (secure mode)
+
+.PHONY: mirror_registry_ca
+mirror_registry_ca: ## Add registry CA to cluster-wide trust
+	MIRROR_REGISTRY_HOST=$(MIRROR_REGISTRY_HOST) \
+	OUT_DIR=$(OUT)/mirror \
+	bash scripts/mirror-registry-ca.sh
+
+.PHONY: mirror_registry_cleanup
+mirror_registry_cleanup: ## Clean up mirror registry configuration
+	MIRROR_NAMESPACE=$(MIRROR_NAMESPACE) bash scripts/mirror-registry-cleanup.sh
 
 BMO_CRDS=$(shell oc get crds | grep metal3.io)
 ifeq (,$(findstring baremetalhosts.metal3.io, ${BMO_CRDS}))
