@@ -18,6 +18,7 @@ set -ex
 CONTAINERS_NAMESPACE=${CONTAINERS_NAMESPACE:-podified-antelope-centos9}
 CONTAINERS_TARGET_TAG=${CONTAINERS_TARGET_TAG:-current-podified}
 FAKE_UPDATE=${FAKE_UPDATE:-false}
+KPATCH_UPDATE=${KPATCH_UPDATE:-false}
 OPENSTACK_VERSION=${OPENSTACK_VERSION:-0.0.2}
 OUTFILE=${OUTFILE:-csv.yaml}
 TIMEOUT=${TIMEOUT:-1000s}
@@ -141,6 +142,20 @@ echo "MinorUpdateControlplane completed"
 # start data plane plane update for rest of edpm services
 DATAPLANE_NODESETS=$(oc get openstackdataplanenodeset -o name | awk -F'/' '{print "    - "  $2}')
 
+ansible_extra_vars_list=()
+if [ "${KPATCH_UPDATE}" != "false" ]; then
+    ansible_extra_vars_list+=('edpm_update_enable_kpatch: "true"')
+fi
+
+ANSIBLE_EXTRA_VARS=""
+if [ ${#ansible_extra_vars_list[@]} -gt 0 ]; then
+    ANSIBLE_EXTRA_VARS="  ansibleExtraVars:"
+    for var in "${ansible_extra_vars_list[@]}"; do
+        ANSIBLE_EXTRA_VARS+=$'\n    '"${var}"
+    done
+fi
+
+
 cat <<EOF >edpm-deployment-update.yaml
 apiVersion: dataplane.openstack.org/v1beta1
 kind: OpenStackDataPlaneDeployment
@@ -151,6 +166,7 @@ spec:
 $DATAPLANE_NODESETS
   servicesOverride:
     - update
+$ANSIBLE_EXTRA_VARS
 EOF
 
 update_event Applying the UPDATE CRD
