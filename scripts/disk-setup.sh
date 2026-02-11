@@ -24,13 +24,13 @@ mkdir -p "$DISK_PATH"
 
 function create_disk {
     for disk in "${DISKS[@]}"; do
-        qemu-img create -f raw "$DISK_PATH"/"$disk" "${DISK_SIZE}"G
+        dd if=/dev/zero of="$DISK_PATH"/"$disk" bs=1G count=0 seek="${DISK_SIZE}"
     done
 }
 
 function attach_disk {
     for disk in "${DISKS[@]}"; do
-        sudo virsh attach-disk "$DOMAIN" "$DISK_PATH"/"$disk" "$disk" --targetbus virtio --persistent
+        virsh attach-disk "$DOMAIN" "$DISK_PATH"/"$disk" "$disk" --targetbus virtio --persistent
     done
 }
 
