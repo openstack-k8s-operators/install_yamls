@@ -2,7 +2,7 @@
 
 The main purpose is to provide scripts to automate installing OpenStack in your *pre-installed* OpenShift environment.
 
-Aside from generating Yaml and running *oc* commands to apply them to your cluster nothing in this repo should modify the local machine, require sudo, or make any changes to the local machine.
+Aside from generating YAML and running *oc* commands to apply them to your cluster nothing in this repo should modify the local machine, require sudo, or make any changes to the local machine.
 
 Helper scripts to automate installing CRC and required tools with versions used in openstack-k8s-operators can be found in [devsetup](devsetup/README.md).
 These scripts/playbook require sudo permissions.
@@ -10,7 +10,7 @@ These scripts/playbook require sudo permissions.
 > [!NOTE]
 > The `install_yamls` project expects several dependencies on the host machine.
 > Without them the deployment will fail and you will have install them first.
-> In general terms, all tools required by Openshift are also required by `install_yamls`.
+> In general terms, all tools required by OpenShift are also required by `install_yamls`.
 > Most importantly, `kubectl` **must** be present on the system.
 
 ## Secrets Management
@@ -82,20 +82,20 @@ make keystone_deploy
 > [!WARNING]
 > The dev environment requires substantial resources to be deployed successfully. It is recommended that you deploy this environment on machines with enough overhead.
 
-* clone install_yamls
+* clone `install_yamls`
 ```bash
 git clone https://github.com/openstack-k8s-operators/install_yamls.git
+cd install_yamls
 ```
+
 * ensure the dependencies are installed
 ```bash
-cd install_yamls/devsetup
-make download_tools
+make -C devsetup download_tools
 ```
 
 * install CRC
 ```bash
-cd install_yamls/devsetup
-CPUS=12 MEMORY=25600 DISK=100 make crc
+CPUS=12 MEMORY=25600 DISK=100 make -C devsetup crc
 ```
 
 * login to OCP (the kubeadmin password is auto-generated in `.secrets.env`)
@@ -104,21 +104,19 @@ eval $(crc oc-env)
 oc login -u kubeadmin -p $(grep KUBEADMIN_PWD ../.secrets.env | sed 's/.*?= *//' ) https://api.crc.testing:6443
 ```
 
-* attach libvirt default network to the crc (default IP 192.168.122.10). This network is used as a vlan trunk to isolate the networks using vlans.
+* attach libvirt default network to the CRC cluster (default IP 192.168.122.10). This network is used as a vlan trunk to isolate the networks using vlans.
 ```bash
-make crc_attach_default_interface
+make -C devsetup crc_attach_default_interface
 ```
 
 * create edpm nodes
 ```bash
-EDPM_TOTAL_NODES=2 make edpm_compute
+EDPM_TOTAL_NODES=2 make -C devsetup edpm_compute
 ```
 
 * create dependencies (secrets are auto-generated on first `make input`)
 ```bash
-cd ..
-make crc_storage
-make input
+make crc_storage input
 ```
 
 * install openstack-operator either from quay.io or the redhat-marketplace
@@ -242,8 +240,7 @@ Producing a list of agents.
 ## Simple steps to validate the deployment
 
 ```
-cd devsetup
-make edpm_deploy_instance
+make -C devsetup edpm_deploy_instance
 ```
 
 ## Deployment on OKD distro
@@ -263,7 +260,7 @@ To test OpenStack deployment in a disconnected environment using the OpenShift i
 
 ```bash
 # Install required tools (includes oc-mirror)
-cd devsetup && make download_tools && cd ..
+make -C devsetup download_tools
 
 # Setup storage first
 make crc_storage
@@ -306,7 +303,7 @@ make mirror_registry_cleanup
 ```
 
 **Tool requirements:**
-- `oc-mirror`: Install via `cd devsetup && make download_tools` (or `make download_tools DOWNLOAD_TOOLS_SELECTION=oc_mirror`)
+- `oc-mirror`: Install via `make -C devsetup download_tools` (or `make -C devsetup download_tools DOWNLOAD_TOOLS_SELECTION=oc_mirror`)
 - `skopeo`: For digest inspection (installed via `make download_tools`)
 
 ## OpenStack Lightspeed
