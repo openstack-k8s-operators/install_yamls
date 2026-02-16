@@ -7,11 +7,11 @@ Aside from generating Yaml and running *oc* commands to apply them to your clust
 Helper scripts to automate installing CRC and required tools with versions used in openstack-k8s-operators can be found in [devsetup](devsetup/README.md).
 These scripts/playbook require sudo permissions.
 
-**Note**
-The `install_yamls` project expects several dependencies on the host machine.
-Without them the deployment will fail and you will have install them first.
-In general terms, all tools required by Openshift are also required by `install_yamls`.
-Most importanly, the `kubectl` must be present on the system.
+> [!NOTE]
+> The `install_yamls` project expects several dependencies on the host machine.
+> Without them the deployment will fail and you will have install them first.
+> In general terms, all tools required by Openshift are also required by `install_yamls`.
+> Most importantly, `kubectl` **must** be present on the system.
 
 ## Secrets Management
 
@@ -79,7 +79,8 @@ make keystone_deploy
 
 ## Deploy dev env using CRC, edpm nodes with isolated networks
 
-**Warning** The dev environment requires substantial resources to be deployed successfully. It is recommended that you deploy this environment on machines with enough overhead.
+> [!WARNING]
+> The dev environment requires substantial resources to be deployed successfully. It is recommended that you deploy this environment on machines with enough overhead.
 
 * clone install_yamls
 ```bash
@@ -136,7 +137,10 @@ REDHAT_OPERATORS=true make openstack
 make openstack_init
 ```
 
-**Note** this will also run the openstack_prep target, which if NETWORK_ISOLATION == true will install nmstate and metallb operator, configure the secondary interface of the crc VM via nncp, creates the network-attachment-definitions for datacentre, internalapi, storage and tenant network. Also the metallb l2advertisement and the ipaddresspools get created.
+> [!NOTE]
+> This will also run the `openstack_prep` target, If `NETWORK_ISOLATION == true` this will install `nmstate` and `metallb` operator,
+> configure the secondary interface of the crc VM via `nncp`, and create the network-attachment-definitions for datacentre, internalapi,
+> storage and tenant network. Also the metallb l2advertisement and the ipaddresspools get created.
 
 The following NADs with ip ranges get configured:
 ```
@@ -157,7 +161,8 @@ tenant:      172.19.0.80-172.19.0.90
 HOSTNETWORK=false NETWORKS_ANNOTATION=\'[\{\"name\":\"storage\",\"namespace\":\"openstack\"\}]\' MON_IP=172.18.0.30 make ceph TIMEOUT=90
 ```
 
-**Note** as it is the first pod requesting an ip using the storage network, it will get the first IP from the configured range in the whereabouts ipam pool, which is 172.18.0.30 .
+> [!NOTE]
+> As it is the first pod requesting an IP using the storage network, it will get the first IP from the configured range in the whereabouts ipam pool, which is `172.18.0.30`.
 
 * deploy the ctlplane
 
@@ -169,7 +174,8 @@ make openstack_deploy
 
 (optional) To deploy with ceph as backend for glance and cinder, a sample config can be found at https://github.com/openstack-k8s-operators/openstack-operator/blob/main/config/samples/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml .
 
-**Note** Make sure to replace the `_FSID_` in the sample with the one from the ceph cluster. When deployed with `make ceph`
+> [!NOTE]
+> Make sure to replace the `_FSID_` in the sample with the one from the ceph cluster. When deployed with `make ceph`
 
 ```bash
 curl -o /tmp/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml https://raw.githubusercontent.com/openstack-k8s-operators/openstack-operator/main/config/samples/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml
@@ -182,19 +188,21 @@ Wait for the ctlplane to be up.
 
 At this point the ctlplane is deployed with the services using isolated networks as specified in the CR sample.
 
-**Note** Deployment may take longer than the default timeout allows for. In these cases, make sure to adjust `DATAPLANE_TIMEOUT` variable.
+> [!NOTE]
+> Deployment may take longer than the default timeout allows for. In these cases, make sure to adjust `DATAPLANE_TIMEOUT` variable.
 
 * deploy edpm compute
 ```bash
 # To use a NTP server other than the ntp.pool.org default one, override the DATAPLANE_NTP_SERVER variable
 DATAPLANE_TOTAL_NODES=2 make edpm_wait_deploy
 ```
-Note: if you used the `edpm_deploy` target to start the deployment then after
-the compute services are visible in `openstack compute service list` you need
-to manually run host discovery:
-```bash
-make edpm_nova_discover_hosts
-```
+
+> [!NOTE]
+> If you used the `edpm_deploy` target to start the deployment then after
+> the compute services are visible in `openstack compute service list` you need
+> to manually run host discovery:
+>
+>     make edpm_nova_discover_hosts
 
 * wait until finished, then can check the env
 ```bash
@@ -248,7 +256,8 @@ make openstack OKD=true
 
 ## Disconnected environment testing
 
-**Note**: This tests OpenStack operators/images in disconnected mode using the internal registry as a mirror, not a fully disconnected OCP cluster.
+> [!NOTE]
+> This tests OpenStack operators/images in disconnected mode using the internal registry as a mirror, not a fully disconnected OCP cluster.
 
 To test OpenStack deployment in a disconnected environment using the OpenShift internal registry as a mirror:
 
