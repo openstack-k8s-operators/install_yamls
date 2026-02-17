@@ -82,55 +82,66 @@ make keystone_deploy
 > [!WARNING]
 > The dev environment requires substantial resources to be deployed successfully. It is recommended that you deploy this environment on machines with enough overhead.
 
-* clone `install_yamls`
+Clone `install_yamls`:
+
 ```bash
 git clone https://github.com/openstack-k8s-operators/install_yamls.git
 cd install_yamls
 ```
 
-* ensure the dependencies are installed
+Ensure the dependencies are installed:
+
 ```bash
 make -C devsetup download_tools
 ```
 
-* install CRC
+Install CRC:
+
 ```bash
 CPUS=12 MEMORY=25600 DISK=100 make -C devsetup crc
 ```
 
-* login to OCP (the kubeadmin password is auto-generated in `.secrets.env`)
+Login to OCP (the kubeadmin password is auto-generated in `.secrets.env`):
+
 ```bash
 eval $(crc oc-env)
 oc login -u kubeadmin -p $(grep KUBEADMIN_PWD ../.secrets.env | sed 's/.*?= *//' ) https://api.crc.testing:6443
 ```
 
-* attach libvirt default network to the CRC cluster (default IP 192.168.122.10). This network is used as a vlan trunk to isolate the networks using vlans.
+Attach libvirt default network to the CRC cluster (default IP 192.168.122.10). This network is used as a VLAN trunk to isolate the networks using VLANs:
+
 ```bash
 make -C devsetup crc_attach_default_interface
 ```
 
-* create edpm nodes
+Create External Data Plane Management (EDPM) nodes:
+
 ```bash
 EDPM_TOTAL_NODES=2 make -C devsetup edpm_compute
 ```
 
-* create dependencies (secrets are auto-generated on first `make input`)
+Create dependencies (secrets are auto-generated on first `make input`):
+
 ```bash
 make crc_storage input
 ```
 
-* install openstack-operator either from quay.io or the redhat-marketplace
+Install `openstack-operator`. You can do this from either quay.io or the redhat-marketplace.
 
-install using the latest openstack-operator-index from quay.io
-```bash
-make openstack
-```
-install using the redhat-marketplace
-```bash
-REDHAT_OPERATORS=true make openstack
-```
+* Install using the latest openstack-operator-index from quay.io
 
-* create the initialization resource (this deploys the operators)
+    ```bash
+    make openstack
+    ```
+
+* Install using the redhat-marketplace
+
+    ```bash
+    REDHAT_OPERATORS=true make openstack
+    ```
+
+Create the initialization resource (this deploys the operators):
+
 ```bash
 make openstack_init
 ```
@@ -139,22 +150,21 @@ make openstack_init
 > This will also run the `openstack_prep` target, If `NETWORK_ISOLATION == true` this will install `nmstate` and `metallb` operator,
 > configure the secondary interface of the crc VM via `nncp`, and create the network-attachment-definitions for datacentre, internalapi,
 > storage and tenant network. Also the metallb l2advertisement and the ipaddresspools get created.
+>
+> The following NADs with IP ranges get configured:
+>
+>     internalapi: 172.17.0.30-172.17.0.70
+>     storage:     172.18.0.30-172.18.0.70
+>     tenant:      172.19.0.30-172.19.0.70
+>
+> The following IPAddressPools with IP ranges get configured:
+>
+>     internalapi: 172.17.0.80-172.17.0.90
+>     storage:     172.18.0.80-172.18.0.90
+>     tenant:      172.19.0.80-172.19.0.90
 
-The following NADs with ip ranges get configured:
-```
-internalapi: 172.17.0.30-172.17.0.70
-storage:     172.18.0.30-172.18.0.70
-tenant:      172.19.0.30-172.19.0.70
-```
+(optional) Deploy ceph container using storage network:
 
-The following IPAddressPools with ip ranges get configured:
-```
-internalapi: 172.17.0.80-172.17.0.90
-storage:     172.18.0.80-172.18.0.90
-tenant:      172.19.0.80-172.19.0.90
-```
-
-* (optional) deploy ceph container using storage network
 ```bash
 HOSTNETWORK=false NETWORKS_ANNOTATION=\'[\{\"name\":\"storage\",\"namespace\":\"openstack\"\}]\' MON_IP=172.18.0.30 make ceph TIMEOUT=90
 ```
@@ -162,9 +172,7 @@ HOSTNETWORK=false NETWORKS_ANNOTATION=\'[\{\"name\":\"storage\",\"namespace\":\"
 > [!NOTE]
 > As it is the first pod requesting an IP using the storage network, it will get the first IP from the configured range in the whereabouts ipam pool, which is `172.18.0.30`.
 
-* deploy the ctlplane
-
-If `NETWORK_ISOLATION == true`, `config/samples/core_v1beta1_openstackcontrolplane_network_isolation.yaml` will be used, if `false` then `config/samples/core_v1beta1_openstackcontrolplane.yaml`.
+Deploy the ctlplane. If `NETWORK_ISOLATION == true`, `config/samples/core_v1beta1_openstackcontrolplane_network_isolation.yaml` will be used, if `false` then `config/samples/core_v1beta1_openstackcontrolplane.yaml`.
 
 ```bash
 make openstack_deploy
@@ -189,7 +197,8 @@ At this point the ctlplane is deployed with the services using isolated networks
 > [!NOTE]
 > Deployment may take longer than the default timeout allows for. In these cases, make sure to adjust `DATAPLANE_TIMEOUT` variable.
 
-* deploy edpm compute
+* Deploy EDPM compute
+
 ```bash
 # To use a NTP server other than the ntp.pool.org default one, override the DATAPLANE_NTP_SERVER variable
 DATAPLANE_TOTAL_NODES=2 make edpm_wait_deploy
@@ -202,12 +211,15 @@ DATAPLANE_TOTAL_NODES=2 make edpm_wait_deploy
 >
 >     make edpm_nova_discover_hosts
 
-* wait until finished, then can check the env
+Wait until finished, then can check the env:
+
 ```bash
 oc -n openstack rsh openstackclient
 openstack compute service list
 ```
+
 Producing a list of services:
+
 ```
 +--------------------------------------+----------------+------------------------+----------+---------+-------+----------------------------+
 | ID                                   | Binary         | Host                   | Zone     | Status  | State | Updated At                 |
@@ -225,6 +237,7 @@ openstack network agent list
 ```
 
 Producing a list of agents.
+
 ```
 +--------------------------------------+------------------------------+--------------------+-------------------+-------+-------+----------------------------+
 | ID                                   | Agent Type                   | Host               | Availability Zone | Alive | State | Binary                     |
