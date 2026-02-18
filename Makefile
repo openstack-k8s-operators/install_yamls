@@ -499,6 +499,14 @@ TELEMETRY_KUTTL_CONF      ?= ${TELEMETRY_KUTTL_BASEDIR}/kuttl-test.yaml
 TELEMETRY_KUTTL_NAMESPACE ?= telemetry-kuttl-tests
 TELEMETRY_KUTTL_DIR       ?= ${TELEMETRY_KUTTL_BASEDIR}/${TELEMETRY_KUTTL_RELPATH}
 
+# Test Operator
+TEST_OPERATOR_IMG      ?= quay.io/openstack-k8s-operators/test-operator-index:${OPENSTACK_K8S_TAG}
+TEST_OPERATOR_REPO     ?= https://github.com/openstack-k8s-operators/test-operator.git
+TEST_OPERATOR_BRANCH   ?= ${OPENSTACK_K8S_BRANCH}
+TEST_OPERATOR_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/test-operator/kuttl-test.yaml
+TEST_OPERATOR_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/test-operator/test/kuttl/tests
+TEST_OPERATOR_KUTTL_NAMESPACE ?= test-operator-kuttl-tests
+
 # BMO
 BMO_REPO                         ?= https://github.com/metal3-io/baremetal-operator
 BMO_BRANCH                       ?= release-0.9
@@ -2742,6 +2750,55 @@ telemetry_kuttl: kuttl_common_prep ovn heat heat_deploy certmanager telemetry te
 	make heat_cleanup
 	make kuttl_common_cleanup
 	bash scripts/restore-namespace.sh
+
+##@ TEST OPERATOR
+.PHONY: test_operator_prep
+test_operator_prep: export IMAGE=${TEST_OPERATOR_IMG}
+test_operator_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,test-operator))
+	bash scripts/gen-olm.sh
+
+.PHONY: test_operator
+test_operator: operator_namespace test_operator_prep ## installs the operator, also runs the prep step. Set TEST_OPERATOR_IMG for custom image.
+	$(eval $(call vars,$@,test-operator))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: test_operator_cleanup
+test_operator_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,test-operator))
+	bash scripts/operator-cleanup.sh
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
+
+.PHONY: test_operator_deploy_prep
+test_operator_deploy_prep: export KIND=Tempest
+test_operator_deploy_prep: export REPO=${TEST_OPERATOR_REPO}
+test_operator_deploy_prep: export BRANCH=${TEST_OPERATOR_BRANCH}
+test_operator_deploy_prep: test_operator_deploy_cleanup ## prepares CR for test-operator
+	$(eval $(call vars,$@,test-operator))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	bash scripts/clone-operator-repo.sh
+
+.PHONY: test_operator_deploy_cleanup
+test_operator_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,test-operator))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	${CLEANUP_DIR_CMD} ${DEPLOY_DIR}
+
+.PHONY: test_operator_kuttl_run
+test_operator_kuttl_run: ## runs kuttl tests for the test-operator, assumes that everything needed for running the test was deployed beforehand.
+	TEST_OPERATOR_KUTTL_DIR=${TEST_OPERATOR_KUTTL_DIR} kubectl-kuttl test --config ${TEST_OPERATOR_KUTTL_CONF} ${TEST_OPERATOR_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
+
+.PHONY: test_operator_kuttl
+test_operator_kuttl: export NAMESPACE = ${TEST_OPERATOR_KUTTL_NAMESPACE}
+# Set the value of $TEST_OPERATOR_KUTTL_NAMESPACE if you want to run test-operator
+# kuttl tests in a namespace different than the default (test-operator-kuttl-tests)
+test_operator_kuttl: kuttl_common_prep test_operator test_operator_deploy_prep
+	$(eval $(call vars,$@,test-operator))
+	make wait
+	make test_operator_kuttl_run
+	make deploy_cleanup
+	make test_operator_cleanup
+	make kuttl_common_cleanup
 
 ##@ SWIFT
 .PHONY: swift_prep
