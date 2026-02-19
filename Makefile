@@ -1044,7 +1044,7 @@ edpm_nova_discover_hosts: ## trigger manual compute host discovery in nova
 	oc rsh nova-cell0-conductor-0 nova-manage cell_v2 discover_hosts --verbose
 
 .PHONY: openstack_crds
-openstack_crds: namespace ## installs all openstack CRDs. Useful for infrastructure dev
+openstack_crds: openstack_repo namespace ## installs all openstack CRDs. Useful for infrastructure dev
 	OPENSTACK_BUNDLE_IMG=${OPENSTACK_BUNDLE_IMG} OUT=${OUT} OPENSTACK_CRDS_DIR=${OPENSTACK_CRDS_DIR} OPERATOR_BASE_DIR=${OPERATOR_BASE_DIR} bash scripts/openstack-crds.sh
 
 .PHONY: openstack_crds_cleanup
