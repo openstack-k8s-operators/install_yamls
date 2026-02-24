@@ -2478,16 +2478,10 @@ metallb: ## installs metallb operator in the metallb-system namespace
 	oc apply -f ${OUT}/${NAMESPACE}/namespace.yaml
 	timeout $(TIMEOUT) bash -c "while ! (oc get project.v1.project.openshift.io ${NAMESPACE}); do sleep 1; done"
 ifeq ($(OKD), true)
-	bash scripts/gen-operatorshub-catalog.sh
-	oc apply -f ${OPERATOR_DIR}/operatorshub-catalog/
-	timeout ${TIMEOUT} bash -c "while ! (oc get packagemanifests metallb-operator --no-headers=true | grep metallb-operator); do sleep 10; done"
 	bash scripts/gen-olm-metallb-okd.sh
-	oc apply -f ${OPERATOR_DIR}
-	timeout ${TIMEOUT} bash -c "while ! (oc get deployment metallb-operator-controller-manager --no-headers=true -n ${NAMESPACE}| grep metallb-operator-controller-manager); do sleep 10; done"
-	oc apply -f ${OPERATOR_DIR}/patches
+	oc apply -k ${OPERATOR_DIR}/config/openshift
+	oc apply -f ${OPERATOR_DIR}/config/metallb_rbac/metallb-openshift.yaml
 	oc wait -n ${NAMESPACE} --for=condition=Available deployment/metallb-operator-controller-manager --timeout=${TIMEOUT}
-	# we ensure the outdated replica is terminated (i.e only one replica available)
-	timeout ${TIMEOUT} bash -c "while ! (oc get pod --no-headers=true -l control-plane=controller-manager -n ${NAMESPACE}| grep metallb-operator-controller | wc -l | grep -q -e 1); do sleep 10; done"
 else
 	bash scripts/gen-olm-metallb.sh
 	oc apply -f ${OPERATOR_DIR}
