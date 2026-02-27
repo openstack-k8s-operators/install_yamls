@@ -124,6 +124,15 @@ EDPM_EMULATED_NVME_ENABLED=true \
 EDPM_EMULATED_SRIOV_NIC_ENABLED=true \
 make edpm_compute
 ```
+**NOTE:** NVMe emulation depends on host QEMU support, install_yamls configures EDPM VMs to request NVMe devices.
+> NVMe emulation has been tested only on a limited set of host distributions:
+> - **Fedora**: Works with the distro-provided QEMU packages.
+> - **RHEL/CentOS 9**: Did not work in our testing and has not been validated further.
+>
+> While using NVMe devices in EDPM VMs, use a host distribution with known NVMe
+> emulation support or ensure the host QEMU/KVM provides the necessary device
+> models.
+
 
 Execute the edpm_deploy step:
 ```
