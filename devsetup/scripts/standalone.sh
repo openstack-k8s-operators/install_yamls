@@ -30,8 +30,8 @@ STANDALONE_VM=${STANDALONE_VM:-"true"}
 if [[ ${STANDALONE_VM} == "true" ]]; then
     EDPM_COMPUTE_NETWORK_IP=$(virsh net-dumpxml ${EDPM_COMPUTE_NETWORK} | xmllint --xpath 'string(/network/ip/@address)' -)
 fi
-IP_ADRESS_SUFFIX=$((100+${EDPM_COMPUTE_SUFFIX}))
-IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADRESS_SUFFIX}"}
+IP_ADDRESS_SUFFIX=$((100+${EDPM_COMPUTE_SUFFIX}))
+IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADDRESS_SUFFIX}"}
 OS_NET_CONFIG_IFACE=${OS_NET_CONFIG_IFACE:-"nic1"}
 GATEWAY=${GATEWAY:-"${EDPM_COMPUTE_NETWORK_IP}"}
 OUTPUT_DIR=${OUTPUT_DIR:-"${SCRIPTPATH}/../../out/edpm/"}
@@ -204,7 +204,7 @@ os_net_config_iface: ${OS_NET_CONFIG_IFACE}
 standalone_vm: ${STANDALONE_VM}
 ctlplane_subnet: ${IP%.*}.0/24
 ctlplane_vip: ${IP%.*}.99
-ip_address_suffix: ${IP_ADRESS_SUFFIX}
+ip_address_suffix: ${IP_ADDRESS_SUFFIX}
 interface_mtu: ${INTERFACE_MTU:-1500}
 gateway_ip: ${GATEWAY}
 dns_server: ${PRIMARY_RESOLV_CONF_ENTRY}

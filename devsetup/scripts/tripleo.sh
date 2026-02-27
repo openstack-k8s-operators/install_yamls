@@ -20,8 +20,8 @@ trap 'rv=$?; rm -rf -- "$MY_TMP_DIR"; exit $rv' EXIT
 
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
-IP_ADRESS_SUFFIX=${IP_ADRESS_SUFFIX:-100}
-IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADRESS_SUFFIX}"}
+IP_ADDRESS_SUFFIX=${IP_ADDRESS_SUFFIX:-100}
+IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADDRESS_SUFFIX}"}
 OS_NET_CONFIG_IFACE=${OS_NET_CONFIG_IFACE:-"nic1"}
 CLOUD_DOMAIN=${CLOUD_DOMAIN:-localdomain}
 GATEWAY=${GATEWAY:-"${EDPM_COMPUTE_NETWORK_IP}"}
@@ -138,7 +138,7 @@ network:
     config: disabled
 __EOF__
 
-cell=\$(( IP_ADRESS_SUFFIX - 100 ))
+cell=\$(( IP_ADDRESS_SUFFIX - 100 ))
 sudo systemctl enable network
 sudo cp /tmp/net_config.yaml /etc/os-net-config/config.yaml
 sudo os-net-config -c /etc/os-net-config/config.yaml
@@ -169,7 +169,7 @@ ctlplane_cidr: 24
 ctlplane_ip: ${IP}
 os_net_config_iface: ${OS_NET_CONFIG_IFACE}
 ctlplane_vip: ${IP%.*}.99
-ip_address_suffix: ${IP_ADRESS_SUFFIX}
+ip_address_suffix: ${IP_ADDRESS_SUFFIX}
 interface_mtu: ${INTERFACE_MTU:-1500}
 ntp_server: ${NTP_SERVER}
 gateway_ip: ${GATEWAY}
