@@ -178,6 +178,10 @@ BARBICAN_DEPL_IMG        ?= unused
 BARBICAN_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/barbican-operator/kuttl-test.yaml
 BARBICAN_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/barbican-operator/test/kuttl/tests
 BARBICAN_KUTTL_NAMESPACE ?= barbican-kuttl-tests
+# HSM-enabled Barbican image overrides
+BARBICAN_API_IMAGE       ?=
+BARBICAN_WORKER_IMAGE    ?=
+BARBICAN_HSM_ENABLED     ?= false
 
 # Mariadb
 MARIADB_IMG             ?= quay.io/openstack-k8s-operators/mariadb-operator-index:${OPENSTACK_K8S_TAG}
@@ -584,6 +588,15 @@ ${1}: export OPERATOR_SOURCE=$(OPERATOR_SOURCE)
 ${1}: export OPERATOR_SOURCE_NAMESPACE=$(OPERATOR_SOURCE_NAMESPACE)
 endef
 
+ifeq ($(BARBICAN_HSM_ENABLED),true)
+    ifneq ($(BARBICAN_API_IMAGE),)
+        BARBICAN_API_IMG := $(BARBICAN_API_IMAGE)
+    endif
+    ifneq ($(BARBICAN_WORKER_IMAGE),)
+        BARBICAN_WORKER_IMG := $(BARBICAN_WORKER_IMAGE)
+    endif
+endif
+
 .PHONY: all
 all: operator_namespace keystone mariadb placement neutron
 
@@ -802,6 +815,9 @@ openstack_wait: ## waits openstack CSV to succeed.
 
 # creates the new initialization resource for our operators
 .PHONY: openstack_init
+openstack_init: export BARBICAN_API_IMAGE:=$(BARBICAN_API_IMAGE)
+openstack_init: export BARBICAN_WORKER_IMAGE:=$(BARBICAN_WORKER_IMAGE)
+openstack_init: export BARBICAN_HSM_ENABLED:=$(BARBICAN_HSM_ENABLED)
 openstack_init: openstack_wait
 	bash -c 'test -f ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/operator_v1beta1_openstack.yaml || make openstack_repo'
 	oc apply -f ${OPERATOR_BASE_DIR}/openstack-operator/config/samples/operator_v1beta1_openstack.yaml
@@ -1290,6 +1306,8 @@ barbican_cleanup: ## deletes the operator, but does not cleanup the service reso
 
 .PHONY: barbican_deploy_prep
 barbican_deploy_prep: export KIND=Barbican
+barbican_deploy_prep: export IMAGE=${BARBICAN_API_IMG:-unused},${BARBICAN_WORKER_IMG:-unused}
+barbican_deploy_prep: export IMAGE_PATH=barbicanAPI/containerImage,barbicanWorker/containerImage
 barbican_deploy_prep: export REPO=${BARBICAN_REPO}
 barbican_deploy_prep: export BRANCH=${BARBICAN_BRANCH}
 barbican_deploy_prep: export HASH=${BARBICAN_COMMIT_HASH}
