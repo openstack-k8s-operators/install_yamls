@@ -62,15 +62,26 @@ oc wait $OPENSTACK_VERSION_CR --for=jsonpath='{.status.availableVersion}'=$OPENS
 
 OPENSTACK_DEPLOYED_VERSION=$(oc get $OPENSTACK_VERSION_CR --template={{.status.deployedVersion}})
 
-cat <<EOF >openstackversionpatch.yaml
-    "spec": {
-      "targetVersion": "$OPENSTACK_VERSION"
-      }
-EOF
-
 update_event Patching the Openstack Version
 
-oc patch $OPENSTACK_VERSION_CR  --type=merge  --patch-file openstackversionpatch.yaml
+# The admission webhook (FR4+) rejects targetVersion changes when
+# customContainerImages are identical to the tracked images for the
+# previous version.  In CI the same images are used for both phases.
+#
+# Work around: save the custom images, null them in the same patch
+# that sets targetVersion (so hasAnyCustomImage=false and the webhook
+# skips validation), then immediately restore them so the operator
+# keeps using the internal-mirror images instead of falling back to
+# the CSV defaults (which may point to an inaccessible registry).
+CUSTOM_IMAGES=$(oc get $OPENSTACK_VERSION_CR -o jsonpath='{.spec.customContainerImages}')
+
+oc patch $OPENSTACK_VERSION_CR --type=merge \
+  -p '{"spec":{"targetVersion":"'"$OPENSTACK_VERSION"'","customContainerImages":null}}'
+
+if [ -n "$CUSTOM_IMAGES" ] && [ "$CUSTOM_IMAGES" != "{}" ] && [ "$CUSTOM_IMAGES" != "null" ]; then
+  oc patch $OPENSTACK_VERSION_CR --type=merge \
+    -p "{\"spec\":{\"customContainerImages\":$CUSTOM_IMAGES}}"
+fi
 
 # wait for ovn update on control plane
 oc wait $OPENSTACK_VERSION_CR --for=condition=MinorUpdateOVNControlplane --timeout=$TIMEOUT
