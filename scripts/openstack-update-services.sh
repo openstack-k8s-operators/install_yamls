@@ -62,15 +62,17 @@ oc wait $OPENSTACK_VERSION_CR --for=jsonpath='{.status.availableVersion}'=$OPENS
 
 OPENSTACK_DEPLOYED_VERSION=$(oc get $OPENSTACK_VERSION_CR --template={{.status.deployedVersion}})
 
-cat <<EOF >openstackversionpatch.yaml
-    "spec": {
-      "targetVersion": "$OPENSTACK_VERSION"
-      }
-EOF
-
 update_event Patching the Openstack Version
 
-oc patch $OPENSTACK_VERSION_CR  --type=merge  --patch-file openstackversionpatch.yaml
+# Clear customContainerImages and set targetVersion in a single patch so the
+# admission webhook (FR4+) sees no custom images and skips its validation.
+# In CI the same container images are used for both the initial deployment
+# and the simulated version bump, so the tracked images would be identical
+# and the webhook would reject the change.  With customContainerImages
+# removed the operator falls back to its CSV defaults, which
+# set_openstack_containers has already updated to the correct tag.
+oc patch $OPENSTACK_VERSION_CR --type=merge \
+  -p '{"spec":{"targetVersion":"'"$OPENSTACK_VERSION"'","customContainerImages":null}}'
 
 # wait for ovn update on control plane
 oc wait $OPENSTACK_VERSION_CR --for=condition=MinorUpdateOVNControlplane --timeout=$TIMEOUT
