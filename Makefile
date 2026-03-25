@@ -285,13 +285,14 @@ CINDER_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/cinder-operator/test/kuttl/tests
 CINDER_KUTTL_NAMESPACE ?= cinder-kuttl-tests
 
 # RabbitMQ
-RABBITMQ_IMG            ?= quay.io/openstack-k8s-operators/rabbitmq-cluster-operator-index:${OPENSTACK_K8S_TAG}
-RABBITMQ_REPO           ?= https://github.com/openstack-k8s-operators/rabbitmq-cluster-operator.git
-RABBITMQ_BRANCH         ?= patches
-RABBITMQ_COMMIT_HASH    ?=
-RABBITMQ                ?= docs/examples/default-security-context/rabbitmq.yaml
-RABBITMQ_CR             ?= ${OPERATOR_BASE_DIR}/rabbitmq-operator/${RABBITMQ}
-RABBITMQ_DEPL_IMG       ?= unused
+RABBITMQ_OPERATOR_VERSION ?= v2.19.2
+RABBITMQ_OPERATOR_URL     ?= https://github.com/rabbitmq/cluster-operator/releases/download/${RABBITMQ_OPERATOR_VERSION}/cluster-operator.yml
+RABBITMQ_REPO             ?= https://github.com/rabbitmq/cluster-operator.git
+RABBITMQ_BRANCH           ?= main
+RABBITMQ_COMMIT_HASH      ?=
+RABBITMQ                  ?= docs/examples/default-security-context/rabbitmq.yaml
+RABBITMQ_CR               ?= ${OPERATOR_BASE_DIR}/rabbitmq-operator/${RABBITMQ}
+RABBITMQ_DEPL_IMG         ?= unused
 
 # Ironic
 IRONIC_IMG             ?= quay.io/openstack-k8s-operators/ironic-operator-index:${OPENSTACK_K8S_TAG}
@@ -1580,20 +1581,20 @@ cinder_deploy_cleanup: namespace ## cleans up the service instance, Does not aff
 
 ##@ RABBITMQ
 .PHONY: rabbitmq_prep
-rabbitmq_prep: export IMAGE=${RABBITMQ_IMG}
-rabbitmq_prep: ## creates the files to install the operator using olm
+rabbitmq_prep: ## downloads the upstream rabbitmq-cluster-operator manifest
 	$(eval $(call vars,$@,rabbitmq-cluster))
-	bash scripts/gen-olm.sh
+	mkdir -p ${OPERATOR_DIR}
+	curl -sL ${RABBITMQ_OPERATOR_URL} -o ${OPERATOR_DIR}/cluster-operator.yml
 
 .PHONY: rabbitmq
-rabbitmq: operator_namespace rabbitmq_prep ## installs the operator, also runs the prep step. Set RABBITMQ_IMG for custom image.
+rabbitmq: operator_namespace rabbitmq_prep ## installs the upstream rabbitmq-cluster-operator. Set RABBITMQ_OPERATOR_VERSION for a specific release.
 	$(eval $(call vars,$@,rabbitmq-cluster))
-	oc apply -f ${OPERATOR_DIR}
+	oc apply -f ${OPERATOR_DIR}/cluster-operator.yml
 
 .PHONY: rabbitmq_cleanup
-rabbitmq_cleanup: ## deletes the operator, but does not cleanup the service resources
+rabbitmq_cleanup: ## deletes the rabbitmq-cluster-operator
 	$(eval $(call vars,$@,rabbitmq-cluster))
-	bash scripts/operator-cleanup.sh
+	if [ -f ${OPERATOR_DIR}/cluster-operator.yml ]; then oc delete --ignore-not-found -f ${OPERATOR_DIR}/cluster-operator.yml; fi
 	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 .PHONY: rabbitmq_deploy_prep
@@ -1974,7 +1975,7 @@ infra_kuttl_run: ## runs kuttl tests for the infra operator, assumes that everyt
 infra_kuttl: export NAMESPACE = ${INFRA_KUTTL_NAMESPACE}
 # Set the value of $INFRA_KUTTL_NAMESPACE if you want to run the infra
 # kuttl tests in a namespace different than the default (infra-kuttl-tests)
-infra_kuttl: input deploy_cleanup rabbitmq rabbitmq_deploy infra memcached_deploy_prep ## runs kuttl tests for the infra operator. Installs infra operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+infra_kuttl: input deploy_cleanup rabbitmq infra memcached_deploy_prep ## runs kuttl tests for the infra operator. Installs infra operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,infra))
 	make wait
 	make infra_kuttl_run

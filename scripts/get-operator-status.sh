@@ -11,6 +11,7 @@ fi
 
 if [ "$OPERATOR_NAME" = "rabbitmq-cluster" ]; then
     DEPL_NAME="rabbitmq-cluster-operator"
+    OPERATOR_NAMESPACE="rabbitmq-system"
 else
     DEPL_NAME=${OPERATOR_NAME}-operator-controller-manager
 fi
