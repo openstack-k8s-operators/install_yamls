@@ -1,4 +1,5 @@
 ---
+
 # kuttl version to use (must be specific version)
 kuttl_version: 0.20.0
 
