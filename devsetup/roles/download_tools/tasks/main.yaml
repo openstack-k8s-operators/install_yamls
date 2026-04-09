@@ -1,19 +1,16 @@
 ---
+- name: Include OS-specific variables
+  tags:
+    - always
+  ansible.builtin.include_vars: "{{ ansible_os_family }}.yaml"
+
 - name: Install build dependencies
-  become: true
+  become: "{{ false if ansible_os_family == 'Darwin' else true }}"
   tags:
     - dependencies
   ansible.builtin.package:
-    name:
-      - jq
-      - skopeo
-      - sqlite
-      - httpd-tools
-      - virt-install
-      - gcc
-      - python3-jinja2
-      - xmlstarlet
-      - openssl
+    name: "{{ tools_packages }}"
+    state: present
 
 - name: Set opm download url suffix
   tags:
@@ -43,7 +40,7 @@
   ansible.builtin.get_url:
     url:
       "https://github.com/operator-framework/operator-registry/releases/\
-      {{ opm_url_suffix }}/linux-amd64-opm"
+      {{ opm_url_suffix }}/{{ os_name }}-{{ arch }}-opm"
     dest: "{{ lookup('env', 'HOME') }}/bin/opm"
     mode: '0755'
     timeout: 30
@@ -69,33 +66,13 @@
     path: "{{ lookup('env', 'HOME') }}/bin/oc-mirror"
     mode: '0755'
 
-- name: Get version from sdk_version
-  tags:
-    - operator_sdk
-  ansible.builtin.set_fact:
-    _sdk_version: "{{ sdk_version | regex_search('v(.*)', '\\1') | first }}"
-
-- name: Set operator-sdk file for version < 1.3.0
-  tags:
-    - operator_sdk
-  ansible.builtin.set_fact:
-    _operator_sdk_file: "operator-sdk-{{ sdk_version }}-x86_64-linux-gnu"
-  when: _sdk_version is version('1.3.0', 'lt', strict=True )
-
-- name: Set operator-sdk file for version >= 1.3.0
-  tags:
-    - operator_sdk
-  ansible.builtin.set_fact:
-    _operator_sdk_file: "operator-sdk_linux_amd64"
-  when: _sdk_version is version('1.3.0', 'ge', strict=True )
-
 - name: Download operator-sdk
   tags:
     - operator_sdk
   ansible.builtin.get_url:
     url:
       "https://github.com/operator-framework/operator-sdk/releases/download/\
-      {{ sdk_version }}/{{ _operator_sdk_file }}"
+      {{ sdk_version }}/operator-sdk_{{ os_name }}_{{ arch }}"
     dest: "{{ lookup('env', 'HOME') }}/bin/operator-sdk"
     mode: '0755'
     force: true
@@ -107,7 +84,7 @@
   ansible.builtin.unarchive:
     src:
       "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F\
-      {{ kustomize_version }}/kustomize_{{ kustomize_version }}_linux_amd64.tar.gz"
+      {{ kustomize_version }}/kustomize_{{ kustomize_version }}_{{ os_name }}_{{ arch }}.tar.gz"
     dest: "{{ lookup('env', 'HOME') }}/bin/"
     remote_src: true
 
@@ -116,7 +93,7 @@
     - kubectl
   ansible.builtin.get_url:
     url:
-      "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl"
+      "https://dl.k8s.io/release/{{ kubectl_version }}/bin/{{ os_name }}/{{ arch }}/kubectl"
     dest: "{{ lookup('env', 'HOME') }}/bin/kubectl"
     mode: '0755'
     timeout: 30
@@ -127,7 +104,7 @@
   ansible.builtin.get_url:
     url:
       "https://github.com/kudobuilder/kuttl/releases/download/v{{ kuttl_version }}/\
-      kubectl-kuttl_{{ kuttl_version }}_linux_x86_64"
+      kubectl-kuttl_{{ kuttl_version }}_{{ os_name }}_{{ ansible_architecture }}"
     dest: "{{ lookup('env', 'HOME') }}/bin/kubectl-kuttl"
     mode: '0755'
     timeout: 30
@@ -138,7 +115,7 @@
   ansible.builtin.unarchive:
     src:
       "https://github.com/kyverno/chainsaw/releases/download/v{{ chainsaw_version }}/\
-      chainsaw_linux_amd64.tar.gz"
+      chainsaw_{{ os_name }}_{{ arch }}.tar.gz"
     dest: "{{ lookup('env', 'HOME') }}/bin/"
     remote_src: true
     extra_opts:
@@ -147,36 +124,34 @@
       - "--exclude"
       - "LICENSE"
 
-- name: Download and extract yq
+- name: Install yq from GitHub
   tags:
     - yq
-  ansible.builtin.unarchive:
-    src:
-      https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64.tar.gz
-    dest: "{{ lookup('env', 'HOME') }}/bin/"
-    remote_src: true
-    mode: '0755'
+  when: ansible_os_family != 'Darwin'
+  block:
+    - name: Download and extract yq
+      ansible.builtin.unarchive:
+        src:
+          https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64.tar.gz
+        dest: "{{ lookup('env', 'HOME') }}/bin/"
+        remote_src: true
+        mode: '0755'
 
-- name: Link yq_linux_amd64 as yq
-  tags:
-    - yq
-  ansible.builtin.file:
-    src: "{{ lookup('env', 'HOME') }}/bin/yq_linux_amd64"
-    dest: "{{ lookup('env', 'HOME') }}/bin/yq"
-    state: link
+    - name: Link yq_linux_amd64 as yq
+      ansible.builtin.file:
+        src: "{{ lookup('env', 'HOME') }}/bin/yq_linux_amd64"
+        dest: "{{ lookup('env', 'HOME') }}/bin/yq"
+        state: link
 
 - name: Set proper golang on the system
-  become: true
+  become: "{{ false if ansible_os_family == 'Darwin' else true }}"
   tags:
     - golang
   block:
     - name: Deinstall golang
       ansible.builtin.package:
         state: absent
-        name:
-          - golang-bin
-          - golang-src
-          - golang
+        name: "{{ golang_packages }}"
 
     - name: Delete old go version installed from upstream
       ansible.builtin.file:
@@ -189,16 +164,20 @@
         - /usr/local/bin/go
         - /usr/local/bin/gofmt
 
+    - name: Ensure golang install directory exists
+      ansible.builtin.file:
+        path: "{{ golang_install_dir }}"
+        state: directory
+        mode: '0755'
+
     - name: Download and extract golang
       ansible.builtin.unarchive:
-        src: "https://golang.org/dl/go{{ go_version }}.linux-amd64.tar.gz"
-        dest: "/usr/local"
+        src: "https://golang.org/dl/go{{ go_version }}.{{ os_name }}-{{ arch }}.tar.gz"
+        dest: "{{ golang_install_dir }}"
         remote_src: true
         extra_opts:
           - "--exclude"
           - "go/misc"
-          - "--exclude"
-          - "go/pkg/linux_amd64_race"
           - "--exclude"
           - "go/test"
 
@@ -211,9 +190,24 @@
         - go
         - gofmt
       changed_when: true
+      when: ansible_os_family != 'Darwin'
 
-- name: Clean bash cache
+    - name: Symlink go binaries into $HOME/bin
+      ansible.builtin.file:
+        src: "{{ golang_install_dir }}/go/bin/{{ item }}"
+        dest: "{{ lookup('env', 'HOME') }}/bin/{{ item }}"
+        state: link
+      with_items:
+        - go
+        - gofmt
+      when: ansible_os_family == 'Darwin'
+
+- name: Suggestions
   tags:
     - always
   ansible.builtin.debug:
-    msg: When move from rpm to upstream version, make sure to clean bash cache using `hash -d go`
+    msg: >-
+      When move from package to upstream version,
+      make sure to clean shell cache using
+      `hash -d go` (bash) or `rehash` (zsh).
+      On macOS, ensure $HOME/bin is in your PATH.

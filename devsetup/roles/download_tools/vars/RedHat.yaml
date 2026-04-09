@@ -1,0 +1,20 @@
+---
+os_name: linux
+arch: amd64
+
+golang_install_dir: /usr/local
+golang_packages:
+  - golang-bin
+  - golang-src
+  - golang
+
+tools_packages:
+  - jq
+  - skopeo
+  - sqlite
+  - httpd-tools
+  - virt-install
+  - gcc
+  - python3-jinja2
+  - xmlstarlet
+  - openssl
