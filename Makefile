@@ -719,7 +719,11 @@ crc_storage: namespace ## initialize local storage PVs in CRC vm
 	$(eval $(call vars,$@))
 	bash scripts/create-pv.sh
 	bash scripts/gen-crc-pv-kustomize.sh
-	oc apply -f ${OUT}/crc/storage.yaml
+	if [ -n "${STORAGE_ID}" ]; then \
+		oc apply -f ${OUT}/crc/storage-${STORAGE_ID}.yaml; \
+	else \
+		oc apply -f ${OUT}/crc/storage.yaml; \
+	fi
 
 .PHONY: crc_storage_cleanup
 crc_storage_cleanup: export NAMESPACE = ${CRC_STORAGE_NAMESPACE}
@@ -754,9 +758,13 @@ operator_namespace: ## creates the namespace specified via OPERATOR_NAMESPACE en
 	oc apply -f ${OUT}/${OPERATOR_NAMESPACE}/namespace.yaml
 	timeout $(TIMEOUT) bash -c "while ! (oc get project.v1.project.openshift.io ${OPERATOR_NAMESPACE}); do sleep 1; done"
 ifeq ($(MICROSHIFT) ,0)
+ifneq ($(SKIP_CONTEXT_SWITCH),true)
 	oc project ${OPERATOR_NAMESPACE}
+endif
 else
+ifneq ($(SKIP_CONTEXT_SWITCH),true)
 	oc config set-context --current --namespace=${OPERATOR_NAMESPACE}
+endif
 	oc adm policy add-scc-to-user privileged -z default --namespace ${OPERATOR_NAMESPACE}
 endif
 
@@ -768,9 +776,13 @@ namespace: ## creates the namespace specified via NAMESPACE env var (defaults to
 	oc apply -f ${OUT}/${NAMESPACE}/namespace.yaml
 	timeout $(TIMEOUT) bash -c "while ! (oc get project.v1.project.openshift.io ${NAMESPACE}); do sleep 1; done"
 ifeq ($(MICROSHIFT) ,0)
+ifneq ($(SKIP_CONTEXT_SWITCH),true)
 	oc project ${NAMESPACE}
+endif
 else
+ifneq ($(SKIP_CONTEXT_SWITCH),true)
 	oc config set-context --current --namespace=${NAMESPACE}
+endif
 	oc adm policy add-scc-to-user privileged -z default --namespace ${NAMESPACE}
 endif
 
@@ -1937,31 +1949,42 @@ mariadb_kuttl: input deploy_cleanup infra mariadb mariadb_deploy_prep ## runs ku
 .PHONY: kuttl_db_prep
 kuttl_db_prep: input deploy_cleanup mariadb mariadb_deploy infra memcached_deploy ## installs common DB service(MariaDB and Memcached)
 
+.PHONY: kuttl_db_deploy_cleanup
+kuttl_db_deploy_cleanup: memcached_deploy_cleanup mariadb_deploy_cleanup input_cleanup
+
 .PHONY: kuttl_db_cleanup
-kuttl_db_cleanup: memcached_deploy_cleanup infra_cleanup mariadb_deploy_cleanup mariadb_cleanup input_cleanup
+kuttl_db_cleanup: kuttl_db_deploy_cleanup infra_cleanup mariadb_cleanup
 
 .PHONY: kuttl_common_prep
 kuttl_common_prep: validate_marketplace metallb kuttl_db_prep infra_rabbitmq_deploy keystone keystone_deploy ## installs common middleware services and Keystone
 
+.PHONY: kuttl_common_deploy_cleanup
+kuttl_common_deploy_cleanup: keystone_deploy_cleanup kuttl_db_deploy_cleanup
+
 .PHONY: kuttl_common_cleanup
-kuttl_common_cleanup: keystone_cleanup kuttl_db_cleanup metallb_cleanup
+kuttl_common_cleanup: kuttl_common_deploy_cleanup keystone_cleanup kuttl_db_cleanup metallb_cleanup
 
 .PHONY: keystone_kuttl_run
 keystone_kuttl_run: ## runs kuttl tests for the keystone operator, assumes that everything needed for running the test was deployed beforehand.
 	KEYSTONE_KUTTL_DIR=${KEYSTONE_KUTTL_DIR} kubectl-kuttl test --config ${KEYSTONE_KUTTL_CONF} ${KEYSTONE_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
 
+.PHONY: keystone_kuttl_prep
+keystone_kuttl_prep: kuttl_db_prep infra_rabbitmq_deploy keystone keystone_deploy_prep ## installs common middleware services and Keystone
+
+.PHONY: keystone_kuttl_deploy_cleanup
+keystone_kuttl_deploy_cleanup: deploy_cleanup kuttl_db_deploy_cleanup infra_rabbitmq_deploy_cleanup
+
+.PHONY: keystone_kuttl_cleanup
+keystone_kuttl_cleanup: keystone_kuttl_deploy_cleanup keystone_cleanup kuttl_db_cleanup
+
 .PHONY: keystone_kuttl
 keystone_kuttl: export NAMESPACE = ${KEYSTONE_KUTTL_NAMESPACE}
 # Set the value of $KEYSTONE_KUTTL_NAMESPACE if you want to run the keystone
 # kuttl tests in a namespace different than the default (keystone-kuttl-tests)
-keystone_kuttl: kuttl_db_prep infra_rabbitmq_deploy keystone keystone_deploy_prep ## runs kuttl tests for the keystone operator. Installs keystone operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+# Set KUTTL_PARALLEL_COUNT to run tests in parallel across multiple namespaces
+keystone_kuttl: ## runs kuttl tests for the keystone operator. Installs keystone operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	$(eval $(call vars,$@,keystone))
-	make wait
-	make keystone_kuttl_run
-	make deploy_cleanup
-	make keystone_cleanup
-	make kuttl_db_cleanup
-	make infra_rabbitmq_deploy_cleanup
+	bash scripts/kuttl-runner.sh keystone "$(KEYSTONE_KUTTL_DIR)" "$(KEYSTONE_KUTTL_NAMESPACE)" "$(if $(KUTTL_PARALLEL_COUNT),$(KUTTL_PARALLEL_COUNT),1)" "$(KEYSTONE_KUTTL_CONF)"
 	bash scripts/restore-namespace.sh
 
 .PHONY: barbican_kuttl_run
@@ -2182,8 +2205,7 @@ horizon_kuttl: kuttl_common_prep horizon horizon_deploy_prep ## runs kuttl tests
 	make kuttl_common_cleanup
 
 .PHONY: openstack_kuttl_prep
-openstack_kuttl_prep: export NAMESPACE = ${OPENSTACK_KUTTL_NAMESPACE}
-openstack_kuttl_prep: input deploy_cleanup openstack openstack_deploy_prep ## runs kuttl tests for the openstack operator. Installs openstack operator and cleans up previous deployments before running the tests, cleans up after running the tests.
+openstack_kuttl_prep: input deploy_cleanup openstack openstack_deploy_prep ## installs openstack operator and cleans up previous deployments before running the tests.
 	# Wait until OLM installs openstack CRDs
 	timeout $(TIMEOUT) bash -c "while ! (oc get crd openstacks.operator.openstack.org); do sleep 1; done"
 	make openstack_init
@@ -2198,23 +2220,28 @@ openstack_kuttl_prep: input deploy_cleanup openstack openstack_deploy_prep ## ru
 openstack_kuttl_run: ## runs kuttl tests for the openstack operator, assumes that everything needed for running the test was deployed beforehand.
 	set -e; \
 	for test_dir in $(shell ls ${OPENSTACK_KUTTL_DIR}); do \
-	    oc delete osctlplane --all --namespace ${NAMESPACE}; \
+	    if [ -n "$(KUTTL_TEST_FILTER)" ] && ! echo "$${test_dir}" | grep -qE "$(KUTTL_TEST_FILTER)"; then continue; fi; \
+	    oc delete osctlplane --all --namespace ${NAMESPACE} --timeout=300s || true; \
 		make crc_storage_cleanup_with_retries; \
 		make crc_storage_with_retries; \
-		kubectl-kuttl test --config ${OPENSTACK_KUTTL_CONF} ${OPENSTACK_KUTTL_DIR} --test $${test_dir}; \
+		kubectl-kuttl test --config ${OPENSTACK_KUTTL_CONF} ${OPENSTACK_KUTTL_DIR} --test "^$${test_dir}$$" || exit 1; \
 	done
 
+.PHONY: openstack_kuttl_deploy_cleanup
+openstack_kuttl_deploy_cleanup: namespace
+	oc delete osctlplane --all --namespace ${NAMESPACE} --timeout=300s || true
+	$(MAKE) openstack_deploy_cleanup
+
 .PHONY: openstack_kuttl_cleanup
-openstack_kuttl_cleanup: export NAMESPACE = ${OPENSTACK_KUTTL_NAMESPACE}
-openstack_kuttl_cleanup:
-	make openstack_deploy_cleanup
-	make openstack_cleanup
+openstack_kuttl_cleanup: openstack_kuttl_deploy_cleanup openstack_cleanup crc_storage_cleanup
 
 .PHONY: openstack_kuttl
 openstack_kuttl: export NAMESPACE = ${OPENSTACK_KUTTL_NAMESPACE}
-openstack_kuttl: openstack_kuttl_prep
-	make openstack_kuttl_run
-	make openstack_kuttl_cleanup
+# Set KUTTL_PARALLEL_COUNT to run tests in parallel across multiple namespaces
+openstack_kuttl: ## runs kuttl tests for the openstack operator. Installs openstack operator and cleans up previous deployments before running the tests, cleans up after running the tests.
+	$(eval $(call vars,$@,openstack))
+	bash scripts/kuttl-runner.sh openstack "$(OPENSTACK_KUTTL_DIR)" "$(OPENSTACK_KUTTL_NAMESPACE)" "$(if $(KUTTL_PARALLEL_COUNT),$(KUTTL_PARALLEL_COUNT),2)" "$(OPENSTACK_KUTTL_CONF)"
+	bash scripts/restore-namespace.sh
 
 .PHONY: openstack_lightspeed_kuttl_prep
 openstack_lightspeed_kuttl_prep: export REPO=${LIGHTSPEED_REPO}

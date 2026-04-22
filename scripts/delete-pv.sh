@@ -30,4 +30,8 @@ for node in $NODE_NAMES; do
     . "${SCRIPTPATH}/storage_apply.sh" "${node}" "delete"
 done
 
-oc wait job -n "${NAMESPACE}" -l install-yamls.crc.storage --for condition=Complete --timeout "${TIMEOUT}"
+JOB_SELECTOR="install-yamls.crc.storage"
+if [ -n "${STORAGE_ID}" ]; then
+    JOB_SELECTOR="${JOB_SELECTOR},crc-devsetup-storage-id=${STORAGE_ID}"
+fi
+oc wait job -n "${NAMESPACE}" -l "${JOB_SELECTOR}" --for condition=Complete --timeout "${TIMEOUT}"
