@@ -426,6 +426,8 @@ GENERATE_SSH_KEYS				 ?= true
 DATAPLANE_EXTRA_NOVA_CONFIG_FILE                 ?= /dev/null
 DATAPLANE_SERVER_ROLE                            ?= compute
 DATAPLANE_TLS_ENABLED                            ?= true
+DATAPLANE_REPO_SETUP_REPO                        ?=current-podified
+DATAPLANE_REPO_SETUP_BRANCH                      ?=antelope
 DATAPLANE_NOVA_NFS_PATH                          ?=
 
 # Manila
@@ -967,7 +969,7 @@ edpm_deploy_prep: edpm_deploy_cleanup openstack_repo ## prepares the CR to insta
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
 endif
-	oc apply -f devsetup/edpm/services
+	sed -e "s/repo-setup current-podified -b antelope/repo-setup ${DATAPLANE_REPO_SETUP_REPO} -b ${DATAPLANE_REPO_SETUP_BRANCH}/" devsetup/edpm/services/*.yaml | oc apply -f -
 
 .PHONY: edpm_deploy_cleanup
 edpm_deploy_cleanup: namespace ## cleans up the edpm instance, Does not affect the operator.
@@ -1018,7 +1020,7 @@ edpm_deploy_baremetal_prep: edpm_deploy_cleanup openstack_repo ## prepares the C
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
 endif
-	oc apply -f devsetup/edpm/services
+	sed -e "s/repo-setup current-podified -b antelope/repo-setup ${DATAPLANE_REPO_SETUP_REPO} -b ${DATAPLANE_REPO_SETUP_BRANCH}/" devsetup/edpm/services/*.yaml | oc apply -f -
 
 .PHONY: edpm_deploy_baremetal
 edpm_deploy_baremetal: input edpm_deploy_baremetal_prep ## installs the dataplane instance using kustomize. Runs prep step in advance. Set OPENSTACK_REPO and OPENSTACK_BRANCH to deploy from a custom repo.
