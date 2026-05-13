@@ -286,8 +286,12 @@ fi
 
 # Set network variables for firstboot script
 IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADDRESS_SUFFIX}"}
-NETDEV=eth0
-NETSCRIPT="/etc/sysconfig/network-scripts/ifcfg-${NETDEV}"
+if [ "${CENTOS_STREAM_VERSION}" = "9" ]; then
+    _netdev=eth0
+fi
+NETDEV=${EDPM_COMPUTE_NETDEV:-"${_netdev:-"enp2s0"}"}
+NETSCRIPTDIR="/etc/sysconfig/network-scripts"
+NETSCRIPT="${NETSCRIPTDIR}/ifcfg-${NETDEV}"
 GATEWAY=${GATEWAY:-"${EDPM_COMPUTE_NETWORK_IP}"}
 DNS=${DATAPLANE_DNS_SERVER}
 PREFIX=24
@@ -317,7 +321,7 @@ if [ ! -e /home/cloud-admin/.ssh/authorized_keys ]; then
 fi
 
 # Set network for current session
-nmcli device set eth0 managed yes
+nmcli device set ${NETDEV} managed yes
 n=0
 retries=6
 while true; do
@@ -329,13 +333,15 @@ while true; do
   fi
   sleep 5
 done
-# Set network to survive reboots
-echo IPADDR=$IP >> $NETSCRIPT
-echo PREFIX=$PREFIX >> $NETSCRIPT
-echo GATEWAY=$GATEWAY >> $NETSCRIPT
-echo DNS1=$DNS >> $NETSCRIPT
-sed -i s/dhcp/none/g $NETSCRIPT
-sed -i /PERSISTENT_DHCLIENT/d $NETSCRIPT
+if [ -d ${NETSCRIPTDIR} ]; then
+  # Set network to survive reboots
+  echo IPADDR=$IP >> $NETSCRIPT
+  echo PREFIX=$PREFIX >> $NETSCRIPT
+  echo GATEWAY=$GATEWAY >> $NETSCRIPT
+  echo DNS1=$DNS >> $NETSCRIPT
+  sed -i s/dhcp/none/g $NETSCRIPT
+  sed -i /PERSISTENT_DHCLIENT/d $NETSCRIPT
+fi
 
 # Remove NVMe artifacts that are auto-generated when nvme-cli RPM is installed
 rm -f /etc/nvme/hostid /etc/nvme/hostnqn
