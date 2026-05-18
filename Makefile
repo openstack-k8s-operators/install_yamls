@@ -198,17 +198,6 @@ MARIADB_CHAINSAW_CONF      ?= ${OPERATOR_BASE_DIR}/mariadb-operator/test/chainsa
 MARIADB_CHAINSAW_DIR       ?= ${OPERATOR_BASE_DIR}/mariadb-operator/test/chainsaw/tests
 MARIADB_CHAINSAW_NAMESPACE ?= mariadb-chainsaw-tests
 
-# Placement
-PLACEMENT_IMG             ?= quay.io/openstack-k8s-operators/placement-operator-index:${OPENSTACK_K8S_TAG}
-PLACEMENT_REPO            ?= https://github.com/openstack-k8s-operators/placement-operator.git
-PLACEMENT_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
-PLACEMENT_COMMIT_HASH     ?=
-PLACEMENTAPI              ?= config/samples/placement_v1beta1_placementapi.yaml
-PLACEMENTAPI_CR           ?= ${OPERATOR_BASE_DIR}/placement-operator/${PLACEMENTAPI}
-PLACEMENTAPI_DEPL_IMG     ?= unused
-PLACEMENT_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/placement-operator/kuttl-test.yaml
-PLACEMENT_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/placement-operator/test/kuttl/tests
-PLACEMENT_KUTTL_NAMESPACE ?= placement-kuttl-tests
 
 # Sir Glancealot
 GLANCE_IMG              ?= quay.io/openstack-k8s-operators/glance-operator-index:${OPENSTACK_K8S_TAG}
@@ -591,7 +580,7 @@ ${1}: export OPERATOR_SOURCE_NAMESPACE=$(OPERATOR_SOURCE_NAMESPACE)
 endef
 
 .PHONY: all
-all: operator_namespace keystone mariadb placement neutron
+all: operator_namespace keystone mariadb neutron
 
 ##@ General
 
@@ -611,10 +600,10 @@ help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 .PHONY: cleanup
-cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup designate_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup placement_cleanup swift_cleanup barbican_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup infra_cleanup manila_cleanup metallb_cleanup ## Delete all operators
+cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup designate_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup swift_cleanup barbican_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup infra_cleanup manila_cleanup metallb_cleanup ## Delete all operators
 
 .PHONY: deploy_cleanup
-deploy_cleanup: manila_deploy_cleanup heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup redis_deploy_cleanup octavia_deploy_cleanup designate_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup placement_deploy_cleanup swift_deploy_cleanup barbican_deploy_cleanup keystone_deploy_cleanup redis_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup infra_rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
+deploy_cleanup: manila_deploy_cleanup heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup redis_deploy_cleanup octavia_deploy_cleanup designate_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup swift_deploy_cleanup barbican_deploy_cleanup keystone_deploy_cleanup redis_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup infra_rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
 
 .PHONY: wait
 wait: ## wait for an operator's controller-manager pod to be ready (requires OPERATOR_NAME to be explicitly passed!)
@@ -1364,49 +1353,6 @@ mariadb_deploy_cleanup: namespace ## cleans up the service instance, Does not af
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/mariadb-operator ${DEPLOY_DIR}
 
-##@ PLACEMENT
-.PHONY: placement_prep
-placement_prep: export IMAGE=${PLACEMENT_IMG}
-placement_prep: ## creates the files to install the operator using olm
-	$(eval $(call vars,$@,placement))
-	bash scripts/gen-olm.sh
-
-.PHONY: placement
-placement: operator_namespace placement_prep ## installs the operator, also runs the prep step. Set PLACEMENT_IMG for custom image.
-	$(eval $(call vars,$@,placement))
-	oc apply -f ${OPERATOR_DIR}
-
-.PHONY: placement_cleanup
-placement_cleanup: ## deletes the operator, but does not cleanup the service resources
-	$(eval $(call vars,$@,placement))
-	bash scripts/operator-cleanup.sh
-	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
-
-.PHONY: placement_deploy_prep
-placement_deploy_prep: export KIND=PlacementAPI
-placement_deploy_prep: export IMAGE=${PLACEMENTAPI_DEPL_IMG}
-placement_deploy_prep: export REPO=${PLACEMENT_REPO}
-placement_deploy_prep: export BRANCH=${PLACEMENT_BRANCH}
-placement_deploy_prep: export HASH=${PLACEMENT_COMMIT_HASH}
-placement_deploy_prep: placement_deploy_cleanup ## prepares the CR to install the service based on the service sample file PLACEMENTAPI
-	$(eval $(call vars,$@,placement))
-	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
-	bash scripts/clone-operator-repo.sh
-	cp ${PLACEMENTAPI_CR} ${DEPLOY_DIR}
-	bash scripts/gen-service-kustomize.sh
-
-.PHONY: placement_deploy
-placement_deploy: input placement_deploy_prep ## installs the service instance using kustomize. Runs prep step in advance. Set PLACEMENT_REPO and PLACEMENT_BRANCH to deploy from a custom repo.
-	$(eval $(call vars,$@,placement))
-	make wait
-	bash scripts/operator-deploy-resources.sh
-
-.PHONY: placement_deploy_cleanup
-placement_deploy_cleanup: namespace ## cleans up the service instance, Does not affect the operator.
-	$(eval $(call vars,$@,placement))
-	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
-	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/placement-operator ${DEPLOY_DIR}
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${PASSWORD} -e "flush tables; drop database if exists placement;" || true
 
 ##@ GLANCE
 .PHONY: glance_prep
@@ -1898,20 +1844,6 @@ barbican_kuttl: kuttl_common_prep barbican barbican_deploy_prep ## runs kuttl te
 	make kuttl_common_cleanup
 	bash scripts/restore-namespace.sh
 
-.PHONY: placement_kuttl_run
-placement_kuttl_run: ## runs kuttl tests for the placement operator, assumes that everything needed for running the test was deployed beforehand.
-	PLACEMENT_KUTTL_DIR=${PLACEMENT_KUTTL_DIR} kubectl-kuttl test --config ${PLACEMENT_KUTTL_CONF} ${PLACEMENT_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
-
-.PHONY: placement_kuttl
-placement_kuttl: export NAMESPACE = ${PLACEMENT_KUTTL_NAMESPACE}
-placement_kuttl: kuttl_common_prep placement placement_deploy_prep ## runs kuttl tests for the placement operator. Installs placement operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
-	$(eval $(call vars,$@,placement))
-	make wait
-	make placement_kuttl_run
-	make deploy_cleanup
-	make placement_cleanup
-	make kuttl_common_cleanup
-	bash scripts/restore-namespace.sh
 
 .PHONY: cinder_kuttl_run
 cinder_kuttl_run: ## runs kuttl tests for the cinder operator, assumes that everything needed for running the test was deployed beforehand.
@@ -1950,9 +1882,8 @@ octavia_kuttl_run: ## runs kuttl tests for the octavia operator, assumes that ev
 
 .PHONY: octavia_kuttl
 octavia_kuttl: export NAMESPACE = ${OCTAVIA_KUTTL_NAMESPACE}
-octavia_kuttl: kuttl_common_prep ovn ovn_deploy redis_deploy neutron neutron_deploy placement placement_deploy nova nova_deploy glance glance_deploy octavia octavia_deploy_prep ## runs kuttl tests for the octavia operator. Installs octavia operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
+octavia_kuttl: kuttl_common_prep ovn ovn_deploy redis_deploy neutron neutron_deploy nova nova_deploy glance glance_deploy octavia octavia_deploy_prep ## runs kuttl tests for the octavia operator. Installs octavia operator and cleans up previous deployments before running the tests, add cleanup after running the tests.
 	make wait OPERATOR_NAME=neutron
-	make wait OPERATOR_NAME=placement
 	make wait OPERATOR_NAME=nova
 	make wait OPERATOR_NAME=glance
 	$(eval $(call vars,$@,octavia))
@@ -1961,7 +1892,6 @@ octavia_kuttl: kuttl_common_prep ovn ovn_deploy redis_deploy neutron neutron_dep
 	make deploy_cleanup
 	make octavia_cleanup
 	make neutron_cleanup
-	make placement_cleanup
 	make nova_cleanup
 	make glance_cleanup
 	make ovn_cleanup
