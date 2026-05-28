@@ -496,6 +496,24 @@ TELEMETRY_KUTTL_CONF      ?= ${TELEMETRY_KUTTL_BASEDIR}/kuttl-test.yaml
 TELEMETRY_KUTTL_NAMESPACE ?= telemetry-kuttl-tests
 TELEMETRY_KUTTL_DIR       ?= ${TELEMETRY_KUTTL_BASEDIR}/${TELEMETRY_KUTTL_RELPATH}
 
+# Test Operator
+TEST_IMG             ?= quay.io/openstack-k8s-operators/test-operator-index:${OPENSTACK_K8S_TAG}
+TEST_REPO            ?= https://github.com/openstack-k8s-operators/test-operator.git
+TEST_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
+TEST_COMMIT_HASH     ?=
+ANSIBLETEST          ?= config/samples/test_v1beta1_ansibletest.yaml
+ANSIBLETEST_CR       ?= ${OPERATOR_BASE_DIR}/test-operator/${ANSIBLETEST}
+HORIZONTEST          ?= config/samples/test_v1beta1_horizontest.yaml
+HORIZONTEST_CR       ?= ${OPERATOR_BASE_DIR}/test-operator/${HORIZONTEST}
+TEMPEST              ?= config/samples/test_v1beta1_tempest.yaml
+TEMPEST_CR           ?= ${OPERATOR_BASE_DIR}/test-operator/${TEMPEST}
+TOBIKO               ?= config/samples/test_v1beta1_tobiko.yaml
+TOBIKO_CR            ?= ${OPERATOR_BASE_DIR}/test-operator/${TOBIKO}
+TEST_CR              ?= ${TEMPEST_CR}
+TEST_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/test-operator/kuttl-test.yaml
+TEST_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/test-operator/test/kuttl/tests
+TEST_KUTTL_NAMESPACE ?= test-operator-kuttl-tests
+
 # BMO
 BMO_REPO                         ?= https://github.com/metal3-io/baremetal-operator
 BMO_BRANCH                       ?= release-0.9
@@ -602,10 +620,10 @@ help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 .PHONY: cleanup
-cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup designate_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup swift_cleanup barbican_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup infra_cleanup manila_cleanup metallb_cleanup ## Delete all operators
+cleanup: heat_cleanup horizon_cleanup nova_cleanup octavia_cleanup designate_cleanup neutron_cleanup ovn_cleanup ironic_cleanup cinder_cleanup glance_cleanup swift_cleanup barbican_cleanup keystone_cleanup mariadb_cleanup telemetry_cleanup infra_cleanup manila_cleanup test_operator_cleanup metallb_cleanup ## Delete all operators
 
 .PHONY: deploy_cleanup
-deploy_cleanup: manila_deploy_cleanup heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup redis_deploy_cleanup octavia_deploy_cleanup designate_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup swift_deploy_cleanup barbican_deploy_cleanup keystone_deploy_cleanup redis_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup infra_rabbitmq_deploy_cleanup ## Delete all OpenStack service objects
+deploy_cleanup: manila_deploy_cleanup heat_deploy_cleanup horizon_deploy_cleanup nova_deploy_cleanup redis_deploy_cleanup octavia_deploy_cleanup designate_deploy_cleanup neutron_deploy_cleanup ovn_deploy_cleanup ironic_deploy_cleanup cinder_deploy_cleanup glance_deploy_cleanup swift_deploy_cleanup barbican_deploy_cleanup keystone_deploy_cleanup redis_deploy_cleanup mariadb_deploy_cleanup telemetry_deploy_cleanup memcached_deploy_cleanup infra_rabbitmq_deploy_cleanup test_operator_deploy_cleanup ## Delete all OpenStack service objects
 
 .PHONY: wait
 wait: ## wait for an operator's controller-manager pod to be ready (requires OPERATOR_NAME to be explicitly passed!)
@@ -2705,6 +2723,65 @@ telemetry_kuttl: kuttl_common_prep ovn heat heat_deploy certmanager telemetry te
 	make deploy_cleanup
 	make telemetry_cleanup
 	make heat_cleanup
+	make kuttl_common_cleanup
+	bash scripts/restore-namespace.sh
+
+##@ TEST OPERATOR
+.PHONY: test_operator_prep
+test_operator_prep: export IMAGE=${TEST_IMG}
+test_operator_prep: ## creates the files to install the operator using olm
+	$(eval $(call vars,$@,test))
+	bash scripts/gen-olm.sh
+
+.PHONY: test_operator
+test_operator: operator_namespace test_operator_prep ## installs the operator, also runs the prep step. Set TEST_IMG for custom image.
+	$(eval $(call vars,$@,test))
+	oc apply -f ${OPERATOR_DIR}
+
+.PHONY: test_operator_cleanup
+test_operator_cleanup: ## deletes the operator, but does not cleanup the service resources
+	$(eval $(call vars,$@,test))
+	bash scripts/operator-cleanup.sh
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
+
+.PHONY: test_operator_deploy_prep
+test_operator_deploy_prep: export KIND=.*
+test_operator_deploy_prep: export REPO=${TEST_REPO}
+test_operator_deploy_prep: export BRANCH=${TEST_BRANCH}
+test_operator_deploy_prep: export HASH=${TEST_COMMIT_HASH}
+test_operator_deploy_prep: test_operator_deploy_cleanup ## prepares CR for test-operator. Set TEST_CR to deploy a specific test type (defaults to Tempest).
+	$(eval $(call vars,$@,test))
+	mkdir -p ${OPERATOR_BASE_DIR} ${OPERATOR_DIR} ${DEPLOY_DIR}
+	bash scripts/clone-operator-repo.sh
+	cp ${TEST_CR} ${DEPLOY_DIR}
+	bash scripts/gen-service-kustomize.sh
+
+.PHONY: test_operator_deploy
+test_operator_deploy: input test_operator_deploy_prep ## installs the test-operator CRs using kustomize. Runs prep step in advance. Set TEST_CR to choose test type, TEST_REPO and TEST_BRANCH to deploy from a custom repo.
+	$(eval $(call vars,$@,test))
+	make wait
+	bash scripts/operator-deploy-resources.sh
+
+.PHONY: test_operator_deploy_cleanup
+test_operator_deploy_cleanup: ## cleans up the service instance, Does not affect the operator.
+	$(eval $(call vars,$@,test))
+	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/test-operator ${DEPLOY_DIR}
+
+.PHONY: test_operator_kuttl_run
+test_operator_kuttl_run: ## runs kuttl tests for the test-operator, assumes that everything needed for running the test was deployed beforehand.
+	TEST_KUTTL_DIR=${TEST_KUTTL_DIR} kubectl-kuttl test --config ${TEST_KUTTL_CONF} ${TEST_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
+
+.PHONY: test_operator_kuttl
+test_operator_kuttl: export NAMESPACE = ${TEST_KUTTL_NAMESPACE}
+# Set the value of $TEST_KUTTL_NAMESPACE if you want to run test-operator
+# kuttl tests in a namespace different than the default (test-operator-kuttl-tests)
+test_operator_kuttl: kuttl_common_prep test_operator test_operator_deploy_prep
+	$(eval $(call vars,$@,test))
+	make wait
+	make test_operator_kuttl_run
+	make deploy_cleanup
+	make test_operator_cleanup
 	make kuttl_common_cleanup
 	bash scripts/restore-namespace.sh
 
