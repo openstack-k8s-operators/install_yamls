@@ -51,23 +51,42 @@ WORK_DIR="${WORK_DIR:-$HOME/.sno-workdir}"
 # OCP installer
 PULL_SECRET="${PULL_SECRET:-${HOME}/pull-secret.txt}"
 SSH_PUB_KEY="${SSH_PUB_KEY:-${HOME}/.ssh/id_rsa.pub}"
-OCP_VERSION="${OCP_VERSION:-latest-4.14}"
+OCP_VERSION="${OCP_VERSION:-latest-4.18}"
 OCP_MIRROR_URL="${OCP_MIRROR_URL:-https://mirror.openshift.com/pub/openshift-v4/clients/ocp}"
 OCP_ADMIN_PASSWD=${OCP_ADMIN_PASSWD:-12345678}
 BOOTSTRAP_ISO_FILENAME="${BOOTSTRAP_ISO_FILENAME:-rhcos-live-with-ignition.iso}"
 
 # Networking
-NETWORK_NAME="${NETWORK_NAME:-nat64}"
-NAT64_IPV6_DNSMASQ_VAR_DIR=${NAT64_IPV6_DNSMASQ_VAR_DIR:-/var/lib/dnsmasq/${NETWORK_NAME}-v6}
-NAT64_IPV6_DNSMASQ_SERVICE_NAME=${NAT64_IPV6_DNSMASQ_SERVICE_NAME:-${NETWORK_NAME}-v6-dnsmasq.service}
-NAT64_IPV6_DNSMASQ_CONF_DIR=${NAT64_IPV6_DNSMASQ_CONF_DIR:-/etc/${NETWORK_NAME}-v6-dnsmasq}
+IP_VERSION=${IP_VERSION:-v6}
+if [ "${IP_VERSION}" = "v6" ]; then
+    NETWORK_NAME="${NETWORK_NAME:-nat64}"
+    NAT64_IPV6_DNSMASQ_VAR_DIR=${NAT64_IPV6_DNSMASQ_VAR_DIR:-/var/lib/dnsmasq/${NETWORK_NAME}-v6}
+    NAT64_IPV6_DNSMASQ_SERVICE_NAME=${NAT64_IPV6_DNSMASQ_SERVICE_NAME:-${NETWORK_NAME}-v6-dnsmasq.service}
+    NAT64_IPV6_DNSMASQ_CONF_DIR=${NAT64_IPV6_DNSMASQ_CONF_DIR:-/etc/${NETWORK_NAME}-v6-dnsmasq}
 
-SNO_CLUSTER_NETWORK=${SNO_CLUSTER_NETWORK:-fd00:abcd:0::/48}
-SNO_HOST_PREFIX=${SNO_HOST_PREFIX:-64}
-SNO_MACHINE_NETWORK=${SNO_MACHINE_NETWORK:-fd00:abcd:abcd:fc00::/64}
-SNO_SERVICE_NETWORK=${SNO_SERVICE_NETWORK:-fd00:abcd:abcd:fc03::/112}
-SNO_HOST_IP=${SNO_HOST_IP:-fd00:abcd:abcd:fc00::11}
-SNO_HOST_MAC="${SNO_HOST_MAC:-$(echo -n 52:54:00; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':')}"
+    SNO_CLUSTER_NETWORK=${SNO_CLUSTER_NETWORK:-fd00:abcd:0::/48}
+    SNO_HOST_PREFIX=${SNO_HOST_PREFIX:-64}
+    SNO_MACHINE_NETWORK=${SNO_MACHINE_NETWORK:-fd00:abcd:abcd:fc00::/64}
+    SNO_SERVICE_NETWORK=${SNO_SERVICE_NETWORK:-fd00:abcd:abcd:fc03::/112}
+    SNO_HOST_IP=${SNO_HOST_IP:-fd00:abcd:abcd:fc00::11}
+    SNO_HOST_MAC="${SNO_HOST_MAC:-$(echo -n 52:54:00; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':')}"
+elif [ "${IP_VERSION}" = "v4" ]; then
+    NETWORK_NAME="${NETWORK_NAME:-sno}"
+    NAT64_IPV6_DNSMASQ_VAR_DIR=${NAT64_IPV6_DNSMASQ_VAR_DIR:-}
+    NAT64_IPV6_DNSMASQ_SERVICE_NAME=${NAT64_IPV6_DNSMASQ_SERVICE_NAME:-}
+    NAT64_IPV6_DNSMASQ_CONF_DIR=${NAT64_IPV6_DNSMASQ_CONF_DIR:-}
+
+    # Set to same as CRC
+    SNO_CLUSTER_NETWORK=${SNO_CLUSTER_NETWORK:-10.217.0.0/22}
+    SNO_HOST_PREFIX=${SNO_HOST_PREFIX:-23}
+    SNO_MACHINE_NETWORK=${SNO_MACHINE_NETWORK:-192.168.130.0/24}
+    SNO_SERVICE_NETWORK=${SNO_SERVICE_NETWORK:-10.217.4.0/23}
+    SNO_HOST_IP=${SNO_HOST_IP:-192.168.130.11}
+    SNO_HOST_MAC="${SNO_HOST_MAC:-$(echo -n 52:54:00; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':')}"
+else
+    echo "ERROR: unknown IP_VERSION=${IP_VERSION}"
+    exit 1
+fi
 
 # VM config
 SNO_INSTANCE_NAME="${SNO_INSTANCE_NAME:-sno}"
@@ -94,7 +113,7 @@ fi
 
 mkdir -p "${WORK_DIR}"/ocp
 mkdir -p "${WORK_DIR}"/bin
-sudo chcon -t bin_t ${WORK_DIR}/bin
+sudo chcon -h system_u:object_r:bin_t:s0 ${WORK_DIR}/bin
 
 function get_oc_client {
     pushd ${WORK_DIR}
@@ -205,6 +224,7 @@ function create_sno_instance {
         --virt-type ${VIRT_TYPE} \
         --import \
         --events on_crash=restart
+    ${VIRSH_CMD} net-update ${NETWORK_NAME} add ip-dhcp-host "<host mac='${SNO_HOST_MAC}' ip='${SNO_HOST_IP}'/>"
     echo "OCP single-node instance ${SNO_INSTANCE_NAME} created"
 }
 
@@ -256,6 +276,7 @@ function wait_for_install_complete {
     echo "${WORK_DIR}/bin/openshift-install --dir=${WORK_DIR}/ocp wait-for bootstrap-complete"
     ./bin/openshift-install --dir=${WORK_DIR}/ocp wait-for bootstrap-complete
     echo
+    create_source_env
     echo "Waiting for OCP cluster installation to complete:"
     sleep 60
     echo "${WORK_DIR}/bin/openshift-install --dir=${WORK_DIR}/ocp wait-for install-complete"
@@ -268,7 +289,7 @@ function post_config {
     pushd ${WORK_DIR}
 
     KUBEADMIN_PASSWD=$(cat ./ocp/auth/kubeadmin-password)
-    export KUBECONFIG="${WORK_DIR}/ocp/auth/kubeconfig"
+    . sno_env
     # Create htpasswd file
     htpasswd -c -B -b ${MY_TMP_DIR}/htpasswd admin ${OCP_ADMIN_PASSWD}
 
@@ -351,11 +372,12 @@ function create {
     get_openshift_installer
     get_rhcos_live_iso
     create_install_iso
-    create_dnsmasq_config
+    if [ "${IP_VERSION}" = "v6" ]; then
+        create_dnsmasq_config
+    fi
     create_sno_instance
     wait_for_install_complete
     post_config
-    create_source_env
     print_cluster_info
 }
 
