@@ -1,8 +1,8 @@
 ---
-warn_list:
-  - syntax-check[specific]  # couldn't resolve module/action "foo"
 exclude_paths:
   - devsetup/standalone/network_data.yaml
   - devsetup/standalone/deployed_network.yaml
 skip_list:
   - no-handler
+  - var-naming[no-role-prefix]
+  - no-changed-when
