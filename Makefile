@@ -517,6 +517,7 @@ TEST_KUTTL_NAMESPACE ?= test-operator-kuttl-tests
 # BMO
 BMO_REPO                         ?= https://github.com/metal3-io/baremetal-operator
 BMO_BRANCH                       ?= release-0.9
+BMO_IMG                          ?= quay.io/metal3-io/baremetal-operator:${BMO_BRANCH}
 BMO_IPA_BASEURI                  ?= https://tarballs.opendev.org/openstack/ironic-python-agent/dib
 BMO_IPA_FLAVOR                   ?= centos9
 BMO_IPA_BRANCH                   ?= stable/2024.1
@@ -742,7 +743,7 @@ ifeq ($(BMO_SETUP_ROUTE_REPLACE), true)
 endif
 	oc patch deployment/baremetal-operator-controller-manager \
 	-n baremetal-operator-system --type='json' \
-	-p='[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "quay.io/metal3-io/baremetal-operator:${BMO_BRANCH}"}]'
+	-p='[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "${BMO_IMG}"}]'
 	## Hack to add required scc
 	oc adm policy add-scc-to-user privileged system:serviceaccount:baremetal-operator-system:baremetal-operator-controller-manager
 	oc adm policy add-scc-to-user privileged system:serviceaccount:baremetal-operator-system:default
