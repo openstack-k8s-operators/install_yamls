@@ -32,6 +32,10 @@ OPERATOR_INDEX_IMAGE=${OPERATOR_INDEX_IMAGE:-"quay.io/openstack-k8s-operators/op
 REDHAT_TO_QUAY_REPLACEMENTS=${REDHAT_TO_QUAY_REPLACEMENTS:-"
 registry.redhat.io/ubi9/httpd-24=quay.io/ubi9/httpd-24
 "}
+SIGSTORE_POLICY_NAME=${SIGSTORE_POLICY_NAME:-"mirror-registry-sigstore"}
+SIGSTORE_PUBLIC_KEY_FILE=${SIGSTORE_PUBLIC_KEY_FILE:-""}
+SIGSTORE_PUBLIC_KEY_DATA=${SIGSTORE_PUBLIC_KEY_DATA:-""}
+SIGSTORE_SIGNED_PREFIX=${SIGSTORE_SIGNED_PREFIX:-""}
 
 
 mkdir -p ${OUT_DIR}
@@ -120,8 +124,22 @@ if [ -n "${REPLACEMENT_IMAGES}" ]; then
     done
 fi
 
+if [ -n "${SIGSTORE_PUBLIC_KEY_FILE}" ] && [ -n "${SIGSTORE_PUBLIC_KEY_DATA}" ]; then
+    echo "Set only one of SIGSTORE_PUBLIC_KEY_FILE or SIGSTORE_PUBLIC_KEY_DATA"; exit 1
+fi
+if [ -n "${SIGSTORE_PUBLIC_KEY_FILE}" ]; then
+    if [ ! -f "${SIGSTORE_PUBLIC_KEY_FILE}" ]; then
+        echo "SIGSTORE_PUBLIC_KEY_FILE does not exist: ${SIGSTORE_PUBLIC_KEY_FILE}"; exit 1
+    fi
+    SIGSTORE_PUBLIC_KEY_DATA=$(base64 -w0 < "${SIGSTORE_PUBLIC_KEY_FILE}")
+fi
+
 # Setup authentication for mirror registry
-AUTH_DIR="${XDG_RUNTIME_DIR:-/tmp}/containers"
+if [ -z "${XDG_RUNTIME_DIR}" ]; then
+    export XDG_RUNTIME_DIR=/tmp/run-$(id -u)
+    mkdir -p ${XDG_RUNTIME_DIR}
+fi
+AUTH_DIR="${XDG_RUNTIME_DIR}/containers"
 mkdir -p ${AUTH_DIR}
 MIRROR_REGISTRY_AUTH=$(echo -n "kubeadmin:${REGISTRY_TOKEN}" | base64 -w0)
 
@@ -215,6 +233,38 @@ for idms_name in $(oc get imagedigestmirrorset -o name 2>/dev/null || true); do
         oc patch ${idms_name} --type=json -p "${PATCH}"
     fi
 done
+
+# Create ClusterImagePolicy for sigstore verification when a public key is provided.
+if [ -n "${SIGSTORE_PUBLIC_KEY_DATA}" ]; then
+    if oc get crd clusterimagepolicies.config.openshift.io >/dev/null 2>&1; then
+        cat > ${OUT_DIR}/cluster-image-policy.yaml <<EOF
+apiVersion: config.openshift.io/v1
+kind: ClusterImagePolicy
+metadata:
+  name: ${SIGSTORE_POLICY_NAME}
+spec:
+  scopes:
+    - ${MIRROR_REGISTRY_HOST}
+  policy:
+    rootOfTrust:
+      policyType: PublicKey
+      publicKey:
+        keyData: ${SIGSTORE_PUBLIC_KEY_DATA}
+EOF
+        if [ -n "${SIGSTORE_SIGNED_PREFIX}" ]; then
+            cat >> ${OUT_DIR}/cluster-image-policy.yaml <<EOF
+    signedIdentity:
+      matchPolicy: RemapIdentity
+      remapIdentity:
+        prefix: ${MIRROR_REGISTRY_HOST}
+        signedPrefix: ${SIGSTORE_SIGNED_PREFIX}
+EOF
+        fi
+        oc apply -f ${OUT_DIR}/cluster-image-policy.yaml
+    else
+        echo "ClusterImagePolicy CRD not found, skipping sigstore policy creation"
+    fi
+fi
 
 # Find the mirrored catalog image
 MIRRORED_CATALOG=$(oc get imagestreams -n ${MIRROR_NAMESPACE} -o name 2>/dev/null | grep -i "operator-index" | head -1 | cut -d'/' -f2)

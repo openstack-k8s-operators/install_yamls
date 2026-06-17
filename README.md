@@ -254,6 +254,16 @@ Both targets use `oc-mirror v2` to mirror the operator catalog and all related i
 - Generates and applies IDMS/ITMS for image redirection
 - Sets `mirrorSourcePolicy: NeverContactSource` on all IDMS entries to block source registries (true disconnected testing)
 
+Optional sigstore policy creation:
+```bash
+SIGSTORE_PUBLIC_KEY_FILE=/path/to/cosign.pub make mirror_registry
+```
+
+Set `SIGSTORE_SIGNED_PREFIX` as well when the mirrored images need `RemapIdentity`
+verification. You can also provide the base64-encoded key directly using
+`SIGSTORE_PUBLIC_KEY_DATA`. This step only runs when the
+`ClusterImagePolicy` CRD is available.
+
 For secure mode (testing operator CA bundle support):
 ```bash
 make mirror_registry_secure
