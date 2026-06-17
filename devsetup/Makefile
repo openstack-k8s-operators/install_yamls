@@ -344,6 +344,7 @@ attach_default_interface_cleanup: export BGP_NIC_2_MAC=${CRC_BGP_NIC_2_MAC}
 endif
 attach_default_interface_cleanup: export INSTANCE_NAME=${NETWORK_ISOLATION_INSTANCE_NAME}
 attach_default_interface_cleanup: export NETWORK_NAME=${NETWORK_ISOLATION_NET_NAME}
+attach_default_interface_cleanup: export IP_ADDRESS=${NETWORK_ISOLATION_IP_ADDRESS}
 attach_default_interface_cleanup: ## Detach default libvirt network from CRC
 	bash scripts/interfaces-setup-cleanup.sh
 
