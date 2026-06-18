@@ -225,7 +225,7 @@ cat <<EOF >${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}.xml
     </graphics>
     <audio id='1' type='none'/>
     <video>
-      <model type='cirrus' vram='16384' heads='1' primary='yes'/>
+      <model type='vga' vram='16384' heads='1' primary='yes'/>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x01' function='0x0'/>
     </video>
     <memballoon model='none'/>
