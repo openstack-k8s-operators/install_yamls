@@ -1,4 +1,4 @@
-# general
+# general, just a comment to trigger test.
 SHELL       := /bin/bash
 OKD                      ?= false
 OPERATOR_NAMESPACE      ?= openstack-operators
