@@ -2841,24 +2841,24 @@ ifeq ($(OKD), true)
 	$(MAKE) operator_namespace OPERATOR_NAMESPACE=cert-manager
 	bash scripts/gen-olm-cert-manager-okd.sh
 	oc apply -f ${OPERATOR_DIR}
-	while ! (oc get pod --no-headers=true -l app=cainjector -n ${NAMESPACE} | grep "cert-manager-cainjector"); do sleep 10; done
-	oc wait pod -n ${NAMESPACE} -l app=cainjector --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
-	while ! (oc get pod --no-headers=true -l app=webhook -n ${NAMESPACE} | grep "cert-manager-webhook"); do sleep 10; done
-	oc wait pod -n ${NAMESPACE} -l app=webhook --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
-	while ! (oc get pod --no-headers=true -l app=cert-manager -n ${NAMESPACE} | grep "cert-manager"); do sleep 10; done
-	oc wait pod -n ${NAMESPACE} -l app=cert-manager --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
+	while ! (oc get pod --no-headers=true -l app=cainjector -n ${NAMESPACE} --field-selector=status.phase=Running | grep "cert-manager-cainjector"); do sleep 10; done
+	oc wait pod -n ${NAMESPACE} -l app=cainjector --field-selector=status.phase=Running --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
+	while ! (oc get pod --no-headers=true -l app=webhook -n ${NAMESPACE} --field-selector=status.phase=Running | grep "cert-manager-webhook"); do sleep 10; done
+	oc wait pod -n ${NAMESPACE} -l app=webhook --field-selector=status.phase=Running --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
+	while ! (oc get pod --no-headers=true -l app=cert-manager -n ${NAMESPACE} --field-selector=status.phase=Running | grep "cert-manager"); do sleep 10; done
+	oc wait pod -n ${NAMESPACE} -l app=cert-manager --field-selector=status.phase=Running --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
 else
 	$(MAKE) operator_namespace
 	bash scripts/gen-olm-cert-manager.sh
 	oc apply -f ${OPERATOR_DIR}
 	while ! (oc get pod --no-headers=true -l name=cert-manager-operator -n ${OPERATOR_NAMESPACE}| grep "cert-manager-operator"); do sleep 10; done
 	oc wait pod -n ${OPERATOR_NAMESPACE} --for condition=Ready -l name=cert-manager-operator --timeout=$(CERTMANAGER_TIMEOUT)
-	while ! (oc get pod --no-headers=true -l app=cainjector -n ${NAMESPACE} | grep "cert-manager-cainjector"); do sleep 10; done
-	oc wait pod -n ${NAMESPACE} -l app=cainjector --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
-	while ! (oc get pod --no-headers=true -l app=webhook -n ${NAMESPACE} | grep "cert-manager-webhook"); do sleep 10; done
-	oc wait pod -n ${NAMESPACE} -l app=webhook --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
-	while ! (oc get pod --no-headers=true -l app=cert-manager -n ${NAMESPACE} | grep "cert-manager"); do sleep 10; done
-	oc wait pod -n ${NAMESPACE} -l app=cert-manager --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
+	while ! (oc get pod --no-headers=true -l app=cainjector -n ${NAMESPACE} --field-selector=status.phase=Running | grep "cert-manager-cainjector"); do sleep 10; done
+	oc wait pod -n ${NAMESPACE} -l app=cainjector --field-selector=status.phase=Running --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
+	while ! (oc get pod --no-headers=true -l app=webhook -n ${NAMESPACE} --field-selector=status.phase=Running | grep "cert-manager-webhook"); do sleep 10; done
+	oc wait pod -n ${NAMESPACE} -l app=webhook --field-selector=status.phase=Running --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
+	while ! (oc get pod --no-headers=true -l app=cert-manager -n ${NAMESPACE} --field-selector=status.phase=Running | grep "cert-manager"); do sleep 10; done
+	oc wait pod -n ${NAMESPACE} -l app=cert-manager --field-selector=status.phase=Running --for condition=Ready --timeout=$(CERTMANAGER_TIMEOUT)
 endif
 
 .PHONY: certmanager_cleanup
