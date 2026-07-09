@@ -9,10 +9,10 @@ opm_version: latest
 oc_mirror_version: latest
 
 # operator-sdk version to use (must be specific version)
-sdk_version: v1.41.1
+sdk_version: v1.42.3
 
 # golang version
-go_version: 1.24.6
+go_version: 1.26.3
 
 # kustomize version to use (must be specific version)
 kustomize_version: v5.0.3
