@@ -52,3 +52,4 @@
   when:
     - _export_shares.changed
   ansible.builtin.command: "exportfs -r"
+  changed_when: false
