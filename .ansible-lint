@@ -1,6 +1,4 @@
 ---
-warn_list:
-  - var-naming[no-role-prefix]
 exclude_paths:
   - devsetup/standalone/network_data.yaml
   - devsetup/standalone/deployed_network.yaml
