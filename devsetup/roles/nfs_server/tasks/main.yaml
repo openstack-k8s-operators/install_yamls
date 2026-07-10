@@ -22,7 +22,7 @@
 
 - name: Create NFS shares
   ansible.builtin.file:
-    path: "{{ nfs_home }}/{{ item }}"
+    path: "{{ nfs_server_nfs_home }}/{{ item }}"
     state: directory
     mode: '0777'
     group: nobody
@@ -37,7 +37,7 @@
 - name: Configure exports
   ansible.builtin.lineinfile:
     path: /etc/exports.d/osp.exports
-    line: "{{ nfs_home }}/{{ item }} *(rw,sync,no_root_squash)"
+    line: "{{ nfs_server_nfs_home }}/{{ item }} *(rw,sync,no_root_squash)"
     create: true
     mode: '0644'
   with_items:

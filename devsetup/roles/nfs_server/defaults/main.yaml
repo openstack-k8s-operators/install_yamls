@@ -1,2 +1,2 @@
 ---
-nfs_home: /home/nfs
+nfs_server_nfs_home: /home/nfs
