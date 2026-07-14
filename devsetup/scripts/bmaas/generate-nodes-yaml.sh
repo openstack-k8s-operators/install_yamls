@@ -4,7 +4,9 @@ set -x
 NODE_NAME_PREFIX=${NODE_NAME_PREFIX:-"crc-bmaas"}
 INGRESS_DOMAIN=$(oc get ingresses.config/cluster -o jsonpath={.spec.domain})
 REDFISH_USERNAME=${REDFISH_USERNAME:-"admin"}
-REDFISH_PASSOWRD=${REDFISH_PASSOWRD:-"password"}
+if [ -z "${REDFISH_PASSWORD}" ]; then
+    echo "Please set REDFISH_PASSWORD"; exit 1
+fi
 NETWORK_NAME=${NETWORK_NAME:-"crc-bmaas"}
 
 function echo_nodes_yaml {
@@ -24,7 +26,7 @@ function echo_nodes_yaml {
         echo "    redfish_address: http://sushy-emulator.${INGRESS_DOMAIN}"
         echo "    redfish_system_id: /redfish/v1/Systems/${uuid}"
         echo "    redfish_username: ${REDFISH_USERNAME}"
-        echo "    redfish_password: ${REDFISH_PASSOWRD}"
+        echo "    redfish_password: ${REDFISH_PASSWORD}"
         echo "  ports:"
         echo "  - address: \"$mac_address\""
     done <<< "$(virsh --connect=qemu:///system list --all --uuid --name | grep "${NODE_NAME_PREFIX}")"
