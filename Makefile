@@ -830,6 +830,7 @@ openstack_init: openstack_wait
 		oc apply -f /tmp/bmh_crd.yaml; \
 		rm -f /tmp/bmh_crd.yaml; \
 	fi
+	timeout ${TIMEOUT} bash -c "while ! (oc get openstack/openstack -n ${OPERATOR_NAMESPACE}); do sleep 1; done"
 	oc wait openstack/openstack -n ${OPERATOR_NAMESPACE} --for condition=Ready --timeout=${TIMEOUT}
 	timeout ${TIMEOUT} bash -c "while ! (oc get services -n ${OPERATOR_NAMESPACE} | grep -E '^(openstack|openstack-baremetal|infra)-operator-webhook-service' | wc -l | grep -q -e 3); do sleep 5; done"
 
