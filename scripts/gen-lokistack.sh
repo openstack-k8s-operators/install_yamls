@@ -52,8 +52,8 @@ metadata:
   name: loki-s3
   namespace: ${NAMESPACE}
 stringData:
-  access_key_id: QUtJQUlPU0ZPRE5ON0VYQU1QTEUK
-  access_key_secret: d0phbHJYVXRuRkVNSS9LN01ERU5HL2JQeFJmaUNZRVhBTVBMRUtFWQo=
+  access_key_id: ${LOKI_S3_ACCESS_KEY_ID}
+  access_key_secret: ${LOKI_S3_ACCESS_KEY_SECRET}
   bucketnames: s3-bucket-name
   endpoint: https://s3.eu-central-1.amazonaws.com
   region: eu-central-1

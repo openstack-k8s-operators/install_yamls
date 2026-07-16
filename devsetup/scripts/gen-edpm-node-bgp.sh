@@ -241,7 +241,7 @@ for i in 0 1 2; do
         fi
         VIRT_HOST_KNOWN_HOSTS=$(ssh-keyscan 192.168.130.1)
         virt-customize -a ${DISK_FILEPATH} \
-            --root-password password:12345678 \
+            --root-password password:${EDPM_ROOT_PASSWORD} \
             --hostname edpm-${EDPM_SERVER_ROLE}-$i \
             --firstboot ${OUTPUT_BASEDIR}/edpm-${EDPM_SERVER_ROLE}-$i-firstboot.sh \
             --run-command "systemctl disable cloud-init cloud-config cloud-final cloud-init-local" \

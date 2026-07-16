@@ -19,7 +19,9 @@ NAMESPACE=${SUSHY_EMULATOR_NAMESPACE:-"sushy-emulator"}
 DRIVER=${SUSHY_EMULATOR_DRIVER:-"libvirt"}
 INGRESS_DOMAIN=$(oc get ingresses.config/cluster -o jsonpath={.spec.domain})
 REDFISH_USERNAME=${REDFISH_USERNAME:-"admin"}
-REDFISH_PASSWORD=${REDFISH_PASSWORD:-"password"}
+if [ -z "${REDFISH_PASSWORD}" ]; then
+    echo "Please set REDFISH_PASSWORD"; exit 1
+fi
 IMAGE=${SUSHY_EMULATOR_IMAGE:-"quay.io/metal3-io/sushy-tools:latest"}
 CRC_NETWORK_NAME=${CRC_NETWORK_NAME:-crc}
 BM_IPV6=${BM_IPV6:-false}

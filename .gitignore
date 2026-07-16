@@ -7,3 +7,4 @@ devsetup/tls.crt
 .vscode
 ansibleee-ssh-key-id_rsa
 ansibleee-ssh-key-id_rsa.pub
+.secrets.env
