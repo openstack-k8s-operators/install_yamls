@@ -55,7 +55,9 @@ if ! [ -x "$(command -v ${OC_MIRROR_BIN})" ]; then
     exit 1
 fi
 
+set +x
 REGISTRY_TOKEN=$(oc whoami -t)
+set -x
 
 # Create mirror namespace and allow image pulls
 oc create namespace ${MIRROR_NAMESPACE} --dry-run=client -o yaml | oc apply -f -
@@ -123,6 +125,7 @@ fi
 # Setup authentication for mirror registry
 AUTH_DIR="${XDG_RUNTIME_DIR:-/tmp}/containers"
 mkdir -p ${AUTH_DIR}
+set +x
 MIRROR_REGISTRY_AUTH=$(echo -n "kubeadmin:${REGISTRY_TOKEN}" | base64 -w0)
 
 rm -f ${AUTH_DIR}/auth.json
@@ -135,6 +138,7 @@ cat > ${AUTH_DIR}/auth.json <<EOF
   }
 }
 EOF
+set -x
 
 # Wait for API server to be ready
 oc wait --for=condition=Available deployment/apiserver -n openshift-apiserver --timeout=120s || true
