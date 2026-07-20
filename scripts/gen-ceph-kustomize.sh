@@ -48,7 +48,9 @@ RGW_USER=${RGW_USER:-"swift"}
 RGW_NAME=${RGW_NAME:-"ceph"}
 DOMAIN=$(oc -n $NAMESPACE get ingresses.config/cluster -o jsonpath={.spec.domain})
 # make input should be called before ceph to make sure we can access this info
+set +x
 RGW_PASS=$(oc -n $NAMESPACE get secrets "$OSP_SECRET" -o jsonpath={.data.SwiftPassword} | base64 -d)
+set -x
 
 
 function add_ceph_pod {
@@ -257,9 +259,11 @@ function config_ceph {
         ["rgw_max_attrs_num_in_req"]="90")
 
     # Apply config settings to Ceph
+    set +x
     for key in "${!config_keys[@]}"; do
         oc exec -n $NAMESPACE -it ceph -- sh -c "ceph config set global $key ${config_keys[$key]}"
     done
+    set -x
 }
 
 function config_rgw {

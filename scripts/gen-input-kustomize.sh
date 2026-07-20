@@ -60,6 +60,7 @@ fi
 
 pushd ${DIR}
 
+set +x
 cat <<EOF >kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -108,3 +109,4 @@ generatorOptions:
   labels:
     type: ${SECRET}
 EOF
+set -x

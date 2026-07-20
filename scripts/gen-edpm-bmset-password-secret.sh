@@ -16,6 +16,7 @@
 set -ex
 
 function create_bmset_password_secret {
+set +x
 cat <<EOF | oc create -f -
 ---
 apiVersion: v1
@@ -27,6 +28,7 @@ type: Opaque
 stringData:
   NodeRootPassword: ${EDPM_ROOT_PASSWORD}
 EOF
+set -x
 }
 
 oc get secret baremetalset-password-secret -n ${NAMESPACE} || create_bmset_password_secret
