@@ -24,14 +24,14 @@ data:
 
     for i in \`seq -w -s ' ' \${PV_NUM}\`; do
       echo "creating dir /mnt/openstack/pv\$i on host"
-      mkdir -p /mnt/nodeMnt/openstack/pv\$i
+      mkdir -p /mnt/nodeMnt/pv\$i
     done
   delete-storage.sh: |
     #!/bin/bash
 
     for i in \`seq -w -s ' ' \${PV_NUM}\`; do
       echo "deleting dir /mnt/openstack/pv\$i on host"
-      rm -rf /mnt/nodeMnt/openstack/pv\$i
+      rm -rf /mnt/nodeMnt/pv\$i
     done
 kind: ConfigMap
 metadata:
@@ -63,19 +63,6 @@ rules:
   - securitycontextconstraints
   verbs:
   - use
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  - jobs
-  verbs:
-  - create
-  - get
-  - list
-  - watch
-  - update
-  - patch
-  - delete
 EOF
 
 cat << EOF | oc apply -f -
