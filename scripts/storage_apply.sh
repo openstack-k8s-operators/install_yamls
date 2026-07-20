@@ -69,7 +69,7 @@ spec:
           name: crc-storage
         - name: node-mnt
           hostPath:
-            path: /mnt
-            type: Directory
+            path: /mnt/openstack
+            type: DirectoryOrCreate
   backoffLimit: 10
 EOF
