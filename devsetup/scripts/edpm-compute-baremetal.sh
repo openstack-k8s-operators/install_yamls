@@ -60,8 +60,8 @@ metadata:
   namespace: ${NAMESPACE}
 type: Opaque
 data:
-  username: YWRtaW4=
-  password: cGFzc3dvcmQ=
+  username: $(echo -n "${REDFISH_USERNAME:-admin}" | base64 -w 0)
+  password: $(echo -n "${REDFISH_PASSWORD}" | base64 -w 0)
 ---
 apiVersion: metal3.io/v1alpha1
 kind: BareMetalHost

@@ -1,6 +1,7 @@
+-include ../.secrets.env
+
 CRC_VERSION ?= latest
 CRC_URL ?= 'https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/$(CRC_VERSION)/crc-linux-amd64.tar.xz'
-KUBEADMIN_PWD ?= 12345678
 PULL_SECRET  ?= ${PWD}/pull-secret.txt
 TIMEOUT                  ?= 300s
 DOWNLOAD_TOOLS_SELECTION ?= all
@@ -115,7 +116,6 @@ BMAAS_NETWORK_IPV6_PREFIX ?= fd00:bbbb::1/64
 BMAAS_BRIDGE_IPV6_PREFIX ?= fd00:bbbb::2/64
 BMAAS_NODE_COUNT ?= 1
 BMAAS_REDFISH_USERNAME ?= admin
-BMAAS_REDFISH_PASSWORD ?= password
 BMAAS_SUSHY_EMULATOR_NAMESPACE ?= sushy-emulator
 BMAAS_SUSHY_EMULATOR_DRIVER ?= libvirt
 BMAAS_SUSHY_EMULATOR_IMAGE ?= quay.io/metal3-io/sushy-tools:latest
@@ -172,7 +172,11 @@ CLEANUP_DIR_CMD ?= rm -Rf
 define vars
 ${1}: export CLEANUP_DIR_CMD=${CLEANUP_DIR_CMD}
 ${1}: export NFS_HOME=${NFS_HOME}
+${1}: export EDPM_ROOT_PASSWORD=${EDPM_ROOT_PASSWORD}
 endef
+
+../.secrets.env:
+	SECRETS_FILE=../.secrets.env bash ../scripts/gen-secrets.sh
 
 ##@ General
 
@@ -214,7 +218,7 @@ nfs_cleanup: ## removes /etc/exports.d/osp.exports, reloads nfs exports and dele
 
 ##@ CRC
 .PHONY: crc
-crc: ## Deploys CRC using CRC_URL to download and install CRC, KUBEADMIN_PWD as the password which defaults to 12345678 and PULL_SECRET to specify the file containing the pull secret, defaults to ${PWD}/pull-secret.txt. To change the default memory and/or cpus for the VM use `CPUS=X MEMORY=Y DISK=Z make crc`.
+crc: ../.secrets.env ## Deploys CRC using CRC_URL to download and install CRC, KUBEADMIN_PWD as the password (auto-generated via .secrets.env) and PULL_SECRET to specify the file containing the pull secret, defaults to ${PWD}/pull-secret.txt. To change the default memory and/or cpus for the VM use `CPUS=X MEMORY=Y DISK=Z make crc`.
 	bash scripts/crc-setup.sh ${CRC_URL} ${KUBEADMIN_PWD} ${PULL_SECRET}
 
 .PHONY: crc_cleanup
@@ -294,7 +298,7 @@ ipv6_lab_sno: export SNO_SERVICE_NETWORK = ${IPV6_LAB_SNO_SERVICE_NETWORK}
 ipv6_lab_sno: export SNO_HOST_IP = ${IPV6_LAB_SNO_HOST_IP}
 ipv6_lab_sno: export SNO_INSTANCE_NAME = ${IPV6_LAB_SNO_INSTANCE_NAME}
 ipv6_lab_sno: export LIBVIRT_STORAGE_POOL = ${IPV6_LAB_LIBVIRT_STORAGE_POOL}
-ipv6_lab_sno: ## Deployes Single-node-Openshift
+ipv6_lab_sno: ../.secrets.env ## Deployes Single-node-Openshift
 	bash scripts/ipv6-nat64/sno.sh --create
 
 .PHONY: ipv6_lab_sno_cleanup
@@ -385,7 +389,9 @@ edpm_baremetal_compute: export BMAAS_INSTANCE_MEMORY=${BM_INSTANCE_MEMORY}
 edpm_baremetal_compute: export BMAAS_NODE_COUNT=${BM_NODE_COUNT}
 edpm_baremetal_compute: export NODE_COUNT=${BM_NODE_COUNT}
 edpm_baremetal_compute: export DEPLOY_DIR=../out/bmaas
-edpm_baremetal_compute: ## Create virtual baremetal for the dataplane
+edpm_baremetal_compute: export REDFISH_USERNAME=${BMAAS_REDFISH_USERNAME}
+edpm_baremetal_compute: export REDFISH_PASSWORD=${BMAAS_REDFISH_PASSWORD}
+edpm_baremetal_compute: ../.secrets.env ## Create virtual baremetal for the dataplane
 	$(eval $(call vars))
 	make bmaas_virtual_bms
 	make bmaas_sushy_emulator_wait
@@ -405,7 +411,7 @@ edpm_baremetal_compute_cleanup:  ## Cleanup dataplane with BMAAS
 .PHONY: edpm_compute
 edpm_compute: export EDPM_COMPUTE_NETWORK = ${NETWORK_ISOLATION_NET_NAME}
 edpm_compute: export FIRSTBOOT_EXTRA = ${EDPM_FIRSTBOOT_EXTRA}
-edpm_compute: ## Create EDPM compute VM
+edpm_compute: ../.secrets.env ## Create EDPM compute VM
 	$(eval $(call vars))
 	scripts/gen-ansibleee-ssh-key.sh
 	if [ ${EDPM_TOTAL_NODES} -eq 1 ]; then \
@@ -419,7 +425,7 @@ edpm_compute: ## Create EDPM compute VM
 .PHONY: edpm_compute_bootc
 edpm_compute_bootc: export EDPM_COMPUTE_NETWORK = ${NETWORK_ISOLATION_NET_NAME}
 edpm_compute_bootc: export FIRSTBOOT_EXTRA = ${EDPM_FIRSTBOOT_EXTRA}
-edpm_compute_bootc:
+edpm_compute_bootc: ../.secrets.env
 	$(eval $(call vars))
 	scripts/gen-ansibleee-ssh-key.sh
 	if [ ${EDPM_TOTAL_NODES} -eq 1 ]; then \
@@ -438,7 +444,7 @@ edpm_ansible_runner: ## Debug edpm-ansible playbooks
 	scripts/edpm-ansible-runner.sh
 
 .PHONY: edpm_computes_bgp
-edpm_computes_bgp: #
+edpm_computes_bgp: ../.secrets.env #
 	$(eval $(call vars))
 	scripts/gen-ansibleee-ssh-key.sh
 	scripts/gen-edpm-node-bgp.sh
@@ -500,6 +506,7 @@ tripleo_deploy: export REGISTRY_PWD ?= ${RH_REGISTRY_PWD}
 tripleo_deploy: export COMPUTE_CEPH_ENABLED=${EDPM_COMPUTE_CEPH_ENABLED}
 tripleo_deploy: export CONFIGURE_HUGEPAGES=${EDPM_CONFIGURE_HUGEPAGES}
 tripleo_deploy: export COMPUTE_CEPH_NOVA=${EDPM_COMPUTE_CEPH_NOVA}
+tripleo_deploy: export IPA_ADMIN_PASSWORD=${DEVSETUP_IPA_ADMIN_PASSWORD}
 tripleo_deploy: export TRIPLEO_NETWORKING=${EDPM_CONFIGURE_NETWORKING}
 tripleo_deploy: export TRIPLEO_ATTACH_EXTNET=${EDPM_ATTACH_EXTNET}
 tripleo_deploy: export TRIPLEO_CONFIGURE_DEFAULT_ROUTE=${EDPM_CONFIGURE_DEFAULT_ROUTE}
@@ -513,7 +520,7 @@ tripleo_deploy: export ADOPTED_STORAGE_NET = ${ADOPTED_STORAGE_NETWORK}
 tripleo_deploy: export ADOPTED_STORAGE_MGMT_NET = ${ADOPTED_STORAGEMGMT_NETWORK}
 tripleo_deploy: export ADOPTED_TENANT_NET = ${ADOPTED_TENANT_NETWORK}
 tripleo_deploy: export ADOPTED_EXTERNAL_NET = ${ADOPTED_EXTERNAL_NETWORK}
-tripleo_deploy:
+tripleo_deploy: ../.secrets.env
 	$(eval $(call vars))
 	scripts/tripleo.sh
 
@@ -531,6 +538,7 @@ standalone_deploy: export COMPUTE_CEPH_NOVA=${EDPM_COMPUTE_CEPH_NOVA}
 standalone_deploy: export COMPUTE_SRIOV_ENABLED=${EDPM_COMPUTE_SRIOV_ENABLED}
 standalone_deploy: export COMPUTE_DHCP_AGENT_ENABLED=${EDPM_COMPUTE_DHCP_AGENT_ENABLED}
 standalone_deploy: export STANDALONE=true
+standalone_deploy: export IPA_ADMIN_PASSWORD=${DEVSETUP_IPA_ADMIN_PASSWORD}
 standalone_deploy: export INTERFACE_MTU=${NETWORK_MTU}
 standalone_deploy: export EDPM_COMPUTE_NETWORK = ${NETWORK_ISOLATION_NET_NAME}
 standalone_deploy: export NETWORK_INTERNAL_PREFIX = ${STANDALONE_INTERNALAPI_NET_PREFIX}
@@ -543,7 +551,7 @@ standalone_deploy: export ADOPTED_STORAGE_NET = ${ADOPTED_STORAGE_NETWORK}
 standalone_deploy: export ADOPTED_STORAGE_MGMT_NET = ${ADOPTED_STORAGEMGMT_NETWORK}
 standalone_deploy: export ADOPTED_TENANT_NET = ${ADOPTED_TENANT_NETWORK}
 standalone_deploy: export ADOPTED_EXTERNAL_NET = ${ADOPTED_EXTERNAL_NETWORK}
-standalone_deploy:
+standalone_deploy: ../.secrets.env
 	$(eval $(call vars))
 	scripts/standalone.sh ${EDPM_COMPUTE_SUFFIX} ${STANDALONE_COMPUTE_DRIVER} '${EDPM_COMPUTE_ADDITIONAL_NETWORKS}' '${EDPM_COMPUTE_ADDITIONAL_HOST_ROUTES}'
 
@@ -708,7 +716,7 @@ bmaas_sushy_emulator: export SUSHY_EMULATOR_OS_CLIENT_CONFIG_FILE = ${BMAAS_SUSH
 bmaas_sushy_emulator: export REDFISH_USERNAME = ${BMAAS_REDFISH_USERNAME}
 bmaas_sushy_emulator: export REDFISH_PASSWORD = ${BMAAS_REDFISH_PASSWORD}
 bmaas_sushy_emulator: export DEPLOY_DIR=../out/bmaas
-bmaas_sushy_emulator: ## Create BMaaS sushy-emulator (Virtual RedFish)
+bmaas_sushy_emulator: ../.secrets.env ## Create BMaaS sushy-emulator (Virtual RedFish)
 	scripts/bmaas/sushy-emulator.sh --create
 
 .PHONY: bmaas_sushy_emulator_cleanup
@@ -733,7 +741,7 @@ bmaas_generate_nodes_yaml: export NODE_NAME_PREFIX = ${BMAAS_INSTANCE_NAME_PREFI
 bmaas_generate_nodes_yaml: export REDFISH_USERNAME = ${BMAAS_REDFISH_USERNAME}
 bmaas_generate_nodes_yaml: export REDFISH_PASSWORD = ${BMAAS_REDFISH_PASSWORD}
 bmaas_generate_nodes_yaml: export NETWORK_NAME = ${BMAAS_NETWORK_NAME}
-bmaas_generate_nodes_yaml:
+bmaas_generate_nodes_yaml: ../.secrets.env
 	scripts/bmaas/generate-nodes-yaml.sh
 
 .PHONY: bmaas
