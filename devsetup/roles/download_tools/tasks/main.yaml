@@ -47,6 +47,9 @@
     dest: "{{ lookup('env', 'HOME') }}/bin/opm"
     mode: '0755'
     timeout: 30
+    checksum: >-
+      sha256:https://github.com/operator-framework/operator-registry/releases/{{
+      opm_url_suffix }}/checksums.txt
 
 - name: Set oc-mirror download url
   tags:
@@ -54,11 +57,23 @@
   ansible.builtin.set_fact:
     oc_mirror_url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ oc_mirror_version }}/oc-mirror.tar.gz"
 
-- name: Download and extract oc-mirror
+- name: Download oc-mirror archive
+  tags:
+    - oc_mirror
+  ansible.builtin.get_url:
+    url: "{{ oc_mirror_url }}"
+    dest: "/tmp/oc-mirror_{{ oc_mirror_version }}.tar.gz"
+    mode: '0644'
+    timeout: 60
+    checksum: >-
+      sha256:https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{
+      oc_mirror_version }}/sha256sum.txt
+
+- name: Extract oc-mirror
   tags:
     - oc_mirror
   ansible.builtin.unarchive:
-    src: "{{ oc_mirror_url }}"
+    src: "/tmp/oc-mirror_{{ oc_mirror_version }}.tar.gz"
     dest: "{{ lookup('env', 'HOME') }}/bin/"
     remote_src: true
 
@@ -68,6 +83,13 @@
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/bin/oc-mirror"
     mode: '0755'
+
+- name: Remove oc-mirror archive
+  tags:
+    - oc_mirror
+  ansible.builtin.file:
+    path: "/tmp/oc-mirror_{{ oc_mirror_version }}.tar.gz"
+    state: absent
 
 - name: Get version from sdk_version
   tags:
@@ -100,16 +122,38 @@
     mode: '0755'
     force: true
     timeout: 30
+    checksum: >-
+      sha256:https://github.com/operator-framework/operator-sdk/releases/download/{{
+      sdk_version }}/checksums.txt
 
-- name: Download and extract kustomize
+- name: Download kustomize archive
+  tags:
+    - kustomize
+  ansible.builtin.get_url:
+    url:
+      "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F\
+      {{ kustomize_version }}/kustomize_{{ kustomize_version }}_linux_amd64.tar.gz"
+    dest: "/tmp/kustomize_{{ kustomize_version }}_linux_amd64.tar.gz"
+    mode: '0644'
+    timeout: 30
+    checksum: >-
+      sha256:https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F{{
+      kustomize_version }}/checksums.txt
+
+- name: Extract kustomize
   tags:
     - kustomize
   ansible.builtin.unarchive:
-    src:
-      "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F\
-      {{ kustomize_version }}/kustomize_{{ kustomize_version }}_linux_amd64.tar.gz"
+    src: "/tmp/kustomize_{{ kustomize_version }}_linux_amd64.tar.gz"
     dest: "{{ lookup('env', 'HOME') }}/bin/"
     remote_src: true
+
+- name: Remove kustomize archive
+  tags:
+    - kustomize
+  ansible.builtin.file:
+    path: "/tmp/kustomize_{{ kustomize_version }}_linux_amd64.tar.gz"
+    state: absent
 
 - name: Download kubectl
   tags:
@@ -120,6 +164,8 @@
     dest: "{{ lookup('env', 'HOME') }}/bin/kubectl"
     mode: '0755'
     timeout: 30
+    checksum: >-
+      sha256:https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/amd64/kubectl.sha256
 
 - name: Download kuttl
   tags:
@@ -131,14 +177,29 @@
     dest: "{{ lookup('env', 'HOME') }}/bin/kubectl-kuttl"
     mode: '0755'
     timeout: 30
+    checksum: >-
+      sha256:https://github.com/kudobuilder/kuttl/releases/download/v{{
+      kuttl_version }}/checksums.txt
 
-- name: Download chainsaw
+- name: Download chainsaw archive
+  tags:
+    - chainsaw
+  ansible.builtin.get_url:
+    url:
+      "https://github.com/kyverno/chainsaw/releases/download/v{{ chainsaw_version }}/\
+      chainsaw_linux_amd64.tar.gz"
+    dest: "/tmp/chainsaw_{{ chainsaw_version }}_linux_amd64.tar.gz"
+    mode: '0644'
+    timeout: 30
+    checksum: >-
+      sha256:https://github.com/kyverno/chainsaw/releases/download/v{{
+      chainsaw_version }}/checksums.txt
+
+- name: Extract chainsaw
   tags:
     - chainsaw
   ansible.builtin.unarchive:
-    src:
-      "https://github.com/kyverno/chainsaw/releases/download/v{{ chainsaw_version }}/\
-      chainsaw_linux_amd64.tar.gz"
+    src: "/tmp/chainsaw_{{ chainsaw_version }}_linux_amd64.tar.gz"
     dest: "{{ lookup('env', 'HOME') }}/bin/"
     remote_src: true
     extra_opts:
@@ -147,12 +208,45 @@
       - "--exclude"
       - "LICENSE"
 
-- name: Download and extract yq
+- name: Remove chainsaw archive
+  tags:
+    - chainsaw
+  ansible.builtin.file:
+    path: "/tmp/chainsaw_{{ chainsaw_version }}_linux_amd64.tar.gz"
+    state: absent
+
+- name: Fetch yq checksums
+  tags:
+    - yq
+  ansible.builtin.uri:
+    url: "https://github.com/mikefarah/yq/releases/download/{{ yq_version }}/checksums-bsd"
+    return_content: true
+  register: _yq_checksums
+
+- name: Extract yq SHA256 checksum
+  tags:
+    - yq
+  ansible.builtin.set_fact:
+    _yq_sha256: >-
+      {{ _yq_checksums.content | regex_search('SHA256 \(yq_linux_amd64\.tar\.gz\) = (\w+)', '\1') | first }}
+
+- name: Download yq archive
+  tags:
+    - yq
+  ansible.builtin.get_url:
+    url:
+      "https://github.com/mikefarah/yq/releases/download/\
+      {{ yq_version }}/yq_linux_amd64.tar.gz"
+    dest: "/tmp/yq_{{ yq_version }}_linux_amd64.tar.gz"
+    mode: '0644'
+    timeout: 30
+    checksum: "sha256:{{ _yq_sha256 }}"
+
+- name: Extract yq
   tags:
     - yq
   ansible.builtin.unarchive:
-    src:
-      https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64.tar.gz
+    src: "/tmp/yq_{{ yq_version }}_linux_amd64.tar.gz"
     dest: "{{ lookup('env', 'HOME') }}/bin/"
     remote_src: true
     mode: '0755'
@@ -164,6 +258,13 @@
     src: "{{ lookup('env', 'HOME') }}/bin/yq_linux_amd64"
     dest: "{{ lookup('env', 'HOME') }}/bin/yq"
     state: link
+
+- name: Remove yq archive
+  tags:
+    - yq
+  ansible.builtin.file:
+    path: "/tmp/yq_{{ yq_version }}_linux_amd64.tar.gz"
+    state: absent
 
 - name: Set proper golang on the system
   become: true
@@ -189,9 +290,18 @@
         - /usr/local/bin/go
         - /usr/local/bin/gofmt
 
-    - name: Download and extract golang
+    - name: Download golang archive
+      ansible.builtin.get_url:
+        url: "https://golang.org/dl/go{{ go_version }}.linux-amd64.tar.gz"
+        dest: "/tmp/go{{ go_version }}.linux-amd64.tar.gz"
+        mode: '0644'
+        timeout: 60
+        checksum: >-
+          sha256:https://dl.google.com/go/go{{ go_version }}.linux-amd64.tar.gz.sha256
+
+    - name: Extract golang
       ansible.builtin.unarchive:
-        src: "https://golang.org/dl/go{{ go_version }}.linux-amd64.tar.gz"
+        src: "/tmp/go{{ go_version }}.linux-amd64.tar.gz"
         dest: "/usr/local"
         remote_src: true
         extra_opts:
@@ -201,6 +311,11 @@
           - "go/pkg/linux_amd64_race"
           - "--exclude"
           - "go/test"
+
+    - name: Remove golang archive
+      ansible.builtin.file:
+        path: "/tmp/go{{ go_version }}.linux-amd64.tar.gz"
+        state: absent
 
     - name: Set alternatives link to installed go version
       ansible.builtin.shell: |
