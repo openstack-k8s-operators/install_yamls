@@ -54,8 +54,8 @@ NAT64_INSTANCE_DISK_SIZE=${NAT64_INSTANCE_DISK_SIZE:-20}
 VIRT_TYPE=${VIRT_TYPE:-kvm}
 NET_MODEL=${NET_MODEL:-virtio}
 SSH_PUB_KEY=${SSH_PUB_KEY:-${HOME}/.ssh/id_rsa.pub}
-FEDORA_IMG=Fedora-Cloud-Base-39-1.5.x86_64.qcow2
-FEDORA_IMG_URL=https://download.fedoraproject.org/pub/fedora/linux/releases/39/Cloud/x86_64/images/${FEDORA_IMG}
+FEDORA_IMG=Fedora-Cloud-Base-Generic-44-1.7.x86_64.qcow2
+FEDORA_IMG_URL=https://download.fedoraproject.org/pub/fedora/linux/releases/44/Cloud/x86_64/images/${FEDORA_IMG}
 UPDATE_PACKAGES=${UPDATE_PACKAGES:-true}
 
 mkdir -p "${WORK_DIR}"
