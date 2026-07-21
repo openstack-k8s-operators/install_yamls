@@ -1,12 +1,12 @@
 ---
 # Released version of the opm package (can be set to 'latest')
-opm_version: v1.30.0
+download_tools_opm_version: v1.30.0
 
 # operator-sdk version to use (must be specific version)
-sdk_version: v1.42.3
+download_tools_sdk_version: v1.42.3
 
 # golang version
-go_version: 1.26.3
+download_tools_go_version: 1.26.3
 
 # kustomize version to use (must be specific version)
-kustomize_version: v5.0.3
+download_tools_kustomize_version: v5.0.3

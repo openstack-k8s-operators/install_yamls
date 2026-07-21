@@ -7,4 +7,4 @@
   roles:
     - role: nfs_server
       vars:
-        nfs_home: "{{ lookup('ansible.builtin.env', 'NFS_HOME')|default('/home/nfs', True) }}"
+        nfs_server_nfs_home: "{{ lookup('ansible.builtin.env', 'NFS_HOME')|default('/home/nfs', True) }}"

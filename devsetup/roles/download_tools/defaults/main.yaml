@@ -1,24 +1,24 @@
 ---
 # kuttl version to use (must be specific version)
-kuttl_version: 0.20.0
+download_tools_kuttl_version: 0.20.0
 
 # Released version of the opm package (can be set to 'latest')
-opm_version: latest
+download_tools_opm_version: latest
 
 # oc-mirror version (OCP version to download from)
-oc_mirror_version: latest
+download_tools_oc_mirror_version: latest
 
 # operator-sdk version to use (must be specific version)
-sdk_version: v1.42.3
+download_tools_sdk_version: v1.42.3
 
 # golang version
-go_version: 1.26.3
+download_tools_go_version: 1.26.3
 
 # kustomize version to use (must be specific version)
-kustomize_version: v5.0.3
+download_tools_kustomize_version: v5.0.3
 
 # kubectl version to use (must be specific version)
-kubectl_version: v1.25.7
+download_tools_kubectl_version: v1.25.7
 
 # chainsaw version to use (must be specific version)
-chainsaw_version: 0.2.12
+download_tools_chainsaw_version: 0.2.12
