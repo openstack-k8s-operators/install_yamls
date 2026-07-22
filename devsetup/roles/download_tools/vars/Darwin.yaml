@@ -1,0 +1,19 @@
+---
+os_name: darwin
+arch: arm64
+
+golang_install_dir: "{{ lookup('env', 'HOME') }}/.local"
+golang_packages:
+  - golang
+
+tools_packages:
+  - jq
+  - yq
+  - skopeo
+  - sqlite3
+  - httpd
+  - gcc
+  - gnu-tar
+  - xmlstarlet
+  - openssl
+  - jinja2-cli
