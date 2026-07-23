@@ -1354,7 +1354,7 @@ keystone_deploy_cleanup: namespace ## cleans up the service instance, Does not a
 	$(eval $(call vars,$@,keystone))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/keystone-operator ${DEPLOY_DIR}
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${DB_ROOT_PASSWORD} -e "flush tables; drop database if exists keystone;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) bash -c 'source /var/lib/operator-scripts/mysql_root_auth.sh && mysql -u root -e "flush tables; drop database if exists keystone;"' || true
 
 ##@ BARBICAN
 .PHONY: barbican_prep
@@ -1400,7 +1400,7 @@ barbican_deploy_cleanup: ## cleans up the service instance, Does not affect the 
 	$(eval $(call vars,$@,barbican))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/barbican-operator ${DEPLOY_DIR}
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${DB_ROOT_PASSWORD} -e "flush tables; drop database if exists barbican;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) bash -c 'source /var/lib/operator-scripts/mysql_root_auth.sh && mysql -u root -e "flush tables; drop database if exists barbican;"' || true
 
 ##@ MARIADB
 mariadb_prep: export IMAGE=${MARIADB_IMG}
@@ -1488,7 +1488,7 @@ glance_deploy_cleanup: namespace ## cleans up the service instance, Does not aff
 	$(eval $(call vars,$@,glance))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/glance-operator ${DEPLOY_DIR}
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${DB_ROOT_PASSWORD} -e "flush tables; drop database if exists glance;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) bash -c 'source /var/lib/operator-scripts/mysql_root_auth.sh && mysql -u root -e "flush tables; drop database if exists glance;"' || true
 
 ##@ OVN
 .PHONY: ovn_prep
@@ -1574,7 +1574,7 @@ neutron_deploy_cleanup: namespace ## cleans up the service instance, Does not af
 	$(eval $(call vars,$@,neutron))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/neutron-operator ${DEPLOY_DIR}
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${DB_ROOT_PASSWORD} -e "flush tables; drop database if exists neutron;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) bash -c 'source /var/lib/operator-scripts/mysql_root_auth.sh && mysql -u root -e "flush tables; drop database if exists neutron;"' || true
 
 ##@ CINDER
 .PHONY: cinder_prep
@@ -1619,7 +1619,7 @@ cinder_deploy_cleanup: namespace ## cleans up the service instance, Does not aff
 	$(eval $(call vars,$@,cinder))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/cinder-operator ${DEPLOY_DIR}
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${DB_ROOT_PASSWORD} -e "flush tables; drop database if exists cinder;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) bash -c 'source /var/lib/operator-scripts/mysql_root_auth.sh && mysql -u root -e "flush tables; drop database if exists cinder;"' || true
 
 ##@ RABBITMQ
 .PHONY: rabbitmq_prep
@@ -1737,8 +1737,8 @@ ironic_deploy_cleanup: namespace ## cleans up the service instance, Does not aff
 	$(eval $(call vars,$@,ironic))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/ironic-operator ${DEPLOY_DIR}
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${DB_ROOT_PASSWORD} -e "flush tables; drop database if exists ironic;" || true
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${DB_ROOT_PASSWORD} -e "flush tables; drop database if exists ironic_inspector;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) bash -c 'source /var/lib/operator-scripts/mysql_root_auth.sh && mysql -u root -e "flush tables; drop database if exists ironic;"' || true
+	oc rsh -t $(DBSERVICE_CONTAINER) bash -c 'source /var/lib/operator-scripts/mysql_root_auth.sh && mysql -u root -e "flush tables; drop database if exists ironic_inspector;"' || true
 
 ##@ OCTAVIA
 .PHONY: octavia_prep
@@ -1781,7 +1781,7 @@ octavia_deploy_cleanup: namespace ## cleans up the service instance, Does not af
 	$(eval $(call vars,$@,octavia))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/octavia-operator ${DEPLOY_DIR}
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${DB_ROOT_PASSWORD} -e "flush tables; drop database if exists octavia;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) bash -c 'source /var/lib/operator-scripts/mysql_root_auth.sh && mysql -u root -e "flush tables; drop database if exists octavia;"' || true
 
 ##@ DESIGNATE
 .PHONY: designate_prep
@@ -1824,7 +1824,7 @@ designate_deploy_cleanup: ## cleans up the service instance, Does not affect the
 	$(eval $(call vars,$@,designate))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/designate-operator ${DEPLOY_DIR}
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${DB_ROOT_PASSWORD} -e "flush tables; drop database if exists designate;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) bash -c 'source /var/lib/operator-scripts/mysql_root_auth.sh && mysql -u root -e "flush tables; drop database if exists designate;"' || true
 
 ##@ NOVA
 .PHONY: nova_prep
@@ -1871,7 +1871,7 @@ nova_deploy_cleanup: namespace ## cleans up the service instance, Does not affec
 	$(eval $(call vars,$@,nova))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/nova-operator ${DEPLOY_DIR}
-	oc rsh $(DBSERVICE_CONTAINER) mysql -u root --password=${DB_ROOT_PASSWORD} -ss -e "show databases like 'nova_%';" | xargs -I '{}' oc rsh $(DBSERVICE_CONTAINER) mysql -u root --password=${DB_ROOT_PASSWORD} -ss -e "flush tables; drop database if exists {};"
+	oc rsh $(DBSERVICE_CONTAINER) bash -c 'source /var/lib/operator-scripts/mysql_root_auth.sh && mysql -u root -ss -e "show databases like '"'"'nova_%'"'"';"' | xargs -I '{}' oc rsh $(DBSERVICE_CONTAINER) bash -c 'source /var/lib/operator-scripts/mysql_root_auth.sh && mysql -u root -ss -e "flush tables; drop database if exists {};"'
 
 ##@ KUTTL tests
 
@@ -2730,7 +2730,7 @@ manila_deploy_cleanup: ## cleans up the service instance, Does not affect the op
 	$(eval $(call vars,$@,manila))
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/manila-operator ${DEPLOY_DIR}
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${DB_ROOT_PASSWORD} -e "flush tables; drop database if exists manila;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) bash -c 'source /var/lib/operator-scripts/mysql_root_auth.sh && mysql -u root -e "flush tables; drop database if exists manila;"' || true
 
 ##@ TELEMETRY
 .PHONY: telemetry_prep
@@ -2776,7 +2776,7 @@ telemetry_deploy_cleanup: ## cleans up the service instance, Does not affect the
 	oc kustomize ${DEPLOY_DIR} | oc delete --ignore-not-found=true -f -
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/telemetry-operator ${DEPLOY_DIR}
 	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/ceilometer-operator ${DEPLOY_DIR}
-	oc rsh -t $(DBSERVICE_CONTAINER) mysql -u root --password=${DB_ROOT_PASSWORD} -e "flush tables; drop database if exists aodh;" || true
+	oc rsh -t $(DBSERVICE_CONTAINER) bash -c 'source /var/lib/operator-scripts/mysql_root_auth.sh && mysql -u root -e "flush tables; drop database if exists aodh;"' || true
 
 .PHONY: telemetry_kuttl_run
 telemetry_kuttl_run: ## runs kuttl tests for the telemetry operator, assumes that everything needed for running the test was deployed beforehand.
