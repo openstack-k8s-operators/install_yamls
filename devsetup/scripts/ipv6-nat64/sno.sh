@@ -77,7 +77,7 @@ ARCH="${ARCH:-x86_64}"
 MEMORY="${MEMORY:-32768}"
 VCPUS="${VCPUS:-12}"
 OS_VARIANT="${OS_VARIANT:-fedora-coreos-stable}"
-DISK_SIZE="${DISK_SIZE:-150}"
+DISK_SIZE="${DISK_SIZE:-31}"
 VIRT_TYPE="${VIRT_TYPE:-kvm}"
 NET_MODEL="${NET_MODEL:-virtio}"
 # Libvirt config
@@ -96,7 +96,7 @@ fi
 
 mkdir -p "${WORK_DIR}"/ocp
 mkdir -p "${WORK_DIR}"/bin
-sudo chcon -t bin_t ${WORK_DIR}/bin
+sudo chcon -h system_u:object_r:bin_t:s0 ${WORK_DIR}/bin
 
 function get_oc_client {
     pushd ${WORK_DIR}
@@ -232,7 +232,7 @@ host-record=api.sno.lab.example.com,${SNO_HOST_IP}
 host-record=api-int.sno.lab.example.com,${SNO_HOST_IP}
 dhcp-host=${SNO_HOST_MAC},[${SNO_HOST_IP}],2m
 EOF
-    mkdir -p ${NAT64_IPV6_DNSMASQ_CONF_DIR}/conf.d
+    sudo mkdir -p ${NAT64_IPV6_DNSMASQ_CONF_DIR}/conf.d
     sudo cp -v ${MY_TMP_DIR}/sno.conf ${NAT64_IPV6_DNSMASQ_CONF_DIR}/conf.d/sno.conf
     sudo systemctl restart ${NAT64_IPV6_DNSMASQ_SERVICE_NAME}
 }
