@@ -193,7 +193,9 @@ if [ "$TLSE_ENABLED" = "true" ]; then
     ENV_ARGS+=" -e /usr/share/openstack-tripleo-heat-templates/ci/environments/standalone-ipa.yaml"
     export IPA_ADMIN_USER=admin
     export IPA_PRINCIPAL=$IPA_ADMIN_USER
-    export IPA_ADMIN_PASSWORD=fce95318204114530f31f885c9df588f
+    if [ -z "${IPA_ADMIN_PASSWORD}" ]; then
+        echo "Please set IPA_ADMIN_PASSWORD"; exit 1
+    fi
     export IPA_PASSWORD=$IPA_ADMIN_PASSWORD
     export UNDERCLOUD_FQDN=undercloud.$CLOUD_DOMAIN
     export IPA_DOMAIN=$CLOUD_DOMAIN

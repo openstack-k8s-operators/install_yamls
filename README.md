@@ -13,6 +13,38 @@ Without them the deployment will fail and you will have install them first.
 In general terms, all tools required by Openshift are also required by `install_yamls`.
 Most importanly, the `kubectl` must be present on the system.
 
+## Secrets Management
+
+All passwords and encryption keys are **dynamically generated** on first use
+and cached in `.secrets.env` (gitignored). No hardcoded secrets are used.
+
+| Command | Description |
+|---|---|
+| `make secrets` | Generate `.secrets.env` if it does not already exist |
+| `make secrets_clean` | Delete `.secrets.env` so secrets are regenerated on next run |
+| `make input` | Automatically runs `make secrets` before creating k8s secrets |
+
+**Override a single field:** set it as an environment variable.
+```bash
+ADMIN_PASSWORD=custom_value make input
+```
+
+**Legacy override:** set `PASSWORD` to apply one value to all service password fields.
+```bash
+PASSWORD=shared_value make input
+```
+
+**Regenerate all secrets:**
+```bash
+make secrets_clean && make secrets
+```
+
+For scripts outside of make (e.g. `devsetup/ceph/deploy.sh`), export the
+variables first:
+```bash
+eval "$(sed 's/ ?= /=/' .secrets.env | grep -v '^#')"
+```
+
 ## Goals
 
 1) WIP: Support installing individual operators for fast testing iteration
@@ -65,10 +97,10 @@ cd install_yamls/devsetup
 CPUS=12 MEMORY=25600 DISK=100 make crc
 ```
 
-* login to OCP
+* login to OCP (the kubeadmin password is auto-generated in `.secrets.env`)
 ```bash
 eval $(crc oc-env)
-oc login -u kubeadmin -p 12345678 https://api.crc.testing:6443
+oc login -u kubeadmin -p $(grep KUBEADMIN_PWD .secrets.env | sed 's/.*?= *//' ) https://api.crc.testing:6443
 ```
 
 * attach libvirt default network to the crc (default IP 192.168.122.10). This network is used as a vlan trunk to isolate the networks using vlans.
@@ -81,7 +113,7 @@ make crc_attach_default_interface
 EDPM_TOTAL_NODES=2 make edpm_compute
 ```
 
-* create dependencies
+* create dependencies (secrets are auto-generated on first `make input`)
 ```bash
 cd ..
 make crc_storage

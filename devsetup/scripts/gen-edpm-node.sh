@@ -29,7 +29,7 @@ if [ ! -f ${DISK_FILEPATH} ]; then
         sudo dnf -y install /usr/bin/virt-customize
     fi
     virt-customize -a ${DISK_FILEPATH} \
-        --root-password password:12345678 \
+        --root-password password:${EDPM_ROOT_PASSWORD} \
         --hostname ${EDPM_COMPUTE_NAME} \
         --firstboot ${OUTPUT_DIR}/${EDPM_COMPUTE_NAME}-firstboot.sh \
         --run-command "systemctl disable cloud-init cloud-config cloud-final cloud-init-local" \

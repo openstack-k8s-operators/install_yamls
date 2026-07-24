@@ -230,7 +230,7 @@ spec:
   myASN: ${ASN}
   peerASN: ${PEER_ASN}
   peerAddress: ${LEAF_1}
-  password: f00barZ
+  password: ${BGP_PEER_PASSWORD}
   routerID: ${SOURCE_IP}
 ---
 apiVersion: metallb.io/v1beta2
@@ -242,7 +242,7 @@ spec:
   myASN: ${ASN}
   peerASN: ${PEER_ASN}
   peerAddress: ${LEAF_2}
-  password: f00barZ
+  password: ${BGP_PEER_PASSWORD}
   routerID: ${SOURCE_IP}
 EOF_CAT
 cat > ${DEPLOY_DIR}/bgpadvertisement.yaml <<EOF_CAT

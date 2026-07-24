@@ -46,7 +46,9 @@ RGW_INGRESS_MPORT=8999
 RGW_INGRESS_SPEC="rgw_ingress.yml"
 
 RGW_USER=${RGW_USER:-"swift"}
-RGW_PASS=${RGW_PASS:-"12345678"}
+if [ -z "${RGW_PASS}" ]; then
+    echo "Please set RGW_PASS"; exit 1
+fi
 KEYSTONE_EP=${KEYSTONE_EP:-"http://keystone-public-openstack.apps-crc.testing"}
 RGW_CONF=${RGW_CONF:-"rgw_conf.sh"}
 

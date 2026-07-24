@@ -33,8 +33,8 @@ cat > ${EDPM_BOOTC_OUTPUT_DIR}/user-data <<EOF
 #cloud-config
 chpasswd:
   users:
-  - {name: root, password: "12345678", type: text}
-  - {name: cloud-admin, password: "12345678", type: text}
+  - {name: root, password: "${EDPM_ROOT_PASSWORD}", type: text}
+  - {name: cloud-admin, password: "${EDPM_ROOT_PASSWORD}", type: text}
   expire: False
 hostname: ${EDPM_COMPUTE_NAME}
 fqdn: ${EDPM_COMPUTE_NAME}.${EDPM_COMPUTE_DOMAIN}

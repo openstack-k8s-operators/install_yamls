@@ -24,8 +24,8 @@ if [ -z "$SECRET" ]; then
     echo "Please set SECRET"; exit 1
 fi
 
-if [ -z "$PASSWORD" ]; then
-    echo "Please set PASSWORD"; exit 1
+if [ -z "$ADMIN_PASSWORD" ]; then
+    echo "Please set ADMIN_PASSWORD"; exit 1
 fi
 
 if [ -z "$METADATA_SHARED_SECRET" ]; then
@@ -70,39 +70,39 @@ labels:
 secretGenerator:
 - name: ${SECRET}
   literals:
-  - AdminPassword=${PASSWORD}
-  - AodhPassword=${PASSWORD}
-  - BarbicanPassword=${PASSWORD}
+  - AdminPassword=${ADMIN_PASSWORD}
+  - AodhPassword=${AODH_PASSWORD}
+  - BarbicanPassword=${BARBICAN_PASSWORD}
   - BarbicanSimpleCryptoKEK=${BARBICAN_SIMPLE_CRYPTO_ENCRYPTION_KEY}
-  - CeilometerPassword=${PASSWORD}
-  - CloudKittyPassword=${PASSWORD}
-  - DbRootPassword=${PASSWORD}
-  - DatabasePassword=${PASSWORD}
-  - DesignatePassword=${PASSWORD}
-  - PlacementPassword=${PASSWORD}
-  - GlancePassword=${PASSWORD}
-  - NeutronPassword=${PASSWORD}
-  - CinderPassword=${PASSWORD}
-  - IronicPassword=${PASSWORD}
-  - IronicInspectorPassword=${PASSWORD}
+  - CeilometerPassword=${CEILOMETER_PASSWORD}
+  - CloudKittyPassword=${CLOUDKITTY_PASSWORD}
+  - DbRootPassword=${DB_ROOT_PASSWORD}
+  - DatabasePassword=${DATABASE_PASSWORD}
+  - DesignatePassword=${DESIGNATE_PASSWORD}
+  - PlacementPassword=${PLACEMENT_PASSWORD}
+  - GlancePassword=${GLANCE_PASSWORD}
+  - NeutronPassword=${NEUTRON_PASSWORD}
+  - CinderPassword=${CINDER_PASSWORD}
+  - IronicPassword=${IRONIC_PASSWORD}
+  - IronicInspectorPassword=${IRONIC_INSPECTOR_PASSWORD}
   - KeystoneOIDCClientSecret=${KEYSTONE_FEDERATION_CLIENT_SECRET}
   - KeystoneOIDCCryptoPassphrase=${KEYSTONE_FEDERATION_CRYPTO_PASSPHRASE}
-  - OctaviaPassword=${PASSWORD}
-  - OctaviaHeartbeatKey=${PASSWORD}
-  - NovaPassword=${PASSWORD}
-  - ManilaPassword=${PASSWORD}
+  - OctaviaPassword=${OCTAVIA_PASSWORD}
+  - OctaviaHeartbeatKey=${OCTAVIA_HEARTBEAT_KEY}
+  - NovaPassword=${NOVA_PASSWORD}
+  - ManilaPassword=${MANILA_PASSWORD}
   - MetadataSecret=${METADATA_SHARED_SECRET}
-  - HeatPassword=${PASSWORD}
+  - HeatPassword=${HEAT_PASSWORD}
   - HeatAuthEncryptionKey=${HEAT_AUTH_ENCRYPTION_KEY}
-  - HeatStackDomainAdminPassword=${PASSWORD}
-  - SwiftPassword=${PASSWORD}
-  - WatcherPassword=${PASSWORD}
+  - HeatStackDomainAdminPassword=${HEAT_STACK_DOMAIN_ADMIN_PASSWORD}
+  - SwiftPassword=${SWIFT_PASSWORD}
+  - WatcherPassword=${WATCHER_PASSWORD}
 - name: ${LIBVIRT_SECRET}
   literals:
-  - LibvirtPassword=${PASSWORD}
+  - LibvirtPassword=${LIBVIRT_PASSWORD}
 - name: octavia-ca-passphrase
   literals:
-  - server-ca-passphrase=${PASSWORD}
+  - server-ca-passphrase=${OCTAVIA_CA_PASSPHRASE}
 generatorOptions:
   disableNameSuffixHash: true
   labels:
