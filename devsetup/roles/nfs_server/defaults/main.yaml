@@ -1,2 +1,6 @@
 ---
 nfs_home: /home/nfs
+nfs_export_opts: "rw,sync,no_root_squash"
+nfs_allowed_clients: >-
+  192.168.130.0/24({{ nfs_export_opts }})
+  192.168.122.0/24({{ nfs_export_opts }})

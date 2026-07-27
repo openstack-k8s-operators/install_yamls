@@ -135,9 +135,9 @@ cat <<EOF >>kustomization.yaml
       path: /spec/nodeTemplate/ansible/ansibleVars/edpm_extra_mounts
       value:
         - fstype: nfs4
-          name: /var/lib/nova/instances
+          path: /var/lib/nova/instances
+          src: ${EDPM_NOVA_NFS_PATH}
           opts: context=system_u:object_r:nfs_t:s0
-          path: ${EDPM_NOVA_NFS_PATH}
 EOF
 fi
 

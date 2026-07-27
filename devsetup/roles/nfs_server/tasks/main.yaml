@@ -24,7 +24,7 @@
   ansible.builtin.file:
     path: "{{ nfs_home }}/{{ item }}"
     state: directory
-    mode: '0777'
+    mode: '0770'
     group: nobody
     owner: nobody
   with_items:
@@ -37,7 +37,8 @@
 - name: Configure exports
   ansible.builtin.lineinfile:
     path: /etc/exports.d/osp.exports
-    line: "{{ nfs_home }}/{{ item }} *(rw,sync,no_root_squash)"
+    regexp: "^{{ nfs_home }}/{{ item }}\\s"
+    line: "{{ nfs_home }}/{{ item }} {{ nfs_allowed_clients }}"
     create: true
     mode: '0644'
   with_items:
