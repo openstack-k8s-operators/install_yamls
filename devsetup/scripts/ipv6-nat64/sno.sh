@@ -117,8 +117,7 @@ function get_openshift_installer {
 
     # Download the OpenShift Container Platform installer
     if ! [ -f openshift-install-linux.tar.gz ]; then
-        curl -k \
-            "${OCP_MIRROR_URL}"/"$OCP_VERSION"/openshift-install-linux.tar.gz \
+        curl "${OCP_MIRROR_URL}"/"$OCP_VERSION"/openshift-install-linux.tar.gz \
             -o openshift-install-linux.tar.gz
     fi
     tar zxf openshift-install-linux.tar.gz -C ./bin/
