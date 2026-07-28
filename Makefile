@@ -602,6 +602,12 @@ NETOBSERV_OPERATOR_GROUP   ?= openshift-netobserv-operator-net
 NETOBSERV_SUBSCRIPTION     ?= netobserv-operator
 NETOBSERV_DEPLOY_NAMESPACE ?= ${LOKI_DEPLOY_NAMESPACE}
 
+# OpenStack Lightspeed
+LIGHTSPEED_NAMESPACE       ?= openstack-lightspeed
+LIGHTSPEED_IMG             ?= quay.io/openstack-lightspeed/operator-catalog:latest
+LIGHTSPEED_CATALOG         ?= openstack-lightspeed-catalog
+LIGHTSPEED_CHANNEL         ?= alpha
+
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
 ${1}: export NAMESPACE=${NAMESPACE}
@@ -2686,6 +2692,35 @@ netobserv_deploy: ## installs netobserv CRs in the netobserv namespace
 netobserv_deploy_cleanup: export NAMESPACE=${NETOBSERV_DEPLOY_NAMESPACE}
 netobserv_deploy_cleanup: ## removes netobserv CRs in the netobserv namespace
 	oc delete flowcollector --all=true -n ${NAMESPACE}
+
+##@ OPENSTACK_LIGHTSPEED
+.PHONY: openstack_lightspeed
+openstack_lightspeed: export NAMESPACE=${LIGHTSPEED_NAMESPACE}
+openstack_lightspeed: export IMAGE=${LIGHTSPEED_IMG}
+openstack_lightspeed: export CATALOG=${LIGHTSPEED_CATALOG}
+openstack_lightspeed: export CHANNEL=${LIGHTSPEED_CHANNEL}
+openstack_lightspeed: ## installs the OpenStack Lightspeed operator. Requires openstack-operator to be running.
+	@if ! oc get csv -l operators.coreos.com/openstack-operator.openstack-operators -n ${OPERATOR_NAMESPACE} 2>/dev/null | grep -q Succeeded; then \
+		echo "ERROR: openstack-operator is not running in ${OPERATOR_NAMESPACE}. Please run 'make openstack' first."; \
+		exit 1; \
+	fi
+	$(eval $(call vars,$@,openstack-lightspeed))
+	bash scripts/gen-namespace.sh
+	oc apply -f ${OUT}/${NAMESPACE}/namespace.yaml
+	timeout ${TIMEOUT} bash -c "while ! (oc get project.v1.project.openshift.io ${NAMESPACE}); do sleep 1; done"
+	bash scripts/gen-olm-lightspeed.sh
+	oc apply -f ${OPERATOR_DIR}
+	timeout ${TIMEOUT} bash -c "while ! (oc get deployments -n ${NAMESPACE} -l app.kubernetes.io/name=openstack-lightspeed-operator --no-headers 2>/dev/null | grep -q .); do sleep 10; done"
+	oc wait deployments -n ${NAMESPACE} -l app.kubernetes.io/name=openstack-lightspeed-operator --for condition=Available --timeout=${TIMEOUT}
+
+.PHONY: openstack_lightspeed_cleanup
+openstack_lightspeed_cleanup: export NAMESPACE=${LIGHTSPEED_NAMESPACE}
+openstack_lightspeed_cleanup: ## deletes the OpenStack Lightspeed operator
+	$(eval $(call vars,$@,openstack-lightspeed))
+	oc delete -n ${NAMESPACE} csv -l operators.coreos.com/openstack-lightspeed-operator.${NAMESPACE} --ignore-not-found=true
+	oc delete -n ${NAMESPACE} subscription openstack-lightspeed-operator --ignore-not-found=true
+	oc delete -n openshift-marketplace catalogsource ${LIGHTSPEED_CATALOG} --ignore-not-found=true
+	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
 
 ##@ MANILA
 .PHONY: manila_prep
