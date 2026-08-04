@@ -299,3 +299,72 @@ make mirror_registry_cleanup
 **Tool requirements:**
 - `oc-mirror`: Install via `cd devsetup && make download_tools` (or `make download_tools DOWNLOAD_TOOLS_SELECTION=oc_mirror`)
 - `skopeo`: For digest inspection (installed via `make download_tools`)
+
+## OpenStack Lightspeed
+
+### Deploying OpenStack Lightspeed
+
+You can use `make openstack_lightspeed` to deploy the `lightspeed-operator` and then create a Lightspeed CR
+to deploy the Lightspeed service.
+
+```yaml
+apiVersion: lightspeed.openstack.org/v1beta1
+kind: OpenStackLightspeed
+metadata:
+  name: openstack-lightspeed
+  namespace: openstack-lightspeed
+spec:
+  llmEndpoint: your-llm-endpoint-url
+  llmEndpointType: openai
+  modelName: gemini-3.5-flash
+  tlsCACertBundle: openstack-lightspeed-cert
+  llmCredentials: openstack-lightspeed-secret
+```
+
+Edit the CR as appropriate and save it as `cr.yaml`. You also need to get your LLM API token and save it in `apitoken.yaml`.
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: openstack-lightspeed-secret
+  namespace: openstack-lightspeed
+type: Opaque
+stringData:
+  apitoken: your-secret-token
+```
+
+Some LLM endpoints require a TLS server certificate. If it is your case, save it in `cert.yaml`. If not, remove
+the `tlsCACertBundle` field from `cr.yaml`.
+
+```yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: openstack-lightspeed-cert
+  namespace: openstack-lightspeed
+data:
+  cert.crt: |
+    -----BEGIN CERTIFICATE-----
+    -----END CERTIFICATE-----
+```
+
+Running the following commands will deploy the operator and the service.
+
+```bash
+make openstack_lightspeed
+oc apply -f apitoken.yaml
+oc apply -f cert.yaml # if you need the certificate
+oc apply -f cr.yaml
+```
+
+### Removing OpenStack Lightspeed
+
+You can remove the Lightspeed service and the operator by running:
+
+```bash
+oc delete -f cr.yaml
+oc delete -f apitoken.yaml
+oc delete -f cert.yaml # if you applied this too
+make openstack_lightspeed_cleanup
+```
