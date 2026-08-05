@@ -76,10 +76,10 @@ if [ "${MIRROR_INSECURE}" = "true" ]; then
     fi
 fi
 
-# Get operator index digest
-OPERATOR_INDEX_DIGEST=$(skopeo inspect --tls-verify=false "docker://${OPERATOR_INDEX_IMAGE}" 2>/dev/null | jq -r '.Digest // empty')
-if [ -z "${OPERATOR_INDEX_DIGEST}" ]; then
-    OPERATOR_INDEX_DIGEST=$(skopeo inspect "docker://${OPERATOR_INDEX_IMAGE}" 2>/dev/null | jq -r '.Digest // empty')
+# Get operator index digest — try secure first, fall back to insecure only when MIRROR_INSECURE=true
+OPERATOR_INDEX_DIGEST=$(skopeo inspect "docker://${OPERATOR_INDEX_IMAGE}" 2>/dev/null | jq -r '.Digest // empty')
+if [ -z "${OPERATOR_INDEX_DIGEST}" ] && [ "${MIRROR_INSECURE}" = "true" ]; then
+    OPERATOR_INDEX_DIGEST=$(skopeo inspect --tls-verify=false "docker://${OPERATOR_INDEX_IMAGE}" 2>/dev/null | jq -r '.Digest // empty')
 fi
 
 # Create ImageSetConfiguration
@@ -147,12 +147,17 @@ oc wait --for=condition=Available deployment/apiserver -n openshift-apiserver --
 # --max-nested-paths 2: OpenShift internal registry only supports <namespace>/<name> format
 # --parallel-images 1: Reduce parallelism to avoid overwhelming CRC's API server
 # --retry-times/--retry-delay: Handle transient API server errors
-# --dest-tls-verify=false: oc-mirror runs locally and doesn't have cluster CA trust
-#   (secure mode configures CA for cluster image pulls, not for oc-mirror push)
+# --dest-tls-verify: When MIRROR_INSECURE=true (default for mirror_registry), TLS verification
+#   is disabled because oc-mirror doesn't have cluster CA trust. When MIRROR_INSECURE=false
+#   (mirror_registry_secure), TLS verification is enabled since the CA is configured.
+DEST_TLS_VERIFY_FLAG=""
+if [ "${MIRROR_INSECURE}" = "true" ]; then
+    DEST_TLS_VERIFY_FLAG="--dest-tls-verify=false"
+fi
 ${OC_MIRROR_BIN} --v2 \
     -c ${OUT_DIR}/imageset-config.yaml \
     --workspace file://${OUT_DIR}/oc-mirror-workspace \
-    --dest-tls-verify=false \
+    ${DEST_TLS_VERIFY_FLAG} \
     --max-nested-paths 2 \
     --parallel-images 1 \
     --retry-times 5 \
