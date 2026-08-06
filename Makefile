@@ -819,9 +819,17 @@ endif
 	oc patch deployment/baremetal-operator-controller-manager \
 	-n baremetal-operator-system --type='json' \
 	-p='[{"op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "${BMO_IMG}"}]'
-	## Hack to add required scc
-	oc adm policy add-scc-to-user privileged system:serviceaccount:baremetal-operator-system:baremetal-operator-controller-manager
-	oc adm policy add-scc-to-user privileged system:serviceaccount:baremetal-operator-system:default
+	## Upstream ironic Deployment does not set a serviceAccountName, so it
+	## falls back to the default SA. Create a dedicated SA and grant it
+	## privileged SCC (needed for hostNetwork, arbitrary UIDs and fsGroup).
+	oc create serviceaccount baremetal-operator-ironic -n baremetal-operator-system --dry-run=client -o yaml | oc apply -f -
+	oc patch deployment/baremetal-operator-ironic \
+	-n baremetal-operator-system --type='json' \
+	-p='[{"op": "add", "path": "/spec/template/spec/serviceAccountName", "value": "baremetal-operator-ironic"}]'
+	oc adm policy add-scc-to-user nonroot-v2 system:serviceaccount:baremetal-operator-system:baremetal-operator-controller-manager
+	oc adm policy add-scc-to-user privileged system:serviceaccount:baremetal-operator-system:baremetal-operator-ironic
+	oc rollout restart deployment/baremetal-operator-controller-manager -n baremetal-operator-system
+	oc rollout restart deployment/baremetal-operator-ironic -n baremetal-operator-system
 
 ##@ CRC BMO CLEANUP
 .PHONY: crc_bmo_cleanup
