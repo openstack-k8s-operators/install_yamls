@@ -63,7 +63,7 @@ set -x
 oc create namespace ${MIRROR_NAMESPACE} --dry-run=client -o yaml | oc apply -f -
 oc policy add-role-to-group system:image-puller system:serviceaccounts -n ${MIRROR_NAMESPACE} || true
 oc policy add-role-to-group system:image-puller system:authenticated -n ${MIRROR_NAMESPACE} || true
-oc policy add-role-to-group system:image-puller system:unauthenticated -n ${MIRROR_NAMESPACE} || true
+
 
 # Configure insecure registry if requested (default: true for mirror_registry, false for mirror_registry_secure)
 MIRROR_INSECURE=${MIRROR_INSECURE:-true}
