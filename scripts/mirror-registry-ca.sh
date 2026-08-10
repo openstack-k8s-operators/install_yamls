@@ -107,7 +107,7 @@ oc wait co/openshift-apiserver --for condition=Progressing=False --timeout=120s 
 # Test registry is responsive
 REGISTRY_TOKEN=$(oc whoami -t)
 for i in {1..30}; do
-    if curl -sk -o /dev/null -w "%{http_code}" \
+    if curl -s --cacert ${OUT_DIR}/ca.crt -o /dev/null -w "%{http_code}" \
         -H "Authorization: Bearer ${REGISTRY_TOKEN}" \
         "https://${MIRROR_REGISTRY_HOST}/v2/" | grep -q "200\|401"; then
         break

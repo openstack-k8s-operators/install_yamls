@@ -46,6 +46,12 @@ DISK_FILEPATH=${DISK_FILEPATH:-"${CRC_POOL}/${DISK_FILENAME}"}
 SSH_PUBLIC_KEY=${SSH_PUBLIC_KEY:-"${OUTPUT_BASEDIR}/ansibleee-ssh-key-id_rsa.pub"}
 IP_ADRESS_SUFFIX=$((100+${EDPM_COMPUTE_SUFFIX}))
 
+CURL_INSECURE=${CURL_INSECURE:-false}
+CURL_INSECURE_FLAG=""
+if [ "${CURL_INSECURE}" = "true" ]; then
+    CURL_INSECURE_FLAG="-k"
+fi
+
 if [ ! -f ${SSH_PUBLIC_KEY} ]; then
     echo "${SSH_PUBLIC_KEY} is missing. Run gen-ansibleee-ssh-key.sh"
     exit 1
@@ -232,7 +238,7 @@ for i in 0 1 2; do
     if [ ! -f ${DISK_FILEPATH} ]; then
         if [ ! -f ${CRC_POOL}/centos-9-stream-base.qcow2 ]; then
             pushd ${CRC_POOL}
-            curl -L -k ${CENTOS_9_STREAM_URL} -o centos-9-stream-base.qcow2
+            curl -L ${CURL_INSECURE_FLAG} ${CENTOS_9_STREAM_URL} -o centos-9-stream-base.qcow2
             popd
         fi
         qemu-img create -o backing_file=${CRC_POOL}/centos-9-stream-base.qcow2,backing_fmt=qcow2 -f qcow2 "${DISK_FILEPATH}" "${EDPM_COMPUTE_DISK_SIZE}G"

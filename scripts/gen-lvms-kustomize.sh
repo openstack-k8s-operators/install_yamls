@@ -59,6 +59,9 @@ function restart_crc {
     sudo virsh start crc
     status=""
     while [ -z $status ]; do
+        # -k is acceptable here: this is a liveness check against the local CRC
+        # OCP API which uses a self-signed certificate. No content is downloaded
+        # or acted upon — we only check whether the API is reachable.
         if curl -k https://"${OCP_API}":6443; then
             status="ok";
         else

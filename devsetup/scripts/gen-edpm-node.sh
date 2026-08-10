@@ -18,10 +18,16 @@ set -ex
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 source ${SCRIPTPATH}/gen-edpm-node-common.sh $@
 
+CURL_INSECURE=${CURL_INSECURE:-false}
+CURL_INSECURE_FLAG=""
+if [ "${CURL_INSECURE}" = "true" ]; then
+    CURL_INSECURE_FLAG="-k"
+fi
+
 if [ ! -f ${DISK_FILEPATH} ]; then
     if [ ! -f ${CRC_POOL}/${BASE_DISK_FILENAME} ]; then
         pushd ${CRC_POOL}
-        curl -L -k ${EDPM_IMAGE_URL} -o ${BASE_DISK_FILENAME}
+        curl -L ${CURL_INSECURE_FLAG} ${EDPM_IMAGE_URL} -o ${BASE_DISK_FILENAME}
         popd
     fi
     qemu-img create -o backing_file=${CRC_POOL}/${BASE_DISK_FILENAME},backing_fmt=qcow2 -f qcow2 "${DISK_FILEPATH}" "${EDPM_COMPUTE_DISK_SIZE}G"
