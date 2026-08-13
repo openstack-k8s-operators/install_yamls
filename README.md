@@ -100,7 +100,7 @@ CPUS=12 MEMORY=25600 DISK=100 make crc
 * login to OCP (the kubeadmin password is auto-generated in `.secrets.env`)
 ```bash
 eval $(crc oc-env)
-oc login -u kubeadmin -p $(grep KUBEADMIN_PWD .secrets.env | sed 's/.*?= *//' ) https://api.crc.testing:6443
+oc login -u kubeadmin -p $(grep KUBEADMIN_PWD ../.secrets.env | sed 's/.*?= *//' ) https://api.crc.testing:6443
 ```
 
 * attach libvirt default network to the crc (default IP 192.168.122.10). This network is used as a vlan trunk to isolate the networks using vlans.
