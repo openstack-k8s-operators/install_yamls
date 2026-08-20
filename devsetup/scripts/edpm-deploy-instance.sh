@@ -17,7 +17,7 @@ set -ex
 
 # Create Image
 IMG=cirros-0.5.2-x86_64-disk.img
-URL=http://download.cirros-cloud.net/0.5.2/$IMG
+URL=https://download.cirros-cloud.net/0.5.2/$IMG
 DISK_FORMAT=qcow2
 RAW=$IMG
 NUMBER_OF_INSTANCES=${1:-1}
