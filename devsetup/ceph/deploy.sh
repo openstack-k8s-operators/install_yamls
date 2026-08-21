@@ -94,7 +94,23 @@ get_ceph_cli() {
 
 distribute_keys() {
     local ip="$1"
-    ssh-copy-id -o StrictHostKeyChecking=no -i "$DEFAULT_CEPH_PUB" root@"$ip"
+    local temp_known_hosts="$HOME/.ssh/ceph_known_hosts.tmp"
+
+    # Collect host keys from the newly deployed target node
+    echo "Collecting SSH host keys from $ip..."
+    ssh-keyscan -H "$ip" >> "$temp_known_hosts" 2>/dev/null
+
+    if [ $? -ne 0 ]; then
+        echo "Warning: Failed to collect host keys from $ip"
+        rm -f "$temp_known_hosts"
+        return 1
+    fi
+
+    # Distribute keys using the temporary known_hosts file
+    ssh-copy-id -o UserKnownHostsFile="$temp_known_hosts" -i "$DEFAULT_CEPH_PUB" root@"$ip"
+
+    # Clean up temporary known_hosts file
+    rm -f "$temp_known_hosts"
 }
 
 # this function follows https://docs.ceph.com/en/latest/cephadm/host-management/
