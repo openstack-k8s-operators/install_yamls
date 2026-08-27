@@ -607,6 +607,11 @@ LIGHTSPEED_NAMESPACE       ?= openstack-lightspeed
 LIGHTSPEED_IMG             ?= quay.io/openstack-lightspeed/operator-catalog:latest
 LIGHTSPEED_CATALOG         ?= openstack-lightspeed-catalog
 LIGHTSPEED_CHANNEL         ?= alpha
+LIGHTSPEED_REPO            ?= https://github.com/openstack-k8s-operators/lightspeed-operator.git
+LIGHTSPEED_BRANCH          ?= ${OPENSTACK_K8S_BRANCH}
+LIGHTSPEED_COMMIT_HASH     ?=
+LIGHTSPEED_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/lightspeed-operator/kuttl-test.yaml
+LIGHTSPEED_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/lightspeed-operator/test/kuttl/tests
 
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
@@ -2185,6 +2190,27 @@ openstack_kuttl: openstack_kuttl_prep
 	make openstack_kuttl_run
 	make openstack_kuttl_cleanup
 
+.PHONY: openstack_lightspeed_kuttl_prep
+openstack_lightspeed_kuttl_prep: export REPO=${LIGHTSPEED_REPO}
+openstack_lightspeed_kuttl_prep: export BRANCH=${LIGHTSPEED_BRANCH}
+openstack_lightspeed_kuttl_prep: export HASH=${LIGHTSPEED_COMMIT_HASH}
+openstack_lightspeed_kuttl_prep: export OPERATOR_NAME=lightspeed
+openstack_lightspeed_kuttl_prep: ## clones lightspeed-operator so its kuttl-test.yaml/tests are available
+	$(eval $(call vars,$@,lightspeed))
+	mkdir -p ${OPERATOR_BASE_DIR}
+	bash scripts/clone-operator-repo.sh
+
+.PHONY: openstack_lightspeed_kuttl_run
+openstack_lightspeed_kuttl_run: ## runs kuttl tests for the lightspeed operator, assumes that everything needed for running the test was deployed beforehand.
+	LIGHTSPEED_KUTTL_DIR=${LIGHTSPEED_KUTTL_DIR} kubectl-kuttl test --config ${LIGHTSPEED_KUTTL_CONF} ${LIGHTSPEED_KUTTL_DIR} --namespace ${NAMESPACE} $(KUTTL_ARGS)
+
+.PHONY: openstack_lightspeed_kuttl
+openstack_lightspeed_kuttl: export NAMESPACE = ${LIGHTSPEED_NAMESPACE}
+openstack_lightspeed_kuttl: openstack_lightspeed openstack_lightspeed_kuttl_prep ## runs kuttl tests for the lightspeed operator. Installs OpenStack Lightspeed operator, runs kuttl tests, cleans up lightspeed afterward.
+	make openstack_lightspeed_kuttl_run
+	${CLEANUP_DIR_CMD} ${OPERATOR_BASE_DIR}/lightspeed-operator
+	make openstack_lightspeed_cleanup
+
 ##@ CHAINSAW tests
 
 .PHONY: mariadb_chainsaw_run
@@ -2707,11 +2733,7 @@ openstack_lightspeed: export NAMESPACE=${LIGHTSPEED_NAMESPACE}
 openstack_lightspeed: export IMAGE=${LIGHTSPEED_IMG}
 openstack_lightspeed: export CATALOG=${LIGHTSPEED_CATALOG}
 openstack_lightspeed: export CHANNEL=${LIGHTSPEED_CHANNEL}
-openstack_lightspeed: ## installs the OpenStack Lightspeed operator. Requires openstack-operator to be running.
-	@if ! oc get csv -l operators.coreos.com/openstack-operator.openstack-operators -n ${OPERATOR_NAMESPACE} 2>/dev/null | grep -q Succeeded; then \
-		echo "ERROR: openstack-operator is not running in ${OPERATOR_NAMESPACE}. Please run 'make openstack' first."; \
-		exit 1; \
-	fi
+openstack_lightspeed: ## installs the OpenStack Lightspeed operator.
 	$(eval $(call vars,$@,openstack-lightspeed))
 	bash scripts/gen-namespace.sh
 	oc apply -f ${OUT}/${NAMESPACE}/namespace.yaml
