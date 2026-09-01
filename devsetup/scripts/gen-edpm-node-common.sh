@@ -111,9 +111,9 @@ fi
 SSH_PUBLIC_KEY=${SSH_PUBLIC_KEY:-"${OUTPUT_DIR}/ansibleee-ssh-key-id_rsa.pub"}
 MAC_ADDRESS=${MAC_ADDRESS:-"$(echo -n 52:54:00; dd bs=1 count=3 if=/dev/random 2>/dev/null | hexdump -v -e '/1 "-%02X"' | tr '-' ':')"}
 if [ "${EDPM_SERVER_ROLE}" == "networker" ]; then
-    IP_ADRESS_SUFFIX=$((200+${EDPM_COMPUTE_SUFFIX}))
+    IP_ADDRESS_SUFFIX=$((200+${EDPM_COMPUTE_SUFFIX}))
 else
-    IP_ADRESS_SUFFIX=$((100+${EDPM_COMPUTE_SUFFIX}))
+    IP_ADDRESS_SUFFIX=$((100+${EDPM_COMPUTE_SUFFIX}))
 fi
 
 if [ ! -f ${SSH_PUBLIC_KEY} ]; then
@@ -284,7 +284,7 @@ if [ "$SWIFT_REPLICATED" = "true" ]; then
 fi
 
 # Set network variables for firstboot script
-IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADRESS_SUFFIX}"}
+IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADDRESS_SUFFIX}"}
 NETDEV=eth0
 NETSCRIPT="/etc/sysconfig/network-scripts/ifcfg-${NETDEV}"
 GATEWAY=${GATEWAY:-"${EDPM_COMPUTE_NETWORK_IP}"}
