@@ -15,7 +15,7 @@ spec:
     - hosts: all
       strategy: linear
       tasks:
-        - name: Enable podified-repos
+        - name: Install repo-setup tool
           become: true
           ansible.builtin.shell: |
             set -euxo pipefail
@@ -24,6 +24,23 @@ spec:
             pushd repo-setup-main
             python3 -m venv ./venv
             PBR_VERSION=0.0.0 ./venv/bin/pip install ./
-            ./venv/bin/repo-setup current-podified -b antelope
-            popd
-            rm -rf repo-setup-main
+
+        - name: Enable podified-repos for CentOS Stream 9
+          become: true
+          when: ansible_distribution_major_version | int != 10
+          ansible.builtin.shell: |
+            set -euxo pipefail
+            /var/tmp/repo-setup-main/venv/bin/repo-setup current-podified -b antelope
+
+        - name: Enable podified-repos for CentOS Stream 10
+          become: true
+          when: ansible_distribution_major_version | int == 10
+          ansible.builtin.shell: |
+            set -euxo pipefail
+            /var/tmp/repo-setup-main/venv/bin/repo-setup current -b master
+
+        - name: Clean up repo-setup source
+          become: true
+          ansible.builtin.file:
+            path: /var/tmp/repo-setup-main
+            state: absent
