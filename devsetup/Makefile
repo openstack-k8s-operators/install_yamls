@@ -1,7 +1,7 @@
 -include ../.secrets.env
 
-CRC_VERSION ?= latest
-CRC_URL ?= 'https://developers.redhat.com/content-gateway/rest/mirror/pub/openshift-v4/clients/crc/$(CRC_VERSION)/crc-linux-amd64.tar.xz'
+CRC_VERSION ?= 2.63.0
+CRC_URL ?= 'https://developers.redhat.com/content-gateway/file/pub/cgw/crc/$(CRC_VERSION)/crc-linux-amd64.tar.xz'
 PULL_SECRET  ?= ${PWD}/pull-secret.txt
 TIMEOUT                  ?= 300s
 DOWNLOAD_TOOLS_SELECTION ?= all
