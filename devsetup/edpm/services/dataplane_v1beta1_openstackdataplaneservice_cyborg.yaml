@@ -1,0 +1,68 @@
+---
+apiVersion: dataplane.openstack.org/v1beta1
+kind: OpenStackDataPlaneService
+metadata:
+  labels:
+    app.kubernetes.io/name: openstackdataplaneservice
+    app.kubernetes.io/instance: openstackdataplaneservice-cyborg
+    app.kubernetes.io/part-of: openstack-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: install_yamls
+  name: cyborg
+spec:
+  label: cyborg
+  playbookContents: |
+    - hosts: all
+      strategy: linear
+      tasks:
+        - name: Install required dependencies for Cyborg
+          become: true
+          ansible.builtin.dnf:
+            name:
+              - "kernel-devel-{{ ansible_kernel }}"
+              - gcc
+              - make
+              - pciutils
+            state: present
+
+        - name: Clone Cyborg repository
+          ansible.builtin.git:
+            repo: https://github.com/openstack/cyborg
+            dest: /var/tmp/cyborg
+            version: master
+
+        - name: Check kernel configuration compatibility
+          become: true
+          ansible.builtin.shell: |
+            set -euxo pipefail
+            cd /var/tmp/cyborg
+            bash tools/check-kernel-config.sh
+
+        - name: Build PCI simulator modules
+          ansible.builtin.shell: |
+            set -euxo pipefail
+            cd /var/tmp/cyborg
+            make -C pci-sim modules
+
+        - name: Load vfio-pci module
+          become: true
+          ansible.builtin.modprobe:
+            name: vfio-pci
+            state: present
+
+        - name: Load fake PCI SRIOV module
+          become: true
+          ansible.builtin.shell: |
+            set -euxo pipefail
+            cd /var/tmp/cyborg
+            insmod pci-sim/fake_pci_sriov.ko num_pfs=2
+
+        - name: Verify PCI devices with lspci
+          ansible.builtin.shell: |
+            lspci -d 1d55:1000
+          register: lspci_output
+          ignore_errors: true
+
+        - name: Show lspci output
+          ansible.builtin.debug:
+            msg: "{{ lspci_output.stdout_lines }}"

@@ -450,6 +450,7 @@ DATAPLANE_TLS_ENABLED                            ?= true
 DATAPLANE_REPO_SETUP_REPO                        ?=current-podified
 DATAPLANE_REPO_SETUP_BRANCH                      ?=antelope
 DATAPLANE_NOVA_NFS_PATH                          ?=
+CYBORG_PCI_SIM                                   ?=
 
 # Manila
 MANILA_IMG              ?= quay.io/openstack-k8s-operators/manila-operator-index:${OPENSTACK_K8S_TAG}
@@ -1066,7 +1067,10 @@ edpm_deploy_prep: edpm_deploy_cleanup openstack_repo ## prepares the CR to insta
 ifeq ($(GENERATE_SSH_KEYS), true)
 	make edpm_deploy_generate_keys
 endif
-	sed -e "s/repo-setup current-podified -b antelope/repo-setup ${DATAPLANE_REPO_SETUP_REPO} -b ${DATAPLANE_REPO_SETUP_BRANCH}/" devsetup/edpm/services/*.yaml | oc apply -f -
+	sed -e "s/repo-setup current-podified -b antelope/repo-setup ${DATAPLANE_REPO_SETUP_REPO} -b ${DATAPLANE_REPO_SETUP_BRANCH}/" devsetup/edpm/services/dataplane_v1beta1_openstackdataplaneservice_reposetup.yaml | oc apply -f -
+ifdef CYBORG_PCI_SIM
+	oc apply -f devsetup/edpm/services/dataplane_v1beta1_openstackdataplaneservice_cyborg.yaml
+endif
 
 .PHONY: edpm_deploy_cleanup
 edpm_deploy_cleanup: namespace ## cleans up the edpm instance, Does not affect the operator.
