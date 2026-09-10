@@ -131,6 +131,20 @@ if [ "${KIND}" == "Galera" ]; then
 EOF
 fi
 
+# RabbitMq no longer exposes a top-level spec.storageClass; the storage class
+# now lives under spec.persistence.storageClassName. The generic
+# /spec/storageClass patch above is pruned by the API server for RabbitMq, so
+# without pinning it here the PVC silently falls back to the cluster default
+# StorageClass (e.g. Cinder standard-csi) instead of ${STORAGE_CLASS}.
+if [ "${KIND}" == "RabbitMq" ]; then
+   cat <<EOF>>kustomization.yaml
+    - op: add
+      path: /spec/persistence
+      value:
+        storageClassName: ${STORAGE_CLASS}
+EOF
+fi
+
 if [ "${KIND}" == "NetConfig" ]; then
 
     if [ -z "${IPV4_ENABLED}" ]; then
