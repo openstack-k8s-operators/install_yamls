@@ -142,6 +142,7 @@ if [ "${KIND}" == "RabbitMq" ]; then
       path: /spec/persistence
       value:
         storageClassName: ${STORAGE_CLASS}
+        storage: ${STORAGE_REQUEST}
 EOF
 fi
 
