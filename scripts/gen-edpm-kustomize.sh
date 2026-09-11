@@ -18,6 +18,7 @@ set -ex
 # expect that the common.sh is in the same dir as the calling script
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 . ${SCRIPTPATH}/common.sh --source-only
+. ${SCRIPTPATH}/gen-edpm-custom-services.sh --source-only
 
 if [ -z "$NAMESPACE" ]; then
     echo "Please set NAMESPACE"; exit 1
@@ -95,10 +96,18 @@ cat <<EOF >>kustomization.yaml
 EOF
 fi
 
+add_repo_setup_service
+
+if [ -n "$CYBORG_PCI_SIM" ]; then
 cat <<EOF >>kustomization.yaml
     - op: add
-      path: /spec/services/0
-      value: repo-setup
+      path: /spec/services/${SERVICE_INDEX}
+      value: cyborg
+EOF
+    SERVICE_INDEX=$((SERVICE_INDEX + 1))
+fi
+
+cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/timesync_ntp_servers
       value:
