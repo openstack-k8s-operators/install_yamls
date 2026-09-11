@@ -45,8 +45,9 @@ EDPM_COMPUTE_NETWORK_TYPE=${EDPM_COMPUTE_NETWORK_TYPE:-network}
 EDPM_COMPUTE_ADDITIONAL_NETWORKS=${2:-'[]'}
 EDPM_COMPUTE_NETWORK_IP=$(virsh net-dumpxml ${EDPM_COMPUTE_NETWORK} | xmllint --xpath 'string(/network/ip/@address)' -)
 DATAPLANE_DNS_SERVER=${DATAPLANE_DNS_SERVER:-${EDPM_COMPUTE_NETWORK_IP}}
-CENTOS_9_STREAM_URL=${CENTOS_9_STREAM_URL:-"https://cloud.centos.org/centos/9-stream/x86_64/images/CentOS-Stream-GenericCloud-9-latest.x86_64.qcow2"}
-EDPM_IMAGE_URL=${EDPM_IMAGE_URL:-"${CENTOS_9_STREAM_URL}"}
+CENTOS_STREAM_VERSION=${CENTOS_STREAM_VERSION:-"10"}
+CENTOS_STREAM_URL=${CENTOS_STREAM_URL:-"https://cloud.centos.org/centos/${CENTOS_STREAM_VERSION}-stream/x86_64/images/CentOS-Stream-GenericCloud-${CENTOS_STREAM_VERSION}-latest.x86_64.qcow2"}
+EDPM_IMAGE_URL=${EDPM_IMAGE_URL:-"${CENTOS_STREAM_URL}"}
 BASE_DISK_FILENAME=${BASE_DISK_FILENAME:-"$(basename ${EDPM_IMAGE_URL})"}
 
 DISK_FILENAME=${DISK_FILENAME:-"edpm-${EDPM_SERVER_ROLE}-${EDPM_COMPUTE_SUFFIX}.qcow2"}
@@ -285,8 +286,12 @@ fi
 
 # Set network variables for firstboot script
 IP=${IP:-"${EDPM_COMPUTE_NETWORK_IP%.*}.${IP_ADDRESS_SUFFIX}"}
-NETDEV=eth0
-NETSCRIPT="/etc/sysconfig/network-scripts/ifcfg-${NETDEV}"
+if [ "${CENTOS_STREAM_VERSION}" = "9" ]; then
+    _netdev=eth0
+fi
+NETDEV=${EDPM_COMPUTE_NETDEV:-"${_netdev:-"enp2s0"}"}
+NETSCRIPTDIR="/etc/sysconfig/network-scripts"
+NETSCRIPT="${NETSCRIPTDIR}/ifcfg-${NETDEV}"
 GATEWAY=${GATEWAY:-"${EDPM_COMPUTE_NETWORK_IP}"}
 DNS=${DATAPLANE_DNS_SERVER}
 PREFIX=24
@@ -316,7 +321,7 @@ if [ ! -e /home/cloud-admin/.ssh/authorized_keys ]; then
 fi
 
 # Set network for current session
-nmcli device set eth0 managed yes
+nmcli device set ${NETDEV} managed yes
 n=0
 retries=6
 while true; do
@@ -328,13 +333,15 @@ while true; do
   fi
   sleep 5
 done
-# Set network to survive reboots
-echo IPADDR=$IP >> $NETSCRIPT
-echo PREFIX=$PREFIX >> $NETSCRIPT
-echo GATEWAY=$GATEWAY >> $NETSCRIPT
-echo DNS1=$DNS >> $NETSCRIPT
-sed -i s/dhcp/none/g $NETSCRIPT
-sed -i /PERSISTENT_DHCLIENT/d $NETSCRIPT
+if [ -d ${NETSCRIPTDIR} ]; then
+  # Set network to survive reboots
+  echo IPADDR=$IP >> $NETSCRIPT
+  echo PREFIX=$PREFIX >> $NETSCRIPT
+  echo GATEWAY=$GATEWAY >> $NETSCRIPT
+  echo DNS1=$DNS >> $NETSCRIPT
+  sed -i s/dhcp/none/g $NETSCRIPT
+  sed -i /PERSISTENT_DHCLIENT/d $NETSCRIPT
+fi
 
 # Remove NVMe artifacts that are auto-generated when nvme-cli RPM is installed
 rm -f /etc/nvme/hostid /etc/nvme/hostnqn
