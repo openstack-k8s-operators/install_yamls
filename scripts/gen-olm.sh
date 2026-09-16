@@ -61,6 +61,8 @@ spec:
   sourceType: grpc
 EOF_CAT
 
+INSTALLPLAN_APPROVAL=${INSTALLPLAN_APPROVAL:-"Automatic"}
+
 cat > ${OPERATOR_DIR}/subscription.yaml <<EOF_CAT
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
@@ -72,4 +74,10 @@ spec:
   channel: ${OPERATOR_CHANNEL}
   source: ${OPERATOR_SOURCE}
   sourceNamespace: ${OPERATOR_SOURCE_NAMESPACE}
+  installPlanApproval: ${INSTALLPLAN_APPROVAL}
 EOF_CAT
+# Optional: pin the first CSV OLM installs so upgrades to newer bundles in the
+# channel require a manual approval step (set STARTING_CSV + INSTALLPLAN_APPROVAL=Manual).
+if [ -n "${STARTING_CSV}" ]; then
+    echo "  startingCSV: ${STARTING_CSV}" >> ${OPERATOR_DIR}/subscription.yaml
+fi
