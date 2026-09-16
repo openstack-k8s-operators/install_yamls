@@ -903,6 +903,11 @@ openstack_wait: ## waits openstack CSV to succeed.
 	bash -c '(oc get subscription -n openstack-operators openstack-operator || make openstack) || true'
 	timeout $(TIMEOUT) bash -c 'until $$(oc get csv -l operators.coreos.com/openstack-operator.openstack-operators -n ${OPERATOR_NAMESPACE} | grep -q Succeeded); do sleep 1; done'
 
+.PHONY: openstack_approve_installplan
+openstack_approve_installplan: ## approves the manual InstallPlan for the CSV and waits for it to succeed. Requires APPROVE_CSV (e.g. APPROVE_CSV=openstack-operator.v19.0.0).
+	$(eval $(call vars,$@,openstack))
+	bash scripts/approve-installplan.sh
+
 
 # creates the new initialization resource for our operators
 .PHONY: openstack_init
