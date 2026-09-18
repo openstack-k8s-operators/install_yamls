@@ -227,6 +227,7 @@ crc_cleanup: ## Destroys the CRC env, but does NOT clear ( --clear-cache ) the c
 	crc cleanup
 	sudo ${CLEANUP_DIR_CMD} /etc/pki/ca-trust/source/anchors/crc-router-ca.pem
 	sudo update-ca-trust
+	$(MAKE) -C .. secrets_clean
 
 .PHONY: crc_scrub
 crc_scrub:
