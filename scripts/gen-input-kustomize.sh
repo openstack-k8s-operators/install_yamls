@@ -72,6 +72,7 @@ secretGenerator:
 - name: ${SECRET}
   literals:
   - AdminPassword=${ADMIN_PASSWORD}
+  - AetosPassword=${AETOS_PASSWORD}
   - AodhPassword=${AODH_PASSWORD}
   - BarbicanPassword=${BARBICAN_PASSWORD}
   - BarbicanSimpleCryptoKEK=${BARBICAN_SIMPLE_CRYPTO_ENCRYPTION_KEY}

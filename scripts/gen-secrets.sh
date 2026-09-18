@@ -47,6 +47,7 @@ cat > "${SECRETS_FILE}" <<EOF
 
 # OpenStack service passwords (osp-secret fields)
 ADMIN_PASSWORD ?= $(gen_password)
+AETOS_PASSWORD ?= $(gen_password)
 AODH_PASSWORD ?= $(gen_password)
 BARBICAN_PASSWORD ?= $(gen_password)
 CEILOMETER_PASSWORD ?= $(gen_password)
