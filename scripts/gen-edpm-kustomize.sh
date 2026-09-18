@@ -54,6 +54,9 @@ patches:
     - op: replace
       path: /metadata/name
       value: ${DEPLOYMENT_NAME:-"edpm-deployment"}
+    - op: add
+      path: /spec/useParallelExecution
+      value: ${EDPM_USE_PARALLEL_EXECUTION:-false}
 - target:
     kind: ${KIND}
   patch: |-
