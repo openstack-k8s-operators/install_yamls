@@ -447,6 +447,7 @@ GENERATE_SSH_KEYS				 ?= true
 DATAPLANE_EXTRA_NOVA_CONFIG_FILE                 ?= /dev/null
 DATAPLANE_SERVER_ROLE                            ?= compute
 DATAPLANE_TLS_ENABLED                            ?= true
+DATAPLANE_USE_PARALLEL_EXECUTION                 ?= false
 DATAPLANE_REPO_SETUP_REPO                        ?=current-podified
 DATAPLANE_REPO_SETUP_BRANCH                      ?=antelope
 DATAPLANE_NOVA_NFS_PATH                          ?=
@@ -1053,6 +1054,7 @@ edpm_deploy_prep: export REPO=${OPENSTACK_REPO}
 edpm_deploy_prep: export BRANCH=${OPENSTACK_BRANCH}
 edpm_deploy_prep: export HASH=${OPENSTACK_COMMIT_HASH}
 edpm_deploy_prep: export EDPM_TLS_ENABLED=${DATAPLANE_TLS_ENABLED}
+edpm_deploy_prep: export EDPM_USE_PARALLEL_EXECUTION=${DATAPLANE_USE_PARALLEL_EXECUTION}
 edpm_deploy_prep: export EDPM_NOVA_NFS_PATH=${DATAPLANE_NOVA_NFS_PATH}
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
@@ -1112,6 +1114,7 @@ edpm_deploy_baremetal_prep: export DATAPLANE_KUSTOMIZE_SCENARIO=baremetal
 edpm_deploy_baremetal_prep: export EDPM_ROOT_PASSWORD=${BM_ROOT_PASSWORD}
 edpm_deploy_baremetal_prep: export EDPM_EXTRA_NOVA_CONFIG_FILE=${DEPLOY_DIR}/25-nova-extra.conf
 edpm_deploy_baremetal_prep: export EDPM_SERVER_ROLE=compute
+edpm_deploy_baremetal_prep: export EDPM_USE_PARALLEL_EXECUTION=${DATAPLANE_USE_PARALLEL_EXECUTION}
 edpm_deploy_baremetal_prep: edpm_deploy_cleanup openstack_repo ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${DEPLOY_DIR}
@@ -1178,6 +1181,7 @@ edpm_deploy_networker_prep: export EDPM_CONTAINER_PREFIX=${DATAPLANE_CONTAINER_P
 edpm_deploy_networker_prep: export EDPM_DEPLOY_DIR=${DEPLOY_DIR_EDPM_NETWORKER}
 edpm_deploy_networker_prep: export EDPM_IP_ADDRESS_OFFSET=200
 edpm_deploy_networker_prep: export EDPM_SERVER_ROLE=networker
+edpm_deploy_networker_prep: export EDPM_USE_PARALLEL_EXECUTION=${DATAPLANE_USE_PARALLEL_EXECUTION}
 edpm_deploy_networker_prep: export REPO=${OPENSTACK_REPO}
 edpm_deploy_networker_prep: export BRANCH=${OPENSTACK_BRANCH}
 edpm_deploy_networker_prep: export HASH=${OPENSTACK_COMMIT_HASH}
