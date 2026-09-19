@@ -9,10 +9,6 @@ fi
 MAC_ADDRESS=$(virsh --connect=qemu:///system dumpxml $INSTANCE_NAME | xmllint --xpath "string(/domain/devices/interface/source[@network=\"$NETWORK_NAME\"]/../mac/@address)" -)
 if [ -n "${MAC_ADDRESS}" ]; then
     virsh --connect=qemu:///system detach-interface $INSTANCE_NAME network --mac $MAC_ADDRESS
-    # First try to remove the DHCP static IP entry by MAC, if it fails try by hostname
-    if ! virsh --connect=qemu:///system net-update $NETWORK_NAME delete ip-dhcp-host "<host mac='$MAC_ADDRESS'/>" --config --live; then
-        virsh --connect=qemu:///system net-update $NETWORK_NAME delete ip-dhcp-host "<host name='$INSTANCE_NAME'/>" --config --live
-    fi
     sleep 5
 fi
 
