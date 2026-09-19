@@ -95,10 +95,39 @@ cat <<EOF >>kustomization.yaml
 EOF
 fi
 
+if [ -z "$EDPM_SKIP_REPO_SETUP" ]; then
 cat <<EOF >>kustomization.yaml
     - op: add
       path: /spec/services/0
       value: repo-setup
+EOF
+fi
+
+if [ -n "$EDPM_REGISTRY_URL" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/nodeTemplate/ansible/ansibleVars/registry_url
+      value: ${EDPM_REGISTRY_URL}
+EOF
+fi
+
+if [ -n "$EDPM_CONTAINER_PREFIX" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/nodeTemplate/ansible/ansibleVars/image_prefix
+      value: ${EDPM_CONTAINER_PREFIX}
+EOF
+fi
+
+if [ -n "$EDPM_CONTAINER_TAG" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: replace
+      path: /spec/nodeTemplate/ansible/ansibleVars/image_tag
+      value: ${EDPM_CONTAINER_TAG}
+EOF
+fi
+
+cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/timesync_ntp_servers
       value:
@@ -106,15 +135,6 @@ cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/neutron_public_interface_name
       value: ${EDPM_NETWORK_INTERFACE_NAME}
-    - op: replace
-      path: /spec/nodeTemplate/ansible/ansibleVars/registry_url
-      value: ${EDPM_REGISTRY_URL}
-    - op: replace
-      path: /spec/nodeTemplate/ansible/ansibleVars/image_prefix
-      value: ${EDPM_CONTAINER_PREFIX}
-    - op: replace
-      path: /spec/nodeTemplate/ansible/ansibleVars/image_tag
-      value: ${EDPM_CONTAINER_TAG}
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/edpm_sshd_allowed_ranges
       value: ${EDPM_SSHD_ALLOWED_RANGES}
@@ -221,5 +241,9 @@ fi
 . ${SCRIPTPATH}/gen-nova-custom-dataplane-service.sh
 
 kustomization_add_resources
+
+if [ -n "${EDPM_POST_GEN_SCRIPT}" ]; then
+    . "${EDPM_POST_GEN_SCRIPT}"
+fi
 
 popd
