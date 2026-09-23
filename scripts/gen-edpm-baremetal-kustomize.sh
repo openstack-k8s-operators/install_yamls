@@ -147,6 +147,15 @@ EOF
     done
 fi
 
+cat <<EOF >>kustomization.yaml
+- target:
+    kind: OpenStackDataPlaneDeployment
+  patch: |-
+    - op: add
+      path: /spec/useParallelExecution
+      value: ${EDPM_USE_PARALLEL_EXECUTION:-false}
+EOF
+
 . ${SCRIPTPATH}/gen-nova-custom-dataplane-service.sh
 
 kustomization_add_resources
