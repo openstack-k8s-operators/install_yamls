@@ -152,6 +152,11 @@ storage:     172.18.0.80-172.18.0.90
 tenant:      172.19.0.80-172.19.0.90
 ```
 
+* (optional) Use the s2i images to get opendev/master content for the openstack  services:
+```bash
+make openstack_versions_master
+```
+
 * (optional) deploy ceph container using storage network
 ```bash
 HOSTNETWORK=false NETWORKS_ANNOTATION=\'[\{\"name\":\"storage\",\"namespace\":\"openstack\"\}]\' MON_IP=172.18.0.30 make ceph TIMEOUT=90
