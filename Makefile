@@ -56,7 +56,7 @@ else
 DBSERVICE_CONTAINER = mariadb-openstack
 endif
 OPENSTACK_K8S_BRANCH     ?= main
-OPENSTACK_K8S_TAG        ?= 18-stable-latest
+OPENSTACK_K8S_TAG        ?= 18.0-fr7-latest
 
 # Use Red Hat operators from OpenShift Marketplace
 REDHAT_OPERATORS		 ?= false
