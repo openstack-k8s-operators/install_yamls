@@ -314,11 +314,14 @@ metadata:
   name: openstack-lightspeed
   namespace: openstack-lightspeed
 spec:
-  llmEndpoint: your-llm-endpoint-url
-  llmEndpointType: openai
-  modelName: gemini-3.5-flash
+  defaultModel: my-model
+  models:
+    - name: my-model
+      llmEndpoint: https://your-llm-endpoint-url/v1
+      llmEndpointType: openai
+      modelName: gemini-3.5-flash
+      llmCredentials: openstack-lightspeed-secret
   tlsCACertBundle: openstack-lightspeed-cert
-  llmCredentials: openstack-lightspeed-secret
 ```
 
 Edit the CR as appropriate and save it as `cr.yaml`. You also need to get your LLM API token and save it in `apitoken.yaml`.
