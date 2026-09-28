@@ -7,6 +7,7 @@ REGISTRY=${REGISTRY:-quay.io/openstack-s2i-containers}
 TAG=${TAG:-master-latest}
 NAMESPACE=${NAMESPACE:-openstack}
 OUTPUT_FORMAT=${OUTPUT_FORMAT:-patch}  # "patch" or "kustomize"
+OUTPUT_FILE=${OUTPUT_FILE:-$PWD/${OUTPUT_FORMAT}-openstack-versions-${TAG}.yaml}
 
 # Split REGISTRY into URL and ORG components
 # If REGISTRY_URL or REGISTRY_ORG are explicitly set, use them; otherwise derive from REGISTRY
@@ -114,22 +115,6 @@ if [ ${success_count} -eq 0 ]; then
     exit 1
 fi
 
-# Now generate the OpenStackVersion patch YAML
-PATCH_FILE="${PATCH_FILE:-$PWD/patch-s2i-openstack-versions.yaml}"
-echo "Generating OpenStackVersion patch file..."
-echo "---" > "$PATCH_FILE"
-echo "# OpenStackVersion customContainerImages patch" >> "$PATCH_FILE"
-echo "# Generated on $(date)" >> "$PATCH_FILE"
-echo "# Using images from ${REGISTRY} with tag ${TAG}" >> "$PATCH_FILE"
-echo "# Successfully fetched: ${success_count}, Failed: ${failed_count}" >> "$PATCH_FILE"
-echo "apiVersion: core.openstack.org/v1beta1" >> "$PATCH_FILE"
-echo "kind: OpenStackVersion" >> "$PATCH_FILE"
-echo "metadata:" >> "$PATCH_FILE"
-echo "  name: openstack-galera-network-isolation" >> "$PATCH_FILE"
-echo "  namespace: ${NAMESPACE}" >> "$PATCH_FILE"
-echo "spec:" >> "$PATCH_FILE"
-echo "  customContainerImages:" >> "$PATCH_FILE"
-
 # Build a sorted unique list of all field names
 declare -A all_fields
 for img in "${!IMAGE_DIGESTS[@]}"; do
@@ -139,18 +124,55 @@ for img in "${!IMAGE_DIGESTS[@]}"; do
     done
 done
 
-# Sort and output the fields
-for field in $(echo "${!all_fields[@]}" | tr ' ' '\n' | sort); do
-    echo "    ${field}: ${all_fields[$field]}" >> "$PATCH_FILE"
-done
+# Generate the patch content
+PATCH_CONTENT=$(cat <<EOF
+---
+# OpenStackVersion customContainerImages patch
+# Generated on $(date)
+# Using images from ${REGISTRY_URL}/${REGISTRY_ORG} with tag ${TAG}
+# Successfully fetched: ${success_count}, Failed: ${failed_count}
+apiVersion: core.openstack.org/v1beta1
+kind: OpenStackVersion
+metadata:
+  name: openstack-galera-network-isolation
+  namespace: ${NAMESPACE}
+spec:
+  customContainerImages:
+$(for field in $(echo "${!all_fields[@]}" | tr ' ' '\n' | sort); do
+    echo "    ${field}: ${all_fields[$field]}"
+done)
+EOF
+)
+
+# Write output based on format
+if [ "$OUTPUT_FORMAT" = "kustomize" ]; then
+    echo "Generating kustomization file..."
+    {
+        echo "apiVersion: kustomize.config.k8s.io/v1beta1"
+        echo "kind: Kustomization"
+        echo ""
+        echo "patchesStrategicMerge:"
+        echo "  - |-"
+        # Indent the patch content to match the kustomize inline patch format (4 spaces)
+        echo "$PATCH_CONTENT" | sed 's/^/    /'
+    } > "$OUTPUT_FILE"
+else
+    echo "Generating OpenStackVersion patch file..."
+    echo "$PATCH_CONTENT" > "$OUTPUT_FILE"
+fi
 
 echo ""
-echo "OpenStackVersion patch file created: $PATCH_FILE"
-echo "  - Total fields: ${#all_fields[@]}"
-# echo ""
-# echo "To apply this patch, copy it to your deployment directory and run:"
-# echo "  cp $PATCH_FILE out/openstack/cr/"
-# echo "  make openstack_deploy"
-# echo "OR"
-echo "  oc apply -f $PATCH_FILE"
-echo "  make openstack_deploy"
+if [ "$OUTPUT_FORMAT" = "kustomize" ]; then
+    echo "Kustomization file created: $OUTPUT_FILE"
+    echo "  - Total fields: ${#all_fields[@]}"
+    echo ""
+    echo "To use this kustomization:"
+    echo "  Place it in your kustomize directory and reference it in your main kustomization.yaml"
+else
+    echo "OpenStackVersion patch file created: $OUTPUT_FILE"
+    echo "  - Total fields: ${#all_fields[@]}"
+    echo ""
+    echo "To apply this patch:"
+    echo "  oc apply -f $OUTPUT_FILE"
+    echo "  make openstack_deploy"
+fi
