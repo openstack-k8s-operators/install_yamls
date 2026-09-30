@@ -3,7 +3,7 @@
 kuttl_version: 0.20.0
 
 # Released version of the opm package
-opm_version: v1.72.0
+opm_version: v1.74.0
 
 # oc-mirror version (OCP version to download from)
 oc_mirror_version: "4.22.5"
