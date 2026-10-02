@@ -926,6 +926,9 @@ openstack_init: openstack_wait
 	timeout ${TIMEOUT} bash -c "while ! (oc get openstack/openstack -n ${OPERATOR_NAMESPACE}); do sleep 1; done"
 	oc wait openstack/openstack -n ${OPERATOR_NAMESPACE} --for condition=Ready --timeout=${TIMEOUT}
 	timeout ${TIMEOUT} bash -c "while ! (oc get services -n ${OPERATOR_NAMESPACE} | grep -E '^(openstack|openstack-baremetal|infra)-operator-webhook-service' | wc -l | grep -q -e 3); do sleep 5; done"
+	# Wait for webhook certificate secrets (created by cert-manager) to exist before proceeding
+	# Operators mount these as volumes and fail to start if they don't exist yet
+	timeout ${TIMEOUT} bash -c "until oc get secret webhook-server-cert openstack-baremetal-operator-webhook-server-cert infra-operator-webhook-server-cert -n ${OPERATOR_NAMESPACE} &>/dev/null; do sleep 5; done"
 
 .PHONY: openstack_cleanup
 openstack_cleanup: operator_namespace## deletes the operator, but does not cleanup the service resources
