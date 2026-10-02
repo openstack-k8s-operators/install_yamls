@@ -615,6 +615,16 @@ LIGHTSPEED_COMMIT_HASH     ?=
 LIGHTSPEED_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/lightspeed-operator/kuttl-test.yaml
 LIGHTSPEED_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/lightspeed-operator/test/kuttl/tests
 
+# OpenStack Assistant
+OPENSTACK_ASSISTANT_NAME                 ?= openstack-assistant
+OPENSTACK_ASSISTANT_IMAGE                ?= quay.io/openstack-s2i-containers/openstack-goose:master-latest
+OPENSTACK_ASSISTANT_MODEL                ?=
+OPENSTACK_ASSISTANT_CLIENT               ?= openstackclient
+OPENSTACK_ASSISTANT_PVC                  ?= ${OPENSTACK_ASSISTANT_NAME}-home
+OPENSTACK_ASSISTANT_PVC_SIZE             ?= 1Gi
+OPENSTACK_ASSISTANT_PVC_STORAGE_CLASS    ?=
+OPENSTACK_ASSISTANT_LIGHTSPEED_URL       ?=
+
 # target vars for generic operator install info 1: target name , 2: operator name
 define vars
 ${1}: export NAMESPACE=${NAMESPACE}
@@ -2765,6 +2775,27 @@ openstack_lightspeed_cleanup: ## deletes the OpenStack Lightspeed operator
 	oc delete -n ${NAMESPACE} subscription openstack-lightspeed-operator --ignore-not-found=true
 	oc delete -n openshift-marketplace catalogsource ${LIGHTSPEED_CATALOG} --ignore-not-found=true
 	${CLEANUP_DIR_CMD} ${OPERATOR_DIR}
+
+.PHONY: openstack_assistant
+openstack_assistant: export LIGHTSPEED_NAMESPACE:=${LIGHTSPEED_NAMESPACE}
+openstack_assistant: export LIGHTSPEED_URL=${OPENSTACK_ASSISTANT_LIGHTSPEED_URL}
+openstack_assistant: export CONTAINER_IMAGE=${OPENSTACK_ASSISTANT_IMAGE}
+openstack_assistant: export ASSISTANT_NAME=${OPENSTACK_ASSISTANT_NAME}
+openstack_assistant: export MODEL=${OPENSTACK_ASSISTANT_MODEL}
+openstack_assistant: export OPENSTACK_CLIENT_NAME=${OPENSTACK_ASSISTANT_CLIENT}
+openstack_assistant: export PVC_NAME=${OPENSTACK_ASSISTANT_PVC}
+openstack_assistant: export PVC_SIZE=${OPENSTACK_ASSISTANT_PVC_SIZE}
+openstack_assistant: export PVC_STORAGE_CLASS=${OPENSTACK_ASSISTANT_PVC_STORAGE_CLASS}
+openstack_assistant: ## creates an OpenStackAssistant instance and its configuration
+	$(eval $(call vars,$@))
+	bash scripts/create-openstack-assistant.sh
+
+.PHONY: openstack_assistant_cleanup
+openstack_assistant_cleanup: export ASSISTANT_NAME=${OPENSTACK_ASSISTANT_NAME}
+openstack_assistant_cleanup: ## deletes the OpenStackAssistant and its configuration, preserving its PVC
+	$(eval $(call vars,$@))
+	oc delete openstackassistant.assistant.openstack.org ${ASSISTANT_NAME} -n ${NAMESPACE} --ignore-not-found=true
+	oc delete configmap ${ASSISTANT_NAME}-hints ${ASSISTANT_NAME}-recipes ${ASSISTANT_NAME}-goose-config -n ${NAMESPACE} --ignore-not-found=true
 
 ##@ MANILA
 .PHONY: manila_prep
