@@ -65,6 +65,7 @@ function git_clone_checkout {
 
     pushd ${OPERATOR_BASE_DIR}
 
+    rm -rf ${operator}-operator${ALT_CHECKOUT:+-$ALT_CHECKOUT}
     echo "Cloning repo: git clone ${git_opts} ${branch} ${repo} ${operator}-operator${ALT_CHECKOUT:+-$ALT_CHECKOUT}"
     git clone ${git_opts} ${branch} ${repo} ${operator}-operator${ALT_CHECKOUT:+-$ALT_CHECKOUT}
     if [ -n "${hash}" ]; then
