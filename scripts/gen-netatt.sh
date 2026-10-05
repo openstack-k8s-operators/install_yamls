@@ -312,16 +312,31 @@ spec:
     {
       "cniVersion": "0.3.1",
       "name": "designate",
+EOF_CAT
+if [ -n "$DESIGNATE_OVERLAY" ]; then
+cat >> ${DEPLOY_DIR}/designate.yaml <<EOF_CAT
+      "type": "ovn-k8s-cni-overlay",
+      "topology": "layer2",
+      "netAttachDefName": "${NAMESPACE}/designate",
+      "excludeSubnets": "${DESIGNATE_PREFIX}.128/25",
+      "subnets": "${DESIGNATE_PREFIX}.0/24"
+EOF_CAT
+else
+cat >> ${DEPLOY_DIR}/designate.yaml <<EOF_CAT
       "type": "macvlan",
       "master": "${INTERFACE}.$((${VLAN_START}+${VLAN_STEP}*5))",
       "ipam": {
         "type": "whereabouts",
-        "range": "172.28.0.0/24",
-        "range_start": "172.28.0.30",
-        "range_end": "172.28.0.70"
+        "range": "${DESIGNATE_PREFIX}.0/24",
+        "range_start": "${DESIGNATE_PREFIX}.30",
+        "range_end": "${DESIGNATE_PREFIX}.70"
       }
+EOF_CAT
+fi
+cat >> ${DEPLOY_DIR}/designate.yaml <<EOF_CAT
     }
 EOF_CAT
+
 cat > ${DEPLOY_DIR}/designateext.yaml <<EOF_CAT
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
