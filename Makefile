@@ -1922,6 +1922,7 @@ mariadb_kuttl: input deploy_cleanup infra mariadb mariadb_deploy_prep ## runs ku
 	make mariadb_kuttl_run
 	make deploy_cleanup
 	make mariadb_cleanup
+	make infra_cleanup
 
 .PHONY: kuttl_db_prep
 kuttl_db_prep: input deploy_cleanup mariadb mariadb_deploy infra memcached_deploy ## installs common DB service(MariaDB and Memcached)
@@ -2120,6 +2121,7 @@ glance_kuttl: kuttl_common_prep horizon swift swift_deploy glance glance_deploy_
 	make deploy_cleanup
 	make glance_cleanup
 	make swift_cleanup
+	make horizon_cleanup
 	make kuttl_common_cleanup
 
 .PHONY: manila_kuttl_run
@@ -2873,6 +2875,7 @@ telemetry_kuttl: kuttl_common_prep ovn heat heat_deploy certmanager telemetry te
 	make deploy_cleanup
 	make telemetry_cleanup
 	make heat_cleanup
+	make ovn_cleanup
 	make kuttl_common_cleanup
 	bash scripts/restore-namespace.sh
 
