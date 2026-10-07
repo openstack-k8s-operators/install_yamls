@@ -24,6 +24,8 @@ resource_registry:
   OS::TripleO::Services::HeatEngine: /usr/share/openstack-tripleo-heat-templates/deployment/heat/heat-engine-container-puppet.yaml
 
 parameter_defaults:
+  # Disable IPv6 to avoid os-net-config IPV6 ifcfg restart (OSPRH-37952) during adoption.
+  KernelDisableIPv6: 1
   SshFirewallAllowAll: true
   RedisVirtualFixedIPs:
     - ip_address: 192.168.122.110

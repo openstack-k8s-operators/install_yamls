@@ -29,6 +29,8 @@ resource_registry:
 {% endif %}
 
 parameter_defaults:
+  # Disable IPv6 to avoid os-net-config IPV6 ifcfg restart (OSPRH-37952) during adoption.
+  KernelDisableIPv6: 1
   SshFirewallAllowAll: true
 {% if cell|int > 0 %}
   # Specify that this is an additional cell
