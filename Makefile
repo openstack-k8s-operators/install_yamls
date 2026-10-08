@@ -3067,3 +3067,22 @@ set_slower_etcd_profile:  ## that is a helper for the CI jobs, where OpenShift A
 	# need to wait until the etcd pod would apply new rules
 	sleep 60
 	timeout $(TIMEOUT) bash -c "while ! (timeout 5 oc get pods -n openshift-etcd -o jsonpath='{.items[*].status.phase}' | grep -qE '^Running'); do sleep 10; done"
+
+# update openstackversions for 19
+TAG ?= master-latest
+REGISTRY ?= quay.io/openstack-s2i-containers
+
+.PHONY: openstack_versions_master
+openstack_versions_fetch: export OV_OUTPUT_FILE=${OUT}/openstack_versions_master.yaml
+openstack_versions_fetch:
+	mkdir -p "$(OUT)"
+	curl --output $(OUT)/image-mappings.yaml https://raw.githubusercontent.com/openstack-k8s-operators/s2i-openstack-containers/refs/heads/main/containers/image-mappings.yaml
+	OUTPUT_FILE=$(OV_OUTPUT_FILE) REGISTRY=$(REGISTRY) TAG=$(TAG) NAMESPACE=$(NAMESPACE) bash scripts/fetch-image-digests.sh $(OUT)/image-mappings.yaml
+
+.PHONY: openstack_versions_master
+openstack_versions_master: export OV_MASTER_PATCHFILE=${OUT}/openstack_versions_master.yaml
+openstack_versions_master: export OUTPUT_FORMAT=patch
+openstack_versions_master: openstack_versions_fetch
+	oc apply -f $(OV_MASTER_PATCHFILE)
+
+# TODO: make the branch configurable by allowing the TAG to be passed.
