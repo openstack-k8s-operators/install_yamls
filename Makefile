@@ -2243,6 +2243,7 @@ mariadb_chainsaw: input deploy_cleanup infra mariadb mariadb_deploy_prep ## runs
 	make mariadb_chainsaw_run
 	make deploy_cleanup
 	make mariadb_cleanup
+	make infra_cleanup
 
 ##@ HORIZON
 .PHONY: horizon_prep
