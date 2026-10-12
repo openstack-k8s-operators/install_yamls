@@ -91,7 +91,6 @@ TENANT_HOST_ROUTES ?=
 STORAGEMGMT_HOST_ROUTES ?=
 
 # network isolation
-NETWORK_ISOLATION   ?= true
 NETWORK_ISOLATION_USE_DEFAULT_NETWORK ?= true
 NETWORK_ISOLATION_IPV4 ?= true
 NETWORK_ISOLATION_IPV6 ?= false
@@ -138,18 +137,10 @@ OPENSTACK_REPO               ?= https://github.com/openstack-k8s-operators/opens
 OPENSTACK_BRANCH             ?= ${OPENSTACK_K8S_BRANCH}
 OPENSTACK_COMMIT_HASH        ?=
 
-ifeq ($(NETWORK_ISOLATION), true)
 ifeq ($(DBSERVICE), galera)
 OPENSTACK_CTLPLANE           ?= $(if $(findstring 3,$(GALERA_REPLICAS)),config/samples/core_v1beta1_openstackcontrolplane_galera_network_isolation_3replicas.yaml,config/samples/core_v1beta1_openstackcontrolplane_galera_network_isolation.yaml)
 else
 OPENSTACK_CTLPLANE           ?= config/samples/core_v1beta1_openstackcontrolplane_network_isolation.yaml
-endif
-else
-ifeq ($(DBSERVICE), galera)
-OPENSTACK_CTLPLANE           ?= $(if $(findstring 3,$(GALERA_REPLICAS)),config/samples/core_v1beta1_openstackcontrolplane_galera_3replicas.yaml,config/samples/core_v1beta1_openstackcontrolplane_galera.yaml)
-else
-OPENSTACK_CTLPLANE           ?= config/samples/core_v1beta1_openstackcontrolplane.yaml
-endif
 endif
 
 OPENSTACK_CR                 ?= ${OPERATOR_BASE_DIR}/openstack-operator/${OPENSTACK_CTLPLANE}
@@ -255,7 +246,7 @@ OVNNORTHD           ?= config/samples/ovn_v1beta1_ovnnorthd.yaml
 OVNNORTHD_CR        ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNNORTHD}
 OVNCONTROLLER       ?= config/samples/ovn_v1beta1_ovncontroller.yaml
 OVNCONTROLLER_CR    ?= ${OPERATOR_BASE_DIR}/ovn-operator/${OVNCONTROLLER}
-OVNCONTROLLER_NMAP  ?= ${NETWORK_ISOLATION}
+OVNCONTROLLER_NMAP  ?= true
 # TODO: Image customizations for all OVN services
 OVN_KUTTL_CONF      ?= ${OPERATOR_BASE_DIR}/ovn-operator/kuttl-test.yaml
 OVN_KUTTL_DIR       ?= ${OPERATOR_BASE_DIR}/ovn-operator/test/kuttl/tests
@@ -481,10 +472,10 @@ CEPH_CLIENT    ?= ${OPERATOR_BASE_DIR}/rook/deploy/examples/toolbox.yaml
 NMSTATE_NAMESPACE      ?= openshift-nmstate
 NMSTATE_OPERATOR_GROUP ?= openshift-nmstate-tn6k8
 NMSTATE_SUBSCRIPTION   ?= kubernetes-nmstate-operator
-INSTALL_NMSTATE        ?= $(NETWORK_ISOLATION) || $(NETWORK_BGP)
+INSTALL_NMSTATE        ?= true
 
 # NNCP
-INSTALL_NNCP        ?= $(NETWORK_ISOLATION) || $(NETWORK_BGP)
+INSTALL_NNCP        ?= true
 NNCP_NODES          ?=
 NNCP_INTERFACE      ?= enp6s0
 NNCP_BRIDGE         ?= ospbr
@@ -884,8 +875,7 @@ OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_NMSTATE)), nmstate)
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_NNCP)), nncp)
 OPENSTACK_PREP_DEPS += metallb
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(INSTALL_CERT_MANAGER)), certmanager)
-OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_ISOLATION)), netattach metallb_config)
-OPENSTACK_PREP_DEPS += $(if $(findstring true,$(NETWORK_BGP)), netattach metallb_config)
+OPENSTACK_PREP_DEPS += netattach metallb_config
 OPENSTACK_PREP_DEPS += $(if $(findstring true,$(BMO_SETUP)), crc_bmo_setup)
 
 .PHONY: openstack_prep
