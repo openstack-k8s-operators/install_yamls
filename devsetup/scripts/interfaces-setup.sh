@@ -50,7 +50,6 @@ if [[ -z "${MAC_ADDRESS}" ]]; then
 else
     VM_ID_SECTION="mac='$MAC_ADDRESS'"
 fi
-virsh --connect=qemu:///system net-update $NETWORK_NAME add-last ip-dhcp-host --xml "<host $VM_ID_SECTION ip='$IP_ADDRESS'/>" --config --live
 virsh --connect=qemu:///system attach-interface $INSTANCE_NAME --source $NETWORK_NAME --type network --model virtio --mac $MAC_ADDRESS --config --persistent
 
 sleep 5
