@@ -52,6 +52,7 @@ runcmd:
   - "sudo chmod 0660 /etc/sudoers.d/cloud-admin"
   - "sudo loginctl enable-linger cloud-admin"
   - "sudo rm -f /etc/nvme/hostid /etc/nvme/hostnqn"
+  - "if [ -n '${EDPM_DNF_PROXY:-}' ]; then echo 'proxy=${EDPM_DNF_PROXY}' >> /etc/dnf/dnf.conf; fi"
 ssh_pwauth: true
 ssh_authorized_keys:
   - ${SSH_PUBLIC_KEY_CONTENTS}

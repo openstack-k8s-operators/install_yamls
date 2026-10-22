@@ -112,6 +112,14 @@ popd
 
 **Note:** Set the `EDPM_IMAGE_URL` environment variable to use a different image (e.g., RHEL 9.6). If using a RHEL image, use subscription-manager or other methods to enable repos in the compute nodes.
 
+Set `EDPM_DNF_PROXY` to configure a DNF proxy on generated EDPM compute and networker nodes. The value should be a proxy URL, for example:
+
+```bash
+EDPM_DNF_PROXY=http://proxy.example.com:3128 make edpm_compute
+```
+
+This also applies to `make edpm_compute_bootc` and `make edpm_networker`.
+
 Deploy a compute node VM:
 ```
 # Creates edpm-compute-0:
