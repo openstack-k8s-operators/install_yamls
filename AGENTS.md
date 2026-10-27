@@ -63,7 +63,7 @@ All Makefile variables use `?=` (conditional assignment). Override via
 environment or command-line:
 
 ```
-NETWORK_ISOLATION=false make openstack_deploy
+PASSWORD=secret123 make openstack_deploy
 ```
 
 ### Do not commit secrets
