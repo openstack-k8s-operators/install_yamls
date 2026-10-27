@@ -346,6 +346,11 @@ fi
 # Remove NVMe artifacts that are auto-generated when nvme-cli RPM is installed
 rm -f /etc/nvme/hostid /etc/nvme/hostnqn
 
+# Configure the DNF proxy when one was provided
+if [ -n "${EDPM_DNF_PROXY:-}" ]; then
+    echo 'proxy=${EDPM_DNF_PROXY}' >> /etc/dnf/dnf.conf
+fi
+
 # Additional commands
 
 EOF
