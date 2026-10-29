@@ -411,6 +411,9 @@ BAREMETAL_OS_IMG           ?=
 
 # Dataplane Operator
 DATAPLANE_TIMEOUT                                ?= 30m
+# nmstate parses edpm_network_config_template as nmstate desired state, so the
+# baremetal path needs the scenario that ships an nmstate-format template.
+BAREMETAL_NETWORK_CONFIG_TOOL                    ?= nmstate
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
 DATAPLANE_KUSTOMIZE_SCENARIO                     ?= bgp_ovn_cluster
@@ -1125,11 +1128,16 @@ edpm_deploy_baremetal_prep: export EDPM_GROWVOLS_ARGS=${DATAPLANE_GROWVOLS_ARGS}
 edpm_deploy_baremetal_prep: export REPO=${OPENSTACK_REPO}
 edpm_deploy_baremetal_prep: export BRANCH=${OPENSTACK_BRANCH}
 edpm_deploy_baremetal_prep: export HASH=${OPENSTACK_COMMIT_HASH}
+ifeq ($(BAREMETAL_NETWORK_CONFIG_TOOL),nmstate)
+edpm_deploy_baremetal_prep: export DATAPLANE_KUSTOMIZE_SCENARIO=nmstate_baremetal
+else
 edpm_deploy_baremetal_prep: export DATAPLANE_KUSTOMIZE_SCENARIO=baremetal
+endif
 edpm_deploy_baremetal_prep: export EDPM_ROOT_PASSWORD=${BM_ROOT_PASSWORD}
 edpm_deploy_baremetal_prep: export EDPM_EXTRA_NOVA_CONFIG_FILE=${DEPLOY_DIR}/25-nova-extra.conf
 edpm_deploy_baremetal_prep: export EDPM_SERVER_ROLE=compute
 edpm_deploy_baremetal_prep: export EDPM_USE_PARALLEL_EXECUTION=${DATAPLANE_USE_PARALLEL_EXECUTION}
+edpm_deploy_baremetal_prep: export EDPM_NETWORK_CONFIG_TOOL=${BAREMETAL_NETWORK_CONFIG_TOOL}
 edpm_deploy_baremetal_prep: edpm_deploy_cleanup openstack_repo ## prepares the CR to install the data plane
 	$(eval $(call vars,$@,dataplane))
 	mkdir -p ${DEPLOY_DIR}
