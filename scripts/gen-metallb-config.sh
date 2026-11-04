@@ -27,10 +27,6 @@ if [ -z "${INTERFACE}" ]; then
     echo "Please set INTERFACE"; exit 1
 fi
 
-if [ -z "${BRIDGE_NAME}" ]; then
-    echo "Please set BRIDGE_NAME"; exit 1
-fi
-
 if [ -z "${ASN}" ]; then
     echo "Please set ASN"; exit 1
 fi
@@ -173,7 +169,7 @@ spec:
   ipAddressPools:
   - ctlplane
   interfaces:
-  - ${BRIDGE_NAME}
+  - ctlplane
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement

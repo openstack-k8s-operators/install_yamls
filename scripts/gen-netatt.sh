@@ -80,7 +80,7 @@ spec:
       "cniVersion": "0.3.1",
       "name": "ctlplane",
       "type": "macvlan",
-      "master": "${BRIDGE_NAME}",
+      "master": "ctlplane",
       "ipam": {
         "type": "whereabouts",
 EOF_CAT
