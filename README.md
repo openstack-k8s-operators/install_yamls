@@ -2,16 +2,16 @@
 
 The main purpose is to provide scripts to automate installing OpenStack in your *pre-installed* OpenShift environment.
 
-Aside from generating Yaml and running *oc* commands to apply them to your cluster nothing in this repo should modify the local machine, require sudo, or make any changes to the local machine.
+Aside from generating YAML and running *oc* commands to apply them to your cluster nothing in this repo should modify the local machine, require sudo, or make any changes to the local machine.
 
 Helper scripts to automate installing CRC and required tools with versions used in openstack-k8s-operators can be found in [devsetup](devsetup/README.md).
 These scripts/playbook require sudo permissions.
 
-**Note**
-The `install_yamls` project expects several dependencies on the host machine.
-Without them the deployment will fail and you will have install them first.
-In general terms, all tools required by Openshift are also required by `install_yamls`.
-Most importanly, the `kubectl` must be present on the system.
+> [!NOTE]
+> The `install_yamls` project expects several dependencies on the host machine.
+> Without them the deployment will fail and you will have install them first.
+> In general terms, all tools required by OpenShift are also required by `install_yamls`.
+> Most importantly, `kubectl` **must** be present on the system.
 
 ## Secrets Management
 
@@ -79,89 +79,100 @@ make keystone_deploy
 
 ## Deploy dev env using CRC, edpm nodes with isolated networks
 
-**Warning** The dev environment requires substantial resources to be deployed successfully. It is recommended that you deploy this environment on machines with enough overhead.
+> [!WARNING]
+> The dev environment requires substantial resources to be deployed successfully. It is recommended that you deploy this environment on machines with enough overhead.
 
-* clone install_yamls
+Clone `install_yamls`:
+
 ```bash
 git clone https://github.com/openstack-k8s-operators/install_yamls.git
-```
-* ensure the dependencies are installed
-```bash
-cd install_yamls/devsetup
-make download_tools
+cd install_yamls
 ```
 
-* install CRC
+Ensure the dependencies are installed:
+
 ```bash
-cd install_yamls/devsetup
-CPUS=12 MEMORY=25600 DISK=100 make crc
+make -C devsetup download_tools
 ```
 
-* login to OCP (the kubeadmin password is auto-generated in `.secrets.env`)
+Install CRC:
+
+```bash
+CPUS=12 MEMORY=25600 DISK=100 make -C devsetup crc
+```
+
+Login to OCP (the kubeadmin password is auto-generated in `.secrets.env`):
+
 ```bash
 eval $(crc oc-env)
 oc login -u kubeadmin -p $(grep KUBEADMIN_PWD ../.secrets.env | sed 's/.*?= *//' ) https://api.crc.testing:6443
 ```
 
-* attach libvirt default network to the crc (default IP 192.168.122.10). This network is used as a vlan trunk to isolate the networks using vlans.
+Attach libvirt default network to the CRC cluster (default IP 192.168.122.10). This network is used as a VLAN trunk to isolate the networks using VLANs:
+
 ```bash
-make crc_attach_default_interface
+make -C devsetup crc_attach_default_interface
 ```
 
-* create edpm nodes
+Create External Data Plane Management (EDPM) nodes:
+
 ```bash
-EDPM_TOTAL_NODES=2 make edpm_compute
+EDPM_TOTAL_NODES=2 make -C devsetup edpm_compute
 ```
 
-* create dependencies (secrets are auto-generated on first `make input`)
+Create dependencies (secrets are auto-generated on first `make input`):
+
 ```bash
-cd ..
-make crc_storage
-make input
+make crc_storage input
 ```
 
-* install openstack-operator either from quay.io or the redhat-marketplace
+Install `openstack-operator`. You can do this from either quay.io or the redhat-marketplace.
 
-install using the latest openstack-operator-index from quay.io
-```bash
-make openstack
-```
-install using the redhat-marketplace
-```bash
-REDHAT_OPERATORS=true make openstack
-```
+* Install using the latest openstack-operator-index from quay.io
 
-* create the initialization resource (this deploys the operators)
+    ```bash
+    make openstack
+    ```
+
+* Install using the redhat-marketplace
+
+    ```bash
+    REDHAT_OPERATORS=true make openstack
+    ```
+
+Create the initialization resource (this deploys the operators):
+
 ```bash
 make openstack_init
 ```
 
-**Note** this will also run the openstack_prep target, which if NETWORK_ISOLATION == true will install nmstate and metallb operator, configure the secondary interface of the crc VM via nncp, creates the network-attachment-definitions for datacentre, internalapi, storage and tenant network. Also the metallb l2advertisement and the ipaddresspools get created.
+> [!NOTE]
+> This will also run the `openstack_prep` target, If `NETWORK_ISOLATION == true` this will install `nmstate` and `metallb` operator,
+> configure the secondary interface of the crc VM via `nncp`, and create the network-attachment-definitions for datacentre, internalapi,
+> storage and tenant network. Also the metallb l2advertisement and the ipaddresspools get created.
+>
+> The following NADs with IP ranges get configured:
+>
+>     internalapi: 172.17.0.30-172.17.0.70
+>     storage:     172.18.0.30-172.18.0.70
+>     tenant:      172.19.0.30-172.19.0.70
+>
+> The following IPAddressPools with IP ranges get configured:
+>
+>     internalapi: 172.17.0.80-172.17.0.90
+>     storage:     172.18.0.80-172.18.0.90
+>     tenant:      172.19.0.80-172.19.0.90
 
-The following NADs with ip ranges get configured:
-```
-internalapi: 172.17.0.30-172.17.0.70
-storage:     172.18.0.30-172.18.0.70
-tenant:      172.19.0.30-172.19.0.70
-```
+(optional) Deploy ceph container using storage network:
 
-The following IPAddressPools with ip ranges get configured:
-```
-internalapi: 172.17.0.80-172.17.0.90
-storage:     172.18.0.80-172.18.0.90
-tenant:      172.19.0.80-172.19.0.90
-```
-
-* (optional) deploy ceph container using storage network
 ```bash
 HOSTNETWORK=false NETWORKS_ANNOTATION=\'[\{\"name\":\"storage\",\"namespace\":\"openstack\"\}]\' MON_IP=172.18.0.30 make ceph TIMEOUT=90
 ```
 
-**Note** as it is the first pod requesting an ip using the storage network, it will get the first IP from the configured range in the whereabouts ipam pool, which is 172.18.0.30 .
+> [!NOTE]
+> As it is the first pod requesting an IP using the storage network, it will get the first IP from the configured range in the whereabouts ipam pool, which is `172.18.0.30`.
 
-* deploy the ctlplane
-
-If `NETWORK_ISOLATION == true`, `config/samples/core_v1beta1_openstackcontrolplane_network_isolation.yaml` will be used, if `false` then `config/samples/core_v1beta1_openstackcontrolplane.yaml`.
+Deploy the ctlplane. If `NETWORK_ISOLATION == true`, `config/samples/core_v1beta1_openstackcontrolplane_network_isolation.yaml` will be used, if `false` then `config/samples/core_v1beta1_openstackcontrolplane.yaml`.
 
 ```bash
 make openstack_deploy
@@ -169,7 +180,8 @@ make openstack_deploy
 
 (optional) To deploy with ceph as backend for glance and cinder, a sample config can be found at https://github.com/openstack-k8s-operators/openstack-operator/blob/main/config/samples/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml .
 
-**Note** Make sure to replace the `_FSID_` in the sample with the one from the ceph cluster. When deployed with `make ceph`
+> [!NOTE]
+> Make sure to replace the `_FSID_` in the sample with the one from the ceph cluster. When deployed with `make ceph`
 
 ```bash
 curl -o /tmp/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml https://raw.githubusercontent.com/openstack-k8s-operators/openstack-operator/main/config/samples/core_v1beta1_openstackcontrolplane_network_isolation_ceph.yaml
@@ -182,26 +194,32 @@ Wait for the ctlplane to be up.
 
 At this point the ctlplane is deployed with the services using isolated networks as specified in the CR sample.
 
-**Note** Deployment may take longer than the default timeout allows for. In these cases, make sure to adjust `DATAPLANE_TIMEOUT` variable.
+> [!NOTE]
+> Deployment may take longer than the default timeout allows for. In these cases, make sure to adjust `DATAPLANE_TIMEOUT` variable.
 
-* deploy edpm compute
+* Deploy EDPM compute
+
 ```bash
 # To use a NTP server other than the ntp.pool.org default one, override the DATAPLANE_NTP_SERVER variable
 DATAPLANE_TOTAL_NODES=2 make edpm_wait_deploy
 ```
-Note: if you used the `edpm_deploy` target to start the deployment then after
-the compute services are visible in `openstack compute service list` you need
-to manually run host discovery:
-```bash
-make edpm_nova_discover_hosts
-```
 
-* wait until finished, then can check the env
+> [!NOTE]
+> If you used the `edpm_deploy` target to start the deployment then after
+> the compute services are visible in `openstack compute service list` you need
+> to manually run host discovery:
+>
+>     make edpm_nova_discover_hosts
+
+Wait until finished, then can check the env:
+
 ```bash
 oc -n openstack rsh openstackclient
 openstack compute service list
 ```
+
 Producing a list of services:
+
 ```
 +--------------------------------------+----------------+------------------------+----------+---------+-------+----------------------------+
 | ID                                   | Binary         | Host                   | Zone     | Status  | State | Updated At                 |
@@ -219,6 +237,7 @@ openstack network agent list
 ```
 
 Producing a list of agents.
+
 ```
 +--------------------------------------+------------------------------+--------------------+-------------------+-------+-------+----------------------------+
 | ID                                   | Agent Type                   | Host               | Availability Zone | Alive | State | Binary                     |
@@ -234,8 +253,7 @@ Producing a list of agents.
 ## Simple steps to validate the deployment
 
 ```
-cd devsetup
-make edpm_deploy_instance
+make -C devsetup edpm_deploy_instance
 ```
 
 ## Deployment on OKD distro
@@ -248,13 +266,14 @@ make openstack OKD=true
 
 ## Disconnected environment testing
 
-**Note**: This tests OpenStack operators/images in disconnected mode using the internal registry as a mirror, not a fully disconnected OCP cluster.
+> [!NOTE]
+> This tests OpenStack operators/images in disconnected mode using the internal registry as a mirror, not a fully disconnected OCP cluster.
 
 To test OpenStack deployment in a disconnected environment using the OpenShift internal registry as a mirror:
 
 ```bash
 # Install required tools (includes oc-mirror)
-cd devsetup && make download_tools && cd ..
+make -C devsetup download_tools
 
 # Setup storage first
 make crc_storage
@@ -297,7 +316,7 @@ make mirror_registry_cleanup
 ```
 
 **Tool requirements:**
-- `oc-mirror`: Install via `cd devsetup && make download_tools` (or `make download_tools DOWNLOAD_TOOLS_SELECTION=oc_mirror`)
+- `oc-mirror`: Install via `make -C devsetup download_tools` (or `make -C devsetup download_tools DOWNLOAD_TOOLS_SELECTION=oc_mirror`)
 - `skopeo`: For digest inspection (installed via `make download_tools`)
 
 ## OpenStack Lightspeed
