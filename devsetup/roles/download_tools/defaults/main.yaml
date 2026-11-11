@@ -2,11 +2,14 @@
 # kuttl version to use (must be specific version)
 kuttl_version: 0.20.0
 
-# Released version of the opm package (can be set to 'latest')
-opm_version: latest
+# Released version of the opm package
+opm_version: v1.72.0
 
 # oc-mirror version (OCP version to download from)
-oc_mirror_version: latest
+oc_mirror_version: "4.22.5"
+
+# yq version to use
+yq_version: v4.53.3
 
 # operator-sdk version to use (must be specific version)
 sdk_version: v1.42.3
