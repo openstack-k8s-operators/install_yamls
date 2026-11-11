@@ -109,6 +109,15 @@ cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/neutron_public_interface_name
       value: ${EDPM_NETWORK_INTERFACE_NAME}
+EOF
+if [ -n "$DATAPLANE_NETWORK_CONFIG_TOOL" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_network_config_tool
+      value: ${DATAPLANE_NETWORK_CONFIG_TOOL}
+EOF
+fi
+cat <<EOF >>kustomization.yaml
     - op: replace
       path: /spec/nodeTemplate/ansible/ansibleVars/registry_url
       value: ${EDPM_REGISTRY_URL}
