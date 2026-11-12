@@ -25,13 +25,21 @@ if [ ! -d ${OUT}/crc ]; then
 fi
 PV_NUM=${PV_NUM:-12}
 STORAGE_CAPACITY=${STORAGE_CAPACITY:-10}
+STORAGE_ID=${STORAGE_ID:-}
+STORAGE_CLASS_CLEAN=$(sed -e 's/^"//' -e 's/"$//' <<<"${STORAGE_CLASS}")
 NODE_NAMES=$(oc get node -o name -l node-role.kubernetes.io/worker | sed -e 's|node/||' | head -c-1 | tr '\n' ' ')
 if [ -z "$NODE_NAMES" ]; then
     echo "Unable to determine node name with 'oc' command."
     exit 1
 fi
 
-cat > ${OUT}/crc/storage.yaml <<EOF_CAT
+if [ -n "$STORAGE_ID" ]; then
+    STORAGE_FILE="${OUT}/crc/storage-${STORAGE_ID}.yaml"
+else
+    STORAGE_FILE="${OUT}/crc/storage.yaml"
+fi
+
+cat > ${STORAGE_FILE} <<EOF_CAT
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
@@ -43,16 +51,24 @@ EOF_CAT
 
 for node in $NODE_NAMES; do
 for i in `seq -w $PV_NUM`; do
-cat >> ${OUT}/crc/storage.yaml <<EOF_CAT
+if [ -n "$STORAGE_ID" ]; then
+    pv_name="${STORAGE_CLASS_CLEAN}-${STORAGE_ID}-${i}-${node}"
+    pv_path="/mnt/openstack/${STORAGE_ID}/pv${i}"
+else
+    pv_name="${STORAGE_CLASS_CLEAN}${i}-${node}"
+    pv_path="/mnt/openstack/pv${i}"
+fi
+cat >> ${STORAGE_FILE} <<EOF_CAT
 ---
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: "$(sed -e 's/^"//' -e 's/"$//' <<<"${STORAGE_CLASS}")$i-${node}"
+  name: "${pv_name}"
   annotations:
     pv.kubernetes.io/provisioned-by: crc-devsetup
   labels:
     provisioned-by: crc-devsetup
+    crc-devsetup-storage-id: "${STORAGE_ID:-default}"
 spec:
   storageClassName: ${STORAGE_CLASS}
   capacity:
@@ -63,7 +79,7 @@ spec:
     - ReadOnlyMany
   persistentVolumeReclaimPolicy: Delete
   local:
-    path: "/mnt/openstack/pv$i"
+    path: "${pv_path}"
     type: DirectoryOrCreate
   volumeMode: Filesystem
   nodeAffinity:
@@ -76,7 +92,7 @@ spec:
 EOF_CAT
 done
 done
-cat >> ${OUT}/crc/storage.yaml <<EOF_CAT
+cat >> ${STORAGE_FILE} <<EOF_CAT
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

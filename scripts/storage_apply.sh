@@ -17,17 +17,23 @@ set -ex
 
 NODE=${1:-"crc"}
 OPERATION=${2:-"create"}
+JOB_SUFFIX=""
+if [ -n "${STORAGE_ID}" ]; then
+    JOB_SUFFIX="-${STORAGE_ID}"
+fi
+JOB_NAME="crc-storage${JOB_SUFFIX}-${NODE}"
 
-oc delete -n "${NAMESPACE}" job "crc-storage-${NODE}" --ignore-not-found
+oc delete -n "${NAMESPACE}" job "${JOB_NAME}" --ignore-not-found
 
 cat << EOF | oc apply -f -
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: crc-storage-${NODE}
+  name: ${JOB_NAME}
   namespace: ${NAMESPACE}
   labels:
     install-yamls.crc.storage: ""
+    crc-devsetup-storage-id: "${STORAGE_ID:-default}"
 spec:
   template:
     spec:
@@ -37,6 +43,8 @@ spec:
         env:
           - name: PV_NUM
             value: "${PV_NUM}"
+          - name: STORAGE_ID
+            value: "${STORAGE_ID}"
         command: ["bash"]
         args: ["/usr/local/bin/crc-storage.sh"]
         securityContext:
