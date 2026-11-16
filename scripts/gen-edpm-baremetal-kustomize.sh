@@ -113,6 +113,13 @@ cat <<EOF >>kustomization.yaml
       value: ${EDPM_OS_CONTAINER_IMG}
 EOF
 fi
+if [ -n "$DATAPLANE_NETWORK_CONFIG_TOOL" ]; then
+cat <<EOF >>kustomization.yaml
+    - op: add
+      path: /spec/nodeTemplate/ansible/ansibleVars/edpm_network_config_tool
+      value: ${DATAPLANE_NETWORK_CONFIG_TOOL}
+EOF
+fi
 if [ "$EDPM_OS_IMG_TYPE" != "" ]; then
 cat <<EOF >>kustomization.yaml
     - op: add

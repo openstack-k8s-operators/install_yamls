@@ -411,6 +411,13 @@ BAREMETAL_OS_IMG           ?=
 
 # Dataplane Operator
 DATAPLANE_TIMEOUT                                ?= 30m
+DATAPLANE_NETWORK_CONFIG_TOOL                    ?= nmstate
+# the bgp scenarios ship os-net-config format templates only, so the tool is
+# not honored for bgp and is forced to os-net-config
+ifeq ($(NETWORK_BGP), true)
+DATAPLANE_NETWORK_CONFIG_TOOL := os-net-config
+endif
+export DATAPLANE_NETWORK_CONFIG_TOOL
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
 DATAPLANE_KUSTOMIZE_SCENARIO                     ?= bgp_ovn_cluster
@@ -1071,6 +1078,11 @@ edpm_deploy_prep: export HASH=${OPENSTACK_COMMIT_HASH}
 edpm_deploy_prep: export EDPM_TLS_ENABLED=${DATAPLANE_TLS_ENABLED}
 edpm_deploy_prep: export EDPM_USE_PARALLEL_EXECUTION=${DATAPLANE_USE_PARALLEL_EXECUTION}
 edpm_deploy_prep: export EDPM_NOVA_NFS_PATH=${DATAPLANE_NOVA_NFS_PATH}
+ifeq ($(DATAPLANE_NETWORK_CONFIG_TOOL),nmstate)
+ifeq ($(DATAPLANE_KUSTOMIZE_SCENARIO),preprovisioned)
+edpm_deploy_prep: export DATAPLANE_KUSTOMIZE_SCENARIO=nmstate
+endif
+endif
 ifeq ($(NETWORK_BGP), true)
 ifeq ($(BGP_OVN_ROUTING), true)
 edpm_deploy_prep: export BGP=ovn
@@ -1125,7 +1137,11 @@ edpm_deploy_baremetal_prep: export EDPM_GROWVOLS_ARGS=${DATAPLANE_GROWVOLS_ARGS}
 edpm_deploy_baremetal_prep: export REPO=${OPENSTACK_REPO}
 edpm_deploy_baremetal_prep: export BRANCH=${OPENSTACK_BRANCH}
 edpm_deploy_baremetal_prep: export HASH=${OPENSTACK_COMMIT_HASH}
+ifeq ($(DATAPLANE_NETWORK_CONFIG_TOOL),nmstate)
+edpm_deploy_baremetal_prep: export DATAPLANE_KUSTOMIZE_SCENARIO=nmstate_baremetal
+else
 edpm_deploy_baremetal_prep: export DATAPLANE_KUSTOMIZE_SCENARIO=baremetal
+endif
 edpm_deploy_baremetal_prep: export EDPM_ROOT_PASSWORD=${BM_ROOT_PASSWORD}
 edpm_deploy_baremetal_prep: export EDPM_EXTRA_NOVA_CONFIG_FILE=${DEPLOY_DIR}/25-nova-extra.conf
 edpm_deploy_baremetal_prep: export EDPM_SERVER_ROLE=compute
