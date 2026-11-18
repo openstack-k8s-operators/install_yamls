@@ -50,6 +50,7 @@ SECRET                   ?= osp-secret
 LIBVIRT_SECRET           ?= libvirt-secret
 OUT                      ?= ${PWD}/out
 TIMEOUT                  ?= 500s
+MARKETPLACE_RETRY        ?= 20
 BAREMETAL_TIMEOUT        ?= 20m
 DBSERVICE           ?= galera
 ifeq ($(DBSERVICE), galera)
@@ -3079,7 +3080,7 @@ validate_marketplace: ## validates that the openshift marketplace is healthy and
 ifeq ($(OKD), true)
 	bash scripts/validate-marketplace-okd.sh
 else
-	bash scripts/validate-marketplace.sh
+	bash scripts/validate-marketplace.sh $(MARKETPLACE_RETRY)
 endif
 
 ##@ REDIS
