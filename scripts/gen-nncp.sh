@@ -470,6 +470,11 @@ EOF_CAT
     #
     # ctlplane interface (untagged)
     #
+    # The bridge itself is kept address-less, with the ctlplane IP(s) carried
+    # on a mac-vlan interface on top of it instead. This works around
+    # https://github.com/k8snetworkplumbingwg/multus-cni/issues/832 where
+    # multus can lose track of an IP address assigned directly to a bridge
+    # used by pods.
     cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: Configuring Bridge ${BRIDGE_NAME} with interface ${INTERFACE}
       name: ${BRIDGE_NAME}
@@ -483,6 +488,18 @@ EOF_CAT
         port:
           - name: ${INTERFACE}
             vlan: {}
+      ipv4:
+        enabled: false
+      ipv6:
+        enabled: false
+    - description: ctlplane mac-vlan
+      name: ctlplane
+      state: up
+      type: mac-vlan
+      mtu: ${INTERFACE_MTU}
+      mac-vlan:
+        base-iface: ${BRIDGE_NAME}
+        mode: bridge
 EOF_CAT
     if [ -n "$IPV4_ENABLED" ]; then
         cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
