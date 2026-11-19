@@ -136,7 +136,7 @@ REDHAT_OPERATORS=true make openstack
 make openstack_init
 ```
 
-**Note** this will also run the openstack_prep target, which if NETWORK_ISOLATION == true will install nmstate and metallb operator, configure the secondary interface of the crc VM via nncp, creates the network-attachment-definitions for datacentre, internalapi, storage and tenant network. Also the metallb l2advertisement and the ipaddresspools get created.
+**Note** this will also run the openstack_prep target, which will install nmstate and metallb operator, configure the secondary interface of the crc VM via nncp, creates the network-attachment-definitions for datacentre, internalapi, storage and tenant network. Also the metallb l2advertisement and the ipaddresspools get created.
 
 The following NADs with ip ranges get configured:
 ```
@@ -160,8 +160,6 @@ HOSTNETWORK=false NETWORKS_ANNOTATION=\'[\{\"name\":\"storage\",\"namespace\":\"
 **Note** as it is the first pod requesting an ip using the storage network, it will get the first IP from the configured range in the whereabouts ipam pool, which is 172.18.0.30 .
 
 * deploy the ctlplane
-
-If `NETWORK_ISOLATION == true`, `config/samples/core_v1beta1_openstackcontrolplane_network_isolation.yaml` will be used, if `false` then `config/samples/core_v1beta1_openstackcontrolplane.yaml`.
 
 ```bash
 make openstack_deploy
