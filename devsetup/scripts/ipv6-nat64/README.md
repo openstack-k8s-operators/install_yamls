@@ -8,9 +8,9 @@ Network setup relies on `systemd-resolved` service enabled and used for DNS
 resolution. If it's not installed on your machine (for example, if you use
 RHEL), then:
 
-#. Install the package: `dnf install -y systemd-resolved`
-#. Enable and start the service: `systemctl enable --now systemd-resolved`
-#. Configure it as the default resolver for the system: `ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf`
+#. Install the package: `sudo dnf install -y systemd-resolved`
+#. Enable and start the service: `sudo systemctl enable --now systemd-resolved`
+#. Configure it as the default resolver for the system: `sudo ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf`
 
 Further DNS requests initiated by the hypervisor should now go through the stub `systemd-resolved` resolver.
 

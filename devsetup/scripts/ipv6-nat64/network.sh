@@ -103,7 +103,7 @@ function build_dnsmasq {
         make
         make install PREFIX=${WORK_DIR}
         # Set selinux context to bin_t
-        sudo chcon -t bin_t ${WORK_DIR}/sbin/dnsmasq
+        sudo chcon -h system_u:object_r:bin_t:s0 ${WORK_DIR}/sbin/dnsmasq
         popd
 
         popd
