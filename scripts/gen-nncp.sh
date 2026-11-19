@@ -377,10 +377,11 @@ EOF_CAT
       type: linux-bridge
 EOF_CAT
 
-    #
-    # designate VLAN interface
-    #
-    cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+    if [ -z "$DESIGNATE_OVERLAY" ]; then
+        #
+        # designate VLAN interface
+        #
+        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
     - description: designate vlan interface
       name: ${INTERFACE}.${designate_vlan_id}
       state: up
@@ -390,8 +391,8 @@ EOF_CAT
         id: ${designate_vlan_id}
         reorder-headers: true
 EOF_CAT
-    if [ -n "$IPV4_ENABLED" ]; then
-        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+        if [ -n "$IPV4_ENABLED" ]; then
+            cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv4:
         address:
         - ip: ${DESIGNATE_PREFIX}.${IP_ADDRESS_SUFFIX}
@@ -399,14 +400,14 @@ EOF_CAT
         enabled: true
         dhcp: false
 EOF_CAT
-    else
-        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+        else
+            cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv4:
         enabled: false
 EOF_CAT
-    fi
-    if [ -n "$IPV6_ENABLED" ]; then
-        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+        fi
+        if [ -n "$IPV6_ENABLED" ]; then
+            cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv6:
         address:
         - ip: fd00:eded::${IPV6_ADDRESS_SUFFIX}
@@ -415,12 +416,13 @@ EOF_CAT
         dhcp: false
         autoconf: false
 EOF_CAT
-    else
-        cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
+        else
+            cat >> ${DEPLOY_DIR}/${WORKER}_nncp.yaml <<EOF_CAT
       ipv6:
         enabled: false
 EOF_CAT
-    fi
+        fi
+    fi # End of Designate VLAN network.
 
     #
     # designate external VLAN interface
