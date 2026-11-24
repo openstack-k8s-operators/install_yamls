@@ -165,6 +165,7 @@ spec:
   nodeSets:
 $DATAPLANE_NODESETS
   servicesOverride:
+    - nova
     - update
 $ANSIBLE_EXTRA_VARS
 EOF
