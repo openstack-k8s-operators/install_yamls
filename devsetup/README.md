@@ -13,6 +13,17 @@ CPUS=12 MEMORY=25600 DISK=100 make crc
 **Note**
 To configure a http and/or https proxy on the crc instance, use `CRC_HTTP_PROXY` and `CRC_HTTPS_PROXY`.
 
+**Note**
+The OpenShift version is determined by the CRC release (see `CRC_VERSION` in the `Makefile`). To deploy a different one, e.g. CRC v2.65.0 which bundles OpenShift 5.0:
+
+```bash
+CRC_VERSION=2.65.0 make crc
+```
+
+See https://github.com/crc-org/crc/releases for the OpenShift version bundled in each CRC release.
+
+`CRC_VERSION` only applies when no `crc` binary is found on the host: if one is already on the PATH, the release version is ignored and the installed binary is left unchanged. Likewise, an existing CRC VM keeps its bundle -- to move an existing setup to a new OpenShift version, run `make crc_scrub` before re-running `make crc`.
+
 After the installation is complete, proceed with the OpenStack service provisioning.
 
 The steps it runs are the following:
