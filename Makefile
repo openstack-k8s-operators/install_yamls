@@ -1,4 +1,4 @@
-# general
+# general, just a comment to trigger test.
 SHELL       := /bin/bash
 
 # Load generated secrets if available (use ?= so env vars take precedence).
